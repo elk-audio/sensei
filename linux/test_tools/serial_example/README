@@ -1,0 +1,12 @@
+C++ example used to test libserialport and verify that it works when used
+in the required manner. The program inplements a simple serial class with
+an internal event loop that reads data from a given port and puts it in
+a thread safe queue. Another event loop polls this queue at regular
+intervals and prints any data in it.
+
+Use the supplied python file to send data on the port.
+
+To build, create a folder, preferably build/serial_example cd into it
+run cmake ../..
+make
+
