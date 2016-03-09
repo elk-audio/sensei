@@ -8,9 +8,8 @@ include(ExternalProject)
 ExternalProject_Add(libserialport
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/libserialport
         BUILD_IN_SOURCE 1
-        UPDATE_COMMAND ./autogen.sh
-        CONFIGURE_COMMAND ./configure
+        CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure
         BUILD_COMMAND make
-        INSTALL_DIR ${PROJECT_SOURCE_DIR}/install
+        INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/install
         INSTALL_COMMAND ""
         )
