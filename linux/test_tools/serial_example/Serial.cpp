@@ -69,7 +69,7 @@ bool Serial::connected()
     return _connected;
 }
 
-bool Serial::readLoop()
+void Serial::readLoop()
 {
     while(_running)
     {

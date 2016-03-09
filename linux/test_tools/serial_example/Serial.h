@@ -23,7 +23,7 @@ class Serial
     void run();
 
     private:
-    bool readLoop();
+    void readLoop();
     sp_port* _port;
     bool _connected;
     LockedQueue* _queue;
