@@ -1,5 +1,5 @@
 # SENSEI
-## SEnsus SEnsors engIne
+## SEnsus SEnsors Interface
 
 Software for managing sensors board: Teensy firmware and Linux frontend program.
 
