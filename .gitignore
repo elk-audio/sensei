@@ -34,3 +34,8 @@
 # Hidden files
 *.
 !*/.gitkeep
+
+# Build and scratch directories
+scratch/
+*/scratch
+linux/build/
