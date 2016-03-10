@@ -27,7 +27,7 @@ GENERATE_DEBUG=true
 GENERATE_RELEASE=true
 BUILD_PROJECTS=false
 PROJECT_DIR_REL="`dirname \"$0\"`"
-PROJECT_DIR=`python -c "import os; print os.path.abspath(\"$PROJECT_DIR_REL\")"`
+PROJECT_DIR=`python -c "import os; print(os.path.abspath(\"$PROJECT_DIR_REL\"))"`
 BUILD_DIR=$PROJECT_DIR/build
 
 
