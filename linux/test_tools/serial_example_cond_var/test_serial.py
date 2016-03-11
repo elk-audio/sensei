@@ -15,7 +15,7 @@ def main():
 	while (1):
 		ser.write('hello ' +str(i) +  str(datetime.now()) + '\n')
 		i += 1
-		time.sleep(0.8)
+		time.sleep(1)
 
 	ser.close()
 
