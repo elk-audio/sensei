@@ -13,3 +13,13 @@ ExternalProject_Add(libserialport
         INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/install
         INSTALL_COMMAND ""
         )
+
+ExternalProject_Add(liblo
+        SOURCE_DIR ${PROJECT_SOURCE_DIR}/liblo
+        BUILD_IN_SOURCE 1
+        CONFIGURE_COMMAND "./autogen.sh --enable-static" COMMAND ./configure
+        BUILD_COMMAND make
+        INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/install
+        INSTALL_COMMAND ""
+        )
+
