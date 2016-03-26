@@ -10,7 +10,6 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 
 # set flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++0x")
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed")
 
 enable_testing()
 
