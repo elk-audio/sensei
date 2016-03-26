@@ -1,7 +1,8 @@
 # build gtest framework
 add_subdirectory(gtest_1_7_0)
 
-SET(TEST_FILES unittests/sample_test.cpp)
+SET(TEST_FILES unittests/sample_test.cpp
+               unittests/locked_queue_test.cpp)
 
 #include folder contains current project's header files
 include_directories(${PROJECT_SOURCE_DIR}/test/gtest_1_7_0/include)
