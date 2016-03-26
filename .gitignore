@@ -32,13 +32,15 @@
 *.dSYM/
 
 # Hidden files
-*.
+.*
 !*/.gitkeep
+!.gitignore
 
 # Build and scratch directories
 scratch/
 */scratch
 linux/build/
+linux/third-party/install/
 
 # Taken from liblo .gitignore
 
@@ -95,6 +97,7 @@ linux/third-party/liblo/src/liblo.def
 linux/third-party/liblo/src/subtest
 linux/third-party/liblo/src/test_bidirectional_tcp
 linux/third-party/liblo/src/testlo
+linux/third-party/liblo/src/liblo-stamp
 linux/third-party/liblo/src/tools/Makefile
 linux/third-party/liblo/src/tools/Makefile.in
 linux/third-party/liblo/src/tools/oscdump

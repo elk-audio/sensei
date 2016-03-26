@@ -8,18 +8,16 @@ include(ExternalProject)
 ExternalProject_Add(libserialport
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/libserialport
         BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure
+        CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${CMAKE_CURRENT_SOURCE_DIR}/install/liblo
         BUILD_COMMAND make
-        INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/install
-        INSTALL_COMMAND ""
+        INSTALL_COMMAND make install
         )
 
 ExternalProject_Add(liblo
         SOURCE_DIR ${PROJECT_SOURCE_DIR}/liblo
         BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND "./autogen.sh --enable-static" COMMAND ./configure
+        CONFIGURE_COMMAND ./autogen.sh --enable-static --prefix=${CMAKE_CURRENT_SOURCE_DIR}/install/liblo
         BUILD_COMMAND make
-        INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/install
-        INSTALL_COMMAND ""
+        INSTALL_COMMAND make install
         )
 
