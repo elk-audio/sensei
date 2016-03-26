@@ -12,12 +12,12 @@ set(SOURCE_FILES src/main.cpp)
 # Add to here if you need to include say third-party/xxx/include
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src "
                  "${PROJECT_SOURCE_DIR}/include "
-                 "${PROJECT_SOURCE_DIR}/third-party/libserialport "
-                 "${PROJECT_SOURCE_DIR}/third-party/liblo/include ")
+                 "${PROJECT_SOURCE_DIR}/third-party/install/libserialport "
+                 "${PROJECT_SOURCE_DIR}/third-party/install/liblo/include ")
 
 # Add any libraries that should be linked here
-set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/libserialport/.libs/libserialport.a "
-                   "${PROJECT_SOURCE_DIR}/third-party/liblo/lib/liblo.a")
+set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
+                   "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a")
 
 message("Source files: ")
 message("" ${SOURCE_FILES})

@@ -8,9 +8,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 
 # Add to here if you need to include say third-party/xxx/include
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/../../include "
-                 "${PROJECT_SOURCE_DIR}/../../third-party/libserialport ")
+                 "${PROJECT_SOURCE_DIR}/../../third-party/install/libserialport ")
 
-set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}../../third-party/libserialport/.libs/libserialport.a ")
+set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}../../third-party/install/libserialport/lib/libserialport.a ")
 
 # List all source files here
 set(SOURCE_FILES main.cpp Serial.cpp Serial.h types.h)
