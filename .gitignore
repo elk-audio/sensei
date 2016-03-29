@@ -39,7 +39,7 @@
 # Build and scratch directories
 scratch/
 */scratch
-linux/build/
+**/build/
 linux/third-party/install/
 
 # Taken from liblo .gitignore
