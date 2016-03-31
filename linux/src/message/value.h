@@ -5,7 +5,7 @@
  * Classes for messages containing values received from board sensors
  * or obtained as result of transformations in processors.
  *
- * Don't instatiate directly objects, use factory methods provided in
+ * Don't instantiate directly objects, use factory methods provided in
  * message/message_factory.h::MessageFactory
  */
 
@@ -18,25 +18,32 @@
 
 namespace sensei {
 
-    /**
-     * @brief Abstract base class for values.
-     */
+class MessageFactory;
+
+/**
+ * @brief Abstract base class for values.
+ */
 class SensorValue : public BaseMessage
 {
-
 public:
-    SensorValue(const int sensor_index, const uint32_t timestamp=0) :
-        BaseMessage(sensor_index, timestamp)
-    {
-    }
-
     virtual ~SensorValue()
     {
     }
 
+    SensorValue(const SensorValue&) = delete;
+
+    void operator=(const SensorValue &x) = delete;
+
+
     bool    is_value() override
     {
         return true;
+    }
+
+protected:
+    SensorValue(const int sensor_index, const uint32_t timestamp=0) :
+            BaseMessage(sensor_index, timestamp)
+    {
     }
 
 };
@@ -46,17 +53,17 @@ public:
  */
 class AnalogValue : public SensorValue
 {
+    friend class MessageFactory;
 
 public:
-    AnalogValue(const int sensor_index, const int value, const uint32_t timestamp=0) :
-        SensorValue(sensor_index, timestamp),
-        _value(value)
-    {
-    }
 
     ~AnalogValue()
     {
     }
+
+    AnalogValue(const AnalogValue&) = delete;
+
+    void operator=(const AnalogValue &x) = delete;
 
     int value()
     {
@@ -69,6 +76,12 @@ public:
     }
 
 private:
+    AnalogValue(const int sensor_index, const int value, const uint32_t timestamp=0) :
+            SensorValue(sensor_index, timestamp),
+            _value(value)
+    {
+    }
+
     int _value;
 
 };
@@ -78,17 +91,17 @@ private:
  */
 class DigitalValue : public SensorValue
 {
+    friend class MessageFactory;
 
 public:
-    DigitalValue(const int sensor_index, const bool value, const uint32_t timestamp=0) :
-        SensorValue(sensor_index, timestamp),
-        _value(value)
-    {
-    }
 
     ~DigitalValue()
     {
     }
+
+    DigitalValue(const DigitalValue&) = delete;
+
+    void operator=(const DigitalValue &x) = delete;
 
     bool value()
     {
@@ -101,6 +114,13 @@ public:
     }
 
 private:
+
+    DigitalValue(const int sensor_index, const bool value, const uint32_t timestamp=0) :
+            SensorValue(sensor_index, timestamp),
+            _value(value)
+    {
+    }
+
     bool _value;
 
 };
@@ -110,17 +130,16 @@ private:
  */
 class OutputValue : public SensorValue
 {
-
 public:
-    OutputValue(const int sensor_index, const float value, const uint32_t timestamp=0) :
-        SensorValue(sensor_index, timestamp),
-        _value(value)
-    {
-    }
+    friend class MessageFactory;
 
     ~OutputValue()
     {
     }
+
+    OutputValue(const OutputValue&) = delete;
+
+    void operator=(const OutputValue &x) = delete;
 
     float value()
     {
@@ -133,6 +152,13 @@ public:
     }
 
 private:
+
+    OutputValue(const int sensor_index, const float value, const uint32_t timestamp=0) :
+            SensorValue(sensor_index, timestamp),
+            _value(value)
+    {
+    }
+
     float _value;
 
 };
