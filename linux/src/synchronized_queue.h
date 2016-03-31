@@ -16,30 +16,31 @@ template <class T> class SynchronizedQueue
 public:
     void push(T const& message)
     {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_queue_mutex);
         _queue.push_front(message);
         _notifier.notify_one();
     }
 
     void push(T&& message)
     {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_queue_mutex);
         _queue.push_front(std::move(message));
         _notifier.notify_one();
     }
 
     T pop()
     {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_queue_mutex);
         T message = std::move(_queue.back());
         _queue.pop_back();
         return std::move(message);
     }
 
-    void wait_for_data(std::unique_lock<std::mutex>& lock, const std::chrono::milliseconds& timeout)
+    void wait_for_data(const std::chrono::milliseconds& timeout)
     {
         if (_queue.empty())
         {
+            std::unique_lock<std::mutex> lock(_wait_mutex);
             _notifier.wait_for(lock, timeout);
         }
     }
@@ -50,7 +51,8 @@ public:
     }
 private:
     std::deque<T>           _queue;
-    std::mutex              _mutex;
+    std::mutex              _queue_mutex;
+    std::mutex              _wait_mutex;
     std::condition_variable _notifier;
 };
 

@@ -34,9 +34,7 @@ void push_loop(SynchronizedQueue<TestContainer>* module_under_test, std::conditi
 TEST(SynchronizedQueueTest, ordertest)
 {
     SynchronizedQueue<TestContainer> module_under_test;
-    std::mutex read_mutex;
     std::condition_variable push_notifier;
-    std::unique_lock<std::mutex> lock(read_mutex);
     // Initial state should be empty
     ASSERT_TRUE(module_under_test.empty());
 
@@ -46,7 +44,7 @@ TEST(SynchronizedQueueTest, ordertest)
         // Normally the push thread shouldn't had time to push the first message yet,
         // But that is not critical since wait_for_data returns immediately if there
         // is data.
-        module_under_test.wait_for_data(lock, std::chrono::milliseconds(1000));
+        module_under_test.wait_for_data(std::chrono::milliseconds(1000));
 
         ASSERT_FALSE(module_under_test.empty());
         TestContainer m = module_under_test.pop();
