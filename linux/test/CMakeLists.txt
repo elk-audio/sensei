@@ -8,7 +8,7 @@ enable_testing()
 
 SET(TEST_FILES unittests/sample_test.cpp
                unittests/locked_queue_test.cpp
-               unittests/synchronized_queue_test.cpp)
+               unittests/synchronized_queue_test.cpp unittests/message_test.cpp)
 
 ##########################################
 #  Include directories relative to test  #
