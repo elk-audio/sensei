@@ -3,7 +3,7 @@
 //
 
 #include "gtest/gtest.h"
-#include "serial_frontend.cpp"
+#include "serial_frontend/serial_frontend.cpp"
 #define private public
 
 using namespace sensei;
