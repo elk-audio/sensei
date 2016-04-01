@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "message/value.h"
+#include "message/command.h"
 
 namespace sensei {
 
