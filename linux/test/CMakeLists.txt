@@ -7,7 +7,7 @@ enable_testing()
 ################
 
 SET(TEST_FILES unittests/sample_test.cpp
-               unittests/serial_frontend_test.cpp
+               unittests/serial_frontend/serial_frontend_test.cpp
                unittests/locked_queue_test.cpp
                unittests/synchronized_queue_test.cpp unittests/message_test.cpp)
 
