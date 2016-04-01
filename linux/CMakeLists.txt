@@ -33,6 +33,7 @@ set(SOURCE_FILES src/main.cpp)
 
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
+                 "${PROJECT_SOURCE_DIR}/../common"
                  "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/include"
                  "${PROJECT_SOURCE_DIR}/third-party/install/liblo/include")
 

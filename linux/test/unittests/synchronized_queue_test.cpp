@@ -44,7 +44,7 @@ TEST(SynchronizedQueueTest, ordertest)
         // Normally the push thread shouldn't had time to push the first message yet,
         // But that is not critical since wait_for_data returns immediately if there
         // is data.
-        module_under_test.wait_for_data(std::chrono::milliseconds(1000));
+        module_under_test.wait_for_data(std::chrono::milliseconds(10));
 
         ASSERT_FALSE(module_under_test.empty());
         TestContainer m = module_under_test.pop();

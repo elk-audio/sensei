@@ -7,6 +7,7 @@ enable_testing()
 ################
 
 SET(TEST_FILES unittests/sample_test.cpp
+               unittests/serial_frontend_test.cpp
                unittests/locked_queue_test.cpp
                unittests/synchronized_queue_test.cpp unittests/message_test.cpp)
 
@@ -16,9 +17,15 @@ SET(TEST_FILES unittests/sample_test.cpp
 
 include_directories(${PROJECT_SOURCE_DIR}/test/gtest_1_7_0/include)
 
+#################################
+#  Statically linked libraries  #
+#################################
+
+set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a")
+
 add_executable(unit_tests ${TEST_FILES})
 
-target_link_libraries(unit_tests gtest gtest_main)
+target_link_libraries(unit_tests gtest gtest_main "${LINK_LIBRARIES}")
 
 add_test(unit_tests unit_tests)
 
