@@ -12,6 +12,25 @@
 #include <cstdint>
 #include <memory>
 
+/**
+ * @brief Convenience macro for declaring non-copyable behaviour
+ *        Put it at beginning of public: section.
+ */
+#define SENSEI_MESSAGE_DECLARE_NON_COPYABLE(ClassName) \
+    ClassName (const ClassName&) = delete ;\
+    ClassName& operator= (const ClassName&) = delete;
+
+/**
+ * @brief Convenience macro for declaring non-copyable behaviour, factory friend and empty destructor.
+ *        Put it at beginning of public: section.
+ */
+#define SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+    ~ClassName() \
+    { \
+    } \
+    friend class MessageFactory; \
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(ClassName)
+
 namespace sensei {
 
 /**
@@ -28,8 +47,7 @@ public:
     {
     }
 
-    BaseMessage(const BaseMessage&) = delete;
-    void operator=(const BaseMessage &x) = delete;
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(BaseMessage)
 
     /**
      * @brief Get integer tag to identify the sensor among the pins available in the board.
@@ -90,5 +108,6 @@ private:
 };
 
 }; // namespace sensei
+
 
 #endif // SENSEI_MESSAGE_H

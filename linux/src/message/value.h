@@ -30,10 +30,7 @@ public:
     {
     }
 
-    SensorValue(const SensorValue&) = delete;
-
-    void operator=(const SensorValue &x) = delete;
-
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(SensorValue)
 
     bool    is_value() override
     {
@@ -53,17 +50,8 @@ protected:
  */
 class AnalogValue : public SensorValue
 {
-    friend class MessageFactory;
-
 public:
-
-    ~AnalogValue()
-    {
-    }
-
-    AnalogValue(const AnalogValue&) = delete;
-
-    void operator=(const AnalogValue &x) = delete;
+    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(AnalogValue)
 
     int value()
     {
@@ -91,17 +79,8 @@ private:
  */
 class DigitalValue : public SensorValue
 {
-    friend class MessageFactory;
-
 public:
-
-    ~DigitalValue()
-    {
-    }
-
-    DigitalValue(const DigitalValue&) = delete;
-
-    void operator=(const DigitalValue &x) = delete;
+    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(DigitalValue)
 
     bool value()
     {
@@ -131,15 +110,7 @@ private:
 class OutputValue : public SensorValue
 {
 public:
-    friend class MessageFactory;
-
-    ~OutputValue()
-    {
-    }
-
-    OutputValue(const OutputValue&) = delete;
-
-    void operator=(const OutputValue &x) = delete;
+    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(OutputValue)
 
     float value()
     {
