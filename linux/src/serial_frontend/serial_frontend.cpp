@@ -61,38 +61,6 @@ bool verify_message(const sSenseiDataPacket *packet)
     return true;
 }
 
-/*
- * Create internal message representation from received teensy packet
- */
-std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSenseiDataPacket *packet)
-{
-    std::unique_ptr<BaseMessage> message(nullptr);
-    switch (packet->cmd)
-    {
-        case SENSEI_CMD::GET_VALUE:  // for now, assume that incoming unsolicited responses will have any of these command codes
-        case SENSEI_CMD::GET_ALL_VALUES:
-        {
-            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->data);
-            switch (m->pin_type)
-            {
-                case PIN_DIGITAL_INPUT:
-                    message = _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
-                    break;
-
-                case PIN_ANALOG_INPUT:
-                    const teensy_analog_value_msg *a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->data);
-                    message = _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
-            }
-            break;
-        }
-        case SENSEI_CMD::ACK:
-            // handle acked messages
-            break;
-        default:
-            break;
-    }
-    return message;
-}
 
 /*
  * Create teensy command packet from
@@ -259,5 +227,37 @@ void SerialFrontend::write_loop()
     _write_thread_state = running_state::STOPPED;
 }
 
+/*
+ * Create internal message representation from received teensy packet
+ */
+std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSenseiDataPacket *packet)
+{
+    std::unique_ptr<BaseMessage> message(nullptr);
+    switch (packet->cmd)
+    {
+        case SENSEI_CMD::GET_VALUE:  // for now, assume that incoming unsolicited responses will have any of these command codes
+        case SENSEI_CMD::GET_ALL_VALUES:
+        {
+            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->data);
+            switch (m->pin_type)
+            {
+                case PIN_DIGITAL_INPUT:
+                    message = _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
+                    break;
+
+                case PIN_ANALOG_INPUT:
+                    const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->data);
+                    message = _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
+            }
+            break;
+        }
+        case SENSEI_CMD::ACK:
+            // handle acked messages
+            break;
+        default:
+            break;
+    }
+    return message;
+}
 }; // end namespace sensei
 }; // end namespace serial_frontend
