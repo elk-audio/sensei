@@ -100,8 +100,6 @@ protected:
     {
     }
 
-private:
-
     int _sensor_index;
     uint32_t _timestamp;
 

@@ -41,7 +41,7 @@ TEST (TestHelperFunctions, test_verify_message)
 TEST (TestSerialFrontend, test_instanciation)
 {
     SynchronizedQueue<std::unique_ptr<BaseMessage>>  out_queue;
-    SynchronizedQueue<std::unique_ptr<CommandMessage>>  in_queue;
+    SynchronizedQueue<std::unique_ptr<Command>>  in_queue;
     SerialFrontend module_under_test("/dev/ttyS011", &in_queue, &out_queue);
     ASSERT_TRUE(module_under_test.connected());
     module_under_test.run();

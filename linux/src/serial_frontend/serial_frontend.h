@@ -42,7 +42,7 @@ public:
     * @param [in] out_queue Queue for messages to be sent to the teensy board
     */
     SerialFrontend(const std::string& port_name,
-                   SynchronizedQueue<std::unique_ptr<CommandMessage>>* in_queue,
+                   SynchronizedQueue<std::unique_ptr<Command>>* in_queue,
                    SynchronizedQueue<std::unique_ptr<BaseMessage>>* out_queue);
 
     ~SerialFrontend();
@@ -74,7 +74,7 @@ private:
     MessageFactory _message_factory;
 
     sp_port *_port;
-    SynchronizedQueue<std::unique_ptr<CommandMessage>>* _in_queue;
+    SynchronizedQueue<std::unique_ptr<Command>>* _in_queue;
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _out_queue;
 
     running_state   _read_thread_state;

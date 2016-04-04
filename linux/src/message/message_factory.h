@@ -11,13 +11,14 @@
 
 #include <memory>
 
-#include "message/value.h"
-#include "message/command.h"
-
-namespace sensei {
+#include "message/value_defs.h"
+#include "message/command_defs.h"
 
 // TODO:
 //      add constructor parameters for e.g. maximum number of sensors, maximum analog value, etc.
+
+
+namespace sensei {
 
 /**
  * @brief Message factory implemented with Singleton pattern.
@@ -39,6 +40,10 @@ public:
     ~MessageFactory()
     {
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Values
+    ////////////////////////////////////////////////////////////////////////////////
 
     std::unique_ptr<BaseMessage> make_analog_value(const int sensor_index,
                                                    const int value,
@@ -62,6 +67,74 @@ public:
     {
         auto msg = new OutputValue(sensor_index, value, timestamp);
         return std::unique_ptr<OutputValue>(msg);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Commands
+    ////////////////////////////////////////////////////////////////////////////////
+
+    std::unique_ptr<BaseMessage> make_set_sampling_rate_command(const int sensor_index,
+                                                                const float sampling_rate,
+                                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSamplingRateCommand(sensor_index, sampling_rate, timestamp);
+        return std::unique_ptr<SetSamplingRateCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_pin_type_command(const int sensor_index,
+                                                           const PinType pin_type,
+                                                           const uint32_t timestamp = 0)
+    {
+        auto msg = new SetPinTypeCommand(sensor_index, pin_type, timestamp);
+        return std::unique_ptr<SetPinTypeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_sending_mode_command(const int sensor_index,
+                                                               const SendingMode mode,
+                                                               const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSendingModeCommand(sensor_index, mode, timestamp);
+        return std::unique_ptr<SetSendingModeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_sending_delta_ticks_command(const int sensor_index,
+                                                                      const int delta_ticks,
+                                                                      const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSendingDeltaTicksCommand(sensor_index, delta_ticks, timestamp);
+        return std::unique_ptr<SetSendingDeltaTicksCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_adc_bit_resolution_command(const int sensor_index,
+                                                                     const int bit_resolution,
+                                                                     const uint32_t timestamp = 0)
+    {
+        auto msg = new SetADCBitResolutionCommand(sensor_index, bit_resolution, timestamp);
+        return std::unique_ptr<SetADCBitResolutionCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_lowpass_cutoff_command(const int sensor_index,
+                                                                 const float cutoff,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetLowpassCutoffCommand(sensor_index, cutoff, timestamp);
+        return std::unique_ptr<SetLowpassCutoffCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_slider_threshold_command(const int sensor_index,
+                                                                   const int threshold,
+                                                                   const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSliderThresholdCommand(sensor_index, threshold, timestamp);
+        return std::unique_ptr<SetSliderThresholdCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_send_digital_value_command(const int sensor_index,
+                                                                 const bool value,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SendDigitalPinValueCommand(sensor_index, value, timestamp);
+        return std::unique_ptr<SendDigitalPinValueCommand>(msg);
     }
 
 };

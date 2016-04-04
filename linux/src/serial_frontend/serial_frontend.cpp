@@ -65,7 +65,7 @@ bool verify_message(const sSenseiDataPacket *packet)
 /*
  * Create teensy command packet from
  */
-void create_send_command(uint8_t *buffer, std::unique_ptr<CommandMessage> message)
+void create_send_command(uint8_t *buffer, std::unique_ptr<Command> message)
 {
     memset(buffer, 0, SENSEI_LENGTH_DATA_PACKET);
     sSenseiDataPacket *command = reinterpret_cast<sSenseiDataPacket *>(buffer);
@@ -93,7 +93,7 @@ void create_send_command(uint8_t *buffer, std::unique_ptr<CommandMessage> messag
  */
 
 SerialFrontend::SerialFrontend(const std::string &port_name,
-                               SynchronizedQueue<std::unique_ptr<CommandMessage>> *in_queue,
+                               SynchronizedQueue<std::unique_ptr<Command>> *in_queue,
                                SynchronizedQueue<std::unique_ptr<BaseMessage>> *out_queue) :
         _in_queue(in_queue),
         _out_queue(out_queue),
@@ -210,7 +210,7 @@ void SerialFrontend::read_loop()
  */
 void SerialFrontend::write_loop()
 {
-    std::unique_ptr<CommandMessage> message;
+    std::unique_ptr<Command> message;
     uint8_t buffer[SENSEI_LENGTH_DATA_PACKET];
     while (_write_thread_state == running_state::RUNNING)
     {
