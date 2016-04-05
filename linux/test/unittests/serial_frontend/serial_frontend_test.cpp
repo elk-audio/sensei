@@ -10,7 +10,7 @@ using namespace sensei;
 using namespace serial_frontend;
 
 
-uint8_t test_msg[] =    { 0x12, 0x34, 0x56, 0x12, 0x25, 0x24, 0x00, 0x00,
+static uint8_t test_msg[] =    { 0x12, 0x34, 0x56, 0x12, 0x25, 0x24, 0x00, 0x00,
                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -20,18 +20,6 @@ uint8_t test_msg[] =    { 0x12, 0x34, 0x56, 0x12, 0x25, 0x24, 0x00, 0x00,
                           0x34, 0x56, 0x78, 0x6F, 0x01, 0x12, 0x34, 0x56 };
 
 // Test standalone functions
-TEST (TestHelperFunctions, test_compare_packet_header) {
-    sensei::PACKET_HEADER hdr1 = {1, 2, 3};
-    sensei::PACKET_HEADER hdr2 = {2, 3, 4};
-    ASSERT_EQ(0, compare_packet_header(hdr1, hdr1));
-    ASSERT_NE(0, compare_packet_header(hdr1, hdr2));
-}
-
-TEST (TestHelperFunctions, test_calculate_crc)
-{
-    uint16_t crc = calculate_crc(reinterpret_cast<sensei::sSenseiDataPacket*>(test_msg));
-    ASSERT_EQ(0x16F, crc);
-}
 
 TEST (TestHelperFunctions, test_verify_message)
 {

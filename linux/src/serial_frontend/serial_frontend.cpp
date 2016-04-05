@@ -10,39 +10,11 @@
 #include <cstring>
 
 #include "serial_frontend.h"
-#include "serial_frontend_internal_definitions.h"
+#include "serial_frontend_internal.h"
 
 namespace sensei {
 namespace serial_frontend
 {
-
-/*
- * Convenience function for comparing header signatures, same pattern as memcmp, strcmp
- */
-int compare_packet_header(const PACKET_HEADER &lhv, const PACKET_HEADER &rhv)
-{
-    int diff = 0;
-    for (unsigned int i = 0; i < sizeof(lhv.vByte); ++i)
-    {
-        diff += lhv.vByte[i] - rhv.vByte[i];
-    }
-    return diff;
-}
-
-/*
- * Calculate the checksum of a teensy packet
- */
-uint16_t calculate_crc(const sSenseiDataPacket *packet)
-{
-    uint16_t sum = packet->cmd + packet->sub_cmd;
-    for (unsigned int i = 0; i < SENSEI_PAYLOAD_LENGTH
-                                 + sizeof(packet->continuation)
-                                 + sizeof(packet->timestamp); ++i)
-    {
-        sum += *(packet->data + i);
-    }
-    return sum;
-}
 
 /*
  * Verify that a received message has not been corrupted
@@ -238,7 +210,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSens
         case SENSEI_CMD::GET_VALUE:  // for now, assume that incoming unsolicited responses will have any of these command codes
         case SENSEI_CMD::GET_ALL_VALUES:
         {
-            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->data);
+            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->payload);
             switch (m->pin_type)
             {
                 case PIN_DIGITAL_INPUT:
@@ -246,7 +218,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSens
                     break;
 
                 case PIN_ANALOG_INPUT:
-                    const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->data);
+                    const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->payload);
                     message = _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
             }
             break;
