@@ -81,6 +81,14 @@ public:
         return std::unique_ptr<SetSamplingRateCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_enabled_command(const int sensor_index,
+                                                          const bool enabled,
+                                                          const uint32_t timestamp = 0)
+    {
+        auto msg = new SetEnabledCommand(sensor_index, enabled, timestamp);
+        return std::unique_ptr<SetEnabledCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_set_pin_type_command(const int sensor_index,
                                                            const PinType pin_type,
                                                            const uint32_t timestamp = 0)
@@ -119,6 +127,14 @@ public:
     {
         auto msg = new SetLowpassCutoffCommand(sensor_index, cutoff, timestamp);
         return std::unique_ptr<SetLowpassCutoffCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_slider_mode_enabled_command(const int sensor_index,
+                                                                      const bool enabled,
+                                                                      const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSliderModeEnabledCommand(sensor_index, enabled, timestamp);
+        return std::unique_ptr<SetSliderModeEnabledCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_set_slider_threshold_command(const int sensor_index,

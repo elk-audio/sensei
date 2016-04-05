@@ -44,13 +44,15 @@ TEST(MessagesTest, test_external_command_creation)
 
     // Fill message queue with all types of commands
     msg_queue.push_back(factory.make_set_sampling_rate_command(1, 1000.0f));
-    msg_queue.push_back(factory.make_set_pin_type_command(2, PinType::ANALOG_INPUT));
-    msg_queue.push_back(factory.make_set_sending_mode_command(3, SendingMode::ON_VALUE_CHANGED));
-    msg_queue.push_back(factory.make_set_sending_delta_ticks_command(4, 10));
-    msg_queue.push_back(factory.make_set_adc_bit_resolution_command(5, 12));
-    msg_queue.push_back(factory.make_set_lowpass_cutoff_command(6, 125.0f));
-    msg_queue.push_back(factory.make_set_slider_threshold_command(7, 9));
-    msg_queue.push_back(factory.make_send_digital_value_command(8, true));
+    msg_queue.push_back(factory.make_set_enabled_command(2, false));
+    msg_queue.push_back(factory.make_set_pin_type_command(3, PinType::ANALOG_INPUT));
+    msg_queue.push_back(factory.make_set_sending_mode_command(4, SendingMode::ON_VALUE_CHANGED));
+    msg_queue.push_back(factory.make_set_sending_delta_ticks_command(5, 10));
+    msg_queue.push_back(factory.make_set_adc_bit_resolution_command(6, 12));
+    msg_queue.push_back(factory.make_set_lowpass_cutoff_command(7, 125.0f));
+    msg_queue.push_back(factory.make_set_slider_mode_enabled_command(8, true));
+    msg_queue.push_back(factory.make_set_slider_threshold_command(9, 9));
+    msg_queue.push_back(factory.make_send_digital_value_command(10, true));
 
     // Parse messages in queue
     for (auto const& msg : msg_queue)
@@ -68,6 +70,13 @@ TEST(MessagesTest, test_external_command_creation)
             {
                 auto typed_cmd = static_cast<SetSamplingRateCommand *>(cmd_msg);
                 ASSERT_EQ(1000.0f, typed_cmd->data());
+            };
+            break;
+
+        case CommandTag::SET_ENABLED:
+            {
+                auto typed_cmd = static_cast<SetEnabledCommand *>(cmd_msg);
+                ASSERT_FALSE(typed_cmd->data());
             };
             break;
 
@@ -103,6 +112,13 @@ TEST(MessagesTest, test_external_command_creation)
             {
                 auto typed_cmd = static_cast<SetLowpassCutoffCommand *>(cmd_msg);
                 ASSERT_EQ(125.0f, typed_cmd->data());
+            };
+            break;
+
+        case CommandTag::SET_SLIDER_MODE_ENABLED:
+            {
+                auto typed_cmd = static_cast<SetSliderModeEnabledCommand *>(cmd_msg);
+                ASSERT_TRUE(typed_cmd->data());
             };
             break;
 
