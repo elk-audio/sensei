@@ -32,6 +32,7 @@ enum class CommandTag
     SET_SENDING_MODE,
     SET_SENDING_DELTA_TICKS,
     SET_ADC_BIT_RESOLUTION,
+    SET_LOWPASS_FILTER_ORDER,
     SET_LOWPASS_CUTOFF,
     SET_SLIDER_THRESHOLD,
     SEND_DIGITAL_PIN_VALUE,
@@ -90,6 +91,11 @@ SENSEI_DECLARE_EXTERNAL_MESSAGE(SetADCBitResolutionCommand,
                                 CommandTag::SET_ADC_BIT_RESOLUTION,
                                 int,
                                 "Set ADC Bit Resolution");
+
+SENSEI_DECLARE_EXTERNAL_MESSAGE(SetLowpassFilterOrderCommand,
+                                CommandTag::SET_LOWPASS_FILTER_ORDER,
+                                int,
+                                "Set Lowpass Filter order");
 
 SENSEI_DECLARE_EXTERNAL_MESSAGE(SetLowpassCutoffCommand,
                                 CommandTag::SET_LOWPASS_CUTOFF,

@@ -48,9 +48,10 @@ TEST(MessagesTest, test_external_command_creation)
     msg_queue.push_back(factory.make_set_sending_mode_command(3, SendingMode::ON_VALUE_CHANGED));
     msg_queue.push_back(factory.make_set_sending_delta_ticks_command(4, 10));
     msg_queue.push_back(factory.make_set_adc_bit_resolution_command(5, 12));
-    msg_queue.push_back(factory.make_set_lowpass_cutoff_command(6, 125.0f));
-    msg_queue.push_back(factory.make_set_slider_threshold_command(7, 9));
-    msg_queue.push_back(factory.make_send_digital_value_command(8, true));
+    msg_queue.push_back(factory.make_set_lowpass_filter_order_command(6, 4));
+    msg_queue.push_back(factory.make_set_lowpass_cutoff_command(7, 125.0f));
+    msg_queue.push_back(factory.make_set_slider_threshold_command(8, 9));
+    msg_queue.push_back(factory.make_send_digital_value_command(9, true));
 
     // Parse messages in queue
     for (auto const& msg : msg_queue)
@@ -98,6 +99,13 @@ TEST(MessagesTest, test_external_command_creation)
                 ASSERT_EQ(12, typed_cmd->data());
             };
             break;
+
+        case CommandTag::SET_LOWPASS_FILTER_ORDER:
+            {
+                auto typed_cmd = static_cast<SetLowpassFilterOrderCommand *>(cmd_msg);
+                ASSERT_EQ(4, typed_cmd->data());
+            };
+                break;
 
         case CommandTag::SET_LOWPASS_CUTOFF:
             {
