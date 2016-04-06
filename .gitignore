@@ -39,3 +39,6 @@
 scratch/
 */scratch
 linux/build/
+
+# Windows folders
+*.ini
