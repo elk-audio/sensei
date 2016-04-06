@@ -10,39 +10,10 @@
 #include <cstring>
 
 #include "serial_frontend.h"
-#include "serial_frontend_internal_definitions.h"
+#include "serial_frontend_internal.h"
 
 namespace sensei {
-namespace serial_frontend
-{
-
-/*
- * Convenience function for comparing header signatures, same pattern as memcmp, strcmp
- */
-int compare_packet_header(const PACKET_HEADER &lhv, const PACKET_HEADER &rhv)
-{
-    int diff = 0;
-    for (unsigned int i = 0; i < sizeof(lhv.vByte); ++i)
-    {
-        diff += lhv.vByte[i] - rhv.vByte[i];
-    }
-    return diff;
-}
-
-/*
- * Calculate the checksum of a teensy packet
- */
-uint16_t calculate_crc(const sSenseiDataPacket *packet)
-{
-    uint16_t sum = packet->cmd + packet->sub_cmd;
-    for (unsigned int i = 0; i < SENSEI_PAYLOAD_LENGTH
-                                 + sizeof(packet->continuation)
-                                 + sizeof(packet->timestamp); ++i)
-    {
-        sum += *(packet->data + i);
-    }
-    return sum;
-}
+namespace serial_frontend {
 
 /*
  * Verify that a received message has not been corrupted
@@ -59,33 +30,6 @@ bool verify_message(const sSenseiDataPacket *packet)
         return false;
     }
     return true;
-}
-
-
-/*
- * Create teensy command packet from
- */
-void create_send_command(uint8_t *buffer, std::unique_ptr<Command> message)
-{
-    memset(buffer, 0, SENSEI_LENGTH_DATA_PACKET);
-    sSenseiDataPacket *command = reinterpret_cast<sSenseiDataPacket *>(buffer);
-    //command->start_header =
-    //command->end_header =
-    if (!message->is_cmd())
-    {
-        return;
-    };
-    //set generic stuff, signatures, timestamp etc.
-    int command_type = 1; // = message->command_type() or something
-    switch (command_type)
-    {
-        case 1:
-            break;
-        default:
-            break;
-    }
-
-    command->crc = calculate_crc(command);
 }
 
 /*
@@ -211,7 +155,6 @@ void SerialFrontend::read_loop()
 void SerialFrontend::write_loop()
 {
     std::unique_ptr<Command> message;
-    uint8_t buffer[SENSEI_LENGTH_DATA_PACKET];
     while (_write_thread_state == running_state::RUNNING)
     {
         _in_queue->wait_for_data(std::chrono::milliseconds(READ_WRITE_TIMEOUT_MS));
@@ -220,8 +163,8 @@ void SerialFrontend::write_loop()
             continue;
         }
         message = _in_queue->pop();
-        create_send_command(buffer, std::move(message));
-        sp_nonblocking_write(_port, buffer, sizeof(buffer));
+        const sSenseiDataPacket* packet = create_send_command(std::move(message));
+        sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _write_thread_state = running_state::STOPPED;
@@ -238,7 +181,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSens
         case SENSEI_CMD::GET_VALUE:  // for now, assume that incoming unsolicited responses will have any of these command codes
         case SENSEI_CMD::GET_ALL_VALUES:
         {
-            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->data);
+            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->payload);
             switch (m->pin_type)
             {
                 case PIN_DIGITAL_INPUT:
@@ -246,7 +189,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSens
                     break;
 
                 case PIN_ANALOG_INPUT:
-                    const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->data);
+                    const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->payload);
                     message = _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
             }
             break;
@@ -259,5 +202,84 @@ std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSens
     }
     return message;
 }
+
+/*
+ * Create teensy command packet from a Command message.
+ * Note that message goes out of scope and is destroyed when the function returns
+ */
+const sSenseiDataPacket* SerialFrontend::create_send_command(std::unique_ptr<Command> message)
+{
+    assert(message->is_cmd());
+
+    switch (message->tag())
+    {
+        case CommandTag::SET_SAMPLING_RATE:
+        {
+            auto cmd = static_cast<SetSamplingRateCommand *>(message.get());
+            return _packet_factory.make_set_sampling_rate_cmd(cmd->timestamp(),
+                                                              cmd->data());
+        }
+        case CommandTag::SET_PIN_TYPE:
+        {
+            auto cmd = static_cast<SetPinTypeCommand *>(message.get());
+            return _packet_factory.make_config_pintype_cmd(cmd->sensor_index(),
+                                                           cmd->timestamp(),
+                                                           static_cast<int>(cmd->data()));
+        }
+        case CommandTag::SET_SENDING_MODE:
+        {
+            auto cmd = static_cast<SetSendingModeCommand *>(message.get());
+            return _packet_factory.make_config_sendingmode_cmd(cmd->sensor_index(),
+                                                               cmd->timestamp(),
+                                                               static_cast<int>(cmd->data()));
+        }
+        case CommandTag::SET_SENDING_DELTA_TICKS:
+        {
+            auto cmd = static_cast<SetSendingDeltaTicksCommand *>(message.get());
+            return _packet_factory.make_config_delta_ticks_cmd(cmd->sensor_index(),
+                                                               cmd->timestamp(),
+                                                               cmd->data());
+        }
+        case CommandTag::SET_ADC_BIT_RESOLUTION:
+        {
+            auto cmd = static_cast<SetADCBitResolutionCommand *>(message.get());
+            return _packet_factory.make_config_bitres_cmd(cmd->sensor_index(),
+                                                          cmd->timestamp(),
+                                                          cmd->data());
+        }
+        case CommandTag::SET_LOWPASS_FILTER_ORDER:
+        {
+            auto cmd = static_cast<SetLowpassFilterOrderCommand *>(message.get());
+            return _packet_factory.make_config_filter_order_cmd(cmd->sensor_index(),
+                                                                cmd->timestamp(),
+                                                                cmd->data());
+        }
+        case CommandTag::SET_LOWPASS_CUTOFF:
+        {
+            auto cmd = static_cast<SetLowpassCutoffCommand *>(message.get());
+            return _packet_factory.make_config_lowpass_cutoff_cmd(cmd->sensor_index(),
+                                                                  cmd->timestamp(),
+                                                                  cmd->data());
+        }
+        case CommandTag::SET_SLIDER_THRESHOLD:
+        {
+            auto cmd = static_cast<SetSliderThresholdCommand *>(message.get());
+            return _packet_factory.make_config_slider_threshold_cmd(cmd->sensor_index(),
+                                                                    cmd->timestamp(),
+                                                                    cmd->data());
+        }
+        case CommandTag::SEND_DIGITAL_PIN_VALUE:
+        {
+            auto cmd = static_cast<SendDigitalPinValueCommand *>(message.get());
+            return _packet_factory.make_set_digital_pin_cmd(cmd->sensor_index(),
+                                                            cmd->timestamp(),
+                                                            cmd->data());
+        }
+        default:
+            return nullptr;
+    }
+}
+
+
 }; // end namespace sensei
 }; // end namespace serial_frontend

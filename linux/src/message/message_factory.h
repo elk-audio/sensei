@@ -113,6 +113,14 @@ public:
         return std::unique_ptr<SetADCBitResolutionCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_lowpass_filter_order_command(const int sensor_index,
+                                                                       const int order,
+                                                                       const uint32_t timestamp = 0)
+    {
+        auto msg = new SetLowpassFilterOrderCommand(sensor_index, order, timestamp);
+        return std::unique_ptr<SetLowpassFilterOrderCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_set_lowpass_cutoff_command(const int sensor_index,
                                                                  const float cutoff,
                                                                  const uint32_t timestamp = 0)

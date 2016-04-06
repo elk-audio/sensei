@@ -17,6 +17,7 @@
 
 #include "message/message_factory.h"
 #include "../../common/sensei_serial_protocol.h"
+#include "serial_command_creator.h"
 
 #include "libserialport.h"
 #include "synchronized_queue.h"
@@ -70,8 +71,10 @@ private:
     void write_loop();
 
     std::unique_ptr<BaseMessage> create_internal_message(const sSenseiDataPacket *packet);
+    const sSenseiDataPacket* create_send_command(std::unique_ptr<Command> message);
 
     MessageFactory _message_factory;
+    SerialCommandCreator _packet_factory;
 
     sp_port *_port;
     SynchronizedQueue<std::unique_ptr<Command>>* _in_queue;
