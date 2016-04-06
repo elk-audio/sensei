@@ -38,7 +38,13 @@ namespace sensei {
         INCORRECT_PARAMETERS_NUMBER=-104,
         INCORRECT_PARAMETER_TYPE = -105,
         INCOMPLETE_PARAMETERS=-106,
-        WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS=-107
+        WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS=-107,
+        //------------------------------------------
+        SERIAL_DEVICE_GENERIC_ERROR = -4000,
+        SERIAL_DEVICE_PORT_NOT_OPEN = -4001,
+
+        //------------------------------------------
+        GENERIC_ERROR=-5000
 
     } SENSEI_ERROR_CODE;
 
