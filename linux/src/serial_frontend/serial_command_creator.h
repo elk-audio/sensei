@@ -1,6 +1,6 @@
 /**
  * @brief Creates serial commands from general set functions. Also caches values on
- * a per pin basis since all parameters have to be set at once.
+ * a per pin basis since the teensy set commands set all parameters at once.
  * @copyright MIND Music Labs AB, Stockholm
  *
  */
@@ -27,18 +27,18 @@ public:
     SerialCommandCreator();
     ~SerialCommandCreator();
 
-    const sSenseiDataPacket* make_set_digital_pin_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t value);
-    const sSenseiDataPacket* make_set_bank_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t value);
+    const sSenseiDataPacket* make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value);
+    const sSenseiDataPacket* make_set_bank_cmd(int pin_id, uint32_t timestamp, int value);
     const sSenseiDataPacket* make_set_sampling_rate_cmd(uint32_t timestamp, float sampling_rate);
-    const sSenseiDataPacket* make_get_value_cmd(uint16_t pin_id, uint32_t timestamp);
-    const sSenseiDataPacket* make_config_pintype_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t pintype);
-    const sSenseiDataPacket* make_config_sendingmode_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t sendingmode);
-    const sSenseiDataPacket* make_config_delta_ticks_cmd(uint16_t pin_id, uint32_t timestamp, uint16_t ticks);
-    const sSenseiDataPacket* make_config_bitres_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t bits);
-    const sSenseiDataPacket* make_config_filter_order_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t order);
-    const sSenseiDataPacket* make_config_lowpass_cutoff_cmd(uint16_t pin_id, uint32_t timestamp, float cutoff);
-    const sSenseiDataPacket* make_config_slidermode_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t mode);
-    const sSenseiDataPacket* make_config_slider_threshold_cmd(uint16_t pin_id, uint32_t timestamp, uint16_t threshold);
+    const sSenseiDataPacket* make_get_value_cmd(int pin_id, uint32_t timestamp);
+    const sSenseiDataPacket* make_config_pintype_cmd(int pin_id, uint32_t timestamp, int pintype);
+    const sSenseiDataPacket* make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, int sendingmode);
+    const sSenseiDataPacket* make_config_delta_ticks_cmd(int pin_id, uint32_t timestamp, int ticks);
+    const sSenseiDataPacket* make_config_bitres_cmd(int pin_id, uint32_t timestamp, int bits);
+    const sSenseiDataPacket* make_config_filter_order_cmd(int pin_id, uint32_t timestamp, int order);
+    const sSenseiDataPacket* make_config_lowpass_cutoff_cmd(int pin_id, uint32_t timestamp, float cutoff);
+    const sSenseiDataPacket* make_config_slidermode_cmd(int pin_id, uint32_t timestamp, int mode);
+    const sSenseiDataPacket* make_config_slider_threshold_cmd(int pin_id, uint32_t timestamp, int threshold);
 
 private:
     sSenseiDataPacket _cmd_buffer;

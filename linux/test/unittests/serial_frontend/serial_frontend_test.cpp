@@ -3,8 +3,8 @@
 //
 
 #include "gtest/gtest.h"
-#include "serial_frontend/serial_frontend.cpp"
 #define private public
+#include "serial_frontend/serial_frontend.cpp"
 
 using namespace sensei;
 using namespace serial_frontend;
@@ -26,22 +26,11 @@ TEST (TestHelperFunctions, test_verify_message)
     ASSERT_TRUE(verify_message(reinterpret_cast<sensei::sSenseiDataPacket*>(test_msg)));
 }
 
-TEST (TestSerialFrontend, test_instanciation)
-{
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>  out_queue;
-    SynchronizedQueue<std::unique_ptr<Command>>  in_queue;
-    SerialFrontend module_under_test("/dev/ttyS011", &in_queue, &out_queue);
-    ASSERT_TRUE(module_under_test.connected());
-    module_under_test.run();
-    module_under_test.stop();
-}
-
-// A more complex test case where tests can be grouped
-// And setup and teardown functions added.
 class SerialFrontendTest : public ::testing::Test
 {
 protected:
-    SerialFrontendTest()
+    SerialFrontendTest() :
+            _module_under_test("/dev/ttyS011", &_in_queue, &_out_queue)
     {
     }
     void SetUp()
@@ -51,9 +40,31 @@ protected:
     void TearDown()
     {
     }
+    SynchronizedQueue<std::unique_ptr<BaseMessage>>  _out_queue;
+    SynchronizedQueue<std::unique_ptr<Command>>      _in_queue;
+    SerialFrontend _module_under_test;
 };
 
-TEST_F(SerialFrontendTest, TestSetup)
+/*
+ * Verify that serial packets are correctly created from Command messages
+ */
+TEST_F(SerialFrontendTest, test_create_serial_message)
 {
-EXPECT_FALSE(0);
+    MessageFactory factory;
+    auto command = std::unique_ptr<Command>(static_cast<Command*>(factory.make_set_sampling_rate_command(3, 500.0, 100u).release()));
+    const sSenseiDataPacket* packet =_module_under_test.create_send_command(std::move(command));
+    ASSERT_EQ(SENSEI_CMD::SET_SAMPLING_RATE, packet->cmd);
+    auto payload = reinterpret_cast<const teensy_set_samplerate_cmd*>(packet->payload);
+    ASSERT_EQ(2, payload->sample_rate_divisor);
+
+    command = std::unique_ptr<Command>(static_cast<Command*>(factory.make_set_lowpass_cutoff_command(4, 1234.0, 100u).release()));
+    packet =_module_under_test.create_send_command(std::move(command));
+    ASSERT_EQ(SENSEI_CMD::CONFIGURE_PIN, packet->cmd);
+    auto payload_cfg = reinterpret_cast<const sPinConfiguration*>(packet->payload);
+    ASSERT_FLOAT_EQ(1234, payload_cfg->lowPassCutOffFilter);
+}
+
+TEST_F(SerialFrontendTest, test_instanciation_again)
+{
+    EXPECT_TRUE(_module_under_test.connected());
 }

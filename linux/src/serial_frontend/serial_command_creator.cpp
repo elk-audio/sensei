@@ -22,13 +22,13 @@ SerialCommandCreator::~SerialCommandCreator()
 /*
  * Settings for commands below are simple passed on to the teensy board
  */
-const sSenseiDataPacket* SerialCommandCreator::make_set_digital_pin_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t value)
+const sSenseiDataPacket* SerialCommandCreator::make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
         return nullptr;
     }
-    initialize_common_data(_cmd_buffer, timestamp, SET_DIGITAL_PINS);
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::SET_DIGITAL_PINS);
     _cmd_buffer.sub_cmd = SET_PIN;
     teensy_set_value_cmd* cmd = reinterpret_cast<teensy_set_value_cmd*>(&_cmd_buffer.payload);
     cmd->pin_idx = pin_id;
@@ -36,13 +36,13 @@ const sSenseiDataPacket* SerialCommandCreator::make_set_digital_pin_cmd(uint16_t
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_set_bank_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t value)
+const sSenseiDataPacket* SerialCommandCreator::make_set_bank_cmd(int pin_id, uint32_t timestamp, int value)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
         return nullptr;
     }
-    initialize_common_data(_cmd_buffer, timestamp, SET_DIGITAL_PINS);
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::SET_DIGITAL_PINS);
     _cmd_buffer.sub_cmd = SET_BANK;
     teensy_set_value_cmd* cmd = reinterpret_cast<teensy_set_value_cmd*>(&_cmd_buffer.payload);
     cmd->pin_idx = pin_id;
@@ -52,10 +52,10 @@ const sSenseiDataPacket* SerialCommandCreator::make_set_bank_cmd(uint16_t pin_id
 
 const sSenseiDataPacket* SerialCommandCreator::make_set_sampling_rate_cmd(uint32_t timestamp, float sampling_rate)
 {
-    initialize_common_data(_cmd_buffer, timestamp, SET_SAMPLING_RATE);
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::SET_SAMPLING_RATE);
     _cmd_buffer.sub_cmd = EMPTY;
     teensy_set_samplerate_cmd* cmd = reinterpret_cast<teensy_set_samplerate_cmd*>(&_cmd_buffer.payload);
-    if (sampling_rate < 3.9)   // this is the lowest possible sr to set, so lower values will be treated as 0
+    if (sampling_rate < 3.9)   // this is the lowest possible samplerate to set, lower values will be treated as 0
     {
         cmd->sample_rate_divisor = 0;
     }
@@ -65,18 +65,18 @@ const sSenseiDataPacket* SerialCommandCreator::make_set_sampling_rate_cmd(uint32
     }
     else
     {
-        cmd->sample_rate_divisor = static_cast<uint8_t>(1000 / sampling_rate);
+        cmd->sample_rate_divisor = static_cast<int>(1000 / sampling_rate);
     }
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(uint16_t pin_id, uint32_t timestamp)
+const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(int pin_id, uint32_t timestamp)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
         return nullptr;
     }
-    initialize_common_data(_cmd_buffer, timestamp, GET_VALUE);
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::GET_VALUE);
     _cmd_buffer.sub_cmd = EMPTY;
     teensy_set_value_cmd* cmd = reinterpret_cast<teensy_set_value_cmd*>(&_cmd_buffer.payload);
     cmd->pin_idx = pin_id;
@@ -87,7 +87,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(uint16_t pin_i
 /*
  * Settings for commands below are cached for every pin.
  */
-const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t pintype)
+const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_id, uint32_t timestamp, int pintype)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -95,11 +95,11 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(uint16_t 
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.pintype = pintype;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t sendingmode)
+const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, int sendingmode)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -107,11 +107,11 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(uint1
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.cfg_data.sendingMode = sendingmode;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_delta_ticks_cmd(uint16_t pin_id, uint32_t timestamp, uint16_t ticks)
+const sSenseiDataPacket* SerialCommandCreator::make_config_delta_ticks_cmd(int pin_id, uint32_t timestamp, int ticks)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -119,11 +119,11 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_delta_ticks_cmd(uint1
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.cfg_data.deltaTicksContinuousMode = ticks;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_bitres_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t bits)
+const sSenseiDataPacket* SerialCommandCreator::make_config_bitres_cmd(int pin_id, uint32_t timestamp, int bits)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -131,11 +131,11 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_bitres_cmd(uint16_t p
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.cfg_data.ADCBitResolution = bits;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_filter_order_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t order)
+const sSenseiDataPacket* SerialCommandCreator::make_config_filter_order_cmd(int pin_id, uint32_t timestamp, int order)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -143,11 +143,11 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_filter_order_cmd(uint
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.cfg_data.filterOrder = order;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_lowpass_cutoff_cmd(uint16_t pin_id, uint32_t timestamp, float cutoff)
+const sSenseiDataPacket* SerialCommandCreator::make_config_lowpass_cutoff_cmd(int pin_id, uint32_t timestamp, float cutoff)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -155,11 +155,11 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_lowpass_cutoff_cmd(ui
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.cfg_data.lowPassCutOffFilter = cutoff;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_slidermode_cmd(uint16_t pin_id, uint32_t timestamp, uint8_t mode)
+const sSenseiDataPacket* SerialCommandCreator::make_config_slidermode_cmd(int pin_id, uint32_t timestamp, int mode)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -167,11 +167,11 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_slidermode_cmd(uint16
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.cfg_data.sliderMode = mode;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_slider_threshold_cmd(uint16_t pin_id, uint32_t timestamp, uint16_t threshold)
+const sSenseiDataPacket* SerialCommandCreator::make_config_slider_threshold_cmd(int pin_id, uint32_t timestamp, int threshold)
 {
     if (pin_id >= MAX_NUMBER_OFF_PINS)
     {
@@ -179,7 +179,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_slider_threshold_cmd(
     }
     pin_config& cached_cfg = _cfg_cache[pin_id];
     cached_cfg.cfg_data.sliderThreshold = threshold;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, CONFIGURE_PIN);
+    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 

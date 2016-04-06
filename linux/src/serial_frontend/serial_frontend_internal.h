@@ -75,7 +75,8 @@ struct teensy_set_samplerate_cmd
 
 #pragma pack(pop)
 
-#endif //SERIAL_FRONTEND_INTERNAL_H
 
 }; // end namespace sensei
 }; // end namespace serial_frontend
+
+#endif //SERIAL_FRONTEND_INTERNAL_H
