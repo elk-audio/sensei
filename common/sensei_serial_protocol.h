@@ -10,6 +10,8 @@
 #ifndef SENSEI_SERIAL_PROTOCOL_H_
 #define SENSEI_SERIAL_PROTOCOL_H_
 
+#include <cstdint>
+
 namespace sensei {
 
     typedef float type_filter_var;
