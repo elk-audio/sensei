@@ -54,7 +54,7 @@ public:
      *
      * @return Index of the sensor
      */
-    int sensor_index()
+    int sensor_index() const
     {   
         return _sensor_index;
     }
@@ -65,7 +65,7 @@ public:
      *
      * @return Timestamp in microseconds from start instant
      */
-    uint32_t timestamp()
+    uint32_t timestamp() const
     {
         return _timestamp;
     }
@@ -75,12 +75,12 @@ public:
      *
      * @return Human readable string with message contents.
      */
-    virtual std::string representation() = 0;
+    virtual std::string representation() const = 0;
 
     /**
      * @brief Check if message is of SensorValue base type. Used for RTTI-like emulation.
      */
-    virtual bool is_value()
+    virtual bool is_value() const
     {
         return false;
     }
@@ -88,7 +88,7 @@ public:
     /**
      * @brief Check if message is of Command base type. Used for RTTI-like emulation.
      */
-    virtual bool is_cmd()
+    virtual bool is_cmd() const
     {
         return false;
     }

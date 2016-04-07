@@ -31,7 +31,7 @@ public:
     {
     }
 
-    bool    is_cmd() override
+    bool is_cmd() const override
     {
         return true;
     }
@@ -40,7 +40,7 @@ public:
      * @brief Used to dispatch external command to the serial frontend.
      *        Derived classes may override the value in their constructor.
      */
-    bool is_external()
+    bool is_external() const
     {
         return _is_external;
     }
@@ -49,7 +49,7 @@ public:
      * @brief Tag type for RTTI-like dynamic dispatch.
      *        Tag definitions are defined in messages/command_defs.h
      */
-    CommandType type()
+    CommandType type() const
     {
         return _type;
     }
@@ -59,7 +59,7 @@ public:
      *
      * @returns 64-bit unsigned integer constructed from sensor index, tag and timestamp
      */
-    uint64_t uuid()
+    uint64_t uuid() const
     {
         uint64_t result = 0u;
         result |= static_cast<uint64_t>(_sensor_index) << 48;
@@ -92,11 +92,11 @@ class ClassName : public Command \
 { \
 public: \
     SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() override \
+    std::string representation() const override \
     {\
         return std::string(representation_prefix);\
     }\
-    InternalType data()\
+    InternalType data() const\
     {\
         return _data;\
     }\

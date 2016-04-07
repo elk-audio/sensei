@@ -29,7 +29,7 @@ public:
 
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(Value)
 
-    bool    is_value() override
+    bool is_value() const override
     {
         return true;
     }
@@ -47,11 +47,11 @@ class ClassName : public Value \
 { \
 public: \
     SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() override \
+    std::string representation() const override \
     {\
         return std::string(representation_prefix);\
     }\
-    InternalType value()\
+    InternalType value() const\
     {\
         return _value;\
     }\
