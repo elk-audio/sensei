@@ -25,7 +25,26 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PROJECT_LINK_FLAGS}")
 #  Source Files  #
 ##################
 
-set(SOURCE_FILES src/main.cpp)
+set(COMPILATION_UNITS src/main.cpp
+                      src/serial_frontend/serial_frontend.cpp
+                      src/serial_frontend/serial_command_creator.cpp)
+
+# Enumerate all the headers separately so that CLion can index them
+
+set(EXTRA_CLION_SOURCES src/message/base_message.h
+                        src/message/base_value.h
+                        src/message/base_command.h
+                        src/message/command_defs.h
+                        src/message/value_defs.h
+                        src/message/message_factory.h
+                        src/serial_frontend/serial_frontend.cpp
+                        src/serial_frontend/serial_frontend.h
+                        src/serial_frontend/serial_frontend_internal.h
+                        src/serial_frontend/serial_command_creator.h
+                        src/locked_queue.h
+                        src/synchronized_queue.h)
+
+set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
 
 #########################
 #  Include Directories  #
