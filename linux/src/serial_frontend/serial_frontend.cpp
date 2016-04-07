@@ -43,7 +43,9 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
         _in_queue(in_queue),
         _out_queue(out_queue),
         _read_thread_state(running_state::STOPPED),
-        _write_thread_state(running_state::STOPPED)
+        _write_thread_state(running_state::STOPPED),
+        _connected(false),
+        _muted(false)
 {
     setup_port(port_name);
 }
@@ -62,7 +64,6 @@ SerialFrontend::~SerialFrontend()
 bool SerialFrontend::connected()
 {
     return _connected;
-
 }
 
 
@@ -94,6 +95,10 @@ void SerialFrontend::stop()
     }
 }
 
+void SerialFrontend::mute(bool state)
+{
+    _muted = state;
+}
 
 int SerialFrontend::setup_port(const std::string &name)
 {
@@ -131,7 +136,7 @@ void SerialFrontend::read_loop()
         if (ret >= SENSEI_LENGTH_DATA_PACKET)
         {
             sSenseiDataPacket *packet = reinterpret_cast<sSenseiDataPacket *>(buffer);
-            if (verify_message(packet) == false)
+            if (_muted == false && verify_message(packet) == false)
             {
                 continue; // log an error message here when logging functionality is in place
             }

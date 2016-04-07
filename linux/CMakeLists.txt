@@ -63,7 +63,8 @@ include_directories(${INCLUDE_DIRS})
 #################################
 
 set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
-                   "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a")
+                   "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a"
+                   pthread)
 
 #############################################
 #  Subdirectory projects                    #

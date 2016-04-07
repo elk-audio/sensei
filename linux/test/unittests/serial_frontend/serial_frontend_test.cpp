@@ -64,6 +64,15 @@ TEST_F(SerialFrontendTest, test_create_serial_message)
     ASSERT_FLOAT_EQ(1234, payload_cfg->lowPassCutOffFilter);
 }
 
+TEST_F(SerialFrontendTest, test_mute_function)
+{
+    ASSERT_FALSE(_module_under_test._muted);
+    _module_under_test.mute(true);
+    ASSERT_TRUE(_module_under_test._muted);
+}
+
+
+
 TEST_F(SerialFrontendTest, test_instanciation_again)
 {
     EXPECT_TRUE(_module_under_test.connected());

@@ -64,6 +64,14 @@ public:
     */
     void stop();
 
+    /**
+     * @brief Stops the flow of messages. If set to true, incoming serial packets
+     * are silently dropped.
+     *
+     * @param [in] state Sets mute enabled/disabled
+     */
+    void mute(bool state);
+
 private:
     int setup_port(const std::string& name);
     void change_state(running_state state);
@@ -87,6 +95,7 @@ private:
     std::mutex      _state_mutex;
 
     bool _connected;
+    bool _muted;
 };
 
 }; // end namespace sensei
