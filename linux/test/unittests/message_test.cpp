@@ -35,10 +35,10 @@ TEST(MessagesTest, test_external_command_creation)
 {
     MessageFactory factory;
 
-    // Test that commands have the right tag attached, declared as external
+    // Test that commands have the right cmd_type attached, declared as external
     // and type of data()
     // This also illustrates how to parse commands from queue
-    // using internal tag for dispatching
+    // using internal cmd_type for dispatching
 
     std::vector<std::unique_ptr<BaseMessage>> msg_queue;
 
@@ -62,77 +62,131 @@ TEST(MessagesTest, test_external_command_creation)
         auto cmd_msg = static_cast<Command*>(msg.get());
         ASSERT_TRUE(cmd_msg->is_external());
 
-        CommandTag tag = cmd_msg->tag();
-        switch(tag)
+        CommandType cmd_type = cmd_msg->type();
+        switch(cmd_type)
         {
 
-        case CommandTag::SET_SAMPLING_RATE:
+        case CommandType::SET_SAMPLING_RATE:
             {
                 auto typed_cmd = static_cast<SetSamplingRateCommand *>(cmd_msg);
                 ASSERT_EQ(1000.0f, typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_ENABLED:
+        case CommandType::SET_ENABLED:
             {
                 auto typed_cmd = static_cast<SetEnabledCommand *>(cmd_msg);
                 ASSERT_FALSE(typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_PIN_TYPE:
+        case CommandType::SET_PIN_TYPE:
             {
                 auto typed_cmd = static_cast<SetPinTypeCommand *>(cmd_msg);
                 ASSERT_EQ(PinType::ANALOG_INPUT, typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_SENDING_MODE:
+        case CommandType::SET_SENDING_MODE:
             {
                 auto typed_cmd = static_cast<SetSendingModeCommand *>(cmd_msg);
                 ASSERT_EQ(SendingMode::ON_VALUE_CHANGED, typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_SENDING_DELTA_TICKS:
+        case CommandType::SET_SENDING_DELTA_TICKS:
             {
                 auto typed_cmd = static_cast<SetSendingDeltaTicksCommand *>(cmd_msg);
                 ASSERT_EQ(10, typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_ADC_BIT_RESOLUTION:
+        case CommandType::SET_ADC_BIT_RESOLUTION:
             {
                 auto typed_cmd = static_cast<SetADCBitResolutionCommand *>(cmd_msg);
                 ASSERT_EQ(12, typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_LOWPASS_CUTOFF:
+        case CommandType::SET_LOWPASS_CUTOFF:
             {
                 auto typed_cmd = static_cast<SetLowpassCutoffCommand *>(cmd_msg);
                 ASSERT_EQ(125.0f, typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_SLIDER_MODE_ENABLED:
+        case CommandType::SET_SLIDER_MODE_ENABLED:
             {
                 auto typed_cmd = static_cast<SetSliderModeEnabledCommand *>(cmd_msg);
                 ASSERT_TRUE(typed_cmd->data());
             };
             break;
 
-        case CommandTag::SET_SLIDER_THRESHOLD:
+        case CommandType::SET_SLIDER_THRESHOLD:
             {
                 auto typed_cmd = static_cast<SetSliderThresholdCommand *>(cmd_msg);
                 ASSERT_EQ(9, typed_cmd->data());
             };
             break;
 
-        case CommandTag::SEND_DIGITAL_PIN_VALUE:
+        case CommandType::SEND_DIGITAL_PIN_VALUE:
             {
                 auto typed_cmd = static_cast<SendDigitalPinValueCommand *>(cmd_msg);
                 ASSERT_EQ(true, typed_cmd->data());
+            };
+            break;
+
+        default:
+            ASSERT_TRUE(false);
+            break;
+
+        }
+
+    }
+
+}
+
+TEST(MessagesTest, test_internal_command_creation)
+{
+    MessageFactory factory;
+
+    std::vector<std::unique_ptr<BaseMessage>> msg_queue;
+
+    // Fill message queue with all types of commands
+    msg_queue.push_back(factory.make_set_invert_enabled_command(1, true));
+    msg_queue.push_back(factory.make_set_input_scale_range_low(2, 20));
+    msg_queue.push_back(factory.make_set_input_scale_range_high(3, 200));
+
+    // Parse messages in queue
+    for (auto const& msg : msg_queue)
+    {
+        ASSERT_TRUE(msg->is_cmd());
+        ASSERT_FALSE(msg->is_value());
+        auto cmd_msg = static_cast<Command*>(msg.get());
+        ASSERT_FALSE(cmd_msg->is_external());
+
+        CommandType cmd_type = cmd_msg->type();
+        switch(cmd_type)
+        {
+
+        case CommandType::SET_INVERT_ENABLED:
+            {
+                auto typed_cmd = static_cast<SetInvertEnabledCommand *>(cmd_msg);
+                ASSERT_TRUE(typed_cmd->data());
+            };
+            break;
+
+        case CommandType::SET_INPUT_SCALE_RANGE_LOW:
+            {
+                auto typed_cmd = static_cast<SetInputScaleRangeLow *>(cmd_msg);
+                ASSERT_EQ(20, typed_cmd->data());
+            };
+            break;
+
+        case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
+            {
+                auto typed_cmd = static_cast<SetInputScaleRangeHigh *>(cmd_msg);
+                ASSERT_EQ(200, typed_cmd->data());
             };
             break;
 

@@ -153,6 +153,30 @@ public:
         return std::unique_ptr<SendDigitalPinValueCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int sensor_index,
+                                                                 const bool enabled,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetInvertEnabledCommand(sensor_index, enabled, timestamp);
+        return std::unique_ptr<SetInvertEnabledCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_input_scale_range_low(const int sensor_index,
+                                                                const int value,
+                                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new SetInputScaleRangeLow(sensor_index, value, timestamp);
+        return std::unique_ptr<SetInputScaleRangeLow>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_input_scale_range_high(const int sensor_index,
+                                                                 const int value,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetInputScaleRangeHigh(sensor_index, value, timestamp);
+        return std::unique_ptr<SetInputScaleRangeHigh>(msg);
+    }
+
 };
 
 }; // namespace sensei
