@@ -1,5 +1,7 @@
 #include "serial_command_creator.h"
 
+#include <cstring>
+
 namespace sensei {
 namespace serial_frontend {
 
