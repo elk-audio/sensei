@@ -1,9 +1,9 @@
 /**
- * @brief Classes for storing external and mapping configurations for sensors
+ * @brief Classes for remapping raw sensor data into output range.
  * @copyright MIND Music Labs AB, Stockholm
  *
- * The classes here store all the state regarding a sensor, /excluded/ the backend configuration.
- *
+ * The classes here store all the configuration regarding a single sensor as well.
+ * They are only used as components in MappingProcessor
  */
 #ifndef SENSEI_SENSOR_MAPPERS_H
 #define SENSEI_SENSOR_MAPPERS_H
@@ -20,8 +20,6 @@ static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 
 }; // Anonymous namespace
 
-typedef std::vector<std::unique_ptr<BaseMessage>> CommandContainer;
-typedef std::back_insert_iterator<CommandContainer> CommandIterator;
 
 class BaseSensorMapper
 {
