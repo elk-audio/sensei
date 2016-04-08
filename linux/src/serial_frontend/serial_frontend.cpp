@@ -39,7 +39,6 @@ bool verify_message(const sSenseiDataPacket *packet)
 /*
  * SerialFrontend member functions below:
  */
-
 SerialFrontend::SerialFrontend(const std::string &port_name,
                                SynchronizedQueue<std::unique_ptr<Command>> *in_queue,
                                SynchronizedQueue<std::unique_ptr<BaseMessage>> *out_queue) :
@@ -144,10 +143,10 @@ void SerialFrontend::read_loop()
     {
         memset(buffer, 0, sizeof(buffer));
         int ret = sp_blocking_read_next(_port, buffer, sizeof(buffer), READ_WRITE_TIMEOUT_MS);
-        if (ret >= SENSEI_LENGTH_DATA_PACKET)
+        if (_muted == false && ret >= SENSEI_LENGTH_DATA_PACKET)
         {
             sSenseiDataPacket *packet = reinterpret_cast<sSenseiDataPacket *>(buffer);
-            if (_muted || verify_message(packet) == false)
+            if (verify_message(packet) == false)
             {
                 continue; // log an error message here when logging functionality is in place
             }
@@ -159,6 +158,14 @@ void SerialFrontend::read_loop()
             else
             {
                 // failed to create BaseMessage, log error
+            }
+            if (_verify_acks)
+            {
+                uint64_t id;
+                while ((id = _message_tracker.timed_out()) > 0)
+                {
+                    // handle timed out message here
+                }
             }
         }
     }
@@ -186,7 +193,7 @@ void SerialFrontend::write_loop()
             sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
             if (_verify_acks)
             {
-                _message_tracker.log(message->uuid());
+                _message_tracker.store(message->uuid());
             }
         }
     }
@@ -199,7 +206,6 @@ void SerialFrontend::write_loop()
  */
 std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
 {
-    std::unique_ptr<BaseMessage> message(nullptr);
     switch (packet->cmd)
     {
         case SENSEI_CMD::GET_VALUE:  // for now, assume that incoming unsolicited responses will have any of these command codes
@@ -209,19 +215,18 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
             switch (m->pin_type)
             {
                 case PIN_DIGITAL_INPUT:
-                    message = _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
+                    return _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
                     break;
 
                 case PIN_ANALOG_INPUT:
                     const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->payload);
-                    message = _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
+                    return _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
             }
             break;
         }
         case SENSEI_CMD::ACK:
         {
-
-            const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet);
+            const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet->payload);
             uint64_t uuid = extract_uuid(ack);
             if (_verify_acks)
             {
@@ -231,20 +236,23 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
                         // Everything's fine, do nothing more
                         break;
                     case ack_status::TIMED_OUT:
-                        // Make error message and put in the queue
+                        // Make error message and return it
                         break;
                     case ack_status::UNKNOWN_IDENTIFIER:
                         // Should not happen, log an error here
                         break;
                 }
             }
-            // handle acked messages
+            if (ack->status != SENSEI_ERROR_CODE::OK)
+            {
+                // return create_error_message(ack->status);
+            }
             break;
         }
         default:
             break;
     }
-    return message;
+    return nullptr;
 }
 
 /*

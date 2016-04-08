@@ -13,7 +13,7 @@ MessageTracker::~MessageTracker()
 
 }
 
-void MessageTracker::log(uint64_t identifier)
+void MessageTracker::store(uint64_t identifier)
 {
     update_time();
     std::lock_guard<std::mutex> lock(_mutex);
