@@ -13,6 +13,7 @@
 
 #include "message/value_defs.h"
 #include "message/command_defs.h"
+#include "message/error_defs.h"
 
 // TODO:
 //      add constructor parameters for e.g. maximum number of sensors, maximum analog value, etc.
@@ -183,6 +184,24 @@ public:
     {
         auto msg = new SetInputScaleRangeHigh(sensor_index, value, timestamp);
         return std::unique_ptr<SetInputScaleRangeHigh>(msg);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Errors
+    ////////////////////////////////////////////////////////////////////////////////
+
+    std::unique_ptr<BaseMessage> make_bad_crc_error(const int sensor_index,
+                                                    const uint32_t timestamp = 0)
+    {
+        auto msg = new BadCrcError(sensor_index, timestamp);
+        return std::unique_ptr<BadCrcError>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_too_many_timeouts_error(const int sensor_index,
+                                                              const uint32_t timestamp = 0)
+    {
+        auto msg = new TooManyTimeoutsError(sensor_index, timestamp);
+        return std::unique_ptr<TooManyTimeoutsError>(msg);
     }
 
 };

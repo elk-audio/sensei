@@ -1,5 +1,5 @@
 /**
- * @brief Command messages definition
+ * @brief Base class for commands
  * @copyright MIND Music Labs AB, Stockholm
  *
  * Base command class and macros for quick subclasses definition.
@@ -71,7 +71,7 @@ public:
 protected:
     Command(const int sensor_index,
             bool is_external,
-            CommandType type,
+            const CommandType type,
             const uint32_t timestamp=0) :
                 BaseMessage(sensor_index, timestamp),
                 _is_external(is_external),
@@ -84,7 +84,7 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////////////
-// Concrete command classes
+// Concrete class definition macros
 //////////////////////////////////////////////////////////////////////////////////
 
 #define __SENSEI_DECLARE_COMMAND(ClassName, command_type, InternalType, representation_prefix, is_external) \

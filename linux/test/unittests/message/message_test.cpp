@@ -199,3 +199,17 @@ TEST(MessagesTest, test_internal_command_creation)
     }
 
 }
+
+
+TEST(MessagesTest, test_error_creation)
+{
+    MessageFactory factory;
+
+    auto tmp_msg = factory.make_bad_crc_error(0);
+    auto bad_crc_msg = static_cast<BadCrcError*>(tmp_msg.get());
+    ASSERT_EQ(ErrorType::BAD_CRC, bad_crc_msg->type() );
+
+    tmp_msg = factory.make_too_many_timeouts_error(0);
+    auto timeouts_msg = static_cast<TooManyTimeoutsError*>(tmp_msg.get());
+    ASSERT_EQ(ErrorType::TOO_MANY_TIMEOUTS, timeouts_msg->type() );
+}
