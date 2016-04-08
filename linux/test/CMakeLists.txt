@@ -10,7 +10,7 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/serial_frontend/serial_frontend_test.cpp
                unittests/locked_queue_test.cpp
                unittests/synchronized_queue_test.cpp
-               unittests/message/message_test.cpp)
+               unittests/message/message_test.cpp unittests/mapping/sensor_mappers_test.cpp)
 
 ##########################################
 #  Include directories relative to test  #

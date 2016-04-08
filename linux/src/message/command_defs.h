@@ -152,15 +152,6 @@ SENSEI_DECLARE_INTERNAL_COMMAND(SetInputScaleRangeHigh,
                                 int,
                                 "Set Input Scale Range Low");
 
-////////////////////////////////////////////////////////////////////////////////
-// Containers
-////////////////////////////////////////////////////////////////////////////////
-
-// these are used in some internal interfaces that operates on list of pointers to commands
-
-typedef std::vector<std::unique_ptr<Command>> CommandContainer;
-
-typedef std::back_insert_iterator<CommandContainer> CommandIterator;
 
 }; // namespace sensei
 
