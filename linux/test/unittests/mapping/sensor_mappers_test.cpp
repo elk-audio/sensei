@@ -115,6 +115,7 @@ protected:
         config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
         config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
+        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_lowpass_filter_order_command(_sensor_idx, _lowpass_filter_order))));
         config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
         config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_slider_mode_enabled_command(_sensor_idx, _slider_mode_enabled))));
         config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
@@ -139,6 +140,7 @@ protected:
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
     int _delta_ticks{5};
+    int _lowpass_filter_order{4};
     float _lowpass_cutoff{199.123f};
     int _adc_bit_resolution{12};
     bool _slider_mode_enabled{true};
@@ -175,6 +177,10 @@ TEST_F(TestAnalogSensorMapper, test_analog_configuration)
     ASSERT_EQ(CommandType::SET_LOWPASS_CUTOFF, cmd_cutoff->type());
     ASSERT_EQ(_lowpass_cutoff, cmd_cutoff->data());
 
+    auto cmd_filt_ord = extract_cmd_from<SetLowpassFilterOrderCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_LOWPASS_FILTER_ORDER, cmd_filt_ord->type());
+    ASSERT_EQ(_lowpass_filter_order, cmd_filt_ord->data());
+
     auto cmd_adc_res = extract_cmd_from<SetADCBitResolutionCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_ADC_BIT_RESOLUTION, cmd_adc_res->type());
     ASSERT_EQ(_adc_bit_resolution, cmd_adc_res->data());
@@ -182,6 +188,10 @@ TEST_F(TestAnalogSensorMapper, test_analog_configuration)
     auto cmd_delta_ticks = extract_cmd_from<SetSendingDeltaTicksCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
     ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
+
+    auto cmd_pintype = extract_cmd_from<SetPinTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_PIN_TYPE, cmd_pintype->type());
+    ASSERT_EQ(PinType::ANALOG_INPUT, cmd_pintype->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());

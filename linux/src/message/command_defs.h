@@ -36,6 +36,7 @@ enum class CommandType
     SET_SENDING_MODE,
     SET_SENDING_DELTA_TICKS,
     SET_ADC_BIT_RESOLUTION,
+    SET_LOWPASS_FILTER_ORDER,
     SET_LOWPASS_CUTOFF,
     SET_SLIDER_MODE_ENABLED,
     SET_SLIDER_THRESHOLD,
@@ -114,6 +115,11 @@ SENSEI_DECLARE_EXTERNAL_COMMAND(SetADCBitResolutionCommand,
                                 CommandType::SET_ADC_BIT_RESOLUTION,
                                 int,
                                 "Set ADC Bit Resolution");
+
+SENSEI_DECLARE_EXTERNAL_COMMAND(SetLowpassFilterOrderCommand,
+                                CommandType::SET_LOWPASS_FILTER_ORDER,
+                                int,
+                                "Set Lowpass Filter order");
 
 SENSEI_DECLARE_EXTERNAL_COMMAND(SetLowpassCutoffCommand,
                                 CommandType::SET_LOWPASS_CUTOFF,

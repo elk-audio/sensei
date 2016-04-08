@@ -87,6 +87,7 @@ private:
     // External board config
     int _delta_ticks_sending;
     int _adc_bit_resolution;
+    int _lowpass_filter_order;
     float _lowpass_cutoff;
     bool _slider_mode_enabled;
     int _slider_threshold;

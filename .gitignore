@@ -43,7 +43,6 @@ scratch/
 linux/third-party/install/
 
 # Taken from liblo .gitignore
-
 *.o
 *~
 *.lo
@@ -106,3 +105,7 @@ linux/third-party/liblo/stamp-h1
 linux/third-party/liblo/test
 linux/third-party/liblo/test-driver
 linux/third-party/liblo/test.cpp
+linux/build/
+
+# Windows folders
+*.ini

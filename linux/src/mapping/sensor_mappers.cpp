@@ -125,6 +125,7 @@ void DigitalSensorMapper::put_config_commands_into(CommandIterator iterator)
 AnalogSensorMapper::AnalogSensorMapper(const int sensor_index) :
     BaseSensorMapper(PinType::ANALOG_INPUT, sensor_index),
     _delta_ticks_sending(1),
+    _lowpass_filter_order(4),
     _lowpass_cutoff(DEFAULT_LOWPASS_CUTOFF),
     _slider_mode_enabled(false),
     _slider_threshold(0),
@@ -166,6 +167,13 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
         {
             const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
             _set_adc_bit_resolution(typed_cmd->data());
+        };
+        break;
+
+    case CommandType::SET_LOWPASS_FILTER_ORDER:
+        {
+            const auto typed_cmd = static_cast<const SetLowpassFilterOrderCommand*>(cmd);
+            _lowpass_filter_order = typed_cmd->data();
         };
         break;
 
@@ -221,8 +229,10 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator iterator)
     BaseSensorMapper::put_config_commands_into(iterator);
 
     MessageFactory factory;
+    *iterator = factory.make_set_pin_type_command(_sensor_index, PinType::ANALOG_INPUT);
     *iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
     *iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
+    *iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
     *iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
     *iterator = factory.make_set_slider_mode_enabled_command(_sensor_index, _slider_mode_enabled);
     *iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
