@@ -111,9 +111,8 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
     {
     case CommandType::SET_PIN_TYPE:
         {
-            const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd);
             // This is set internally and not from the user, so just assert for bugs
-            assert(typed_cmd->data() == PinType::DIGITAL_INPUT);
+            assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::DIGITAL_INPUT);
         };
         break;
 
@@ -170,6 +169,12 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     switch(cmd->type())
     {
     // External
+    case CommandType::SET_PIN_TYPE:
+        {
+            // This is set internally and not from the user, so just assert for bugs
+            assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::ANALOG_INPUT);
+        };
+        break;
 
     case CommandType::SET_SENDING_DELTA_TICKS:
         {
