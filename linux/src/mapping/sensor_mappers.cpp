@@ -21,6 +21,7 @@ static const int MAX_LOWPASS_FILTER_ORDER = 8;
 }; // Anonymous namespace
 
 using namespace sensei;
+using namespace sensei::mapping;
 
 BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int sensor_index) :
     _pin_type(pin_type),

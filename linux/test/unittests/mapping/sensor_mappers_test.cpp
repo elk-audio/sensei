@@ -7,6 +7,7 @@
 #include "mapping/sensor_mappers.cpp"
 
 using namespace sensei;
+using namespace sensei::mapping;
 
 // Helper functions
 

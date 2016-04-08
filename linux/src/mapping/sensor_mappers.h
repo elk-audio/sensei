@@ -12,6 +12,8 @@
 
 namespace sensei {
 
+namespace mapping {
+
 /**
  * @brief Base class for sensor mappers.
  *
@@ -23,8 +25,8 @@ class BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(BaseSensorMapper)
 
-    BaseSensorMapper(const PinType pin_type=PinType::ANALOG_INPUT,
-                     const int sensor_index=0);
+    BaseSensorMapper(const PinType pin_type = PinType::ANALOG_INPUT,
+                     const int sensor_index = 0);
 
     virtual ~BaseSensorMapper();
 
@@ -53,8 +55,8 @@ public:
 
 protected:
     PinType _pin_type;
-    int     _sensor_index;
-    bool    _sensor_enabled;
+    int _sensor_index;
+    bool _sensor_enabled;
     SendingMode _sending_mode;
 
     bool _invert_value;
@@ -65,7 +67,7 @@ class DigitalSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DigitalSensorMapper)
 
-    DigitalSensorMapper(const int sensor_index=0);
+    DigitalSensorMapper(const int sensor_index = 0);
 
     ~DigitalSensorMapper();
 
@@ -82,8 +84,8 @@ class AnalogSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AnalogSensorMapper)
 
-    AnalogSensorMapper(const int sensor_index=0,
-                       const float adc_sampling_rate=1000.0f);
+    AnalogSensorMapper(const int sensor_index = 0,
+                       const float adc_sampling_rate = 1000.0f);
 
     ~AnalogSensorMapper();
 
@@ -123,6 +125,8 @@ private:
     float _adc_sampling_rate;
 };
 
+
+}; // namespace mapping
 }; // namespace sensei
 
 #endif //SENSEI_SENSOR_MAPPERS_H
