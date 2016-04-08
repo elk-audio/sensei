@@ -12,14 +12,6 @@
 
 namespace sensei {
 
-namespace {
-
-static const int MAX_ADC_BIT_RESOLUTION = 16;
-static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
-static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
-
-}; // Anonymous namespace
-
 /**
  * @brief Base class for sensor mappers.
  *
@@ -90,7 +82,8 @@ class AnalogSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AnalogSensorMapper)
 
-    AnalogSensorMapper(const int sensor_index=0);
+    AnalogSensorMapper(const int sensor_index=0,
+                       const float adc_sampling_rate=1000.0f);
 
     ~AnalogSensorMapper();
 
@@ -104,6 +97,14 @@ private:
     CommandErrorCode _set_input_scale_range_low(const int value);
 
     CommandErrorCode _set_input_scale_range_high(const int value);
+
+    CommandErrorCode _set_delta_ticks_sending(const int value);
+
+    CommandErrorCode _set_lowpass_filter_order(const int value);
+
+    CommandErrorCode _set_lowpass_cutoff(const float value);
+
+    CommandErrorCode _set_slider_threshold(const int value);
 
     // External board config
     int _delta_ticks_sending;
@@ -119,6 +120,7 @@ private:
 
     // Internal helper attributes
     int _max_allowed_input;
+    float _adc_sampling_rate;
 };
 
 }; // namespace sensei

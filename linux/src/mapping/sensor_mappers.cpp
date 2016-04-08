@@ -11,6 +11,15 @@
 #include "mapping/sensor_mappers.h"
 #include "message/message_factory.h"
 
+namespace {
+
+static const int MAX_ADC_BIT_RESOLUTION = 16;
+static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
+static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
+static const int MAX_LOWPASS_FILTER_ORDER = 8;
+
+}; // Anonymous namespace
+
 using namespace sensei;
 
 BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int sensor_index) :
@@ -122,7 +131,8 @@ void DigitalSensorMapper::put_config_commands_into(CommandIterator iterator)
     *iterator = factory.make_set_pin_type_command(_sensor_index, PinType::DIGITAL_INPUT);
 }
 
-AnalogSensorMapper::AnalogSensorMapper(const int sensor_index) :
+AnalogSensorMapper::AnalogSensorMapper(const int sensor_index,
+                                       const float adc_sampling_rate) :
     BaseSensorMapper(PinType::ANALOG_INPUT, sensor_index),
     _delta_ticks_sending(1),
     _lowpass_filter_order(4),
@@ -130,7 +140,8 @@ AnalogSensorMapper::AnalogSensorMapper(const int sensor_index) :
     _slider_mode_enabled(false),
     _slider_threshold(0),
     _input_scale_range_low(0),
-    _input_scale_range_high((1<<DEFAULT_ADC_BIT_RESOLUTION)-1)
+    _input_scale_range_high((1<<DEFAULT_ADC_BIT_RESOLUTION)-1),
+    _adc_sampling_rate(adc_sampling_rate)
 {
     _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
 }
@@ -159,7 +170,7 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_SENDING_DELTA_TICKS:
         {
             const auto typed_cmd = static_cast<const SetSendingDeltaTicksCommand*>(cmd);
-            _delta_ticks_sending = typed_cmd->data();
+            _set_delta_ticks_sending(typed_cmd->data());
         };
         break;
 
@@ -173,14 +184,14 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_LOWPASS_FILTER_ORDER:
         {
             const auto typed_cmd = static_cast<const SetLowpassFilterOrderCommand*>(cmd);
-            _lowpass_filter_order = typed_cmd->data();
+            _set_lowpass_filter_order(typed_cmd->data());
         };
         break;
 
     case CommandType::SET_LOWPASS_CUTOFF:
         {
             const auto typed_cmd = static_cast<const SetLowpassCutoffCommand*>(cmd);
-            _lowpass_cutoff = typed_cmd->data();
+            _set_lowpass_cutoff(typed_cmd->data());
         };
         break;
 
@@ -194,7 +205,7 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_SLIDER_THRESHOLD:
         {
             const auto typed_cmd = static_cast<const SetSliderThresholdCommand*>(cmd);
-            _slider_threshold = typed_cmd->data();
+            _set_slider_threshold(typed_cmd->data());
         };
         break;
 
@@ -244,7 +255,7 @@ CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolutio
 {
     if ((resolution < 1) || (resolution > MAX_ADC_BIT_RESOLUTION))
     {
-        return CommandErrorCode::INVALID_RANGE;
+        return CommandErrorCode::INVALID_VALUE;
     }
 
     _adc_bit_resolution = resolution;
@@ -252,6 +263,50 @@ CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolutio
 
     _input_scale_range_low = std::min(_input_scale_range_low, _max_allowed_input);
     _input_scale_range_high = std::min(_input_scale_range_high, _max_allowed_input);
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AnalogSensorMapper::_set_delta_ticks_sending(const int value)
+{
+    if (value < 1)
+    {
+        return CommandErrorCode::INVALID_RANGE;
+    }
+
+    _delta_ticks_sending = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AnalogSensorMapper::_set_lowpass_filter_order(const int value)
+{
+    if ((value < 1) || (value > MAX_LOWPASS_FILTER_ORDER))
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+
+    _lowpass_filter_order = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AnalogSensorMapper::_set_lowpass_cutoff(const float value)
+{
+    if ( (value <= 0.0f) || (value >= (0.5f * _adc_sampling_rate)) )
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+
+    _lowpass_cutoff = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AnalogSensorMapper::_set_slider_threshold(const int value)
+{
+    if ( (value < 0) || (value > (_max_allowed_input-1)) )
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+
+    _slider_threshold = value;
     return CommandErrorCode::OK;
 }
 
@@ -288,3 +343,4 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(const int value
     _input_scale_range_high = value;
     return CommandErrorCode::OK;
 }
+
