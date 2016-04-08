@@ -261,7 +261,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
  */
 const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
 {
-    assert(message->is_cmd());
+    assert(message->base_type() == MessageType::COMMAND);
 
     switch (message->type())
     {

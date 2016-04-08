@@ -80,7 +80,7 @@ TEST_F(SerialFrontendTest, test_process_serial_packet)
     std::unique_ptr<BaseMessage> msg = _module_under_test.process_serial_packet(&packet);
     AnalogValue* valuemessage = static_cast<AnalogValue*>(msg.get());
 
-    EXPECT_TRUE(valuemessage->is_value());
+    EXPECT_EQ(MessageType::VALUE, valuemessage->base_type());
     EXPECT_EQ(1234u, valuemessage->timestamp());
     EXPECT_EQ(12, valuemessage->sensor_index());
     EXPECT_EQ(35, valuemessage->value());

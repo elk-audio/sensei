@@ -19,11 +19,22 @@
 
 namespace sensei {
 
-SENSEI_DECLARE_VALUE(AnalogValue, int, "Analog Value");
+/**
+ * @brief Tags used for RTTI emulation.
+ */
+enum class ValueType
+{
+    ANALOG,
+    DIGITAL,
+    OUTPUT
+};
 
-SENSEI_DECLARE_VALUE(DigitalValue, bool, "Digital Value");
 
-SENSEI_DECLARE_VALUE(OutputValue, float, "Output Value");
+SENSEI_DECLARE_VALUE(AnalogValue, ValueType::ANALOG, int, "Analog Value");
+
+SENSEI_DECLARE_VALUE(DigitalValue, ValueType::DIGITAL, bool, "Digital Value");
+
+SENSEI_DECLARE_VALUE(OutputValue, ValueType::OUTPUT, float, "Output Value");
 
 
 }; // namespace sensei

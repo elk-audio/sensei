@@ -13,6 +13,16 @@
 #include <memory>
 
 /**
+ * @brief Concrete classes tags used for RTTI emulation
+ */
+enum class MessageType
+{
+    VALUE,
+    COMMAND,
+    ERROR
+};
+
+/**
  * @brief Convenience macro for declaring non-copyable behaviour
  *        Put it at beginning of public: section.
  */
@@ -78,30 +88,26 @@ public:
     virtual std::string representation() const = 0;
 
     /**
-     * @brief Check if message is of SensorValue base type. Used for RTTI-like emulation.
+     * @brief Return type tag
      */
-    virtual bool is_value() const
+    MessageType base_type() const
     {
-        return false;
-    }
-
-    /**
-     * @brief Check if message is of Command base type. Used for RTTI-like emulation.
-     */
-    virtual bool is_cmd() const
-    {
-        return false;
+        return _base_type;
     }
 
 protected:
-    BaseMessage(const int sensor_index, const unsigned int timestamp=0) :
+    BaseMessage(const int sensor_index,
+                const unsigned int timestamp=0,
+                const MessageType msg_type=MessageType::VALUE) :
             _sensor_index(sensor_index),
-            _timestamp(timestamp)
+            _timestamp(timestamp),
+            _base_type(msg_type)
     {
     }
 
     int _sensor_index;
     uint32_t _timestamp;
+    MessageType _base_type;
 
 };
 

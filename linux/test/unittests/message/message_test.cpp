@@ -12,23 +12,28 @@ TEST(MessagesTest, test_value_creation)
     MessageFactory factory;
 
     auto tmp_msg = factory.make_analog_value(1, 10, 100);
+    ASSERT_EQ(MessageType::VALUE, tmp_msg->base_type());
     auto analog_msg = static_cast<AnalogValue*>(tmp_msg.get());
+    ASSERT_EQ(ValueType::ANALOG, analog_msg->type());
     ASSERT_EQ(1, analog_msg->sensor_index());
     ASSERT_EQ(10, analog_msg->value());
     ASSERT_EQ(100u, analog_msg->timestamp());
 
     tmp_msg = factory.make_digital_value(1, true, 100);
+    ASSERT_EQ(MessageType::VALUE, tmp_msg->base_type());
     auto digital_msg = static_cast<DigitalValue*>(tmp_msg.get());
+    ASSERT_EQ(ValueType::DIGITAL, digital_msg->type());
     ASSERT_EQ(1, digital_msg->sensor_index());
     ASSERT_EQ(true, digital_msg->value());
     ASSERT_EQ(100u, digital_msg->timestamp());
 
     tmp_msg = factory.make_output_value(1, -0.1f, 100);
+    ASSERT_EQ(MessageType::VALUE, tmp_msg->base_type());
     auto output_msg = static_cast<OutputValue*>(tmp_msg.get());
+    ASSERT_EQ(ValueType::OUTPUT, output_msg->type());
     ASSERT_EQ(1, output_msg->sensor_index());
     ASSERT_EQ(-0.1f, output_msg->value());
     ASSERT_EQ(100u, output_msg->timestamp());
-
 }
 
 TEST(MessagesTest, test_external_command_creation)
@@ -57,8 +62,7 @@ TEST(MessagesTest, test_external_command_creation)
     // Parse messages in queue
     for (auto const& msg : msg_queue)
     {
-        ASSERT_TRUE(msg->is_cmd());
-        ASSERT_FALSE(msg->is_value());
+        ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
         ASSERT_TRUE(cmd_msg->is_external());
 
@@ -160,8 +164,8 @@ TEST(MessagesTest, test_internal_command_creation)
     // Parse messages in queue
     for (auto const& msg : msg_queue)
     {
-        ASSERT_TRUE(msg->is_cmd());
-        ASSERT_FALSE(msg->is_value());
+
+        ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
         ASSERT_FALSE(cmd_msg->is_external());
 

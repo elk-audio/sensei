@@ -31,11 +31,6 @@ public:
     {
     }
 
-    bool is_cmd() const override
-    {
-        return true;
-    }
-
     /**
      * @brief Used to dispatch external command to the serial frontend.
      *        Derived classes may override the value in their constructor.
@@ -73,7 +68,7 @@ protected:
             bool is_external,
             const CommandType type,
             const uint32_t timestamp=0) :
-                BaseMessage(sensor_index, timestamp),
+                BaseMessage(sensor_index, timestamp, MessageType::COMMAND),
                 _is_external(is_external),
                 _type(type)
     {

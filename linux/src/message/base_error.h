@@ -39,7 +39,7 @@ protected:
     Error(const int sensor_index,
           const ErrorType type,
           const uint32_t timestamp = 0) :
-            BaseMessage(sensor_index, timestamp),
+            BaseMessage(sensor_index, timestamp, MessageType::ERROR),
             _type(type)
     {
     }

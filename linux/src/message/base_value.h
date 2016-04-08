@@ -17,6 +17,8 @@ namespace sensei {
 
 class MessageFactory;
 
+enum class ValueType;
+
 /**
  * @brief Abstract base class for values.
  */
@@ -29,20 +31,28 @@ public:
 
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(Value)
 
-    bool is_value() const override
+    /**
+     * @brief Tag type for RTTI-like dynamic dispatch.
+     *        Tag definitions are defined in messages/value_defs.h
+     */
+    ValueType type() const
     {
-        return true;
+        return _type;
     }
 
 protected:
-    Value(const int sensor_index, const uint32_t timestamp=0) :
-            BaseMessage(sensor_index, timestamp)
+    Value(const int sensor_index,
+          const ValueType type,
+          const uint32_t timestamp=0) :
+        BaseMessage(sensor_index, timestamp, MessageType::VALUE),
+        _type(type)
     {
     }
 
+    ValueType _type;
 };
 
-#define SENSEI_DECLARE_VALUE(ClassName, InternalType, representation_prefix) \
+#define SENSEI_DECLARE_VALUE(ClassName, value_type, InternalType, representation_prefix) \
 class ClassName : public Value \
 { \
 public: \
@@ -59,7 +69,7 @@ private:\
     ClassName(const int sensor_index,\
               const InternalType value,\
               const uint32_t timestamp=0) :\
-        Value(sensor_index, timestamp),\
+        Value(sensor_index, value_type, timestamp),\
         _value(value)\
     {\
     }\
