@@ -4,13 +4,10 @@
  *
  * Declaration of Command Message types using macro facilities in message/command_base.h
  *
- * Define in this file all concrete message types, possibly using the macros
+ * Define in this file all concrete message types, possibly using the macro
  *
- * SENSEI_DECLARE_EXTERNAL_MESSAGE(ClassName, command_tag, InternalType, representation_prefix)
+ * SENSEI_DECLARE_MESSAGE(ClassName, command_tag, InternalType, representation_prefix, destination)
  *
- * SENSEI_DECLARE_INTERNAL_MESSAGE(ClassName, command_tag, InternalType, representation_prefix)
- *
- * In case of External Messages,
  * Classes defined here have to be instantiated with factory methods provide by message_factory.h
  *
  */
@@ -87,77 +84,91 @@ enum class CommandErrorCode
 
 // External commands
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetSamplingRateCommand,
-                                CommandType::SET_SAMPLING_RATE,
-                                float,
-                                "Set Sampling Rate");
+SENSEI_DECLARE_COMMAND(SetSamplingRateCommand,
+                       CommandType::SET_SAMPLING_RATE,
+                       float,
+                       "Set Sampling Rate",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetEnabledCommand,
-                                CommandType::SET_ENABLED,
-                                bool,
-                                "Set Enabled");
+SENSEI_DECLARE_COMMAND(SetEnabledCommand,
+                       CommandType::SET_ENABLED,
+                       bool,
+                       "Set Enabled",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetPinTypeCommand,
-                                CommandType::SET_PIN_TYPE,
-                                PinType,
-                                "Set Pin Type");
+SENSEI_DECLARE_COMMAND(SetPinTypeCommand,
+                       CommandType::SET_PIN_TYPE,
+                       PinType,
+                       "Set Pin Type",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetSendingModeCommand,
-                                CommandType::SET_SENDING_MODE,
-                                SendingMode ,
-                                "Set Sending Mode");
+SENSEI_DECLARE_COMMAND(SetSendingModeCommand,
+                       CommandType::SET_SENDING_MODE,
+                       SendingMode ,
+                       "Set Sending Mode",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetSendingDeltaTicksCommand,
-                                CommandType::SET_SENDING_DELTA_TICKS,
-                                int,
-                                "Set Sending Delta Ticks");
+SENSEI_DECLARE_COMMAND(SetSendingDeltaTicksCommand,
+                       CommandType::SET_SENDING_DELTA_TICKS,
+                       int,
+                       "Set Sending Delta Ticks",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetADCBitResolutionCommand,
-                                CommandType::SET_ADC_BIT_RESOLUTION,
-                                int,
-                                "Set ADC Bit Resolution");
+SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
+                       CommandType::SET_ADC_BIT_RESOLUTION,
+                       int,
+                       "Set ADC Bit Resolution",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetLowpassFilterOrderCommand,
-                                CommandType::SET_LOWPASS_FILTER_ORDER,
-                                int,
-                                "Set Lowpass Filter order");
+SENSEI_DECLARE_COMMAND(SetLowpassFilterOrderCommand,
+                       CommandType::SET_LOWPASS_FILTER_ORDER,
+                       int,
+                       "Set Lowpass Filter order",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetLowpassCutoffCommand,
-                                CommandType::SET_LOWPASS_CUTOFF,
-                                float,
-                                "Set Lowpass Cutoff");
+SENSEI_DECLARE_COMMAND(SetLowpassCutoffCommand,
+                       CommandType::SET_LOWPASS_CUTOFF,
+                       float,
+                       "Set Lowpass Cutoff",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetSliderModeEnabledCommand,
-                                CommandType::SET_SLIDER_MODE_ENABLED,
-                                bool,
-                                "Set Slider Mode Enabled");
+SENSEI_DECLARE_COMMAND(SetSliderModeEnabledCommand,
+                       CommandType::SET_SLIDER_MODE_ENABLED,
+                       bool,
+                       "Set Slider Mode Enabled",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SetSliderThresholdCommand,
-                                CommandType::SET_SLIDER_THRESHOLD,
-                                int,
-                                "Set Slider Threshold");
+SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
+                       CommandType::SET_SLIDER_THRESHOLD,
+                       int,
+                       "Set Slider Threshold",
+                       CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_EXTERNAL_COMMAND(SendDigitalPinValueCommand,
-                                CommandType::SEND_DIGITAL_PIN_VALUE,
-                                bool,
-                                "Send Digital Pin Value");
+SENSEI_DECLARE_COMMAND(SendDigitalPinValueCommand,
+                       CommandType::SEND_DIGITAL_PIN_VALUE,
+                       bool,
+                       "Send Digital Pin Value",
+                       CommandDestination::SERIAL_FRONTEND);
 
 // Internal commands
 
-SENSEI_DECLARE_INTERNAL_COMMAND(SetInvertEnabledCommand,
-                                CommandType::SET_INVERT_ENABLED,
-                                bool,
-                                "Set Invert Enabled");
+SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
+                       CommandType::SET_INVERT_ENABLED,
+                       bool,
+                       "Set Invert Enabled",
+                       CommandDestination::INTERNAL);
 
-SENSEI_DECLARE_INTERNAL_COMMAND(SetInputScaleRangeLow,
-                                CommandType::SET_INPUT_SCALE_RANGE_LOW,
-                                int,
-                                "Set Input Scale Range Low");
+SENSEI_DECLARE_COMMAND(SetInputScaleRangeLow,
+                       CommandType::SET_INPUT_SCALE_RANGE_LOW,
+                       int,
+                       "Set Input Scale Range Low",
+                       CommandDestination::INTERNAL);
 
-SENSEI_DECLARE_INTERNAL_COMMAND(SetInputScaleRangeHigh,
-                                CommandType::SET_INPUT_SCALE_RANGE_HIGH,
-                                int,
-                                "Set Input Scale Range Low");
+SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
+                       CommandType::SET_INPUT_SCALE_RANGE_HIGH,
+                       int,
+                       "Set Input Scale Range Low",
+                       CommandDestination::INTERNAL);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Container specifications

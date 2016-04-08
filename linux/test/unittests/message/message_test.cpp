@@ -64,7 +64,7 @@ TEST(MessagesTest, test_external_command_creation)
     {
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_TRUE(cmd_msg->is_external());
+        ASSERT_EQ(CommandDestination::SERIAL_FRONTEND, cmd_msg->destination());
 
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
@@ -167,7 +167,7 @@ TEST(MessagesTest, test_internal_command_creation)
 
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_FALSE(cmd_msg->is_external());
+        ASSERT_EQ(CommandDestination::INTERNAL, cmd_msg->destination());
 
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
