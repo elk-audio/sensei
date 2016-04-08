@@ -37,6 +37,9 @@ BaseSensorMapper::~BaseSensorMapper()
 
 CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
 {
+
+    assert(cmd->sensor_index() == _sensor_index);
+
     CommandErrorCode status = CommandErrorCode::OK;
 
     // Handle here per-sensor configuration common between sensor types
@@ -109,6 +112,7 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_PIN_TYPE:
         {
             const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd);
+            // This is set internally and not from the user, so just assert for bugs
             assert(typed_cmd->data() == PinType::DIGITAL_INPUT);
         };
         break;

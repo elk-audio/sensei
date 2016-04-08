@@ -94,6 +94,22 @@ TEST_F(TestDigitalSensorMapper, test_digital_configuration)
     ASSERT_EQ(_enabled, cmd_enabled->data());
 }
 
+
+TEST_F(TestDigitalSensorMapper, test_digital_config_fail)
+{
+    // Verify that some wrong commands return unhandled error
+    MessageFactory factory;
+
+    auto ret = _mapper.apply_command(__CMD_CAST(factory.make_set_adc_bit_resolution_command(_sensor_idx, 12)).get());
+    ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
+
+    ret = _mapper.apply_command(__CMD_CAST(factory.make_set_slider_mode_enabled_command(_sensor_idx, false)).get());
+    ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
+
+    ret = _mapper.apply_command(__CMD_CAST(factory.make_set_lowpass_cutoff_command(_sensor_idx, 1000.0f)).get());
+    ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
+}
+
 class TestAnalogSensorMapper : public ::testing::Test
 {
 protected:
