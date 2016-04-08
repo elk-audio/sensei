@@ -18,7 +18,8 @@ static_unique_ptr_cast( std::unique_ptr<Base>&& p )
     return std::unique_ptr<Derived>(d);
 }
 
-#define __CMD_CAST(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
+#define __CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
+#define __CMD_PTR(msg) __CMD_UPTR(msg).get()
 
 template<typename DerivedCommand>
 std::unique_ptr<DerivedCommand> extract_cmd_from(std::vector<std::unique_ptr<BaseMessage>>& msg_queue)
@@ -46,9 +47,9 @@ protected:
     {
         MessageFactory factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_enabled_command(_sensor_idx, _enabled))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
 
         for (auto const& cmd : config_cmds)
         {
@@ -100,13 +101,13 @@ TEST_F(TestDigitalSensorMapper, test_digital_config_fail)
     // Verify that some wrong commands return unhandled error
     MessageFactory factory;
 
-    auto ret = _mapper.apply_command(__CMD_CAST(factory.make_set_adc_bit_resolution_command(_sensor_idx, 12)).get());
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, 12)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
 
-    ret = _mapper.apply_command(__CMD_CAST(factory.make_set_slider_mode_enabled_command(_sensor_idx, false)).get());
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_slider_mode_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
 
-    ret = _mapper.apply_command(__CMD_CAST(factory.make_set_lowpass_cutoff_command(_sensor_idx, 1000.0f)).get());
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, 1000.0f)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
 }
 
@@ -126,17 +127,17 @@ protected:
     {
         MessageFactory factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_enabled_command(_sensor_idx, _enabled))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_lowpass_filter_order_command(_sensor_idx, _lowpass_filter_order))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_slider_mode_enabled_command(_sensor_idx, _slider_mode_enabled))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_input_scale_range_low(_sensor_idx, _input_scale_low))));
-        config_cmds.push_back(std::move(__CMD_CAST(factory.make_set_input_scale_range_high(_sensor_idx, _input_scale_high))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, _lowpass_filter_order))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_slider_mode_enabled_command(_sensor_idx, _slider_mode_enabled))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_input_scale_range_low(_sensor_idx, _input_scale_low))));
+        config_cmds.push_back(std::move(__CMD_UPTR(factory.make_set_input_scale_range_high(_sensor_idx, _input_scale_high))));
 
         for (auto const& cmd : config_cmds)
         {
@@ -221,5 +222,42 @@ TEST_F(TestAnalogSensorMapper, test_analog_configuration)
     ASSERT_EQ(CommandType::SET_ENABLED, cmd_enabled->type());
     ASSERT_EQ(_enabled, cmd_enabled->data());
 
+}
+
+TEST_F(TestAnalogSensorMapper, test_analog_config_fail)
+{
+    // Verify that wrong commands return appropriate errors
+    MessageFactory factory;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_sampling_rate_command(_sensor_idx, 1000.0f)));
+    ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
+
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, -10)));
+    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, 100)));
+    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
+
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, -23)));
+    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
+
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, 0)));
+    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, 100)));
+    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
+
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_slider_threshold_command(_sensor_idx, -20)));
+    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_slider_threshold_command(_sensor_idx, 123456)));
+    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
+
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_input_scale_range_low(_sensor_idx, -20)));
+    ASSERT_EQ(CommandErrorCode::INVALID_RANGE, ret);
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_input_scale_range_high(_sensor_idx, -20)));
+    ASSERT_EQ(CommandErrorCode::INVALID_RANGE, ret);
+
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_input_scale_range_low(_sensor_idx, _input_scale_high+1)));
+    ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_input_scale_range_high(_sensor_idx, _input_scale_low-1)));
+    ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
 }
 

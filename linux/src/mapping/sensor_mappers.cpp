@@ -174,28 +174,28 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_SENDING_DELTA_TICKS:
         {
             const auto typed_cmd = static_cast<const SetSendingDeltaTicksCommand*>(cmd);
-            _set_delta_ticks_sending(typed_cmd->data());
+            status = _set_delta_ticks_sending(typed_cmd->data());
         };
         break;
 
     case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
-            _set_adc_bit_resolution(typed_cmd->data());
+            status = _set_adc_bit_resolution(typed_cmd->data());
         };
         break;
 
     case CommandType::SET_LOWPASS_FILTER_ORDER:
         {
             const auto typed_cmd = static_cast<const SetLowpassFilterOrderCommand*>(cmd);
-            _set_lowpass_filter_order(typed_cmd->data());
+            status = _set_lowpass_filter_order(typed_cmd->data());
         };
         break;
 
     case CommandType::SET_LOWPASS_CUTOFF:
         {
             const auto typed_cmd = static_cast<const SetLowpassCutoffCommand*>(cmd);
-            _set_lowpass_cutoff(typed_cmd->data());
+            status = _set_lowpass_cutoff(typed_cmd->data());
         };
         break;
 
@@ -209,7 +209,7 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_SLIDER_THRESHOLD:
         {
             const auto typed_cmd = static_cast<const SetSliderThresholdCommand*>(cmd);
-            _set_slider_threshold(typed_cmd->data());
+            status = _set_slider_threshold(typed_cmd->data());
         };
         break;
 
@@ -218,14 +218,14 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_INPUT_SCALE_RANGE_LOW:
         {
             const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
-            _set_input_scale_range_low(typed_cmd->data());
+            status = _set_input_scale_range_low(typed_cmd->data());
         };
         break;
 
     case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
         {
             const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
-            _set_input_scale_range_high(typed_cmd->data());
+            status = _set_input_scale_range_high(typed_cmd->data());
         };
         break;
 
@@ -274,7 +274,7 @@ CommandErrorCode AnalogSensorMapper::_set_delta_ticks_sending(const int value)
 {
     if (value < 1)
     {
-        return CommandErrorCode::INVALID_RANGE;
+        return CommandErrorCode::INVALID_VALUE;
     }
 
     _delta_ticks_sending = value;
