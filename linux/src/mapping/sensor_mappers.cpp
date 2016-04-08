@@ -18,10 +18,22 @@ static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
+template<typename Derived, typename Base>
+std::unique_ptr<Derived>
+static_unique_ptr_cast( std::unique_ptr<Base>&& p )
+{
+    auto d = static_cast<Derived *>(p.release());
+    return std::unique_ptr<Derived>(d);
+}
+
 }; // Anonymous namespace
 
 using namespace sensei;
 using namespace sensei::mapping;
+
+////////////////////////////////////////////////////////////////////////////////
+// BaseSensorMapper
+////////////////////////////////////////////////////////////////////////////////
 
 BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int sensor_index) :
     _pin_type(pin_type),
@@ -77,14 +89,18 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
 
 }
 
-void BaseSensorMapper::put_config_commands_into(CommandIterator iterator)
+void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
     MessageFactory factory;
 
-    *iterator = factory.make_set_enabled_command(_sensor_index, _sensor_enabled);
-    *iterator = factory.make_set_sending_mode_command(_sensor_index, _sending_mode);
-    *iterator = factory.make_set_invert_enabled_command(_sensor_index, _invert_value);
+    *out_iterator = factory.make_set_enabled_command(_sensor_index, _sensor_enabled);
+    *out_iterator = factory.make_set_sending_mode_command(_sensor_index, _sending_mode);
+    *out_iterator = factory.make_set_invert_enabled_command(_sensor_index, _invert_value);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// DigitalSensorMapper
+////////////////////////////////////////////////////////////////////////////////
 
 DigitalSensorMapper::DigitalSensorMapper(const int sensor_index) :
     BaseSensorMapper(PinType::DIGITAL_INPUT, sensor_index)
@@ -127,13 +143,31 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 
 }
 
-void DigitalSensorMapper::put_config_commands_into(CommandIterator iterator)
+void DigitalSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
-    BaseSensorMapper::put_config_commands_into(iterator);
+    BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *iterator = factory.make_set_pin_type_command(_sensor_index, PinType::DIGITAL_INPUT);
+    *out_iterator = factory.make_set_pin_type_command(_sensor_index, PinType::DIGITAL_INPUT);
 }
+
+void DigitalSensorMapper::process(Value* value, OutputValueIterator out_iterator)
+{
+    assert(value->type() == ValueType::DIGITAL);
+    auto digital_val = static_cast<DigitalValue*>(value);
+    float out_val = digital_val->value() ? 1.0f : 0.0f;
+    if (_invert_value)
+    {
+        out_val = 1.0f - out_val;
+    }
+
+    MessageFactory factory;
+    *out_iterator = static_unique_ptr_cast<OutputValue, BaseMessage>(factory.make_output_value(_sensor_index, out_val));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// AnalogSensorMapper
+////////////////////////////////////////////////////////////////////////////////
 
 AnalogSensorMapper::AnalogSensorMapper(const int sensor_index,
                                        const float adc_sampling_rate) :
@@ -245,20 +279,24 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 
 }
 
-void AnalogSensorMapper::put_config_commands_into(CommandIterator iterator)
+void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
-    BaseSensorMapper::put_config_commands_into(iterator);
+    BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *iterator = factory.make_set_pin_type_command(_sensor_index, PinType::ANALOG_INPUT);
-    *iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
-    *iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
-    *iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
-    *iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
-    *iterator = factory.make_set_slider_mode_enabled_command(_sensor_index, _slider_mode_enabled);
-    *iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
-    *iterator = factory.make_set_input_scale_range_low(_sensor_index, _input_scale_range_low);
-    *iterator = factory.make_set_input_scale_range_high(_sensor_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_pin_type_command(_sensor_index, PinType::ANALOG_INPUT);
+    *out_iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
+    *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
+    *out_iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
+    *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
+    *out_iterator = factory.make_set_slider_mode_enabled_command(_sensor_index, _slider_mode_enabled);
+    *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
+    *out_iterator = factory.make_set_input_scale_range_low(_sensor_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high(_sensor_index, _input_scale_range_high);
+}
+
+void AnalogSensorMapper::process(Value* /* value */, OutputValueIterator /* out_iterator */)
+{
 }
 
 CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolution)

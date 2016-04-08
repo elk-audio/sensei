@@ -11,14 +11,6 @@ using namespace sensei::mapping;
 
 // Helper functions
 
-template<typename Derived, typename Base>
-std::unique_ptr<Derived>
-static_unique_ptr_cast( std::unique_ptr<Base>&& p )
-{
-    auto d = static_cast<Derived *>(p.release());
-    return std::unique_ptr<Derived>(d);
-}
-
 #define __CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
 #define __CMD_PTR(msg) __CMD_UPTR(msg).get()
 
@@ -110,6 +102,50 @@ TEST_F(TestDigitalSensorMapper, test_digital_config_fail)
 
     ret = _mapper.apply_command(__CMD_PTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, 1000.0f)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
+}
+
+TEST_F(TestDigitalSensorMapper, test_process)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+
+    OutputValueContainer out_values;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+    auto input_msg = factory.make_digital_value(_sensor_idx, false);
+    auto input_val = static_cast<Value*>(input_msg.get());
+
+    _mapper.process(input_val, std::back_inserter(out_values));
+    auto out_val = std::move(out_values.back());
+    out_values.pop_back();
+    ASSERT_EQ(0.0f, out_val->value());
+
+    input_msg = factory.make_digital_value(_sensor_idx, true);
+    input_val = static_cast<Value*>(input_msg.get());
+
+    _mapper.process(input_val, std::back_inserter(out_values));
+    out_val = std::move(out_values.back());
+    out_values.pop_back();
+    ASSERT_EQ(1.0f, out_val->value());
+}
+
+TEST_F(TestDigitalSensorMapper, test_invert)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+
+    OutputValueContainer out_values;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, true)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+    auto input_msg = factory.make_digital_value(_sensor_idx, false);
+    auto input_val = static_cast<Value*>(input_msg.get());
+
+    _mapper.process(input_val, std::back_inserter(out_values));
+    auto out_val = std::move(out_values.back());
+    out_values.pop_back();
+    ASSERT_EQ(1.0f, out_val->value());
 }
 
 class TestAnalogSensorMapper : public ::testing::Test
@@ -261,4 +297,3 @@ TEST_F(TestAnalogSensorMapper, test_analog_config_fail)
     ret = _mapper.apply_command(__CMD_PTR(factory.make_set_input_scale_range_high(_sensor_idx, _input_scale_low-1)));
     ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
 }
-

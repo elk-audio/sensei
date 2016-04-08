@@ -14,7 +14,6 @@
 #ifndef SENSEI_COMMAND_DEFS_H
 #define SENSEI_COMMAND_DEFS_H
 
-#include <memory>
 #include <vector>
 
 #include "base_command.h"

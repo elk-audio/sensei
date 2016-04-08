@@ -8,6 +8,8 @@
 #ifndef SENSEI_SENSOR_MAPPERS_H
 #define SENSEI_SENSOR_MAPPERS_H
 
+#include <message/base_value.h>
+#include <message/value_defs.h>
 #include "message/command_defs.h"
 
 namespace sensei {
@@ -49,9 +51,17 @@ public:
      * Invariant: if the output sequence is sent back to the object with apply_command(..), there
      * should be no changes in the internal state.
      *
-     * @param iterator back_inserter operator to output container to be filled
+     * @param out_iterator back_inserter operator to output container to be filled
      */
-    virtual void put_config_commands_into(CommandIterator iterator);
+    virtual void put_config_commands_into(CommandIterator out_iterator);
+
+    /**
+     * @brief Process a given input value and generate output values for the backend consumer.
+     *
+     * @param value Input value coming from the serial frontend
+     * @param out_iterator Iterator to a collection to which output values will be added
+     */
+    virtual void process(Value* value, OutputValueIterator out_iterator) = 0;
 
 protected:
     PinType _pin_type;
@@ -73,7 +83,9 @@ public:
 
     CommandErrorCode apply_command(const Command *cmd) override;
 
-    void put_config_commands_into(CommandIterator iterator) override;
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value *value, OutputValueIterator out_iterator) override;
 
 private:
 
@@ -91,21 +103,17 @@ public:
 
     CommandErrorCode apply_command(const Command *cmd) override;
 
-    void put_config_commands_into(CommandIterator iterator) override;
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value *value, OutputValueIterator out_iterator) override;
 
 private:
     CommandErrorCode _set_adc_bit_resolution(const int resolution);
-
     CommandErrorCode _set_input_scale_range_low(const int value);
-
     CommandErrorCode _set_input_scale_range_high(const int value);
-
     CommandErrorCode _set_delta_ticks_sending(const int value);
-
     CommandErrorCode _set_lowpass_filter_order(const int value);
-
     CommandErrorCode _set_lowpass_cutoff(const float value);
-
     CommandErrorCode _set_slider_threshold(const int value);
 
     // External board config
