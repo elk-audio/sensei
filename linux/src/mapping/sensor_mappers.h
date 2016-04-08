@@ -20,7 +20,11 @@ static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 
 }; // Anonymous namespace
 
-
+/**
+ * @brief Base class for sensor mappers.
+ *
+ * Handles enabled status and sending mode.
+ */
 class BaseSensorMapper
 {
 
@@ -32,8 +36,27 @@ public:
 
     virtual ~BaseSensorMapper();
 
+    /**
+     * @brief Modify internal configuration according to the given command.
+     *
+     * @param cmd Configuration command.
+     *
+     * @return CommandErrorCode::OK if command was succesful.
+     *
+     * Other return codes can be errors specific to a parameter (e.g. CommandErrorCode::INVALID_RANGE),
+     * or CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE
+     * if command is not appropriate for configuring this sensor.
+     */
     virtual CommandErrorCode apply_command(const Command *cmd);
 
+    /**
+     * @brief Fill the given container with a sequence of commands that match internal configuration.
+     *
+     * Invariant: if the output sequence is sent back to the object with apply_command(..), there
+     * should be no changes in the internal state.
+     *
+     * @param iterator back_inserter operator to output container to be filled
+     */
     virtual void put_config_commands_into(CommandIterator iterator);
 
 protected:
