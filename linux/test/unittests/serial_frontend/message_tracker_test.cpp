@@ -50,10 +50,10 @@ TEST_F (TestMessageTracker, test_time_handling)
  */
 TEST_F (TestMessageTracker, test_simple_tracking)
 {
-    _module_under_test.log(1);
+    _module_under_test.store(1);
     ASSERT_FALSE(_module_under_test._entries.empty());
-    _module_under_test.log(2);
-    _module_under_test.log(3);
+    _module_under_test.store(2);
+    _module_under_test.store(3);
     /*
      * Check that all entries return ok and that no has timed out.
      */
@@ -68,8 +68,8 @@ TEST_F (TestMessageTracker, test_simple_tracking)
  */
 TEST_F (TestMessageTracker, test_late_ack)
 {
-    _module_under_test.log(2);
-    _module_under_test.log(3);
+    _module_under_test.store(2);
+    _module_under_test.store(3);
     /*
      * Hack the list by rewinding the stored timestamps
      */

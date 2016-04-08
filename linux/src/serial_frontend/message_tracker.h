@@ -35,7 +35,7 @@ public:
     /**
      * @brief Log a new entry, i.e. call this when sending a packet and waiting for a response
      */
-    void log(uint64_t identifier);
+    void store(uint64_t identifier);
 
     /**
      * @brief Check the status of a received packet against the list of un-acknowledged packets.
