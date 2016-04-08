@@ -45,12 +45,12 @@ TEST(SynchronizedQueueTest, ordertest)
         // But that is not critical since wait_for_data returns immediately if there
         // is data.
         module_under_test.wait_for_data(std::chrono::milliseconds(10));
-
-        ASSERT_FALSE(module_under_test.empty());
-        TestContainer m = module_under_test.pop();
-        ASSERT_TRUE(module_under_test.empty());
-        ASSERT_EQ(i, m.a);
-
+        if (module_under_test.empty() == false)
+        {
+            TestContainer m = module_under_test.pop();
+            ASSERT_TRUE(module_under_test.empty());
+            ASSERT_EQ(i, m.a);
+        }
         // tell the push thread to push a new message on the queue
         push_notifier.notify_one();
     }

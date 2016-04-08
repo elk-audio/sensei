@@ -44,6 +44,14 @@ uint16_t inline calculate_crc(const sSenseiDataPacket *packet)
     return sum;
 }
 
+uint64_t inline extract_uuid(const sSenseiACKPacket* ack)
+{
+    uint64_t uuid = ack->timestamp;
+    uuid += (static_cast<uint64_t>(ack->cmd) << 32);
+    uuid += (static_cast<uint64_t>(ack->sub_cmd) << 48);
+    return uuid;
+}
+
 // set 1 byte boundary for matching
 #pragma pack(push, 1)
 

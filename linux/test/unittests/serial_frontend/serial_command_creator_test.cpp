@@ -9,12 +9,13 @@ using namespace sensei;
 using namespace serial_frontend;
 
 static const uint32_t test_tstamp = test_tstamp;
-
+static const int MAX_NUMBER_OFF_PINS = 64;
 
 class TestSerialCommandCreator : public ::testing::Test
 {
 protected:
-    TestSerialCommandCreator()
+    TestSerialCommandCreator() :
+            _module_under_test(MAX_NUMBER_OFF_PINS)
     {
     }
     void SetUp()

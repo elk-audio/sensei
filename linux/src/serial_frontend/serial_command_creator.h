@@ -24,7 +24,7 @@ struct pin_config
 
 class SerialCommandCreator {
 public:
-    SerialCommandCreator();
+    SerialCommandCreator(int max_pins);
     ~SerialCommandCreator();
 
     const sSenseiDataPacket* make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value);
@@ -41,6 +41,7 @@ public:
     const sSenseiDataPacket* make_config_slider_threshold_cmd(int pin_id, uint32_t timestamp, int threshold);
 
 private:
+    int _max_pins;
     sSenseiDataPacket _cmd_buffer;
     std::vector<pin_config> _cfg_cache;
 };

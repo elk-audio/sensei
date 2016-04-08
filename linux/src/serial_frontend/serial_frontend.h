@@ -18,6 +18,7 @@
 #include "message/message_factory.h"
 #include "../../common/sensei_serial_protocol.h"
 #include "serial_command_creator.h"
+#include "message_tracker.h"
 
 #include "libserialport.h"
 #include "synchronized_queue.h"
@@ -64,17 +65,33 @@ public:
     */
     void stop();
 
+    /**
+     * @brief Stops the flow of messages. If set to true, incoming serial packets
+     * are silently dropped.
+     *
+     * @param [in] enabled Sets mute enabled/disabled
+     */
+    void mute(bool enabled);
+
+    /**
+     * @brief Enables tracking and verification of serial ack packets
+     *
+     * @param [in] enabled Sets ack verification enabled/disabled
+     */
+    void verify_acks(bool enabled);
+
 private:
     int setup_port(const std::string& name);
     void change_state(running_state state);
     void read_loop();
     void write_loop();
 
-    std::unique_ptr<BaseMessage> create_internal_message(const sSenseiDataPacket *packet);
-    const sSenseiDataPacket* create_send_command(std::unique_ptr<Command> message);
+    std::unique_ptr<BaseMessage> process_serial_packet(const sSenseiDataPacket *packet);
+    const sSenseiDataPacket* create_send_command(Command* message);
 
-    MessageFactory _message_factory;
+    MessageFactory       _message_factory;
     SerialCommandCreator _packet_factory;
+    MessageTracker       _message_tracker;
 
     sp_port *_port;
     SynchronizedQueue<std::unique_ptr<Command>>* _in_queue;
@@ -87,6 +104,8 @@ private:
     std::mutex      _state_mutex;
 
     bool _connected;
+    bool _muted;
+    bool _verify_acks;
 };
 
 }; // end namespace sensei

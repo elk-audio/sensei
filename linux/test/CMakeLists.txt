@@ -12,6 +12,7 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/serial_frontend/serial_command_creator_test.cpp
                unittests/serial_frontend/serial_frontend_test.cpp
                unittests/serial_frontend/serial_fronted_internal_test.cpp
+               unittests/serial_frontend/message_tracker_test.cpp
                unittests/message/message_test.cpp
                unittests/mapping/sensor_mappers_test.cpp)
 

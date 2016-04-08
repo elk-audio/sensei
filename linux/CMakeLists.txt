@@ -28,6 +28,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PROJECT_LINK_FLAGS}")
 set(COMPILATION_UNITS src/main.cpp
                       src/serial_frontend/serial_frontend.cpp
                       src/serial_frontend/serial_command_creator.cpp
+                      src/serial_frontend/message_tracker.cpp
                       src/mapping/sensor_mappers.cpp)
 
 # Enumerate all the headers separately so that CLion can index them
@@ -41,10 +42,11 @@ set(EXTRA_CLION_SOURCES src/message/base_message.h
                         src/serial_frontend/serial_frontend.h
                         src/serial_frontend/serial_frontend_internal.h
                         src/serial_frontend/serial_command_creator.h
+                        src/serial_frontend/message_tracker.h
                         src/locked_queue.h
-                        src/synchronized_queue.h)
+                        src/synchronized_queue.h src/serial_frontend/message_tracker.cpp)
 
-set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
+set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" )
 
 #########################
 #  Include Directories  #
@@ -63,7 +65,8 @@ include_directories(${INCLUDE_DIRS})
 #################################
 
 set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
-                   "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a")
+                   "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a"
+                   pthread)
 
 #############################################
 #  Subdirectory projects                    #

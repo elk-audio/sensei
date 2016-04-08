@@ -16,6 +16,9 @@
 namespace sensei {
 namespace serial_frontend {
 
+static const int MAX_NUMBER_OFF_PINS = 64 + 16;
+static const auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
+
 /*
  * Verify that a received message has not been corrupted
  */
@@ -40,10 +43,15 @@ bool verify_message(const sSenseiDataPacket *packet)
 SerialFrontend::SerialFrontend(const std::string &port_name,
                                SynchronizedQueue<std::unique_ptr<Command>> *in_queue,
                                SynchronizedQueue<std::unique_ptr<BaseMessage>> *out_queue) :
+        _packet_factory(MAX_NUMBER_OFF_PINS),
+        _message_tracker(ACK_TIMEOUT),
         _in_queue(in_queue),
         _out_queue(out_queue),
         _read_thread_state(running_state::STOPPED),
-        _write_thread_state(running_state::STOPPED)
+        _write_thread_state(running_state::STOPPED),
+        _connected(false),
+        _muted(false),
+        _verify_acks(true)
 {
     setup_port(port_name);
 }
@@ -62,7 +70,6 @@ SerialFrontend::~SerialFrontend()
 bool SerialFrontend::connected()
 {
     return _connected;
-
 }
 
 
@@ -94,6 +101,15 @@ void SerialFrontend::stop()
     }
 }
 
+void SerialFrontend::mute(bool enabled)
+{
+    _muted = enabled;
+}
+
+void SerialFrontend::verify_acks(bool enabled)
+{
+    _verify_acks = enabled;
+}
 
 int SerialFrontend::setup_port(const std::string &name)
 {
@@ -131,11 +147,11 @@ void SerialFrontend::read_loop()
         if (ret >= SENSEI_LENGTH_DATA_PACKET)
         {
             sSenseiDataPacket *packet = reinterpret_cast<sSenseiDataPacket *>(buffer);
-            if (verify_message(packet) == false)
+            if (_muted || verify_message(packet) == false)
             {
                 continue; // log an error message here when logging functionality is in place
             }
-            std::unique_ptr<BaseMessage> m = create_internal_message(packet);
+            std::unique_ptr<BaseMessage> m = process_serial_packet(packet);
             if (m != nullptr)
             {
                 _out_queue->push(std::move(m));
@@ -164,8 +180,15 @@ void SerialFrontend::write_loop()
             continue;
         }
         message = _in_queue->pop();
-        const sSenseiDataPacket* packet = create_send_command(std::move(message));
-        sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
+        const sSenseiDataPacket* packet = create_send_command(message.get());
+        if (packet != nullptr)
+        {
+            sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
+            if (_verify_acks)
+            {
+                _message_tracker.log(message->uuid());
+            }
+        }
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _write_thread_state = running_state::STOPPED;
@@ -174,7 +197,7 @@ void SerialFrontend::write_loop()
 /*
  * Create internal message representation from received teensy packet
  */
-std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSenseiDataPacket *packet)
+std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
 {
     std::unique_ptr<BaseMessage> message(nullptr);
     switch (packet->cmd)
@@ -196,8 +219,28 @@ std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSens
             break;
         }
         case SENSEI_CMD::ACK:
+        {
+
+            const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet);
+            uint64_t uuid = extract_uuid(ack);
+            if (_verify_acks)
+            {
+                switch (_message_tracker.check_status(uuid))
+                {
+                    case ack_status::ACKED_OK:
+                        // Everything's fine, do nothing more
+                        break;
+                    case ack_status::TIMED_OUT:
+                        // Make error message and put in the queue
+                        break;
+                    case ack_status::UNKNOWN_IDENTIFIER:
+                        // Should not happen, log an error here
+                        break;
+                }
+            }
             // handle acked messages
             break;
+        }
         default:
             break;
     }
@@ -208,7 +251,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::create_internal_message(const sSens
  * Create teensy command packet from a Command message.
  * Note that message goes out of scope and is destroyed when the function returns
  */
-const sSenseiDataPacket* SerialFrontend::create_send_command(std::unique_ptr<Command> message)
+const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
 {
     assert(message->is_cmd());
 
@@ -216,62 +259,62 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(std::unique_ptr<Com
     {
         case CommandType::SET_SAMPLING_RATE:
         {
-            auto cmd = static_cast<SetSamplingRateCommand *>(message.get());
+            auto cmd = static_cast<SetSamplingRateCommand *>(message);
             return _packet_factory.make_set_sampling_rate_cmd(cmd->timestamp(),
                                                               cmd->data());
         }
         case CommandType::SET_PIN_TYPE:
         {
-            auto cmd = static_cast<SetPinTypeCommand *>(message.get());
+            auto cmd = static_cast<SetPinTypeCommand *>(message);
             return _packet_factory.make_config_pintype_cmd(cmd->sensor_index(),
                                                            cmd->timestamp(),
                                                            static_cast<int>(cmd->data()));
         }
         case CommandType::SET_SENDING_MODE:
         {
-            auto cmd = static_cast<SetSendingModeCommand *>(message.get());
+            auto cmd = static_cast<SetSendingModeCommand *>(message);
             return _packet_factory.make_config_sendingmode_cmd(cmd->sensor_index(),
                                                                cmd->timestamp(),
                                                                static_cast<int>(cmd->data()));
         }
         case CommandType::SET_SENDING_DELTA_TICKS:
         {
-            auto cmd = static_cast<SetSendingDeltaTicksCommand *>(message.get());
+            auto cmd = static_cast<SetSendingDeltaTicksCommand *>(message);
             return _packet_factory.make_config_delta_ticks_cmd(cmd->sensor_index(),
                                                                cmd->timestamp(),
                                                                cmd->data());
         }
         case CommandType::SET_ADC_BIT_RESOLUTION:
         {
-            auto cmd = static_cast<SetADCBitResolutionCommand *>(message.get());
+            auto cmd = static_cast<SetADCBitResolutionCommand *>(message);
             return _packet_factory.make_config_bitres_cmd(cmd->sensor_index(),
                                                           cmd->timestamp(),
                                                           cmd->data());
         }
         case CommandType::SET_LOWPASS_FILTER_ORDER:
         {
-            auto cmd = static_cast<SetLowpassFilterOrderCommand *>(message.get());
+            auto cmd = static_cast<SetLowpassFilterOrderCommand *>(message);
             return _packet_factory.make_config_filter_order_cmd(cmd->sensor_index(),
                                                                 cmd->timestamp(),
                                                                 cmd->data());
         }
         case CommandType::SET_LOWPASS_CUTOFF:
         {
-            auto cmd = static_cast<SetLowpassCutoffCommand *>(message.get());
+            auto cmd = static_cast<SetLowpassCutoffCommand *>(message);
             return _packet_factory.make_config_lowpass_cutoff_cmd(cmd->sensor_index(),
                                                                   cmd->timestamp(),
                                                                   cmd->data());
         }
         case CommandType::SET_SLIDER_THRESHOLD:
         {
-            auto cmd = static_cast<SetSliderThresholdCommand *>(message.get());
+            auto cmd = static_cast<SetSliderThresholdCommand *>(message);
             return _packet_factory.make_config_slider_threshold_cmd(cmd->sensor_index(),
                                                                     cmd->timestamp(),
                                                                     cmd->data());
         }
         case CommandType::SEND_DIGITAL_PIN_VALUE:
         {
-            auto cmd = static_cast<SendDigitalPinValueCommand *>(message.get());
+            auto cmd = static_cast<SendDigitalPinValueCommand *>(message);
             return _packet_factory.make_set_digital_pin_cmd(cmd->sensor_index(),
                                                             cmd->timestamp(),
                                                             cmd->data());
