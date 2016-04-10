@@ -52,6 +52,7 @@ enum class PinType
     DIGITAL_INPUT,
     DIGITAL_OUTPUT,
     ANALOG_INPUT,
+    UNDEFINED,
     N_PIN_TYPES
 };
 
@@ -74,6 +75,7 @@ enum class CommandErrorCode
     INVALID_VALUE,
     INVALID_RANGE,
     CLIP_WARNING,
+    INVALID_PIN_INDEX,
     N_COMMAND_ERROR_CODES
 };
 

@@ -44,9 +44,9 @@ set(EXTRA_CLION_SOURCES src/message/base_message.h
                         src/serial_frontend/serial_command_creator.h
                         src/serial_frontend/message_tracker.h
                         src/locked_queue.h
-                        src/synchronized_queue.h src/serial_frontend/message_tracker.cpp src/message/error_defs.h src/message/base_error.h)
+                        src/synchronized_queue.h src/serial_frontend/message_tracker.cpp src/message/error_defs.h src/message/base_error.h src/mapping/mapping_processor.h)
 
-set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" )
+set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" src/mapping/mapping_processor.cpp)
 
 #########################
 #  Include Directories  #
