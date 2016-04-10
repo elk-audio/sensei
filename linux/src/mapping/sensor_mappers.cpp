@@ -18,12 +18,20 @@ static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
+// TODO: find a better home for these
+
 template<typename Derived, typename Base>
 std::unique_ptr<Derived>
 static_unique_ptr_cast( std::unique_ptr<Base>&& p )
 {
     auto d = static_cast<Derived *>(p.release());
     return std::unique_ptr<Derived>(d);
+}
+
+template <typename T>
+T clip(const T& x, const T& lower, const T& upper)
+{
+    return std::max(lower, std::min(x, upper));
 }
 
 }; // Anonymous namespace
@@ -295,8 +303,20 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_input_scale_range_high(_sensor_index, _input_scale_range_high);
 }
 
-void AnalogSensorMapper::process(Value* /* value */, OutputValueIterator /* out_iterator */)
+void AnalogSensorMapper::process(Value* value, OutputValueIterator out_iterator)
 {
+    assert(value->type() == ValueType::ANALOG);
+    auto analog_val = static_cast<AnalogValue*>(value);
+    int clipped_val = clip<int>(analog_val->value(), _input_scale_range_low, _input_scale_range_high);
+    float out_val =   static_cast<float>(clipped_val - _input_scale_range_low)
+                    / static_cast<float>(_input_scale_range_high - _input_scale_range_low);
+    if (_invert_value)
+    {
+        out_val = 1.0f - out_val;
+    }
+
+    MessageFactory factory;
+    *out_iterator = static_unique_ptr_cast<OutputValue, BaseMessage>(factory.make_output_value(_sensor_index, out_val));
 }
 
 CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolution)

@@ -65,7 +65,7 @@ protected:
     DigitalSensorMapper _mapper{_sensor_idx};
 };
 
-TEST_F(TestDigitalSensorMapper, test_digital_configuration)
+TEST_F(TestDigitalSensorMapper, test_config)
 {
     // Get the config back inside a local container and check values in a LIFO manner
     std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
@@ -89,7 +89,7 @@ TEST_F(TestDigitalSensorMapper, test_digital_configuration)
 }
 
 
-TEST_F(TestDigitalSensorMapper, test_digital_config_fail)
+TEST_F(TestDigitalSensorMapper, test_config_fail)
 {
     // Verify that some wrong commands return unhandled error
     MessageFactory factory;
@@ -199,13 +199,13 @@ protected:
     int _adc_bit_resolution{12};
     bool _slider_mode_enabled{true};
     int _slider_threshold{9};
-    int _input_scale_low{23};
+    int _input_scale_low{22};
     int _input_scale_high{2322};
 
     AnalogSensorMapper _mapper{_sensor_idx};
 };
 
-TEST_F(TestAnalogSensorMapper, test_analog_configuration)
+TEST_F(TestAnalogSensorMapper, test_config)
 {
     // Get the config back inside a local container and check values in a LIFO manner
     std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
@@ -261,7 +261,7 @@ TEST_F(TestAnalogSensorMapper, test_analog_configuration)
 
 }
 
-TEST_F(TestAnalogSensorMapper, test_analog_config_fail)
+TEST_F(TestAnalogSensorMapper, test_config_fail)
 {
     // Verify that wrong commands return appropriate errors
     MessageFactory factory;
@@ -297,3 +297,83 @@ TEST_F(TestAnalogSensorMapper, test_analog_config_fail)
     ret = _mapper.apply_command(__CMD_PTR(factory.make_set_input_scale_range_high(_sensor_idx, _input_scale_low-1)));
     ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
 }
+
+TEST_F(TestAnalogSensorMapper, test_process)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+
+    OutputValueContainer out_values;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    // Middle value should return 0.5
+
+    // Force range sum to be even so that we can just check for 0.5
+    if ( ((_input_scale_low + _input_scale_high) % 2 ) == 1 )
+    {
+        _input_scale_low += 1;
+        ret = _mapper.apply_command(__CMD_PTR(factory.make_set_input_scale_range_low(_sensor_idx, _input_scale_low)));
+        ASSERT_EQ(CommandErrorCode::OK, ret);
+    }
+    auto input_msg = factory.make_analog_value(_sensor_idx,
+                                               (_input_scale_low + _input_scale_high) / 2);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, std::back_inserter(out_values));
+    auto out_val = std::move(out_values.back());
+    ASSERT_FLOAT_EQ(0.5f, out_val->value());
+}
+
+
+TEST_F(TestAnalogSensorMapper, test_invert)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+
+    OutputValueContainer out_values;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    int sensor_input = static_cast<int>(0.25 * (_input_scale_low + _input_scale_high));
+    auto input_msg = factory.make_analog_value(_sensor_idx, sensor_input);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, std::back_inserter(out_values));
+    float out_val = std::move(out_values.back())->value();
+
+    ret = _mapper.apply_command(__CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, true)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+    _mapper.process(input_val, std::back_inserter(out_values));
+    float inverted_val = std::move(out_values.back())->value();
+    ASSERT_FLOAT_EQ(inverted_val, 1.0f - out_val);
+
+}
+
+TEST_F(TestAnalogSensorMapper, test_clip)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+
+    OutputValueContainer out_values;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    // Under low range
+    int sensor_input = std::max(_input_scale_low-10, 0);
+    auto input_msg = factory.make_analog_value(_sensor_idx, sensor_input);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, std::back_inserter(out_values));
+    float out_val = std::move(out_values.back())->value();
+    ASSERT_FLOAT_EQ(0.0f, out_val);
+
+    // Above high range
+    sensor_input = std::min(_input_scale_high+10, ((1 <<_adc_bit_resolution) - 1));
+    input_msg = factory.make_analog_value(_sensor_idx, sensor_input);
+    input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, std::back_inserter(out_values));
+    out_val = std::move(out_values.back())->value();
+    ASSERT_FLOAT_EQ(1.0f, out_val);
+}
+
