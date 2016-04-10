@@ -161,7 +161,12 @@ void DigitalSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 
 void DigitalSensorMapper::process(Value* value, OutputValueIterator out_iterator)
 {
+    if (! _sensor_enabled)
+    {
+        return;
+    }
     assert(value->type() == ValueType::DIGITAL);
+
     auto digital_val = static_cast<DigitalValue*>(value);
     float out_val = digital_val->value() ? 1.0f : 0.0f;
     if (_invert_value)
@@ -305,7 +310,12 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 
 void AnalogSensorMapper::process(Value* value, OutputValueIterator out_iterator)
 {
+    if (! _sensor_enabled)
+    {
+        return;
+    }
     assert(value->type() == ValueType::ANALOG);
+
     auto analog_val = static_cast<AnalogValue*>(value);
     int clipped_val = clip<int>(analog_val->value(), _input_scale_range_low, _input_scale_range_high);
     float out_val =   static_cast<float>(clipped_val - _input_scale_range_low)

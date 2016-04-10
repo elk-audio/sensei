@@ -148,6 +148,22 @@ TEST_F(TestDigitalSensorMapper, test_invert)
     ASSERT_EQ(1.0f, out_val->value());
 }
 
+TEST_F(TestDigitalSensorMapper, test_disabled_process_return_empty)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+
+    OutputValueContainer out_values;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+    auto input_msg = factory.make_digital_value(_sensor_idx, false);
+    auto input_val = static_cast<Value*>(input_msg.get());
+
+    _mapper.process(input_val, std::back_inserter(out_values));
+    ASSERT_TRUE(out_values.empty());
+}
+
 class TestAnalogSensorMapper : public ::testing::Test
 {
 protected:
@@ -377,3 +393,18 @@ TEST_F(TestAnalogSensorMapper, test_clip)
     ASSERT_FLOAT_EQ(1.0f, out_val);
 }
 
+TEST_F(TestAnalogSensorMapper, test_disabled_process_return_empty)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+
+    OutputValueContainer out_values;
+
+    auto ret = _mapper.apply_command(__CMD_PTR(factory.make_set_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+    auto input_msg = factory.make_analog_value(_sensor_idx, 100);
+    auto input_val = static_cast<Value*>(input_msg.get());
+
+    _mapper.process(input_val, std::back_inserter(out_values));
+    ASSERT_TRUE(out_values.empty());
+}
