@@ -32,6 +32,7 @@ namespace sensei {
         DIGITAL_OUTPUT_IDX_PIN_NOT_VALID = -8,
         IDX_PIN_NOT_VALID=-9,
         PIN_TYPE_NOT_VALID=-10,
+        CMD_NOT_ALLOWED=-11,
         //------------------------------------------
         TIMEOUT_ON_RESPONSE = -100,
         INCORRECT_PAYLOAD_SIZE = -101,
@@ -42,10 +43,17 @@ namespace sensei {
         INCOMPLETE_PARAMETERS=-106,
         WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS=-107,
         //------------------------------------------
+        IMU_COMMUNICATION_ERROR = -3000,
+        IMU_NOT_CONNECTED = -3001,
+        IMU_CMD_NOT_EXECUTED = -3002,
+        //------------------------------------------
         SERIAL_DEVICE_GENERIC_ERROR = -4000,
         SERIAL_DEVICE_PORT_NOT_OPEN = -4001,
-
+		SERIAL_DEVICE_ERROR_ON_WRITING = -4002,
         //------------------------------------------
+        PINS_CONFIGURATION_PARSING_ERROR = -10000,
+        //------------------------------------------
+
         GENERIC_ERROR=-5000
 
     } SENSEI_ERROR_CODE;
@@ -96,24 +104,47 @@ namespace sensei {
 
     } __attribute__((packed)) sSenseiACKPacket;
 
+    typedef struct sSenseiStatus
+    {
+        uint64_t taskCyclesRt;
+        int32_t  controlLoopDelay; //[us]
+        uint32_t msgQueueReceivedRtTask;
+        uint16_t msgQueueSendErrorsRtTask;
+        uint16_t nCyclesCloseToExpiration;
+
+        uint64_t taskCyclesCom;
+        uint32_t nPacketReceived;
+        uint32_t msgQueueReceivedComTask;
+        uint16_t msgQueueSendErrorsComTask;
+
+    } __attribute__((packed)) sSenseiStatus;
+
+
     typedef enum SENSEI_CMD {
         //----------------------------------------------
+        INITIALIZE_SYSTEM = 0,
         HELLO = 1,
         SERIAL_DEBUG = 2,
+        GET_SYSTEM_STATUS=3,
+		//----------------------------------------------
+		ENABLE_SENDING_PACKETS=10,
         //----------------------------------------------
-        SET_SAMPLING_RATE = 100,
-        CONFIGURE_PIN = 101,
+        CONFIGURE_PIN = 100,
+        GET_PINS_CONFIGURATION=101,
         GET_VALUE = 102,
         GET_ALL_VALUES = 103,
         SET_VALUE = 104,
         SET_DIGITAL_PINS = 105,
-        GET_PINS_CONFIGURATION=106,
         //----------------------------------------------
-        IMU_GET_SETTINGS = 200,
-        IMU_SET_SETTINGS = 201,
-        IMU_GYROSCOPE_CALIBRATION = 202,
-        IMU_RESET_FILTER = 203,
-        IMU_GET_DATA = 204,
+		IMU_START=200,
+		IMU_STOP=201,
+        IMU_SET_SETTINGS = 202,
+        IMU_GET_SETTINGS = 203,
+        IMU_GYROSCOPE_CALIBRATION = 204,
+        IMU_RESET_FILTER = 205,
+        IMU_GET_DATA = 206,
+        IMU_TARE_WITH_CURRENT_ORIENTATION = 207,
+        IMU_RESET_TARE=208,
         //----------------------------------------------
         STOP_BOARD = 250,
         //----------------------------------------------
@@ -130,16 +161,53 @@ namespace sensei {
         SET_PIN = 0,
         SET_BANK = 1,
         //----------------------------------------------
-        //----------------------------------------------
         // CONFIGURE_PIN
         //----------------------------------------------
         SET_PIN_DISABLE=0,
         SET_PIN_DIGITAL_INPUT = 1,
         SET_PIN_DIGITAL_OUTPUT = 2,
-        SET_PIN_ANALOG_INPUT = 3
-
+        SET_PIN_ANALOG_INPUT = 3,
+        //----------------------------------------------
+        // GET_ALL_VALUES
+        //----------------------------------------------
+		PINS=0,
+		DIGITAL_PIN=1,
+        //----------------------------------------------
+        // IMU_GET_DATA
+        //----------------------------------------------
+		GET_ALL_DATA=0,
+		GET_DATA_COMPONENT_SENSOR=1,
+		GET_DATA_COMPONENT_SENSOR_NORMALIZED=2,
+		GET_DATA_QUATERNION=3,
+		GET_DATA_LINEARACCELERATION=4,
+		GET_DATA_QUATERNION_LINEARACCELERATION=5,
+        //----------------------------------------------
+        // SET_VALUE
+        //----------------------------------------------
+		SET_SINGLE_PIN=0,
+        //----------------------------------------------
+        // GET_VALUE
+        //----------------------------------------------
+        GET_SINGLE_PIN=0
 
     } SENSEI_SUB_CMD;
+
+    typedef struct sSystemInitialization {
+		uint8_t samplingRateTicks;
+		uint16_t nPins;
+		uint16_t nDigitalPins;
+    } __attribute__((packed)) sSystemInitialization;
+
+    typedef enum eSamplingRateTicks {
+		SAMPLING_RATE_1000_HZ=1,
+		SAMPLING_RATE_500_HZ=2,
+		SAMPLING_RATE_333_HZ=3,
+		SAMPLING_RATE_250_HZ=4,
+		SAMPLING_RATE_200_HZ=5,
+		SAMPLING_RATE_125_HZ=8,
+		SAMPLING_RATE_100_HZ=10,
+		SAMPLING_RATE_50_HZ=20
+    } eSamplingRateTicks;
 
     typedef enum eImuSensorAccelerometerRange {
         IMU_SENSOR_ACCELEROMETER_RANGE_2G,
@@ -182,6 +250,9 @@ namespace sensei {
         uint8_t gyroscopeRange;
         uint8_t compassRange;
         uint8_t compassEnable;
+        uint16_t deltaTicksContinuousMode; //0->REQUEST_MODE
+		uint8_t typeOfData; // -> eImuGetData
+
     } __attribute__((packed)) sImuSettings;
 
     typedef struct sImuComponentSensor
@@ -245,18 +316,17 @@ namespace sensei {
     } eImuGetData;
 
     typedef enum ePinType{
-        PIN_UNUSED=0,
+        PIN_DISABLE=0,
         PIN_DIGITAL_INPUT,
         PIN_DIGITAL_OUTPUT,
         PIN_ANALOG_INPUT,
         N_PIN_TYPES
     } ePinType;
 
-    typedef enum ePinSendingMode{
-        PIN_SENDING_MODE_OFF,
-        PIN_SENDING_MODE_CONTINUOUS,
-        PIN_SENDING_MODE_ON_VALUE_CHANGED,
-        PIN_SENDING_MODE_ON_REQUEST,
+    typedef enum eSendingMode{
+        SENDING_MODE_ON_REQUEST,
+        SENDING_MODE_CONTINUOUS,
+        SENDING_MODE_ON_VALUE_CHANGED,
         N_PIN_SENDING_MODE
     } ePinSendingMode;
 
@@ -282,4 +352,5 @@ namespace sensei {
     } __attribute__((packed))  sPinConfiguration;
 
 }; // namespace sensei
-#endif // #ifndef SENSEI_SERIAL_PROTOCOL_H_ 
+
+#endif // #ifndef SENSEI_SERIAL_PROTOCOL_H_
