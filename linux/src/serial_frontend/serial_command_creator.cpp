@@ -190,8 +190,8 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_slider_threshold_cmd(
 void initialize_common_data(sSenseiDataPacket& packet, uint32_t timestamp, uint8_t command)
 {
     memset(&packet, 0, sizeof(sSenseiDataPacket));
-    packet.start_header = START_SIGNATURE;
-    packet.stop_header = STOP_SIGNATURE;
+    packet.start_header = START_HEADER;
+    packet.stop_header = STOP_HEADER;
     packet.timestamp = timestamp;
     packet.cmd = command;
 }

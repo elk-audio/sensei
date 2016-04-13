@@ -17,13 +17,13 @@ static uint8_t test_msg[] = { 0x1, 0x2, 0x3, 0xff, 0x0, 0x0, 0x0, 0x0,
 TEST (TestHelperFunctions, test_compare_packet_header) {
     PACKET_HEADER hdr1 = {1, 2, 3};
     PACKET_HEADER hdr2 = {4, 5, 6};
-    ASSERT_EQ(0, compare_packet_header(hdr1, hdr1));
-    ASSERT_NE(0, compare_packet_header(hdr1, hdr2));
+    EXPECT_EQ(0, compare_packet_header(hdr1, hdr1));
+    EXPECT_NE(0, compare_packet_header(hdr1, hdr2));
 }
 
 TEST (TestHelperFunctions, test_calculate_crc)
 {
     uint16_t crc = calculate_crc(reinterpret_cast<sSenseiDataPacket*>(test_msg));
-    ASSERT_EQ(0x04c3, crc);
+    EXPECT_EQ(0x04c3, crc);
 }
 

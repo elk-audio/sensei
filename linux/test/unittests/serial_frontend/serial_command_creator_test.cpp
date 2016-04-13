@@ -45,8 +45,8 @@ TEST_F(TestSerialCommandCreator, test_initialize_common_data)
 {
     sSenseiDataPacket packet;
     initialize_common_data(packet, test_tstamp, CONFIGURE_PIN);
-    ASSERT_EQ(0, compare_packet_header(START_SIGNATURE, packet.start_header));
-    ASSERT_EQ(0, compare_packet_header(STOP_SIGNATURE, packet.stop_header));
+    ASSERT_EQ(0, compare_packet_header(START_HEADER, packet.start_header));
+    ASSERT_EQ(0, compare_packet_header(STOP_HEADER, packet.stop_header));
     ASSERT_EQ((uint32_t)test_tstamp, packet.timestamp);
     ASSERT_EQ(CONFIGURE_PIN, packet.cmd);
 }

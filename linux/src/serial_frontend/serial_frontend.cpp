@@ -24,8 +24,8 @@ static const auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
  */
 bool verify_message(const sSenseiDataPacket *packet)
 {
-    if (compare_packet_header(packet->start_header, START_SIGNATURE) != 0 ||
-        compare_packet_header(packet->stop_header, STOP_SIGNATURE) != 0)
+    if (compare_packet_header(packet->start_header, START_HEADER) != 0 ||
+        compare_packet_header(packet->stop_header, STOP_HEADER) != 0)
     {
         return false;
     }

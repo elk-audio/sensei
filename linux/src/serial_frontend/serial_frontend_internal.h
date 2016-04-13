@@ -15,8 +15,6 @@ namespace serial_frontend {
 
 const unsigned int READ_WRITE_TIMEOUT_MS = 100;
 
-const PACKET_HEADER START_SIGNATURE = {0x12, 0x34, 0x56};
-const PACKET_HEADER STOP_SIGNATURE = {0x12, 0x34, 0x56};
 
 /*
  * Convenience function for comparing header signatures, same pattern as memcmp, strcmp
