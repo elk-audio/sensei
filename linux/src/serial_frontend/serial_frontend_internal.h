@@ -41,7 +41,7 @@ uint16_t inline calculate_crc(const sSenseiDataPacket *packet)
                                  + sizeof(packet->continuation)
                                  + sizeof(packet->timestamp); ++i)
     {
-        sum += *(packet->payload + i);
+        sum += *reinterpret_cast<const uint8_t*>(packet->payload + i);
     }
     return sum;
 }
