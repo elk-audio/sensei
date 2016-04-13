@@ -6,7 +6,6 @@
  * @date 2016-03-10
  */
 
-
 #ifndef SENSEI_SERIAL_PROTOCOL_H_
 #define SENSEI_SERIAL_PROTOCOL_H_
 
@@ -15,6 +14,8 @@
 namespace sensei {
 
     typedef float type_filter_var;
+
+    const type_filter_var DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
 
     typedef enum SENSEI_ERROR_CODE {
 
@@ -33,6 +34,8 @@ namespace sensei {
         IDX_PIN_NOT_VALID=-9,
         PIN_TYPE_NOT_VALID=-10,
         CMD_NOT_ALLOWED=-11,
+        INCORRECT_NUMBER_OF_PINS=-12,
+        INCORRECT_NUMBER_OF_DIGITAL_PINS=-13,
         //------------------------------------------
         TIMEOUT_ON_RESPONSE = -100,
         INCORRECT_PAYLOAD_SIZE = -101,
@@ -110,7 +113,9 @@ namespace sensei {
         int32_t  controlLoopDelay; //[us]
         uint32_t msgQueueReceivedRtTask;
         uint16_t msgQueueSendErrorsRtTask;
+        uint16_t nCyclesExpired;
         uint16_t nCyclesCloseToExpiration;
+        uint16_t lastTocRtTask;
 
         uint64_t taskCyclesCom;
         uint32_t nPacketReceived;
@@ -128,6 +133,7 @@ namespace sensei {
         GET_SYSTEM_STATUS=3,
 		//----------------------------------------------
 		ENABLE_SENDING_PACKETS=10,
+        ENABLE_MULTIPLE_PACKETS=11,
         //----------------------------------------------
         CONFIGURE_PIN = 100,
         GET_PINS_CONFIGURATION=101,
@@ -193,7 +199,7 @@ namespace sensei {
     } SENSEI_SUB_CMD;
 
     typedef struct sSystemInitialization {
-		uint8_t samplingRateTicks;
+		uint8_t ticksDelayRtTask;
 		uint16_t nPins;
 		uint16_t nDigitalPins;
     } __attribute__((packed)) sSystemInitialization;
