@@ -16,11 +16,18 @@ namespace sensei {
 class EventHandler
 {
 public:
-    EventHandler(const std::string port_name,
-                 const int max_n_sensors,
-                 const int sleep_period_ms=10);
+    EventHandler()
+    {}
 
-    void run();
+    ~EventHandler()
+    {}
+
+    void init(const std::string port_name,
+              const int max_n_sensors);
+
+    void handle_events();
+
+    void deinit();
 
 private:
     void _handle_command(Command* cmd);
@@ -34,10 +41,6 @@ private:
     std::unique_ptr<serial_frontend::SerialFrontend> _frontend;
     std::unique_ptr<mapping::MappingProcessor> _processor;
     std::unique_ptr<output_backend::StandardStreamBackend> _output_backend;
-
-    // Internal variables
-    std::chrono::milliseconds _sleep_period;
-    bool _event_loop_running;
 };
 
 }; // namespace sensei

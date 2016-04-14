@@ -4,6 +4,7 @@
     #include <cstdio>
 #endif
 
+#include <chrono>
 #include <cassert>
 
 #include "event_handler.h"
@@ -11,29 +12,22 @@
 
 using namespace sensei;
 
-EventHandler::EventHandler(const std::string port_name,
-                           const int max_n_sensors,
-                           const int sleep_period_ms) :
-    _sleep_period(sleep_period_ms),
-    _event_loop_running(false)
+
+void EventHandler::init(const std::string port_name,
+                        const int max_n_sensors)
 {
-    _frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
     _processor.reset(new mapping::MappingProcessor(max_n_sensors));
     _output_backend.reset(new output_backend::StandardStreamBackend(max_n_sensors));
-}
-
-
-void EventHandler::run()
-{
-    // Start serial reading thread
-
-    _frontend->run();
+    _frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
 
     // TODO: use TBI logger system
-    if (! _frontend->connected() )
+    if (!_frontend->connected())
     {
         fprintf(stderr, "Error: serial connection failed.\n");
     }
+
+    // Start serial reading thread
+    _frontend->run();
 
 #ifdef SENSEI_TEST_WITHOUT_CONFIG_BACKEND
     _frontend->verify_acks(false);
@@ -43,7 +37,7 @@ void EventHandler::run()
     MessageFactory factory;
 
     // Pin 0-15 : digital input
-    for (int pin_idx=0; pin_idx<16; pin_idx++)
+    for (int pin_idx = 0; pin_idx < 16; pin_idx++)
     {
         _event_queue.push(factory.make_set_pin_type_command(pin_idx, PinType::DIGITAL_INPUT));
         _event_queue.push(factory.make_set_pin_name(pin_idx, std::string("digitaLINO")));
@@ -51,7 +45,7 @@ void EventHandler::run()
     }
 
     // Pin 32-55 : analog input
-    for (int pin_idx=32; pin_idx<56; pin_idx++)
+    for (int pin_idx = 32; pin_idx < 56; pin_idx++)
     {
         _event_queue.push(factory.make_set_pin_type_command(pin_idx, PinType::ANALOG_INPUT));
         _event_queue.push(factory.make_set_pin_name(pin_idx, std::string("analoGINO")));
@@ -62,32 +56,36 @@ void EventHandler::run()
     }
 #endif
 
-    _event_loop_running = true;
+}
 
-    while (_event_loop_running)
+void EventHandler::deinit()
+{
+    _frontend.reset(nullptr);
+    _processor.reset(nullptr);
+    _output_backend.reset(nullptr);
+}
+
+void EventHandler::handle_events()
+{
+    _event_queue.wait_for_data(std::chrono::milliseconds(0));
+    if (! _event_queue.empty())
     {
-        _event_queue.wait_for_data(_sleep_period);
-        if (! _event_queue.empty())
+        std::unique_ptr<BaseMessage> event = _event_queue.pop();
+        switch(event->base_type())
         {
-            std::unique_ptr<BaseMessage> event = _event_queue.pop();
-            switch(event->base_type())
-            {
-            case MessageType::VALUE:
-                _processor->process(static_cast<Value*>(event.release()), _output_backend.get());
-                break;
+        case MessageType::VALUE:
+            _processor->process(static_cast<Value*>(event.release()), _output_backend.get());
+            break;
 
-            case MessageType::COMMAND:
-                _handle_command(static_cast<Command*>(event.release()));
-                break;
+        case MessageType::COMMAND:
+            _handle_command(static_cast<Command*>(event.release()));
+            break;
 
-            case MessageType::ERROR:
-                _handle_error(static_cast<Error*>(event.release()));
-                break;
-            }
+        case MessageType::ERROR:
+            _handle_error(static_cast<Error*>(event.release()));
+            break;
         }
-        // TODO: handle periodic stuff that need to be handled even when the queue is empty
     }
-
 }
 
 

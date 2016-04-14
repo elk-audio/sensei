@@ -1,5 +1,8 @@
 #include <vector>
+#include <thread>
+#include <chrono>
 #include <cstdlib>
+#include <csignal>
 #include <cstdio>
 #include <cassert>
 
@@ -17,6 +20,25 @@
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_SERIAL_DEVICE        "/dev/ttyS01"
+
+////////////////////////////////////////////////////////////////////////////////
+// Global Variables
+////////////////////////////////////////////////////////////////////////////////
+
+sensei::EventHandler event_handler;
+static volatile sig_atomic_t main_loop_running = 1;
+
+////////////////////////////////////////////////////////////////////////////////
+// Signal handlers
+////////////////////////////////////////////////////////////////////////////////
+
+static void system_signal_handler(int sig_number)
+{
+    if ( (sig_number == SIGINT) || (sig_number == SIGTERM) )
+    {
+        main_loop_running = 0;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Command Line parsing helpers
@@ -167,7 +189,7 @@ int main(int argc, char* argv[])
     }
 
     int n_pins = SENSEI_DEFAULT_N_PINS;
-    int sleep_period_ms = SENSEI_DEFAULT_SLEEP_PERIOD_MS;
+    std::chrono::milliseconds sleep_period_ms{SENSEI_DEFAULT_SLEEP_PERIOD_MS};
     std::string port_name = std::string(SENSEI_DEFAULT_SERIAL_DEVICE);
     for (int i=0; i<cl_parser.optionsCount(); i++)
     {
@@ -202,7 +224,7 @@ int main(int argc, char* argv[])
                     SenseiArg::print_error("Option '", opt, "' invalid number\n");
                     return 1;
                 }
-                sleep_period_ms = parsed_int;
+                sleep_period_ms = std::chrono::milliseconds(parsed_int);
             }
             break;
 
@@ -217,11 +239,30 @@ int main(int argc, char* argv[])
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    // Start main loop
+    // Initialization
     ////////////////////////////////////////////////////////////////////////////////
 
-    sensei::EventHandler event_handler(port_name, n_pins, sleep_period_ms);
-    event_handler.run();
+    signal(SIGINT, system_signal_handler);
+    signal(SIGTERM, system_signal_handler);
+
+    event_handler.init(port_name, n_pins);
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Main loop
+    ////////////////////////////////////////////////////////////////////////////////
+
+    while (main_loop_running)
+    {
+        event_handler.handle_events();
+        std::this_thread::sleep_for(sleep_period_ms);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Deinit
+    ////////////////////////////////////////////////////////////////////////////////
+
+    event_handler.deinit();
+    printf("I have deinitialized everything, ready to shut down.\n");
 
     return 0;
 }
