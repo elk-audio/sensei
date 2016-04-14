@@ -52,7 +52,10 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
         _muted(false),
         _verify_acks(true)
 {
-    setup_port(port_name);
+    if (setup_port(port_name) == SP_OK)
+    {
+        _connected = true;
+    }
 }
 
 
