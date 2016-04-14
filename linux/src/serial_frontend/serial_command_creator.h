@@ -27,6 +27,7 @@ public:
     SerialCommandCreator(int max_pins);
     ~SerialCommandCreator();
 
+    const sSenseiDataPacket* make_initialize_system_cmd(uint32_t timestamp, int ticks_delay, int pins, int digital_pins);
     const sSenseiDataPacket* make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value);
     const sSenseiDataPacket* make_set_bank_cmd(int pin_id, uint32_t timestamp, int value);
     const sSenseiDataPacket* make_set_sampling_rate_cmd(uint32_t timestamp, float sampling_rate);

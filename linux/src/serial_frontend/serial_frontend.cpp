@@ -151,13 +151,13 @@ void SerialFrontend::read_loop()
                 continue; // log an error message here when logging functionality is in place
             }
             std::unique_ptr<BaseMessage> m = process_serial_packet(packet);
-            if (m != nullptr)
+            if (m)
             {
                 _out_queue->push(std::move(m));
             }
             else
             {
-                // failed to create BaseMessage, log error
+                // failed to create BaseMessage, TODO - log error
             }
             if (_verify_acks)
             {
@@ -188,12 +188,12 @@ void SerialFrontend::write_loop()
         }
         message = _in_queue->pop();
         const sSenseiDataPacket* packet = create_send_command(message.get());
-        if (packet != nullptr)
+        if (packet)
         {
             sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
             if (_verify_acks)
             {
-                _message_tracker.store(message->uuid());
+                _message_tracker.store(extract_uuid(packet));
             }
         }
     }
@@ -216,7 +216,6 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
             {
                 case PIN_DIGITAL_INPUT:
                     return _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
-                    break;
 
                 case PIN_ANALOG_INPUT:
                     const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->payload);
@@ -226,31 +225,40 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
         }
         case SENSEI_CMD::ACK:
         {
-            const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet->payload);
-            uint64_t uuid = extract_uuid(ack);
-            if (_verify_acks)
-            {
-                switch (_message_tracker.check_status(uuid))
-                {
-                    case ack_status::ACKED_OK:
-                        // Everything's fine, do nothing more
-                        break;
-                    case ack_status::TIMED_OUT:
-                        // Make error message and return it
-                        break;
-                    case ack_status::UNKNOWN_IDENTIFIER:
-                        // Should not happen, log an error here
-                        break;
-                }
-            }
-            if (ack->status != SENSEI_ERROR_CODE::OK)
-            {
-                // return create_error_message(ack->status);
-            }
-            break;
+            return process_ack(packet);
         }
-        default:
-            break;
+    }
+    return nullptr;
+}
+
+std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket *packet)
+{
+    const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet->payload);
+    uint64_t uuid = extract_uuid(ack);
+    if (_verify_acks)
+    {
+        switch (_message_tracker.check_status(uuid))
+        {
+            case ack_status::ACKED_OK:
+                // Everything's fine, do nothing more
+                break;
+            case ack_status::TIMED_OUT:
+                // Make error message and return it
+                break;
+            case ack_status::UNKNOWN_IDENTIFIER:
+                // Should not happen, log an error here
+                break;
+        }
+    }
+    if (ack->status != SENSEI_ERROR_CODE::OK)
+    {
+        // TODO - log the error here as only some error codes result in an error message being sent
+        switch (ack->status)
+        {
+            case SENSEI_ERROR_CODE::CRC_NOT_CORRECT:
+                // TODO - count the number of crc errors and only report error when they are too many
+                return _message_factory.make_bad_crc_error(0, ack->timestamp);
+        }
     }
     return nullptr;
 }

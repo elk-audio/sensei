@@ -87,6 +87,10 @@ private:
     void write_loop();
 
     std::unique_ptr<BaseMessage> process_serial_packet(const sSenseiDataPacket *packet);
+    std::unique_ptr<BaseMessage> process_value(const sSenseiDataPacket *packet);
+    std::unique_ptr<BaseMessage> process_ack(const sSenseiDataPacket *packet);
+
+
     const sSenseiDataPacket* create_send_command(Command* message);
 
     MessageFactory       _message_factory;

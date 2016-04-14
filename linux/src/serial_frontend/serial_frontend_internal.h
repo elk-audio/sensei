@@ -55,6 +55,17 @@ uint64_t inline extract_uuid(const sSenseiACKPacket* ack)
     return uuid;
 }
 
+/*
+ * Convenience function for getting the uid of a data packet
+ */
+uint64_t inline extract_uuid(const sSenseiDataPacket* packet)
+{
+    uint64_t uuid = packet->timestamp;
+    uuid += (static_cast<uint64_t>(packet->cmd) << 32);
+    uuid += (static_cast<uint64_t>(packet->sub_cmd) << 48);
+    return uuid;
+}
+
 
 /*
  * Translate a teensy status code to a string for debugging and logging.

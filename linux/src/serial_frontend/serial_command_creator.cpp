@@ -23,6 +23,19 @@ SerialCommandCreator::~SerialCommandCreator()
 /*
  * Settings for commands below are simple passed on to the teensy board
  */
+
+const sSenseiDataPacket* SerialCommandCreator::make_initialize_system_cmd(uint32_t timestamp, int ticks_delay, int pins, int digital_pins)
+{
+    _max_pins = pins + digital_pins;
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::INITIALIZE_SYSTEM);
+    sSystemInitialization* cmd = reinterpret_cast<sSystemInitialization*>(&_cmd_buffer.payload);
+    cmd->ticksDelayRtTask = ticks_delay;
+    cmd->nPins = pins;
+    cmd->nDigitalPins = digital_pins;
+    return &_cmd_buffer;
+}
+
+
 const sSenseiDataPacket* SerialCommandCreator::make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value)
 {
     if (pin_id >= _max_pins)
