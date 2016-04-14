@@ -10,9 +10,11 @@ SerialCommandCreator::SerialCommandCreator(int max_pins) :
         _max_pins(max_pins),
         _cfg_cache(_max_pins)
 {
-    for (pin_config& i : _cfg_cache)
+    int id = 0;
+    for (std::vector<pin_config>::iterator i = _cfg_cache.begin(); i < _cfg_cache.end() ; ++i)
     {
-        memset(&i, 0, sizeof(pin_config));
+        memset(i.base(), 0, sizeof(pin_config));
+        i->cfg_data.idxPin = id++;
     }
 }
 

@@ -32,7 +32,7 @@ TEST_F(TestSerialCommandCreator, test_initialization)
 {
     pin_config p = _module_under_test._cfg_cache[MAX_NUMBER_OFF_PINS -1];
     EXPECT_EQ(0, p.pintype);
-    EXPECT_EQ(0, p.cfg_data.idxPin);
+    EXPECT_EQ(MAX_NUMBER_OFF_PINS -1, p.cfg_data.idxPin);
     EXPECT_EQ(0, p.cfg_data.sendingMode);
     EXPECT_EQ(0, p.cfg_data.deltaTicksContinuousMode);
     EXPECT_EQ(0, p.cfg_data.ADCBitResolution);
@@ -126,64 +126,72 @@ TEST_F(TestSerialCommandCreator, test_make_config_sendingmode_cmd)
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(SENDING_MODE_CONTINUOUS, pin_config->sendingMode);
+    EXPECT_EQ(3, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_delta_ticks_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_delta_ticks_cmd(3, test_tstamp, 10);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_delta_ticks_cmd(4, test_tstamp, 10);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(10, pin_config->deltaTicksContinuousMode);
+    EXPECT_EQ(4, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_bitres_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_bitres_cmd(3, test_tstamp, PIN_ADC_RESOLUTION_10_BIT);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_bitres_cmd(5, test_tstamp, PIN_ADC_RESOLUTION_10_BIT);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(PIN_ADC_RESOLUTION_10_BIT, pin_config->ADCBitResolution);
+    EXPECT_EQ(5, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_filter_order_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_filter_order_cmd(3, test_tstamp, 4);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_filter_order_cmd(6, test_tstamp, 4);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(4, pin_config->filterOrder);
+    EXPECT_EQ(6, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_lowpass_cutoff_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_lowpass_cutoff_cmd(3, test_tstamp, 1.234);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_lowpass_cutoff_cmd(7, test_tstamp, 1.234);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_FLOAT_EQ(1.234, pin_config->lowPassCutOffFilter);
+    EXPECT_EQ(7, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_slidermode_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_slidermode_cmd(3, test_tstamp, 1);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_slidermode_cmd(8, test_tstamp, 1);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(1, pin_config->sliderMode);
+    EXPECT_EQ(8, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_slider_threshold_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_slider_threshold_cmd(3, test_tstamp, 5);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_slider_threshold_cmd(9, test_tstamp, 5);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(5, pin_config->sliderThreshold);
+    EXPECT_EQ(9, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_cacheing)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_bitres_cmd(3, test_tstamp, PIN_ADC_RESOLUTION_10_BIT);
-    packet = _module_under_test.make_config_pintype_cmd(3, test_tstamp, PIN_ANALOG_INPUT);
-    packet = _module_under_test.make_config_sendingmode_cmd(3, 0x12341234, SENDING_MODE_CONTINUOUS);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_bitres_cmd(10, test_tstamp, PIN_ADC_RESOLUTION_10_BIT);
+    packet = _module_under_test.make_config_pintype_cmd(10, test_tstamp, PIN_ANALOG_INPUT);
+    packet = _module_under_test.make_config_sendingmode_cmd(10, 0x12341234, SENDING_MODE_CONTINUOUS);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(static_cast<uint32_t>(0x12341234), packet->timestamp);
     EXPECT_EQ(PIN_ADC_RESOLUTION_10_BIT, pin_config->ADCBitResolution);
     EXPECT_EQ(PIN_ANALOG_INPUT, packet->sub_cmd);
     EXPECT_EQ(SENDING_MODE_CONTINUOUS, pin_config->sendingMode);
+    EXPECT_EQ(10, pin_config->idxPin);
 }
