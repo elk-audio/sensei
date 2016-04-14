@@ -158,7 +158,7 @@ void DigitalSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_pin_type_command(_sensor_index, PinType::DIGITAL_INPUT);
 }
 
-void DigitalSensorMapper::process(Value* value, OutputValueIterator out_iterator)
+void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
 {
     if (! _sensor_enabled)
     {
@@ -174,7 +174,11 @@ void DigitalSensorMapper::process(Value* value, OutputValueIterator out_iterator
     }
 
     MessageFactory factory;
-    *out_iterator = static_unique_ptr_cast<OutputValue, BaseMessage>(factory.make_output_value(_sensor_index, out_val));
+    auto transformed_value = static_cast<OutputValue*>(factory.make_output_value(_sensor_index,
+                                                                                 out_val,
+                                                                                 value->timestamp()
+                                                       ).get());
+    backend->send(transformed_value, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,7 +311,7 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_input_scale_range_high(_sensor_index, _input_scale_range_high);
 }
 
-void AnalogSensorMapper::process(Value* value, OutputValueIterator out_iterator)
+void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
     if (! _sensor_enabled)
     {
@@ -325,7 +329,11 @@ void AnalogSensorMapper::process(Value* value, OutputValueIterator out_iterator)
     }
 
     MessageFactory factory;
-    *out_iterator = static_unique_ptr_cast<OutputValue, BaseMessage>(factory.make_output_value(_sensor_index, out_val));
+    auto transformed_value = static_cast<OutputValue*>(factory.make_output_value(_sensor_index,
+                                                                                 out_val,
+                                                                                 value->timestamp()
+                                                       ).get());
+    backend->send(transformed_value, value);
 }
 
 CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolution)

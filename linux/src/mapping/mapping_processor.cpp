@@ -70,14 +70,16 @@ void MappingProcessor::put_config_commands_into(CommandIterator out_iterator)
     }
 }
 
-void MappingProcessor::process(Value* value, OutputValueIterator out_iterator)
+void MappingProcessor::process(Value *value, output_backend::OutputBackend *backend)
 {
-    for (auto& mapper : _mappers)
+    int sensor_index = value->sensor_index();
+    if (_mappers[sensor_index] != nullptr)
     {
-        if (mapper != nullptr)
-        {
-            mapper->process(value, out_iterator);
-        }
+        _mappers[sensor_index]->process(value, backend);
+    }
+    else
+    {
+        // TODO: log an error instead
     }
 }
 

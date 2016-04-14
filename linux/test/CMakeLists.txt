@@ -14,7 +14,9 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/serial_frontend/serial_fronted_internal_test.cpp
                unittests/serial_frontend/message_tracker_test.cpp
                unittests/message/message_test.cpp
-               unittests/mapping/sensor_mappers_test.cpp unittests/mapping/mapping_processor_test.cpp)
+               unittests/mapping/sensor_mappers_test.cpp
+               unittests/mapping/mapping_processor_test.cpp
+               unittests/mapping/output_backend_mockup.h)
 
 ##########################################
 #  Include directories relative to test  #

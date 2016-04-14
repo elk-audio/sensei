@@ -6,6 +6,8 @@
 
 #include "mapping/sensor_mappers.cpp"
 
+#include "output_backend_mockup.h"
+
 using namespace sensei;
 using namespace sensei::mapping;
 
@@ -62,6 +64,7 @@ protected:
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
 
+    OutputBackendMockup _backend;
     DigitalSensorMapper _mapper{_sensor_idx};
 };
 
@@ -108,60 +111,59 @@ TEST_F(TestDigitalSensorMapper, test_process)
 {
     // Reset relevant configuration
     MessageFactory factory;
-
-    OutputValueContainer out_values;
-
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
+
     auto input_msg = factory.make_digital_value(_sensor_idx, false);
     auto input_val = static_cast<Value*>(input_msg.get());
-
-    _mapper.process(input_val, std::back_inserter(out_values));
-    auto out_val = std::move(out_values.back());
-    out_values.pop_back();
-    ASSERT_EQ(0.0f, out_val->value());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(0.0f, _backend._last_output_value);
 
     input_msg = factory.make_digital_value(_sensor_idx, true);
     input_val = static_cast<Value*>(input_msg.get());
-
-    _mapper.process(input_val, std::back_inserter(out_values));
-    out_val = std::move(out_values.back());
-    out_values.pop_back();
-    ASSERT_EQ(1.0f, out_val->value());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(1.0f, _backend._last_output_value);
 }
 
 TEST_F(TestDigitalSensorMapper, test_invert)
 {
     // Reset relevant configuration
     MessageFactory factory;
-
-    OutputValueContainer out_values;
-
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, true)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
+
     auto input_msg = factory.make_digital_value(_sensor_idx, false);
     auto input_val = static_cast<Value*>(input_msg.get());
-
-    _mapper.process(input_val, std::back_inserter(out_values));
-    auto out_val = std::move(out_values.back());
-    out_values.pop_back();
-    ASSERT_EQ(1.0f, out_val->value());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(1.0f, _backend._last_output_value);
 }
 
-TEST_F(TestDigitalSensorMapper, test_disabled_process_return_empty)
+TEST_F(TestDigitalSensorMapper, test_disabled_process_dont_send_values)
 {
     // Reset relevant configuration
     MessageFactory factory;
-
-    OutputValueContainer out_values;
-
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    // Put some weird value out-of-range and verify that is not touched by process
+    float fake_reference_value = -123456.789f;
+    _backend._last_output_value = fake_reference_value;
+
     auto input_msg = factory.make_digital_value(_sensor_idx, false);
     auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_FLOAT_EQ(fake_reference_value, _backend._last_output_value);
+}
 
-    _mapper.process(input_val, std::back_inserter(out_values));
-    ASSERT_TRUE(out_values.empty());
+TEST_F(TestDigitalSensorMapper, test_raw_input_send)
+{
+    MessageFactory factory;
+    bool sensor_value = true;
+    auto input_msg = factory.make_digital_value(_sensor_idx, sensor_value);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _backend.enable_send_raw_input(true);
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(sensor_value, _backend._last_raw_digital_input);
 }
 
 class TestAnalogSensorMapper : public ::testing::Test
@@ -218,6 +220,7 @@ protected:
     int _input_scale_low{22};
     int _input_scale_high{2322};
 
+    OutputBackendMockup _backend;
     AnalogSensorMapper _mapper{_sensor_idx};
 };
 
@@ -318,9 +321,6 @@ TEST_F(TestAnalogSensorMapper, test_process)
 {
     // Reset relevant configuration
     MessageFactory factory;
-
-    OutputValueContainer out_values;
-
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
@@ -336,9 +336,8 @@ TEST_F(TestAnalogSensorMapper, test_process)
     auto input_msg = factory.make_analog_value(_sensor_idx,
                                                (_input_scale_low + _input_scale_high) / 2);
     auto input_val = static_cast<Value*>(input_msg.get());
-    _mapper.process(input_val, std::back_inserter(out_values));
-    auto out_val = std::move(out_values.back());
-    ASSERT_FLOAT_EQ(0.5f, out_val->value());
+    _mapper.process(input_val, &_backend);
+    ASSERT_FLOAT_EQ(0.5f, _backend._last_output_value);
 }
 
 
@@ -346,22 +345,19 @@ TEST_F(TestAnalogSensorMapper, test_invert)
 {
     // Reset relevant configuration
     MessageFactory factory;
-
-    OutputValueContainer out_values;
-
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
     int sensor_input = static_cast<int>(0.25 * (_input_scale_low + _input_scale_high));
     auto input_msg = factory.make_analog_value(_sensor_idx, sensor_input);
     auto input_val = static_cast<Value*>(input_msg.get());
-    _mapper.process(input_val, std::back_inserter(out_values));
-    float out_val = std::move(out_values.back())->value();
+    _mapper.process(input_val, &_backend);
+    float out_val = _backend._last_output_value;
 
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, true)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
-    _mapper.process(input_val, std::back_inserter(out_values));
-    float inverted_val = std::move(out_values.back())->value();
+    _mapper.process(input_val, &_backend);
+    float inverted_val = _backend._last_output_value;
     ASSERT_FLOAT_EQ(inverted_val, 1.0f - out_val);
 
 }
@@ -370,9 +366,6 @@ TEST_F(TestAnalogSensorMapper, test_clip)
 {
     // Reset relevant configuration
     MessageFactory factory;
-
-    OutputValueContainer out_values;
-
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
@@ -380,31 +373,51 @@ TEST_F(TestAnalogSensorMapper, test_clip)
     int sensor_input = std::max(_input_scale_low-10, 0);
     auto input_msg = factory.make_analog_value(_sensor_idx, sensor_input);
     auto input_val = static_cast<Value*>(input_msg.get());
-    _mapper.process(input_val, std::back_inserter(out_values));
-    float out_val = std::move(out_values.back())->value();
-    ASSERT_FLOAT_EQ(0.0f, out_val);
+    _mapper.process(input_val, &_backend);
+    ASSERT_FLOAT_EQ(0.0f, _backend._last_output_value);
 
     // Above high range
     sensor_input = std::min(_input_scale_high+10, ((1 <<_adc_bit_resolution) - 1));
     input_msg = factory.make_analog_value(_sensor_idx, sensor_input);
     input_val = static_cast<Value*>(input_msg.get());
-    _mapper.process(input_val, std::back_inserter(out_values));
-    out_val = std::move(out_values.back())->value();
-    ASSERT_FLOAT_EQ(1.0f, out_val);
+    _mapper.process(input_val, &_backend);
+    ASSERT_FLOAT_EQ(1.0f, _backend._last_output_value);
 }
 
-TEST_F(TestAnalogSensorMapper, test_disabled_process_return_empty)
+TEST_F(TestAnalogSensorMapper, test_disabled_process_dont_send_values)
 {
     // Reset relevant configuration
     MessageFactory factory;
-
-    OutputValueContainer out_values;
-
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
     auto input_msg = factory.make_analog_value(_sensor_idx, 100);
     auto input_val = static_cast<Value*>(input_msg.get());
 
-    _mapper.process(input_val, std::back_inserter(out_values));
-    ASSERT_TRUE(out_values.empty());
+    // Put some weird value out-of-range and verify that is not touched by process
+    float fake_reference_value = -123456.789f;
+    _backend._last_output_value = fake_reference_value;
+
+    _mapper.process(input_val, &_backend);
+    ASSERT_FLOAT_EQ(fake_reference_value, _backend._last_output_value);
+}
+
+TEST_F(TestAnalogSensorMapper, test_output_timestamp_preserved)
+{
+    MessageFactory factory;
+    uint32_t ref_time = 123456;
+    auto input_msg = factory.make_analog_value(_sensor_idx, 100, ref_time);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(ref_time, _backend._last_timestamp);
+}
+
+TEST_F(TestAnalogSensorMapper, test_raw_input_send)
+{
+    MessageFactory factory;
+    int sensor_value = 100;
+    auto input_msg = factory.make_analog_value(_sensor_idx, sensor_value);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _backend.enable_send_raw_input(true);
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(sensor_value, _backend._last_raw_analogue_input);
 }

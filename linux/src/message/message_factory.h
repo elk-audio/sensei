@@ -186,6 +186,14 @@ public:
         return std::unique_ptr<SetInputScaleRangeHigh>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_pin_name(const int sensor_index,
+                                                   const std::string name,
+                                                   const uint32_t timestamp = 0)
+    {
+        auto msg = new SetPinNameCommand(sensor_index, name, timestamp);
+        return std::unique_ptr<SetPinNameCommand>(msg);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // Errors
     ////////////////////////////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@
 
 #include <message/base_value.h>
 #include <message/value_defs.h>
+#include <output_backend/output_backend.h>
 #include "message/command_defs.h"
 
 namespace sensei {
@@ -35,7 +36,7 @@ public:
     /**
      * @brief Modify internal configuration according to the given command.
      *
-     * @param cmd Configuration command.
+     * @param [in] cmd Configuration command.
      *
      * @return CommandErrorCode::OK if command was succesful.
      *
@@ -51,17 +52,17 @@ public:
      * Invariant: if the output sequence is sent back to the object with apply_command(..), there
      * should be no changes in the internal state.
      *
-     * @param out_iterator back_inserter operator to output container to be filled
+     * @param [out] out_iterator back_inserter operator to output container to be filled
      */
     virtual void put_config_commands_into(CommandIterator out_iterator);
 
     /**
      * @brief Process a given input value and generate output values for the backend consumer.
      *
-     * @param value Input value coming from the serial frontend
-     * @param out_iterator Iterator to a collection to which output values will be added
+     * @param [in] value Input value coming from the serial frontend
+     * @param [out] out_iterator Iterator to a collection to which output values will be added
      */
-    virtual void process(Value* value, OutputValueIterator out_iterator) = 0;
+    virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
 
 protected:
     PinType _pin_type;
@@ -85,7 +86,7 @@ public:
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, OutputValueIterator out_iterator) override;
+    void process(Value *value, output_backend::OutputBackend *backend) override;
 
 private:
 
@@ -105,7 +106,7 @@ public:
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, OutputValueIterator out_iterator) override;
+    void process(Value *value, output_backend::OutputBackend *backend) override;
 
 private:
     CommandErrorCode _set_adc_bit_resolution(const int resolution);

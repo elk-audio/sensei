@@ -141,9 +141,7 @@ TEST(MessagesTest, test_external_command_creation)
             break;
 
         default:
-            ASSERT_TRUE(false);
-            break;
-
+            FAIL();
         }
 
     }
@@ -195,11 +193,42 @@ TEST(MessagesTest, test_internal_command_creation)
             break;
 
         default:
-            ASSERT_TRUE(false);
-            break;
-
+            FAIL();
         }
 
+    }
+
+}
+
+TEST(MessagesTest, test_output_backend_command_creation)
+{
+    MessageFactory factory;
+
+    std::vector<std::unique_ptr<BaseMessage>> msg_queue;
+
+    msg_queue.push_back(factory.make_set_pin_name(0, std::string("pippo")));
+
+    for (auto const& msg : msg_queue)
+    {
+
+        ASSERT_EQ(MessageType::COMMAND, msg->base_type());
+        auto cmd_msg = static_cast<Command*>(msg.get());
+        ASSERT_EQ(CommandDestination::OUTPUT_BACKEND, cmd_msg->destination());
+
+        CommandType cmd_type = cmd_msg->type();
+        switch(cmd_type)
+        {
+
+        case CommandType::SET_PIN_NAME:
+            {
+                auto typed_cmd = static_cast<SetPinNameCommand *>(cmd_msg);
+                ASSERT_EQ(std::string("pippo"), typed_cmd->data());
+            };
+            break;
+
+        default:
+            FAIL();
+        }
     }
 
 }

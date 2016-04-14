@@ -38,19 +38,6 @@ SENSEI_DECLARE_VALUE(DigitalValue, ValueType::DIGITAL, bool, "Digital Value");
 
 SENSEI_DECLARE_VALUE(OutputValue, ValueType::OUTPUT, float, "Output Value");
 
-////////////////////////////////////////////////////////////////////////////////
-// Container specifications
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Container for internal->output backend message exchange
- */
-typedef std::vector<std::unique_ptr<OutputValue>> OutputValueContainer;
-
-/**
- * @brief Iterator used in function interfaces
- */
-typedef std::back_insert_iterator<OutputValueContainer> OutputValueIterator;
 
 }; // namespace sensei
 

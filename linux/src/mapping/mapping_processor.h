@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sensor_mappers.h"
+#include "output_backend/output_backend.h"
 
 namespace sensei {
 namespace mapping {
@@ -24,7 +25,7 @@ public:
 
     void put_config_commands_into(CommandIterator out_iterator);
 
-    void process(Value* value, OutputValueIterator out_iterator);
+    void process(Value* value, output_backend::OutputBackend* backend);
 
 private:
     int _max_n_sensors;

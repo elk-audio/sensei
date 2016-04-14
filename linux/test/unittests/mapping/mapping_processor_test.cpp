@@ -2,6 +2,7 @@
 
 #include "mapping/mapping_processor.cpp"
 #include "message/message_factory.h"
+#include "output_backend_mockup.h"
 
 using namespace sensei;
 using namespace sensei::mapping;
@@ -95,12 +96,15 @@ TEST_F(TestMappingProcessor, test_get_config)
 TEST_F(TestMappingProcessor, undefined_mappers_return_empty_process)
 {
     MessageFactory factory;
-    OutputValueContainer out_values;
+    OutputBackendMockup backend;
 
     auto input_msg = factory.make_digital_value(2, false);
     auto input_val = static_cast<Value*>(input_msg.get());
 
-    _processor.process(input_val, std::back_inserter(out_values));
-    ASSERT_TRUE(out_values.empty());
+    // Put some weird value out-of-range and verify that is not touched by process
+    float fake_reference_value = -123456.789f;
+    backend._last_output_value = fake_reference_value;
+    _processor.process(input_val, &backend);
+    ASSERT_FLOAT_EQ(fake_reference_value, backend._last_output_value);
 }
 

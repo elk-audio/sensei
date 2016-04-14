@@ -41,6 +41,8 @@ enum class CommandType
     SET_INVERT_ENABLED,
     SET_INPUT_SCALE_RANGE_LOW,
     SET_INPUT_SCALE_RANGE_HIGH,
+    // Output Backend Commands
+    SET_PIN_NAME,
     N_COMMAND_TAGS
 };
 
@@ -170,6 +172,14 @@ SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
                        int,
                        "Set Input Scale Range Low",
                        CommandDestination::INTERNAL);
+
+// Output Backend commands
+
+SENSEI_DECLARE_COMMAND(SetPinNameCommand,
+                       CommandType::SET_PIN_NAME,
+                       std::string,
+                       "Set Pin Name",
+                       CommandDestination::OUTPUT_BACKEND);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Container specifications
