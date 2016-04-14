@@ -50,14 +50,14 @@ protected:
 TEST_F(SerialFrontendTest, test_create_serial_message)
 {
     MessageFactory factory;
-    auto command = static_cast<Command*>(factory.make_set_sampling_rate_command(3, 500.0, 100u).release());
-    const sSenseiDataPacket* packet =_module_under_test.create_send_command(command);
+    auto command = factory.make_set_sampling_rate_command(3, 500.0, 100u);
+    const sSenseiDataPacket* packet =_module_under_test.create_send_command(static_cast<Command*>(command.get()));
     EXPECT_EQ(SENSEI_CMD::SET_SAMPLING_RATE, packet->cmd);
     auto payload = reinterpret_cast<const teensy_set_samplerate_cmd*>(packet->payload);
     EXPECT_EQ(2, payload->sample_rate_divisor);
 
-    command = static_cast<Command*>(factory.make_set_lowpass_cutoff_command(4, 1234.0, 100u).release());
-    packet =_module_under_test.create_send_command(command);
+    auto lp_command = factory.make_set_lowpass_cutoff_command(4, 1234.0, 100u);
+    packet =_module_under_test.create_send_command(static_cast<Command*>(lp_command.get()));
     EXPECT_EQ(SENSEI_CMD::CONFIGURE_PIN, packet->cmd);
     auto payload_cfg = reinterpret_cast<const sPinConfiguration*>(packet->payload);
     EXPECT_FLOAT_EQ(1234, payload_cfg->lowPassCutOffFilter);
