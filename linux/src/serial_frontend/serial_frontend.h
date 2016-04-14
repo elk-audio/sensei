@@ -66,6 +66,13 @@ public:
     void stop();
 
     /**
+     * @brief Sends a SYSTEM_INITIALIZE command to the teensy board
+     * Note, this function is only temprary. PLease call before calling run()
+     * as it is not threadsafe.
+     */
+    void initialize(int ticks, int pins, int digital_pins, uint32_t timestamp);
+
+    /**
      * @brief Stops the flow of messages. If set to true, incoming serial packets
      * are silently dropped.
      *

@@ -100,6 +100,15 @@ void SerialFrontend::stop()
     }
 }
 
+
+void SerialFrontend::initialize(int ticks, int pins, int digital_pins, uint32_t timestamp)
+{
+    const sSenseiDataPacket* packet = _packet_factory.make_initialize_system_cmd(timestamp, ticks, pins, digital_pins);
+    sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
+}
+
+
+
 void SerialFrontend::mute(bool enabled)
 {
     _muted = enabled;
