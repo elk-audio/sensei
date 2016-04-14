@@ -35,6 +35,7 @@ set(COMPILATION_UNITS src/main.cpp
                       src/output_backend/std_stream_backend.cpp
                       src/output_backend/osc_backend.cpp)
 
+
 # Enumerate all the headers separately so that CLion can index them
 
 set(EXTRA_CLION_SOURCES src/message/base_message.h
@@ -58,7 +59,8 @@ set(EXTRA_CLION_SOURCES src/message/base_message.h
                         src/event_handler.h
                         src/output_backend/osc_backend.h src/utils.h)
 
-set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" )
+
+set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
 
 #########################
 #  Include Directories  #
@@ -79,7 +81,7 @@ include_directories(${INCLUDE_DIRS})
 
 set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
                    "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a"
-                   pthread)
+                   pthread jsoncpp)
 
 #############################################
 #  Subdirectory projects                    #

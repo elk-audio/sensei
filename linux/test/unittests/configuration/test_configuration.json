@@ -1,0 +1,33 @@
+{
+	"backends" : [
+		{
+			"id" : 0,
+			"type" : "osc",
+			"prefix" : "/sensei/sensors",
+			"port" : 123
+		}
+	],
+
+
+	"sensors" : [
+		{
+			"id" : 1,
+			"pin_type" : 1,
+			"enabled": true,
+			"mode" : "continuous",
+			"delta_tics" : 4,
+			"adc_resolution" : 8,
+			"lowpass_cutoff" : 300,
+			"lowpass_order" : 4,
+			"slider_mode" : false,
+			"slider_threshold" : 10
+			},
+		{
+			"id" : 0,
+			"pin_type" : 0,
+			"enabled": true,
+			"mode" : "continuous",
+			"delta_tics" : 4
+			}
+	]
+}

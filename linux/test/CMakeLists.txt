@@ -20,6 +20,7 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/test_utils.h
                unittests/output_backend/osc_backend_test.cpp)
 
+
 ##########################################
 #  Include directories relative to test  #
 ##########################################
@@ -32,13 +33,13 @@ include_directories(${PROJECT_SOURCE_DIR}/test/gtest_1_7_0/include)
 
 set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
                    "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a"
+                   jsoncpp
                    gtest
                    gtest_main)
 
 add_executable(unit_tests ${TEST_FILES})
 
 target_link_libraries(unit_tests "${LINK_LIBRARIES}")
-
 add_test(unit_tests unit_tests)
 
 # custom target for running the tests
