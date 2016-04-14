@@ -135,6 +135,7 @@ namespace sensei {
 		ENABLE_SENDING_PACKETS=10,
         ENABLE_MULTIPLE_PACKETS=11,
         //----------------------------------------------
+        SET_SAMPLING_RATE = 99,  // TODO - deprecated command - remove!
         CONFIGURE_PIN = 100,
         GET_PINS_CONFIGURATION=101,
         GET_VALUE = 102,
