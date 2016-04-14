@@ -174,10 +174,12 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     }
 
     MessageFactory factory;
-    auto transformed_value = static_cast<OutputValue*>(factory.make_output_value(_sensor_index,
-                                                                                 out_val,
-                                                                                 value->timestamp()
-                                                       ).get());
+    // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
+    // it gets optimized away by the compiler in release mode
+    auto temp_msg = factory.make_output_value(_sensor_index,
+                                              out_val,
+                                              value->timestamp());
+    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
 }
 
@@ -329,10 +331,12 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
     }
 
     MessageFactory factory;
-    auto transformed_value = static_cast<OutputValue*>(factory.make_output_value(_sensor_index,
-                                                                                 out_val,
-                                                                                 value->timestamp()
-                                                       ).get());
+    // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
+    // it gets optimized away by the compiler in release mode
+    auto temp_msg = factory.make_output_value(_sensor_index,
+                                              out_val,
+                                              value->timestamp());
+    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
 }
 
