@@ -296,14 +296,14 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
             auto cmd = static_cast<SetPinTypeCommand *>(message);
             return _packet_factory.make_config_pintype_cmd(cmd->sensor_index(),
                                                            cmd->timestamp(),
-                                                           static_cast<int>(cmd->data()));
+                                                           cmd->data());
         }
         case CommandType::SET_SENDING_MODE:
         {
             auto cmd = static_cast<SetSendingModeCommand *>(message);
             return _packet_factory.make_config_sendingmode_cmd(cmd->sensor_index(),
                                                                cmd->timestamp(),
-                                                               static_cast<int>(cmd->data()));
+                                                               cmd->data());
         }
         case CommandType::SET_SENDING_DELTA_TICKS:
         {
@@ -315,9 +315,9 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
         case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             auto cmd = static_cast<SetADCBitResolutionCommand *>(message);
-            return _packet_factory.make_config_bitres_cmd(cmd->sensor_index(),
-                                                          cmd->timestamp(),
-                                                          cmd->data());
+            return _packet_factory.make_config_adc_bitres_cmd(cmd->sensor_index(),
+                                                              cmd->timestamp(),
+                                                              cmd->data());
         }
         case CommandType::SET_LOWPASS_FILTER_ORDER:
         {

@@ -9,9 +9,11 @@
 #define SENSEI_SERIAL_COMMAND_CREATOR_H
 
 #include <vector>
+#include <message/command_defs.h>
 
 #include "../../common/sensei_serial_protocol.h"
 #include "serial_frontend_internal.h"
+#include "message/base_message.h"
 
 namespace sensei {
 namespace serial_frontend {
@@ -32,10 +34,10 @@ public:
     const sSenseiDataPacket* make_set_bank_cmd(int pin_id, uint32_t timestamp, int value);
     const sSenseiDataPacket* make_set_sampling_rate_cmd(uint32_t timestamp, float sampling_rate);
     const sSenseiDataPacket* make_get_value_cmd(int pin_id, uint32_t timestamp);
-    const sSenseiDataPacket* make_config_pintype_cmd(int pin_id, uint32_t timestamp, int pintype);
-    const sSenseiDataPacket* make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, int sendingmode);
+    const sSenseiDataPacket* make_config_pintype_cmd(int pin_id, uint32_t timestamp, PinType type);
+    const sSenseiDataPacket* make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, SendingMode mode);
     const sSenseiDataPacket* make_config_delta_ticks_cmd(int pin_id, uint32_t timestamp, int ticks);
-    const sSenseiDataPacket* make_config_bitres_cmd(int pin_id, uint32_t timestamp, int bits);
+    const sSenseiDataPacket*make_config_adc_bitres_cmd(int pin_id, uint32_t timestamp, int bits);
     const sSenseiDataPacket* make_config_filter_order_cmd(int pin_id, uint32_t timestamp, int order);
     const sSenseiDataPacket* make_config_lowpass_cutoff_cmd(int pin_id, uint32_t timestamp, float cutoff);
     const sSenseiDataPacket* make_config_slidermode_cmd(int pin_id, uint32_t timestamp, int mode);
@@ -44,7 +46,7 @@ public:
 private:
     int _max_pins;
     sSenseiDataPacket _cmd_buffer;
-    std::vector<pin_config> _cfg_cache;
+    std::vector<pin_config> _cached_cfgs;
 };
 
 void initialize_common_data(sSenseiDataPacket& packet, uint32_t timestamp, uint8_t command);

@@ -8,10 +8,10 @@ namespace serial_frontend {
 
 SerialCommandCreator::SerialCommandCreator(int max_pins) :
         _max_pins(max_pins),
-        _cfg_cache(_max_pins)
+        _cached_cfgs(_max_pins)
 {
     int id = 0;
-    for (std::vector<pin_config>::iterator i = _cfg_cache.begin(); i < _cfg_cache.end() ; ++i)
+    for (std::vector<pin_config>::iterator i = _cached_cfgs.begin(); i < _cached_cfgs.end() ; ++i)
     {
         memset(i.base(), 0, sizeof(pin_config));
         i->cfg_data.idxPin = id++;
@@ -103,26 +103,56 @@ const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(int pin_id, ui
 /*
  * Settings for commands below are cached for every pin.
  */
-const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_id, uint32_t timestamp, int pintype)
+const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_id, uint32_t timestamp, PinType type)
 {
     if (pin_id >= _max_pins)
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
-    cached_cfg.pintype = pintype;
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    switch (type)
+    {
+        case PinType::DIGITAL_INPUT:
+            cached_cfg.pintype = ePinType::PIN_DIGITAL_INPUT;
+            break;
+        case PinType::DIGITAL_OUTPUT:
+            cached_cfg.pintype = ePinType::PIN_DIGITAL_OUTPUT;
+            break;
+        case PinType::ANALOG_INPUT:
+            cached_cfg.pintype = ePinType::PIN_ANALOG_INPUT;
+            break;
+        case PinType::UNDEFINED:
+        case PinType::N_PIN_TYPES:
+            cached_cfg.pintype = ePinType::PIN_DISABLE;
+            break;
+    }
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, int sendingmode)
+const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, SendingMode mode)
 {
     if (pin_id >= _max_pins)
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
-    cached_cfg.cfg_data.sendingMode = sendingmode;
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    switch (mode)
+    {
+        case SendingMode::CONTINUOUS:
+            cached_cfg.cfg_data.sendingMode = eSendingMode::SENDING_MODE_CONTINUOUS;
+            break;
+        case SendingMode::ON_VALUE_CHANGED:
+            cached_cfg.cfg_data.sendingMode = eSendingMode::SENDING_MODE_ON_VALUE_CHANGED;
+            break;
+        case SendingMode::ON_REQUEST:
+            cached_cfg.cfg_data.sendingMode = eSendingMode::SENDING_MODE_ON_REQUEST;
+            break;
+        case SendingMode::OFF:
+        case SendingMode::N_SENDING_MODES:
+            cached_cfg.cfg_data.sendingMode = 0; // TODO - Add when the proper enum is in place
+            break;
+    }
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
@@ -133,20 +163,40 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_delta_ticks_cmd(int p
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.deltaTicksContinuousMode = ticks;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_bitres_cmd(int pin_id, uint32_t timestamp, int bits)
+const sSenseiDataPacket* SerialCommandCreator::make_config_adc_bitres_cmd(int pin_id, uint32_t timestamp, int bits)
 {
     if (pin_id >= _max_pins)
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
-    cached_cfg.cfg_data.ADCBitResolution = bits;
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    switch (bits)
+    {
+        case 8:
+            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_8_BIT;
+            break;
+        case 9:
+            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_9_BIT;
+            break;
+        case 10:
+            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_10_BIT;
+            break;
+        case 11:
+            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_11_BIT;
+            break;
+        case 12:
+            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_12_BIT;
+            break;
+        default:
+            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_12_BIT;
+            break;
+    }
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
@@ -157,7 +207,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_filter_order_cmd(int 
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.filterOrder = order;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
@@ -169,7 +219,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_lowpass_cutoff_cmd(in
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.lowPassCutOffFilter = cutoff;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
@@ -181,7 +231,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_slidermode_cmd(int pi
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.sliderMode = mode;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
@@ -193,7 +243,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_slider_threshold_cmd(
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cfg_cache[pin_id];
+    pin_config& cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.sliderThreshold = threshold;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;

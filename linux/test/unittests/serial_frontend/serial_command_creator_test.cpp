@@ -30,7 +30,7 @@ protected:
 
 TEST_F(TestSerialCommandCreator, test_initialization)
 {
-    pin_config p = _module_under_test._cfg_cache[MAX_NUMBER_OFF_PINS -1];
+    pin_config p = _module_under_test._cached_cfgs[MAX_NUMBER_OFF_PINS - 1];
     EXPECT_EQ(0, p.pintype);
     EXPECT_EQ(MAX_NUMBER_OFF_PINS -1, p.cfg_data.idxPin);
     EXPECT_EQ(0, p.cfg_data.sendingMode);
@@ -115,17 +115,17 @@ TEST_F(TestSerialCommandCreator, test_make_get_value_cmd)
 
 TEST_F(TestSerialCommandCreator, test_make_config_pintype_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_pintype_cmd(3, test_tstamp, PIN_ANALOG_INPUT);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_pintype_cmd(3, test_tstamp, PinType::ANALOG_INPUT);
     EXPECT_EQ(PIN_ANALOG_INPUT, packet->sub_cmd);
     EXPECT_EQ(test_tstamp, packet->timestamp);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_sendingmode_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_sendingmode_cmd(3, test_tstamp, SENDING_MODE_CONTINUOUS);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_sendingmode_cmd(3, test_tstamp, SendingMode::ON_REQUEST);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
-    EXPECT_EQ(SENDING_MODE_CONTINUOUS, pin_config->sendingMode);
+    EXPECT_EQ(SENDING_MODE_ON_REQUEST, pin_config->sendingMode);
     EXPECT_EQ(3, pin_config->idxPin);
 }
 
@@ -138,9 +138,9 @@ TEST_F(TestSerialCommandCreator, test_make_config_delta_ticks_cmd)
     EXPECT_EQ(4, pin_config->idxPin);
 }
 
-TEST_F(TestSerialCommandCreator, test_make_config_bitres_cmd)
+TEST_F(TestSerialCommandCreator, test_make_config_adc_bitres_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_bitres_cmd(5, test_tstamp, PIN_ADC_RESOLUTION_10_BIT);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_adc_bitres_cmd(5, test_tstamp, 10);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(PIN_ADC_RESOLUTION_10_BIT, pin_config->ADCBitResolution);
@@ -185,9 +185,9 @@ TEST_F(TestSerialCommandCreator, test_make_config_slider_threshold_cmd)
 
 TEST_F(TestSerialCommandCreator, test_cacheing)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_bitres_cmd(10, test_tstamp, PIN_ADC_RESOLUTION_10_BIT);
-    packet = _module_under_test.make_config_pintype_cmd(10, test_tstamp, PIN_ANALOG_INPUT);
-    packet = _module_under_test.make_config_sendingmode_cmd(10, 0x12341234, SENDING_MODE_CONTINUOUS);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_adc_bitres_cmd(10, test_tstamp, 10);
+    packet = _module_under_test.make_config_pintype_cmd(10, test_tstamp, PinType::ANALOG_INPUT);
+    packet = _module_under_test.make_config_sendingmode_cmd(10, 0x12341234, SendingMode::CONTINUOUS);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(static_cast<uint32_t>(0x12341234), packet->timestamp);
     EXPECT_EQ(PIN_ADC_RESOLUTION_10_BIT, pin_config->ADCBitResolution);
