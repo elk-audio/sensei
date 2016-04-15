@@ -65,6 +65,7 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
 SerialFrontend::~SerialFrontend()
 {
     stop();
+    sp_close(_port);
     sp_free_port(_port);
 }
 
@@ -135,7 +136,13 @@ int SerialFrontend::setup_port(const std::string &name)
     {
         return ret;
     }
-    return SP_OK;
+    /* Turn of flow control, otherwise some byte patterns can be interpreted as controls codes */
+    ret = sp_set_flowcontrol(_port, SP_FLOWCONTROL_NONE);
+    if (ret != SP_OK)
+    {
+        return ret;
+    }
+    return sp_flush(_port, SP_BUF_BOTH);
 }
 
 void SerialFrontend::change_state(running_state state)
@@ -150,14 +157,14 @@ void SerialFrontend::change_state(running_state state)
  */
 void SerialFrontend::read_loop()
 {
-    uint8_t buffer[100];
+    uint8_t buffer[SENSEI_LENGTH_DATA_PACKET];
     while (_read_thread_state == running_state::RUNNING)
     {
         memset(buffer, 0, sizeof(buffer));
         int ret = sp_blocking_read_next(_port, buffer, sizeof(buffer), READ_WRITE_TIMEOUT_MS);
         if (_muted == false && ret >= SENSEI_LENGTH_DATA_PACKET)
         {
-            sSenseiDataPacket *packet = reinterpret_cast<sSenseiDataPacket *>(buffer);
+            sSenseiDataPacket *packet = reinterpret_cast<sSenseiDataPacket*>(buffer);
             if (verify_message(packet) == false)
             {
                 continue; // log an error message here when logging functionality is in place
