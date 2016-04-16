@@ -17,6 +17,10 @@ namespace sensei {
 
     const type_filter_var DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
 
+    const bool COND_DEBUG_MODE = false;
+    const bool COND_MULTIPLE_PACKETS = false;
+    const bool COND_SENDING_PACKETS = false;
+
     typedef enum SENSEI_ERROR_CODE {
 
         NO_EXTERNAL_PROCESSING_NECESSARY = 1,
@@ -36,6 +40,7 @@ namespace sensei {
         CMD_NOT_ALLOWED=-11,
         INCORRECT_NUMBER_OF_PINS=-12,
         INCORRECT_NUMBER_OF_DIGITAL_PINS=-13,
+        SYSTEM_NOT_INITIALIZED=-14,
         //------------------------------------------
         TIMEOUT_ON_RESPONSE = -100,
         INCORRECT_PAYLOAD_SIZE = -101,
@@ -153,6 +158,8 @@ namespace sensei {
         IMU_RESET_TARE=208,
         //----------------------------------------------
         STOP_BOARD = 250,
+        //----------------------------------------------
+        VALUE = 254,
         //----------------------------------------------
         ACK = 255
         //----------------------------------------------
