@@ -1,26 +1,42 @@
 # build gtest framework
 add_subdirectory(gtest_1_7_0)
-
-SET(TEST_FILES unittests/sample_test.cpp)
-
-#include folder contains current project's header files
-include_directories(${PROJECT_SOURCE_DIR}/test/gtest_1_7_0/include)
-include_directories(${PROJECT_SOURCE_DIR}/src)
-
-# set flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++0x")
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--as-needed")
-
 enable_testing()
 
-message("Unit test files: ")
-message("" ${TEST_FILES})
+################
+#  Test Files  #
+################
 
-add_executable(UnitTests ${TEST_FILES})
+SET(TEST_FILES unittests/sample_test.cpp
+               unittests/locked_queue_test.cpp
+               unittests/synchronized_queue_test.cpp 
+               unittests/serial_frontend/serial_command_creator_test.cpp
+               unittests/serial_frontend/serial_frontend_test.cpp
+               unittests/serial_frontend/serial_fronted_internal_test.cpp
+               unittests/serial_frontend/message_tracker_test.cpp
+               unittests/message/message_test.cpp
+               unittests/mapping/sensor_mappers_test.cpp
+               unittests/mapping/mapping_processor_test.cpp
+               unittests/mapping/output_backend_mockup.h)
 
-target_link_libraries(UnitTests gtest gtest_main ${PROJECT_SOURCE_DIR}/third-party/libserialport/.libs/libserialport.a)
+##########################################
+#  Include directories relative to test  #
+##########################################
 
-add_test(UnitTests UnitTests)
+include_directories(${PROJECT_SOURCE_DIR}/test/gtest_1_7_0/include)
+
+#################################
+#  Statically linked libraries  #
+#################################
+
+set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a")
+
+add_executable(unit_tests ${TEST_FILES})
+
+target_link_libraries(unit_tests gtest gtest_main "${LINK_LIBRARIES}")
+
+add_test(unit_tests unit_tests)
 
 # custom target for running the tests
-add_custom_target(run_tests ALL COMMAND "./UnitTests")
+add_custom_target(run_tests ALL COMMAND "./unit_tests")
+add_dependencies(run_tests unit_tests)
+
