@@ -3,36 +3,36 @@
 
 Filter::Filter()
 {
-    isEnable=false;
+    enable=false;
 }
 
-int32_t Filter::setFilter(uint8_t _filterOrder,type_filter_var* _filterCoeff_a,type_filter_var* _filterCoeff_b)
+int32_t Filter::set_filter(uint8_t filter_order,FilterType* filter_coeff_a,FilterType* filter_coeff_b)
 {
-    filterOrder=_filterOrder;
-    if ((filterOrder>0) && (filterOrder <= MAX_FILTER_ORDER))
+    _filter_order=filter_order;
+    if ((_filter_order>0) && (_filter_order <= MAX_FILTER_ORDER))
     {
-        for (int idx = 0; idx < filterOrder + 1; idx++)
+        for (int i = 0; i < _filter_order + 1; i++)
         {
-            filterCoeff_a.push_back(_filterCoeff_a[idx]);
-            filterCoeff_b.push_back(_filterCoeff_b[idx]);
+            _filter_coeff_a.push_back(filter_coeff_a[i]);
+            _filter_coeff_b.push_back(filter_coeff_b[i]);
         }
 
-        zbuffer.resize(filterOrder);
+        _buffer.resize(_filter_order);
 
         if (DEBUG)
         {
             SerialDebug.println("------------------------------------");
             SerialDebug.println("filterCoeff");
             SerialDebug.println("------------------------------------");
-            for (int idx = 0; idx < filterOrder + 1; idx++)
+            for (int i = 0; i < _filter_order + 1; i++)
             {
-                SerialDebug.println(String(filterCoeff_a[idx]) + " " + String(filterCoeff_b[idx]));
+                SerialDebug.println(String(_filter_coeff_b[i]) + " " + String(_filter_coeff_b[i]));
             }
             SerialDebug.println("------------------------------------");
             SerialDebug.println("");
         }
 
-        isEnable=true;
+        enable=true;
     }
     return SENSEI_ERROR_CODE::OK;
 }
@@ -40,25 +40,25 @@ int32_t Filter::setFilter(uint8_t _filterOrder,type_filter_var* _filterCoeff_a,t
 Filter::~Filter()
 {
     //SerialDebug.println("~Filter()");
-    zbuffer.clear();
-    filterCoeff_a.clear();
-    filterCoeff_b.clear();
+    _buffer.clear();
+    _filter_coeff_a.clear();
+    _filter_coeff_b.clear();
 }
 
 
-type_filter_var Filter::processFilter(type_filter_var x)
+FilterType Filter::process_filter(FilterType x)
 {
-    if (isEnable)
+    if (enable)
     {
-        type_filter_var y;
+        FilterType y;
 
-        y=filterCoeff_b[0]*x+zbuffer[0];
+        y=_filter_coeff_b[0]*x+_buffer[0];
 
-        for(int i=0;i<filterOrder-1;i++)
+        for(int i=0;i<_filter_order-1;i++)
         {
-            zbuffer[i]=zbuffer[i+1]+filterCoeff_b[i+1]*x-filterCoeff_a[i+1]*y;
+            _buffer[i]=_buffer[i+1]+_filter_coeff_b[i+1]*x-_filter_coeff_a[i+1]*y;
         }
-        zbuffer[filterOrder-1]=filterCoeff_b[filterOrder]*x-filterCoeff_a[filterOrder]*y;
+        _buffer[_filter_order-1]=_filter_coeff_b[_filter_order]*x-_filter_coeff_a[_filter_order]*y;
         return y;
     }
     else return x;

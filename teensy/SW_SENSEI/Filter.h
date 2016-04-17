@@ -7,16 +7,16 @@ class Filter {
 public:
 
     Filter();
-    int32_t setFilter(uint8_t _filterOrder, type_filter_var* _filterCoeff_a, type_filter_var* filterCoeff_b);
+    int32_t set_filter(uint8_t filter_order, FilterType* filter_coeff_a, FilterType* filter_coeff_b);
     ~Filter();
-    type_filter_var processFilter(type_filter_var x);
+    FilterType process_filter(FilterType x);
 
 private:
-    bool isEnable;
-    uint8_t filterOrder;
-    vector<type_filter_var> filterCoeff_a;
-    vector<type_filter_var> filterCoeff_b;
-    vector<type_filter_var> zbuffer;
+    bool enable;
+    uint8_t _filter_order;
+    vector<FilterType> _filter_coeff_a;
+    vector<FilterType> _filter_coeff_b;
+    vector<FilterType> _buffer;
 };
 
 #endif // FILTER_H
