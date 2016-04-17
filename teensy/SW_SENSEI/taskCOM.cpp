@@ -29,7 +29,7 @@ void vTaskCOM(void *pvParameters)
 
     // Filtering
     Butterworth butterworth;
-    type_filter_var FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
+    FilterType FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
 
     ManageDataPacket manageDataPacket;
 
@@ -131,8 +131,8 @@ void vTaskCOM(void *pvParameters)
                         msgData.data.setupPin.sliderMode = pinConfiguration->sliderMode;
                         msgData.data.setupPin.sliderThreshold = pinConfiguration->sliderThreshold;
 
-                        msgData.data.setupPin.filterCoeff_a = new type_filter_var[pinConfiguration->filterOrder + 1]; //TODO STRUCT
-                        msgData.data.setupPin.filterCoeff_b = new type_filter_var[pinConfiguration->filterOrder + 1];
+                        msgData.data.setupPin.filterCoeff_a = new FilterType[pinConfiguration->filterOrder + 1]; //TODO STRUCT
+                        msgData.data.setupPin.filterCoeff_b = new FilterType[pinConfiguration->filterOrder + 1];
 
                         butterworth.createFilterCoefficients(pinConfiguration->filterOrder, FsFilter, pinConfiguration->lowPassCutOffFilter, msgData.data.setupPin.filterCoeff_a, msgData.data.setupPin.filterCoeff_b);
 

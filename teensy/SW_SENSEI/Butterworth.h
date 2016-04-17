@@ -9,13 +9,13 @@
 #include <cmath>
 #include <algorithm>
 
-typedef std::complex<type_filter_var> Complex;
+typedef std::complex<FilterType> Complex;
 
 class Butterworth {
 
 public:
 
-	void createFilterCoefficients(int order, type_filter_var Fs, type_filter_var Fcut, type_filter_var* a, type_filter_var* b);
+	void createFilterCoefficients(int order, FilterType Fs, FilterType Fcut, FilterType* a, FilterType* b);
 
 private:
 
@@ -26,10 +26,10 @@ private:
 	Complex* a_coeffs;
 
 	void zeros2coeffs(Complex* zeros, Complex* coeffs, int size);
-	void create_z_poles(Complex* poles, int order, type_filter_var cutoff);
+	void create_z_poles(Complex* poles, int order, FilterType cutoff);
 	void create_z_zeros(Complex* zeros, int order);
-	type_filter_var warp_freq(type_filter_var freq, type_filter_var Fs);
-	void p2z(Complex* p, Complex* z, int size, type_filter_var Fs);
+	FilterType warp_freq(FilterType freq, FilterType Fs);
+	void p2z(Complex* p, Complex* z, int size, FilterType Fs);
 	void inverse_poly(Complex* coeffs, int size);
 };
 

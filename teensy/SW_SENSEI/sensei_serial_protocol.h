@@ -13,9 +13,9 @@
 
 namespace sensei {
 
-    typedef float type_filter_var;
+    typedef float FilterType;
 
-    const type_filter_var DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
+    const FilterType DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
 
     const uint8_t MAX_FILTER_ORDER = 12;
 

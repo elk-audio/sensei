@@ -8,7 +8,7 @@ AnalogInput::AnalogInput(SetupPin* _setupPin) : DigitalInput(_setupPin)
 
 	ADCBitResolution = _setupPin->ADCBitResolution;
 
-	filter.setFilter(_setupPin->filterOrder,_setupPin->filterCoeff_a,_setupPin->filterCoeff_b);
+	filter.set_filter(_setupPin->filterOrder,_setupPin->filterCoeff_a,_setupPin->filterCoeff_b);
 
 	sliderMode = _setupPin->sliderMode;
 	sliderThreshold = _setupPin->sliderThreshold;
@@ -31,7 +31,7 @@ AnalogInput::AnalogInput(SetupPin* _setupPin) : DigitalInput(_setupPin)
 void AnalogInput::setPinValue(uint16_t _value)
 {
 
-	value=static_cast<uint16_t>(filter.processFilter(_value))>>ADCBitResolution;
+	value=static_cast<uint16_t>(filter.process_filter(_value))>>ADCBitResolution;
 
 	pinValueChanged = !(value==precValue); //TODO INCORPORARE
 	precValue=value;

@@ -57,14 +57,14 @@ typedef struct ImuComponents
 typedef struct SetupPin
 {
 	uint16_t idxPin;
-	type_filter_var FsFilter;
+	FilterType FsFilter;
 	//---------------------------
 	uint8_t sendingMode;
 	uint16_t deltaTicksContinuousMode;
 	uint8_t ADCBitResolution;
 	uint8_t filterOrder;
-	type_filter_var* filterCoeff_a;
-	type_filter_var* filterCoeff_b;
+	FilterType* filterCoeff_a;
+	FilterType* filterCoeff_b;
 	uint8_t sliderMode;
 	uint16_t sliderThreshold;
 } __attribute__((packed)) SetupPin;

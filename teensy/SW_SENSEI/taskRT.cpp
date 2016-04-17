@@ -24,7 +24,7 @@ void vTaskRT(void *pvParameters)
     TickType_t xFrequency = 1; // 1 ms -> 1000Hz //TODO define
 
     xLastWakeTime = xTaskGetTickCount();
-    //type_filter_var FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
+    //FilterType FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
 
     ManageIO manageIO;
 

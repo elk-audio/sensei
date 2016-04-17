@@ -1,6 +1,6 @@
 #include "Butterworth.h"
 
-void Butterworth::createFilterCoefficients(int order, type_filter_var Fs, type_filter_var Fcut, type_filter_var* a, type_filter_var* b)
+void Butterworth::createFilterCoefficients(int order, FilterType Fs, FilterType Fcut, FilterType* a, FilterType* b)
 {
 	p_poles = new Complex[order + 1];
 	z_poles = new Complex[order + 1];
@@ -8,21 +8,21 @@ void Butterworth::createFilterCoefficients(int order, type_filter_var Fs, type_f
 	z_zeros = new Complex[order + 1];
 	a_coeffs = new Complex[order + 1];
 
-	type_filter_var cutoff = warp_freq(Fcut, Fs);
+	FilterType cutoff = warp_freq(Fcut, Fs);
 	create_z_poles(p_poles, order, cutoff);
 	p2z(p_poles, z_poles, order, Fs);
 	zeros2coeffs(z_poles, a_coeffs, order);
 	create_z_zeros(z_zeros, order);
 	zeros2coeffs(z_zeros, b_coeffs, order);
 
-	type_filter_var k0_numer = 0.0;
-	type_filter_var k0_denom = 0.0;
+	FilterType k0_numer = 0.0;
+	FilterType k0_denom = 0.0;
 
 	for (int i = 0; i < order + 1; ++i){
 		k0_numer += b_coeffs[i].real();
 		k0_denom += a_coeffs[i].real();
 	}
-	type_filter_var k0 = k0_numer / k0_denom;
+	FilterType k0 = k0_numer / k0_denom;
 
 	for (int i = 0; i < order + 1; i++)
 	{
@@ -67,9 +67,9 @@ void Butterworth::zeros2coeffs(Complex * zeros, Complex * coeffs, int size)
 	coeffs[size] = Complex(1.0, 0.0);
 }
 
-void Butterworth::create_z_poles(Complex * poles, int order, type_filter_var cutoff)//cutoff Hz
+void Butterworth::create_z_poles(Complex * poles, int order, FilterType cutoff)//cutoff Hz
 {
-	type_filter_var arg;
+	FilterType arg;
 	for (int i = 0; i < order; ++i){
 		arg = M_PI*(2 * i + order + 1) / 2 / order;
 
@@ -86,12 +86,12 @@ void Butterworth::create_z_zeros(Complex * zeros, int order)
 	}
 }
 
-type_filter_var Butterworth::warp_freq(type_filter_var freq, type_filter_var Fs)
+FilterType Butterworth::warp_freq(FilterType freq, FilterType Fs)
 {
 	return Fs*tan(M_PI*freq / Fs) / M_PI;
 }
 
-void Butterworth::p2z(Complex * p, Complex * z, int size, type_filter_var Fs)
+void Butterworth::p2z(Complex * p, Complex * z, int size, FilterType Fs)
 {
 	for (int i = 0; i < size; ++i){
 		z[i] = (Complex(2 * Fs, 0.0) + p[i]) / (Complex(2 * Fs, 0.0) - p[i]);
