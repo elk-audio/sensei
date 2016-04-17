@@ -28,7 +28,7 @@ void vTaskCOM(void *pvParameters)
     hQueueCOMtoRT_DATA = xQueueCreate(64, sizeof(Msg_DATA)); //TODO define
 
     // Filtering
-    //Butterworth* butterworth;
+    Butterworth butterworth;
     type_filter_var FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
 
     ManageDataPacket manageDataPacket;
@@ -54,7 +54,7 @@ void vTaskCOM(void *pvParameters)
                 cmd = manageDataPacket.dataPacket.sData.cmd;
                 sub_cmd = manageDataPacket.dataPacket.sData.sub_cmd;
                 timestamp = manageDataPacket.dataPacket.sData.timestamp;
-                
+
                 if (systemSettings.debugMode)
                 {
                     SerialDebug.println("cmd="+String(cmd)+" sub_cmd="+String(sub_cmd)+" timestamp="+String(timestamp));
@@ -134,9 +134,7 @@ void vTaskCOM(void *pvParameters)
                         msgData.data.setupPin.filterCoeff_a = new type_filter_var[pinConfiguration->filterOrder + 1]; //TODO STRUCT
                         msgData.data.setupPin.filterCoeff_b = new type_filter_var[pinConfiguration->filterOrder + 1];
 
-                        butterworth = new Butterworth();
-                        butterworth->createFilterCoefficients(pinConfiguration->filterOrder, FsFilter, pinConfiguration->lowPassCutOffFilter, msgData.data.setupPin.filterCoeff_a, msgData.data.setupPin.filterCoeff_b);
-                        delete butterworth;
+                        butterworth.createFilterCoefficients(pinConfiguration->filterOrder, FsFilter, pinConfiguration->lowPassCutOffFilter, msgData.data.setupPin.filterCoeff_a, msgData.data.setupPin.filterCoeff_b);
 
                         retCode = SENSEI_ERROR_CODE::OK;
                         break;

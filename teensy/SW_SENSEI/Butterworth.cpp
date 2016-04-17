@@ -1,15 +1,5 @@
 #include "Butterworth.h"
 
-Butterworth::Butterworth()
-{
-
-}
-
-Butterworth::~Butterworth()
-{
-
-}
-
 void Butterworth::createFilterCoefficients(int order, type_filter_var Fs, type_filter_var Fcut, type_filter_var* a, type_filter_var* b)
 {
 	p_poles = new Complex[order + 1];
@@ -49,7 +39,6 @@ void Butterworth::createFilterCoefficients(int order, type_filter_var Fs, type_f
 
 void Butterworth::zeros2coeffs(Complex * zeros, Complex * coeffs, int size)
 {
-
 	int * b = new int[size + 1];
 	memset(b, 0, sizeof(int)*(size + 1));
 	int i = 0;

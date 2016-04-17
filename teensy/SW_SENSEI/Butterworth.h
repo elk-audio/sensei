@@ -14,8 +14,7 @@ typedef std::complex<type_filter_var> Complex;
 class Butterworth {
 
 public:
-	Butterworth();
-	~Butterworth();
+
 	void createFilterCoefficients(int order, type_filter_var Fs, type_filter_var Fcut, type_filter_var* a, type_filter_var* b);
 
 private:
