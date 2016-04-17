@@ -17,6 +17,8 @@ namespace sensei {
 
     const type_filter_var DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
 
+    const uint8_t MAX_FILTER_ORDER = 12;
+
     const bool COND_DEBUG_MODE = false;
     const bool COND_MULTIPLE_PACKETS = false;
     const bool COND_SENDING_PACKETS = false;
