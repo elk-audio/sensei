@@ -13,19 +13,6 @@ AnalogInput::AnalogInput(SetupPin* _setupPin) : DigitalInput(_setupPin)
 	sliderMode = _setupPin->sliderMode;
 	sliderThreshold = _setupPin->sliderThreshold;
 
-	/*SerialDebug.println("PIN_ANALOG_INPUT()");
-	SerialDebug.println("sendingMode=" + String(sendingMode));
-	SerialDebug.println("deltaTicksContinuousMode=" + String(deltaTicksContinuousMode));
-	SerialDebug.println("ADCBitResolution=" + String(ADCBitResolution));
-	SerialDebug.println("filterOrder=" + String(filterOrder));
-	SerialDebug.println("sliderMode=" + String(sliderMode));
-	SerialDebug.println("sliderThreshold=" + String(sliderThreshold));
-
-	for (int idx = 0; idx < filterOrder + 1; idx++)
-	{
-		SerialDebug.println(String(filterCoeff_a[idx]) + " " + String(filterCoeff_b[idx]));
-	}
-	SerialDebug.println("------------------------------------");*/
 }
 
 void AnalogInput::setPinValue(uint16_t _value)

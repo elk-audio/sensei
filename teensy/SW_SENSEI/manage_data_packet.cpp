@@ -14,18 +14,21 @@ void ManageDataPacket::receivePacket()
 {
 	Serial.readBytes((char*)dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
 
-	/*for(int i=0;i<SENSEI_LENGTH_DATA_PACKET;i++)
+	if (DEBUG)
 	{
-		SerialDebug.print("[" + String(dataPacket.vData[i]) +"] ");
+		for(int i=0;i<SENSEI_LENGTH_DATA_PACKET;i++)
+		{
+			SerialDebug.print("[" + String(dataPacket.vData[i]) +"] ");
+		}
+		SerialDebug.println("---------------");
 	}
-	SerialDebug.println("---------------");*/
 
 	nPacketReceived++;
 }
 
 uint32_t ManageDataPacket::getNpacketReceived()
 {
-    return nPacketReceived;
+	return nPacketReceived;
 }
 
 uint16_t ManageDataPacket::calcCRC()
@@ -37,9 +40,6 @@ uint16_t ManageDataPacket::calcCRC()
 		crc += dataPacket.vData[idx];
 	}
 
-	//SerialDebug.println(SENSEI_START_IDX_CRC);
-	//SerialDebug.println(SENSEI_STOP_IDX_CRC);
-
 	return crc;
 }
 
@@ -48,9 +48,9 @@ bool ManageDataPacket::checkCRC()
 	uint16_t crc = calcCRC();
 
 	if (dataPacket.sData.crc == crc)
-		return true;
+	return true;
 	else
-		return false;
+	return false;
 }
 
 void ManageDataPacket::preparePacket(uint8_t cmd, uint8_t sub_cmd, uint16_t nPacketsMissing,uint8_t *pPayload,uint16_t nBytePayload)
@@ -98,12 +98,12 @@ int32_t ManageDataPacket::checkPacket()
 {
 
 	if ((dataPacket.sData.start_header.vByte[0] == START_HEADER.vByte[0]) &&
-		(dataPacket.sData.start_header.vByte[1] == START_HEADER.vByte[1]) &&
-		(dataPacket.sData.start_header.vByte[2] == START_HEADER.vByte[2]))
+	(dataPacket.sData.start_header.vByte[1] == START_HEADER.vByte[1]) &&
+	(dataPacket.sData.start_header.vByte[2] == START_HEADER.vByte[2]))
 	{
 		if ((dataPacket.sData.stop_header.vByte[0] == STOP_HEADER.vByte[0]) &&
-			(dataPacket.sData.stop_header.vByte[1] == STOP_HEADER.vByte[1]) &&
-			(dataPacket.sData.stop_header.vByte[2] == STOP_HEADER.vByte[2]))
+		(dataPacket.sData.stop_header.vByte[1] == STOP_HEADER.vByte[1]) &&
+		(dataPacket.sData.stop_header.vByte[2] == STOP_HEADER.vByte[2]))
 		{
 			if (checkCRC() == true)
 			{

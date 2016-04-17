@@ -58,11 +58,6 @@ void vTaskCOM(void *pvParameters)
                 if (systemSettings.debugMode)
                 {
                     SerialDebug.println("cmd="+String(cmd)+" sub_cmd="+String(sub_cmd)+" timestamp="+String(timestamp));
-                    SerialDebug.println("Serial.available()=" + String(Serial.available()));
-                    for(int i=0;i<SENSEI_LENGTH_DATA_PACKET;i++)
-                    {
-                        SerialDebug.print("[" +String(manageDataPacket.dataPacket.vData[i]) + "] ");
-                    }
                 }
 
                 //---------------------------------------------------------------------
