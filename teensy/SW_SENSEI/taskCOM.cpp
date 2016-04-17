@@ -76,6 +76,7 @@ void vTaskCOM(void *pvParameters)
                     //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                     case SENSEI_CMD::INITIALIZE_SYSTEM:
                     if (systemSettings.debugMode) SerialDebug.println("COM: INITIALIZE_SYSTEM");
+                    systemSettings.enableSendingPackets=false;
                     memcpy(&msgData.data.hw,&manageDataPacket.dataPacket.sData.payload[0],sizeof(HardwareSettings));
                     retCode=SENSEI_ERROR_CODE::OK;
                     break;

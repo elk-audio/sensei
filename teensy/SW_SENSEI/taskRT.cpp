@@ -124,6 +124,7 @@ void vTaskRT(void *pvParameters)
                 //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                 case SENSEI_CMD::INITIALIZE_SYSTEM:
                 msgData.status=manageIO.setSystem(msgData.data.hw.nPin,msgData.data.hw.nDigitalPin);
+                systemSettings.enableSendingPackets=false;
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
