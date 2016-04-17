@@ -1,8 +1,7 @@
 // TODO
-// - max filter order
 // - INPUT - OUTPUT classes
-// - filterCoeff, Butterworth class
-// -
+// - filterCoeff
+// - put hardware polling into a method of ManageIO class
 // -
 
 //#pragma GCC optimize ("-Ofast")
