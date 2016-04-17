@@ -1,16 +1,15 @@
 #include "Filter.h"
-//#include <arm_neon.h>
+#include "common.h"
 
 Filter::Filter()
 {
-    isInitialized=false;
     isEnable=false;
 }
 
 int32_t Filter::setFilter(uint8_t _filterOrder,type_filter_var* _filterCoeff_a,type_filter_var* _filterCoeff_b)
 {
     filterOrder=_filterOrder;
-    if (filterOrder>0)
+    if ((filterOrder>0) && (filterOrder <= MAX_FILTER_ORDER))
     {
         for (int idx = 0; idx < filterOrder + 1; idx++)
         {
@@ -35,7 +34,6 @@ int32_t Filter::setFilter(uint8_t _filterOrder,type_filter_var* _filterCoeff_a,t
 
         isEnable=true;
     }
-    isInitialized=true;
     return SENSEI_ERROR_CODE::OK;
 }
 

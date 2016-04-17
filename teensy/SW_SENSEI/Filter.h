@@ -12,7 +12,6 @@ public:
     type_filter_var processFilter(type_filter_var x);
 
 private:
-    bool isInitialized;
     bool isEnable;
     uint8_t filterOrder;
     vector<type_filter_var> filterCoeff_a;
