@@ -1,4 +1,4 @@
-#include "DigitalOutput.h"
+#include "digital_output.h"
 
 DigitalOutput::DigitalOutput() : PIN()
 {

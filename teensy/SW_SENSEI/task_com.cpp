@@ -1,4 +1,4 @@
-#include "taskCOM.h"
+#include "task_com.h"
 
 // handles for queue
 extern QueueHandle_t hQueueRTtoCOM_DATA;

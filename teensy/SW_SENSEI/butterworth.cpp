@@ -1,4 +1,4 @@
-#include "Butterworth.h"
+#include "butterworth.h"
 
 void Butterworth::createFilterCoefficients(int order, FilterType Fs, FilterType Fcut, FilterType* a, FilterType* b)
 {

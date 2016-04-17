@@ -2,7 +2,7 @@
 #define DIGITALOUTPUT_H
 
 #include "common.h"
-#include "PIN.h"
+#include "pin.h"
 
 class DigitalOutput : public PIN {
 public:

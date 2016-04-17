@@ -1,4 +1,4 @@
-#include "DigitalInput.h"
+#include "digital_input.h"
 
 DigitalInput::DigitalInput(SetupPin* _setupPin) : DigitalOutput()
 {

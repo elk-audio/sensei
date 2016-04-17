@@ -2,8 +2,8 @@
 #define ANALOGINPUT_H
 
 #include "common.h"
-#include "DigitalInput.h"
-#include "Filter.h"
+#include "digital_input.h"
+#include "filter.h"
 
 class AnalogInput : public DigitalInput  {
 public:

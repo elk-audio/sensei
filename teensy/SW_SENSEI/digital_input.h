@@ -1,7 +1,7 @@
 #ifndef DIGITALINPUT_H
 #define DIGITALINPUT_H
 
-#include "DigitalOutput.h"
+#include "digital_output.h"
 
 class DigitalInput : public DigitalOutput {
 public:

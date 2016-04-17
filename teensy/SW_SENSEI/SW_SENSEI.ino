@@ -12,9 +12,9 @@
 #include <Arduino.h>
 #include "common.h"
 
-#include "taskRT.h"
-#include "taskCOM.h"
-#include "taskLED.h"
+#include "task_rt.h"
+#include "task_com.h"
+#include "task_led.h"
 
 namespace std {
     void __throw_bad_alloc() {

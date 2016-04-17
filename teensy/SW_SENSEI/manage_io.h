@@ -4,12 +4,12 @@
 #include "Arduino.h"
 #include "common.h"
 
-#include "PIN.h"
-#include "AnalogInput.h"
-#include "DigitalInput.h"
-#include "DigitalOutput.h"
+#include "pin.h"
+#include "analog_input.h"
+#include "digital_input.h"
+#include "digital_output.h"
 
-#include "ManageIMU.h"
+#include "manage_imu.h"
 
 class ManageIO{
   public:
