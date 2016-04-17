@@ -7,4 +7,4 @@
 
 void vTaskCOM(void *pvParameters);
 
-#endif //TASKCOM_H
+#endif // TASKCOM_H

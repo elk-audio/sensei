@@ -11,8 +11,6 @@
 
 #include "ManageIMU.h"
 
-
-
 class ManageIO{
   public:
 
@@ -55,4 +53,4 @@ class ManageIO{
      bool systemInitialized;
 };
 
-#endif
+#endif // MANAGEIO_H

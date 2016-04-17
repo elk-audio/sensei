@@ -1,5 +1,5 @@
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef COMMON_H
+#define COMMON_H
 
 #include "Arduino.h"
 #include "FreeRTOS_ARM.h"
@@ -36,7 +36,6 @@ typedef union uByte{
 	};
 	uint8_t value;
 } Byte;
-
 
 // FreeRTOS
 typedef enum RT_MSG_TYPE
@@ -179,5 +178,4 @@ const uint8_t SPI_MISO = 12;
 const uint8_t SPI_MOSI = 11;
 const uint8_t INT_FILTER = 9;
 
-
-#endif
+#endif // COMMON_H

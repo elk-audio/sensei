@@ -22,4 +22,4 @@ private:
 
 };
 
-#endif //ANALOGINPUT_H
+#endif // ANALOGINPUT_H

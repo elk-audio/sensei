@@ -368,4 +368,4 @@ namespace sensei {
 
 }; // namespace sensei
 
-#endif // #ifndef SENSEI_SERIAL_PROTOCOL_H_
+#endif // SENSEI_SERIAL_PROTOCOL_H

@@ -33,8 +33,4 @@ private:
 	void inverse_poly(Complex* coeffs, int size);
 };
 
-
-
-
-
-#endif
+#endif // BUTTERWORTH_H

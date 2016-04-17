@@ -29,4 +29,4 @@ private:
 	sSenseiACKPacket* ACKPacket;
 };
 
-#endif
+#endif // MANAGEDATAPACKET_H

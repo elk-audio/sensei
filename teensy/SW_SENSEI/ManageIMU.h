@@ -108,7 +108,7 @@ public:
     void clearBuffer();
 
     int32_t getAllComponents(ImuComponents* _components);
-    
+
     int32_t writeCommand(uint8_t cmd);
     int32_t writeCommand(uint8_t cmd, uint8_t value);
     int32_t writeCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
@@ -131,4 +131,4 @@ private:
     sImuInternalSettings internalSettings;
 };
 
-#endif
+#endif // MANAGE_IMU_H

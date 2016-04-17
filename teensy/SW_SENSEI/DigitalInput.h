@@ -15,5 +15,4 @@ private:
 
 };
 
-
-#endif
+#endif // DIGITALINPUT_H

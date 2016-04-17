@@ -11,4 +11,4 @@ public:
 private:
 };
 
-#endif
+#endif // DIGITALOUTPUT_H

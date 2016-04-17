@@ -19,4 +19,4 @@ private:
     vector<type_filter_var> zbuffer;
 };
 
-#endif
+#endif // FILTER_H

@@ -23,5 +23,4 @@ class PIN{
 
 };
 
-
-#endif
+#endif // PIN_H
