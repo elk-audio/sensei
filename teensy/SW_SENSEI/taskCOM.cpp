@@ -28,7 +28,7 @@ void vTaskCOM(void *pvParameters)
     hQueueCOMtoRT_DATA = xQueueCreate(64, sizeof(Msg_DATA)); //TODO define
 
     // Filtering
-    Butterworth* butterworth;
+    //Butterworth* butterworth;
     type_filter_var FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
 
     ManageDataPacket manageDataPacket;
@@ -54,14 +54,17 @@ void vTaskCOM(void *pvParameters)
                 cmd = manageDataPacket.dataPacket.sData.cmd;
                 sub_cmd = manageDataPacket.dataPacket.sData.sub_cmd;
                 timestamp = manageDataPacket.dataPacket.sData.timestamp;
-
-                SerialDebug.println("cmd="+String(cmd)+" sub_cmd="+String(sub_cmd)+" timestamp="+String(timestamp));
-                SerialDebug.println("Serial.available()=" + String(Serial.available()));
-
-                for(int i=0;i<SENSEI_LENGTH_DATA_PACKET;i++)
+                
+                if (systemSettings.debugMode)
                 {
-                    SerialDebug.print("[" +String(manageDataPacket.dataPacket.vData[i]) + "] ");
+                    SerialDebug.println("cmd="+String(cmd)+" sub_cmd="+String(sub_cmd)+" timestamp="+String(timestamp));
+                    SerialDebug.println("Serial.available()=" + String(Serial.available()));
+                    for(int i=0;i<SENSEI_LENGTH_DATA_PACKET;i++)
+                    {
+                        SerialDebug.print("[" +String(manageDataPacket.dataPacket.vData[i]) + "] ");
+                    }
                 }
+
                 //---------------------------------------------------------------------
                 // START COMMANDS
                 //---------------------------------------------------------------------
@@ -85,7 +88,7 @@ void vTaskCOM(void *pvParameters)
                     case SENSEI_CMD::CONFIGURE_PIN:
                     sPinConfiguration* pinConfiguration;
                     pinConfiguration = (sPinConfiguration*)&manageDataPacket.dataPacket.sData.payload[0];
-                    if (1)//systemSettings.debugMode)
+                    if (systemSettings.debugMode)
                     {
                         SerialDebug.println("------------------------------------");
                         SerialDebug.println("COM: CONFIGURE_PIN");
