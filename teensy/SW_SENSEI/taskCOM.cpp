@@ -43,7 +43,7 @@ void vTaskCOM(void *pvParameters)
 
     for (;;)
     {
-        if (Serial.available()==SENSEI_LENGTH_DATA_PACKET)
+        if (Serial.available()>=SENSEI_LENGTH_DATA_PACKET)
         {
 
             manageDataPacket.receivePacket();
