@@ -135,16 +135,16 @@ void vTaskRT(void *pvParameters)
                 //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
                 case SENSEI_CMD::ENABLE_SENDING_PACKETS:
                 systemSettings.enableSendingPackets = static_cast<bool>(msgData.data.value);
-                msgData.status = SENSEI_ERROR_CODE::OK;
                 if (DEBUG)
                 {
                     SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
                 }
+                msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
                 case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
-                systemSettings.enableMultiplePackets=static_cast<bool>(msgData.data.value);
+                systemSettings.enableMultiplePackets = static_cast<bool>(msgData.data.value);
                 msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
@@ -201,21 +201,19 @@ void vTaskRT(void *pvParameters)
                 switch (msgData.sub_cmd)
                 {
                     case SET_PIN:
-                    msgData.status = manageIO.setDigitalPin(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
-
                     if (systemSettings.debugMode)
                     {
                         SerialDebug.println("SET_DIGITAL_PINS: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
                     }
+                    msgData.status = manageIO.setDigitalPin(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
                     break;
 
                     case SET_BANK:
-                    msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
-
                     if (systemSettings.debugMode)
                     {
                         SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
                     }
+                    msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
                     break;
 
                     default:
