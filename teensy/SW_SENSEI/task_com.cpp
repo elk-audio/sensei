@@ -67,79 +67,78 @@ void vTaskCOM(void *pvParameters)
                 {
                     //--------------------------------------------------------------------- [CMD HELLO]
                     case SENSEI_CMD::HELLO:
-                    if (systemSettings.debugMode)
-                    {
-                        SerialDebug.println("COM: HELLO");
-                    }
-                    retCode = SENSEI_ERROR_CODE::NO_EXTERNAL_PROCESSING_NECESSARY;
+                        if (systemSettings.debugMode)
+                        {
+                            SerialDebug.println("COM: HELLO");
+                        }
+                        retCode = SENSEI_ERROR_CODE::NO_EXTERNAL_PROCESSING_NECESSARY;
                     break;
 
                     //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                     case SENSEI_CMD::INITIALIZE_SYSTEM:
-                    if (systemSettings.debugMode)
-                    {
-                        SerialDebug.println("COM: INITIALIZE_SYSTEM");
-                    }
-                    systemSettings.enableSendingPackets=false;
-                    memcpy(&msgData.data.hw,&manageDataPacket.dataPacket.sData.payload[0],sizeof(HardwareSettings));
-                    retCode = SENSEI_ERROR_CODE::OK;
+                        if (systemSettings.debugMode)
+                        {
+                            SerialDebug.println("COM: INITIALIZE_SYSTEM");
+                        }
+                        systemSettings.enableSendingPackets=false;
+                        memcpy(&msgData.data.hw,&manageDataPacket.dataPacket.sData.payload[0],sizeof(HardwareSettings));
+                        retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
                     //--------------------------------------------------------------------- [CMD CONFIGURE_PIN]
                     case SENSEI_CMD::CONFIGURE_PIN:
-                    sPinConfiguration* pinConfiguration;
-                    pinConfiguration = (sPinConfiguration*)&manageDataPacket.dataPacket.sData.payload[0];
-                    if (systemSettings.debugMode)
-                    {
-                        SerialDebug.println("------------------------------------");
-                        SerialDebug.println("COM: CONFIGURE_PIN");
-                        SerialDebug.println("------------------------------------");
-                        SerialDebug.println("pinType=" + String(sub_cmd));
-                        SerialDebug.println("idxPin=" + String(pinConfiguration->idxPin));
-                        SerialDebug.println("sendingMode=" + String(pinConfiguration->sendingMode));
-                        SerialDebug.println("deltaTicksContinuousMode=" + String(pinConfiguration->deltaTicksContinuousMode));
-                        SerialDebug.println("ADCBitResolution=" + String(pinConfiguration->ADCBitResolution));
-                        SerialDebug.println("filterOrder=" + String(pinConfiguration->filterOrder));
-                        SerialDebug.println("lowPassCutOffFilter=" + String(pinConfiguration->lowPassCutOffFilter));
-                        SerialDebug.println("sliderMode=" + String(pinConfiguration->sliderMode));
-                        SerialDebug.println("sliderThreshold=" + String(pinConfiguration->sliderThreshold));
-                        SerialDebug.println("------------------------------------");
-                        SerialDebug.println("");
-                    }
+                        sPinConfiguration* pinConfiguration;
+                        pinConfiguration = (sPinConfiguration*)&manageDataPacket.dataPacket.sData.payload[0];
+                        if (systemSettings.debugMode)
+                        {
+                            SerialDebug.println("------------------------------------");
+                            SerialDebug.println("COM: CONFIGURE_PIN");
+                            SerialDebug.println("------------------------------------");
+                            SerialDebug.println("pinType=" + String(sub_cmd));
+                            SerialDebug.println("idxPin=" + String(pinConfiguration->idxPin));
+                            SerialDebug.println("sendingMode=" + String(pinConfiguration->sendingMode));
+                            SerialDebug.println("deltaTicksContinuousMode=" + String(pinConfiguration->deltaTicksContinuousMode));
+                            SerialDebug.println("ADCBitResolution=" + String(pinConfiguration->ADCBitResolution));
+                            SerialDebug.println("filterOrder=" + String(pinConfiguration->filterOrder));
+                            SerialDebug.println("lowPassCutOffFilter=" + String(pinConfiguration->lowPassCutOffFilter));
+                            SerialDebug.println("sliderMode=" + String(pinConfiguration->sliderMode));
+                            SerialDebug.println("sliderThreshold=" + String(pinConfiguration->sliderThreshold));
+                            SerialDebug.println("------------------------------------");
+                            SerialDebug.println("");
+                        }
 
-                    memset(&msgData.data.setupPin,0,sizeof(SetupPin));
+                        memset(&msgData.data.setupPin,0,sizeof(SetupPin));
 
-                    msgData.data.setupPin.idxPin = pinConfiguration->idxPin;
+                        msgData.data.setupPin.idxPin = pinConfiguration->idxPin;
 
-                    switch (sub_cmd) //pinType
-                    {
-                        case SENSEI_SUB_CMD::SET_PIN_DISABLE:
-                        case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
-                        retCode = SENSEI_ERROR_CODE::OK;
-                        break;
+                        switch (sub_cmd) //pinType
+                        {
+                            case SENSEI_SUB_CMD::SET_PIN_DISABLE:
+                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
+                                retCode = SENSEI_ERROR_CODE::OK;
+                            break;
 
-                        case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
-                        msgData.data.setupPin.sendingMode = pinConfiguration->sendingMode;
-                        msgData.data.setupPin.deltaTicksContinuousMode = pinConfiguration->deltaTicksContinuousMode;
-                        retCode = SENSEI_ERROR_CODE::OK;
-                        break;
+                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
+                                msgData.data.setupPin.sendingMode = pinConfiguration->sendingMode;
+                                msgData.data.setupPin.deltaTicksContinuousMode = pinConfiguration->deltaTicksContinuousMode;
+                                retCode = SENSEI_ERROR_CODE::OK;
+                            break;
 
-                        case SENSEI_SUB_CMD::SET_PIN_ANALOG_INPUT:
-                        msgData.data.setupPin.sendingMode= pinConfiguration->sendingMode;
-                        msgData.data.setupPin.deltaTicksContinuousMode = pinConfiguration->deltaTicksContinuousMode;
-                        msgData.data.setupPin.ADCBitResolution = pinConfiguration->ADCBitResolution;
-                        msgData.data.setupPin.filterOrder = pinConfiguration->filterOrder;
-                        msgData.data.setupPin.sliderMode = pinConfiguration->sliderMode;
-                        msgData.data.setupPin.sliderThreshold = pinConfiguration->sliderThreshold;
+                            case SENSEI_SUB_CMD::SET_PIN_ANALOG_INPUT:
+                                msgData.data.setupPin.sendingMode= pinConfiguration->sendingMode;
+                                msgData.data.setupPin.deltaTicksContinuousMode = pinConfiguration->deltaTicksContinuousMode;
+                                msgData.data.setupPin.ADCBitResolution = pinConfiguration->ADCBitResolution;
+                                msgData.data.setupPin.filterOrder = pinConfiguration->filterOrder;
+                                msgData.data.setupPin.sliderMode = pinConfiguration->sliderMode;
+                                msgData.data.setupPin.sliderThreshold = pinConfiguration->sliderThreshold;
+                                msgData.data.setupPin.filterCoeff_a = new FilterType[pinConfiguration->filterOrder + 1]; //TODO STRUCT
+                                msgData.data.setupPin.filterCoeff_b = new FilterType[pinConfiguration->filterOrder + 1];
 
-                        msgData.data.setupPin.filterCoeff_a = new FilterType[pinConfiguration->filterOrder + 1]; //TODO STRUCT
-                        msgData.data.setupPin.filterCoeff_b = new FilterType[pinConfiguration->filterOrder + 1];
+                                butterworth.createFilterCoefficients(pinConfiguration->filterOrder, FsFilter, pinConfiguration->lowPassCutOffFilter, msgData.data.setupPin.filterCoeff_a, msgData.data.setupPin.filterCoeff_b);
 
-                        butterworth.createFilterCoefficients(pinConfiguration->filterOrder, FsFilter, pinConfiguration->lowPassCutOffFilter, msgData.data.setupPin.filterCoeff_a, msgData.data.setupPin.filterCoeff_b);
-
-                        retCode = SENSEI_ERROR_CODE::OK;
-                        break;
-                    } //pinType
+                                retCode = SENSEI_ERROR_CODE::OK;
+                            break;
+                        } //pinType
                     break; //case SENSEI_CMD::CONFIGURE_PIN
 
                     //--------------------------------------------------------------------- [CMD SET_DIGITAL_PINS]
@@ -150,12 +149,12 @@ void vTaskCOM(void *pvParameters)
                     {
                         case SENSEI_SUB_CMD::SET_PIN:
                         case SENSEI_SUB_CMD::SET_BANK:
-                        memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
-                        retCode = SENSEI_ERROR_CODE::OK;
-
+                            memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
+                            retCode = SENSEI_ERROR_CODE::OK;
                         break;
+
                         default:
-                        retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                            retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
                     }
                     break;
 
@@ -164,12 +163,12 @@ void vTaskCOM(void *pvParameters)
                     switch (sub_cmd)
                     {
                         case SENSEI_SUB_CMD::SET_SINGLE_PIN:
-                        memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
-                        retCode = SENSEI_ERROR_CODE::OK;
+                            memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
+                            retCode = SENSEI_ERROR_CODE::OK;
                         break;
 
                         default:
-                        retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                            retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
                         break;
                     }
                     break;
@@ -179,7 +178,6 @@ void vTaskCOM(void *pvParameters)
 
                     switch (sub_cmd)
                     {
-
                         case SENSEI_SUB_CMD::GET_SINGLE_PIN:
                         memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
                         retCode = SENSEI_ERROR_CODE::OK;
@@ -192,31 +190,31 @@ void vTaskCOM(void *pvParameters)
 
                     //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
                     case SENSEI_CMD::ENABLE_SENDING_PACKETS:
-                    memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
-                    systemSettings.enableSendingPackets = msgData.data.value;
-                    if (systemSettings.debugMode)
-                    {
-                        SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
-                    }
-                    retCode = SENSEI_ERROR_CODE::OK;
+                        memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
+                        systemSettings.enableSendingPackets = msgData.data.value;
+                        if (systemSettings.debugMode)
+                        {
+                            SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                        }
+                        retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
                     //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
                     case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
-                    memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
-                    systemSettings.enableMultiplePackets = msgData.data.value;
-                    if (systemSettings.debugMode)
-                    {
-                        SerialDebug.println("enableMultiplePackets= " + String(systemSettings.enableMultiplePackets));
-                    }
-                    retCode = SENSEI_ERROR_CODE::OK;
+                        memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
+                        systemSettings.enableMultiplePackets = msgData.data.value;
+                        if (systemSettings.debugMode)
+                        {
+                            SerialDebug.println("enableMultiplePackets= " + String(systemSettings.enableMultiplePackets));
+                        }
+                        retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
                     //---------------------------------------------------------------------
                     // STOP COMMANDS
                     //---------------------------------------------------------------------
                     default:
-                    retCode = SENSEI_ERROR_CODE::CMD_NOT_VALID;
+                        retCode = SENSEI_ERROR_CODE::CMD_NOT_VALID;
                 } //switch (cmd)
 
 
