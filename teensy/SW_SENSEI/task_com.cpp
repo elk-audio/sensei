@@ -198,7 +198,7 @@ void vTaskCOM(void *pvParameters)
                     {
                         SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
                     }
-                    msgData.status=SENSEI_ERROR_CODE::OK;
+                    retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
                     //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
@@ -209,7 +209,7 @@ void vTaskCOM(void *pvParameters)
                     {
                         SerialDebug.println("enableMultiplePackets= " + String(systemSettings.enableMultiplePackets));
                     }
-                    msgData.status = SENSEI_ERROR_CODE::OK;
+                    retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
                     //---------------------------------------------------------------------
