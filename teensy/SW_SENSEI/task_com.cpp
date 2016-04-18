@@ -13,9 +13,9 @@ void vTaskCOM(void *pvParameters)
     SerialDebug.println("-> TASK: COM");
 
     SystemSettings systemSettings;
-    systemSettings.debugMode=COND_DEBUG_MODE;
-    systemSettings.enableMultiplePackets=COND_MULTIPLE_PACKETS;
-    systemSettings.enableSendingPackets=COND_SENDING_PACKETS;
+    systemSettings.debugMode = COND_DEBUG_MODE;
+    systemSettings.enableMultiplePackets = COND_MULTIPLE_PACKETS;
+    systemSettings.enableSendingPackets = COND_SENDING_PACKETS;
 
     TaskComStatus taskStatus;
     memset(&taskStatus,0,sizeof(TaskComStatus));
@@ -57,7 +57,7 @@ void vTaskCOM(void *pvParameters)
 
                 if (systemSettings.debugMode)
                 {
-                    SerialDebug.println("cmd="+String(cmd)+" sub_cmd="+String(sub_cmd)+" timestamp="+String(timestamp));
+                    SerialDebug.println("cmd=" + String(cmd) + " sub_cmd=" + String(sub_cmd) + " timestamp=" + String(timestamp));
                 }
 
                 //---------------------------------------------------------------------
@@ -82,7 +82,7 @@ void vTaskCOM(void *pvParameters)
                     }
                     systemSettings.enableSendingPackets=false;
                     memcpy(&msgData.data.hw,&manageDataPacket.dataPacket.sData.payload[0],sizeof(HardwareSettings));
-                    retCode=SENSEI_ERROR_CODE::OK;
+                    retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
                     //--------------------------------------------------------------------- [CMD CONFIGURE_PIN]
@@ -109,7 +109,7 @@ void vTaskCOM(void *pvParameters)
 
                     memset(&msgData.data.setupPin,0,sizeof(SetupPin));
 
-                    msgData.data.setupPin.idxPin=pinConfiguration->idxPin;
+                    msgData.data.setupPin.idxPin = pinConfiguration->idxPin;
 
                     switch (sub_cmd) //pinType
                     {
@@ -119,7 +119,7 @@ void vTaskCOM(void *pvParameters)
                         break;
 
                         case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
-                        msgData.data.setupPin.sendingMode= pinConfiguration->sendingMode;
+                        msgData.data.setupPin.sendingMode = pinConfiguration->sendingMode;
                         msgData.data.setupPin.deltaTicksContinuousMode = pinConfiguration->deltaTicksContinuousMode;
                         retCode = SENSEI_ERROR_CODE::OK;
                         break;
@@ -193,7 +193,7 @@ void vTaskCOM(void *pvParameters)
                     //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
                     case SENSEI_CMD::ENABLE_SENDING_PACKETS:
                     memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
-                    systemSettings.enableSendingPackets=msgData.data.value;
+                    systemSettings.enableSendingPackets = msgData.data.value;
                     if (systemSettings.debugMode)
                     {
                         SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
@@ -204,12 +204,12 @@ void vTaskCOM(void *pvParameters)
                     //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
                     case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
                     memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
-                    systemSettings.enableMultiplePackets=msgData.data.value;
+                    systemSettings.enableMultiplePackets = msgData.data.value;
                     if (systemSettings.debugMode)
                     {
                         SerialDebug.println("enableMultiplePackets= " + String(systemSettings.enableMultiplePackets));
                     }
-                    msgData.status=SENSEI_ERROR_CODE::OK;
+                    msgData.status = SENSEI_ERROR_CODE::OK;
                     break;
 
                     //---------------------------------------------------------------------
@@ -242,9 +242,9 @@ void vTaskCOM(void *pvParameters)
                 break;
 
                 case SENSEI_ERROR_CODE::OK:
-                msgData.cmd=cmd;
-                msgData.sub_cmd=sub_cmd;
-                msgData.timestamp=timestamp;
+                msgData.cmd = cmd;
+                msgData.sub_cmd = sub_cmd;
+                msgData.timestamp = timestamp;
 
 
                 //Message to RT in order to process the command

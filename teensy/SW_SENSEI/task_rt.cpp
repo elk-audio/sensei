@@ -115,7 +115,7 @@ void vTaskRT(void *pvParameters)
         if ((hQueueCOMtoRT_DATA != 0) && (xQueueReceive(hQueueCOMtoRT_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE)))
         {
             taskStatus.msgQueueReceived++;
-            msgData.msgType=RT_MSG_TYPE::ACK;
+            msgData.msgType = RT_MSG_TYPE::ACK;
 
             if (systemSettings.debugMode)
             {
@@ -128,14 +128,14 @@ void vTaskRT(void *pvParameters)
             {
                 //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                 case SENSEI_CMD::INITIALIZE_SYSTEM:
-                msgData.status=manageIO.setSystem(msgData.data.hw.nPin,msgData.data.hw.nDigitalPin);
+                msgData.status = manageIO.setSystem(msgData.data.hw.nPin,msgData.data.hw.nDigitalPin);
                 systemSettings.enableSendingPackets=false;
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
                 case SENSEI_CMD::ENABLE_SENDING_PACKETS:
-                systemSettings.enableSendingPackets=static_cast<bool>(msgData.data.value);
-                msgData.status=SENSEI_ERROR_CODE::OK;
+                systemSettings.enableSendingPackets = static_cast<bool>(msgData.data.value);
+                msgData.status = SENSEI_ERROR_CODE::OK;
                 if (DEBUG)
                 {
                     SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
@@ -145,7 +145,7 @@ void vTaskRT(void *pvParameters)
                 //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
                 case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
                 systemSettings.enableMultiplePackets=static_cast<bool>(msgData.data.value);
-                msgData.status=SENSEI_ERROR_CODE::OK;
+                msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
                 //--------------------------------------------------------------------- [CMD CONFIGURE_PIN]
@@ -173,12 +173,12 @@ void vTaskRT(void *pvParameters)
                         case SENSEI_SUB_CMD::SET_PIN_DISABLE:
                         case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
                         case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
-                        msgData.status=manageIO.configurePin(static_cast<ePinType>(msgData.sub_cmd), &msgData.data.setupPin);
+                        msgData.status = manageIO.configurePin(static_cast<ePinType>(msgData.sub_cmd), &msgData.data.setupPin);
                         break;
 
                         case SENSEI_SUB_CMD::SET_PIN_ANALOG_INPUT:
 
-                        msgData.status=manageIO.configurePin(ePinType::PIN_ANALOG_INPUT, &msgData.data.setupPin);
+                        msgData.status = manageIO.configurePin(ePinType::PIN_ANALOG_INPUT, &msgData.data.setupPin);
 
                         delete[] msgData.data.setupPin.filterCoeff_a;
                         delete[] msgData.data.setupPin.filterCoeff_b;
@@ -192,7 +192,7 @@ void vTaskRT(void *pvParameters)
                 }
                 else
                 {
-                    msgData.status=SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
+                    msgData.status = SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
                 }
                 break;
 
@@ -248,10 +248,10 @@ void vTaskRT(void *pvParameters)
                 {
                     case SENSEI_SUB_CMD::GET_SINGLE_PIN:
                     msgData.msgType = RT_MSG_TYPE::DATA;
-                    msgData.data.pin.type=manageIO.getPinType(msgData.data.pin.idx);
+                    msgData.data.pin.type = manageIO.getPinType(msgData.data.pin.idx);
                     uint16_t value;
-                    msgData.status=manageIO.getPinValue(msgData.data.pin.idx,value);
-                    msgData.data.pin.value=value;
+                    msgData.status = manageIO.getPinValue(msgData.data.pin.idx,value);
+                    msgData.data.pin.value = value;
                     break;
 
                     default:
@@ -264,7 +264,7 @@ void vTaskRT(void *pvParameters)
                 // END COMMANDS
                 //---------------------------------------------------------------------
                 default:
-                msgData.status=SENSEI_ERROR_CODE::CMD_NOT_VALID;
+                msgData.status = SENSEI_ERROR_CODE::CMD_NOT_VALID;
             } //switch (msgCmd.cmd)
 
 
