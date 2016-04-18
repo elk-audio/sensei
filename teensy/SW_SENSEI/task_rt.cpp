@@ -98,7 +98,10 @@ void vTaskRT(void *pvParameters)
 
                         if (xQueueSend(hQueueRTtoCOM_PIN,(void*)&msgPin,(TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
                         {
-                            if (DEBUG) SerialDebug.println("QueueRTtoCOM_PIN: xQueueSend");
+                            if (DEBUG)
+                            {
+                                SerialDebug.println("QueueRTtoCOM_PIN: xQueueSend");
+                            }
                             taskStatus.msgQueueSendErrors++;
                         }
                     }
@@ -114,8 +117,10 @@ void vTaskRT(void *pvParameters)
             taskStatus.msgQueueReceived++;
             msgData.msgType=RT_MSG_TYPE::ACK;
 
-            if (systemSettings.debugMode) SerialDebug.println("QueueRTtoCOM_DATA: xQueueReceive");
-
+            if (systemSettings.debugMode)
+            {
+                SerialDebug.println("QueueRTtoCOM_DATA: xQueueReceive");
+            }
             //---------------------------------------------------------------------
             // START COMMANDS
             //---------------------------------------------------------------------
@@ -131,7 +136,10 @@ void vTaskRT(void *pvParameters)
                 case SENSEI_CMD::ENABLE_SENDING_PACKETS:
                 systemSettings.enableSendingPackets=static_cast<bool>(msgData.data.value);
                 msgData.status=SENSEI_ERROR_CODE::OK;
-                if (1) SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                if (DEBUG)
+                {
+                    SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                }
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
@@ -195,13 +203,19 @@ void vTaskRT(void *pvParameters)
                     case SET_PIN:
                     msgData.status = manageIO.setDigitalPin(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
 
-                    if (systemSettings.debugMode) SerialDebug.println("SET_DIGITAL_PINS: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                    if (systemSettings.debugMode)
+                    {
+                        SerialDebug.println("SET_DIGITAL_PINS: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                    }
                     break;
 
                     case SET_BANK:
                     msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
 
-                    if (systemSettings.debugMode) SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                    if (systemSettings.debugMode)
+                    {
+                        SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                    }
                     break;
 
                     default:
@@ -214,7 +228,10 @@ void vTaskRT(void *pvParameters)
                 switch (msgData.sub_cmd)
                 {
                     case SENSEI_SUB_CMD::SET_SINGLE_PIN:
-                    if (systemSettings.debugMode) SerialDebug.println("SET_SINGLE_PIN: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                    if (systemSettings.debugMode)
+                    {
+                        SerialDebug.println("SET_SINGLE_PIN: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                    }
                     msgData.status = manageIO.setPinValue(msgData.data.pin.idx,msgData.data.pin.value);
                     break;
 
@@ -255,7 +272,10 @@ void vTaskRT(void *pvParameters)
             //Message DATA to COM
             if ((hQueueRTtoCOM_DATA != 0) && (xQueueSend(hQueueRTtoCOM_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_COM_TO_RT) != pdPASS))
             {
-                if (DEBUG) SerialDebug.println("QueueRTtoCOM_DATA: msgQueueSendErrors");
+                if (DEBUG)
+                {
+                    SerialDebug.println("QueueRTtoCOM_DATA: msgQueueSendErrors");
+                }
                 taskStatus.msgQueueSendErrors++;
             }
 
