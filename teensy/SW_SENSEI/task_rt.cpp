@@ -65,28 +65,28 @@ void vTaskRT(void *pvParameters)
                     switch(manageIO.getPinType(idxPin))
                     {
                        case ePinType::PIN_DISABLE:
-                       pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
                        break;
 
                        case ePinType::PIN_DIGITAL_INPUT:
-                       delayMicroseconds(1); //to define
-                       pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
-                       manageIO.setPinValue(idxPin,digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
+                           delayMicroseconds(1); //to define
+                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
+                           manageIO.setPinValue(idxPin, digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
                        break;
 
                        case ePinType::PIN_DIGITAL_OUTPUT:
-                       pinMode(Z1 + VERSOR_Z_PINS * idxMul, OUTPUT);
-                       delayMicroseconds(1);
-                       digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,static_cast<bool>(manageIO.getPinValue(idxPin)));
-                       delayMicroseconds(1);
-                       digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,LOW);
-                       pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLDOWN);
+                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, OUTPUT);
+                           delayMicroseconds(1);
+                           digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,static_cast<bool>(manageIO.getPinValue(idxPin)));
+                           delayMicroseconds(1);
+                           digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,LOW);
+                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLDOWN);
                        break;
 
                        case ePinType::PIN_ANALOG_INPUT:
-                       pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
-                       delayMicroseconds(1);
-                       manageIO.setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
+                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+                           delayMicroseconds(1);
+                           manageIO.setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
                        break;
                     }
 
@@ -96,7 +96,7 @@ void vTaskRT(void *pvParameters)
                         msgPin.pin.value=manageIO.getPinValue(idxPin);
                         msgPin.pin.type=manageIO.getPinType(idxPin);
 
-                        if (xQueueSend(hQueueRTtoCOM_PIN,(void*)&msgPin,(TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+                        if (xQueueSend(hQueueRTtoCOM_PIN, (void*)&msgPin, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
                         {
                             if (DEBUG)
                             {
@@ -128,24 +128,24 @@ void vTaskRT(void *pvParameters)
             {
                 //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                 case SENSEI_CMD::INITIALIZE_SYSTEM:
-                msgData.status = manageIO.setSystem(msgData.data.hw.nPin,msgData.data.hw.nDigitalPin);
-                systemSettings.enableSendingPackets=false;
+                    msgData.status = manageIO.setSystem(msgData.data.hw.nPin, msgData.data.hw.nDigitalPin);
+                    systemSettings.enableSendingPackets=false;
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
                 case SENSEI_CMD::ENABLE_SENDING_PACKETS:
-                systemSettings.enableSendingPackets = static_cast<bool>(msgData.data.value);
-                if (DEBUG)
-                {
-                    SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
-                }
-                msgData.status = SENSEI_ERROR_CODE::OK;
+                    systemSettings.enableSendingPackets = static_cast<bool>(msgData.data.value);
+                    if (DEBUG)
+                    {
+                        SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                    }
+                    msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
                 case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
-                systemSettings.enableMultiplePackets = static_cast<bool>(msgData.data.value);
-                msgData.status = SENSEI_ERROR_CODE::OK;
+                    systemSettings.enableMultiplePackets = static_cast<bool>(msgData.data.value);
+                    msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
                 //--------------------------------------------------------------------- [CMD CONFIGURE_PIN]
@@ -173,21 +173,17 @@ void vTaskRT(void *pvParameters)
                         case SENSEI_SUB_CMD::SET_PIN_DISABLE:
                         case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
                         case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
-                        msgData.status = manageIO.configurePin(static_cast<ePinType>(msgData.sub_cmd), &msgData.data.setupPin);
+                            msgData.status = manageIO.configurePin(static_cast<ePinType>(msgData.sub_cmd), &msgData.data.setupPin);
                         break;
 
                         case SENSEI_SUB_CMD::SET_PIN_ANALOG_INPUT:
-
-                        msgData.status = manageIO.configurePin(ePinType::PIN_ANALOG_INPUT, &msgData.data.setupPin);
-
-                        delete[] msgData.data.setupPin.filterCoeff_a;
-                        delete[] msgData.data.setupPin.filterCoeff_b;
-
+                            msgData.status = manageIO.configurePin(ePinType::PIN_ANALOG_INPUT, &msgData.data.setupPin);
+                            delete[] msgData.data.setupPin.filterCoeff_a;
+                            delete[] msgData.data.setupPin.filterCoeff_b;
                         break;
 
                         default:
-                        msgData.status = SENSEI_ERROR_CODE::PIN_TYPE_NOT_VALID;
-                        break;
+                            msgData.status = SENSEI_ERROR_CODE::PIN_TYPE_NOT_VALID;
                     }
                 }
                 else
@@ -198,46 +194,45 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD SET_DIGITAL_PINS]
                 case SENSEI_CMD::SET_DIGITAL_PINS:
-                switch (msgData.sub_cmd)
-                {
-                    case SET_PIN:
-                    if (systemSettings.debugMode)
+                    switch (msgData.sub_cmd)
                     {
-                        SerialDebug.println("SET_DIGITAL_PINS: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
-                    }
-                    msgData.status = manageIO.setDigitalPin(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
-                    break;
+                        case SET_PIN:
+                            if (systemSettings.debugMode)
+                            {
+                                SerialDebug.println("SET_DIGITAL_PINS: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                            }
+                            msgData.status = manageIO.setDigitalPin(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
+                        break;
 
-                    case SET_BANK:
-                    if (systemSettings.debugMode)
-                    {
-                        SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
-                    }
-                    msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
-                    break;
+                        case SET_BANK:
+                            if (systemSettings.debugMode)
+                            {
+                                SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                            }
+                            msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
+                        break;
 
-                    default:
-                    msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
-                }
+                        default:
+                            msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                    }
                 break;
 
                 //--------------------------------------------------------------------- [CMD SET_VALUE]
                 case SENSEI_CMD::SET_VALUE:
-                switch (msgData.sub_cmd)
-                {
-                    case SENSEI_SUB_CMD::SET_SINGLE_PIN:
-                    if (systemSettings.debugMode)
+                    switch (msgData.sub_cmd)
                     {
-                        SerialDebug.println("SET_SINGLE_PIN: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
-                    }
-                    msgData.status = manageIO.setPinValue(msgData.data.pin.idx,msgData.data.pin.value);
-                    break;
+                        case SENSEI_SUB_CMD::SET_SINGLE_PIN:
+                            if (systemSettings.debugMode)
+                            {
+                                SerialDebug.println("SET_SINGLE_PIN: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                            }
+                            msgData.status = manageIO.setPinValue(msgData.data.pin.idx, msgData.data.pin.value);
+                        break;
 
-                    default:
-                    msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                        default:
+                            msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                    }
                     break;
-                }
-                break;
 
                 //--------------------------------------------------------------------- [CMD GET_VALUE]
                 case SENSEI_CMD::GET_VALUE:
@@ -245,15 +240,15 @@ void vTaskRT(void *pvParameters)
                 switch (msgData.sub_cmd)
                 {
                     case SENSEI_SUB_CMD::GET_SINGLE_PIN:
-                    msgData.msgType = RT_MSG_TYPE::DATA;
-                    msgData.data.pin.type = manageIO.getPinType(msgData.data.pin.idx);
-                    uint16_t value;
-                    msgData.status = manageIO.getPinValue(msgData.data.pin.idx,value);
-                    msgData.data.pin.value = value;
+                        msgData.msgType = RT_MSG_TYPE::DATA;
+                        msgData.data.pin.type = manageIO.getPinType(msgData.data.pin.idx);
+                        uint16_t value;
+                        msgData.status = manageIO.getPinValue(msgData.data.pin.idx,value);
+                        msgData.data.pin.value = value;
                     break;
 
                     default:
-                    msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                        msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
                 }
 
                 break;
@@ -262,7 +257,7 @@ void vTaskRT(void *pvParameters)
                 // END COMMANDS
                 //---------------------------------------------------------------------
                 default:
-                msgData.status = SENSEI_ERROR_CODE::CMD_NOT_VALID;
+                    msgData.status = SENSEI_ERROR_CODE::CMD_NOT_VALID;
             } //switch (msgCmd.cmd)
 
 
