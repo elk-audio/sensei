@@ -150,46 +150,46 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD CONFIGURE_PIN]
                 case SENSEI_CMD::CONFIGURE_PIN:
-                if (systemSettings.debugMode)
-                {
-                    SerialDebug.println("------------------------------------");
-                    SerialDebug.println("RT: CONFIGURE_PIN");
-                    SerialDebug.println("------------------------------------");
-                    SerialDebug.println("idxPin=" + String(msgData.data.setupPin.idxPin));
-                    SerialDebug.println("pinType=" + String(msgData.sub_cmd));
-                    SerialDebug.println("sendingMode=" + String(msgData.data.setupPin.sendingMode));
-                    SerialDebug.println("deltaTicksContinuousMode=" + String(msgData.data.setupPin.deltaTicksContinuousMode));
-                    SerialDebug.println("ADCBitResolution=" + String(msgData.data.setupPin.ADCBitResolution));
-                    SerialDebug.println("filterOrder=" + String(msgData.data.setupPin.filterOrder));
-                    SerialDebug.println("sliderMode=" + String(msgData.data.setupPin.sliderMode));
-                    SerialDebug.println("sliderThreshold=" + String(msgData.data.setupPin.sliderThreshold));
-                    SerialDebug.println("------------------------------------");
-                    SerialDebug.println("");
-                }
-                if (manageIO.isSystemInitialized())
-                {
-                    switch (msgData.sub_cmd) //pinType
+                    if (systemSettings.debugMode)
                     {
-                        case SENSEI_SUB_CMD::SET_PIN_DISABLE:
-                        case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
-                        case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
-                            msgData.status = manageIO.configurePin(static_cast<ePinType>(msgData.sub_cmd), &msgData.data.setupPin);
-                        break;
-
-                        case SENSEI_SUB_CMD::SET_PIN_ANALOG_INPUT:
-                            msgData.status = manageIO.configurePin(ePinType::PIN_ANALOG_INPUT, &msgData.data.setupPin);
-                            delete[] msgData.data.setupPin.filterCoeff_a;
-                            delete[] msgData.data.setupPin.filterCoeff_b;
-                        break;
-
-                        default:
-                            msgData.status = SENSEI_ERROR_CODE::PIN_TYPE_NOT_VALID;
+                        SerialDebug.println("------------------------------------");
+                        SerialDebug.println("RT: CONFIGURE_PIN");
+                        SerialDebug.println("------------------------------------");
+                        SerialDebug.println("idxPin=" + String(msgData.data.setupPin.idxPin));
+                        SerialDebug.println("pinType=" + String(msgData.sub_cmd));
+                        SerialDebug.println("sendingMode=" + String(msgData.data.setupPin.sendingMode));
+                        SerialDebug.println("deltaTicksContinuousMode=" + String(msgData.data.setupPin.deltaTicksContinuousMode));
+                        SerialDebug.println("ADCBitResolution=" + String(msgData.data.setupPin.ADCBitResolution));
+                        SerialDebug.println("filterOrder=" + String(msgData.data.setupPin.filterOrder));
+                        SerialDebug.println("sliderMode=" + String(msgData.data.setupPin.sliderMode));
+                        SerialDebug.println("sliderThreshold=" + String(msgData.data.setupPin.sliderThreshold));
+                        SerialDebug.println("------------------------------------");
+                        SerialDebug.println("");
                     }
-                }
-                else
-                {
-                    msgData.status = SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
-                }
+                    if (manageIO.isSystemInitialized())
+                    {
+                        switch (msgData.sub_cmd) //pinType
+                        {
+                            case SENSEI_SUB_CMD::SET_PIN_DISABLE:
+                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
+                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
+                                msgData.status = manageIO.configurePin(static_cast<ePinType>(msgData.sub_cmd), &msgData.data.setupPin);
+                            break;
+
+                            case SENSEI_SUB_CMD::SET_PIN_ANALOG_INPUT:
+                                msgData.status = manageIO.configurePin(ePinType::PIN_ANALOG_INPUT, &msgData.data.setupPin);
+                                delete[] msgData.data.setupPin.filterCoeff_a;
+                                delete[] msgData.data.setupPin.filterCoeff_b;
+                            break;
+
+                            default:
+                                msgData.status = SENSEI_ERROR_CODE::PIN_TYPE_NOT_VALID;
+                        }
+                    }
+                    else
+                    {
+                        msgData.status = SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
+                    }
                 break;
 
                 //--------------------------------------------------------------------- [CMD SET_DIGITAL_PINS]
@@ -237,19 +237,19 @@ void vTaskRT(void *pvParameters)
                 //--------------------------------------------------------------------- [CMD GET_VALUE]
                 case SENSEI_CMD::GET_VALUE:
 
-                switch (msgData.sub_cmd)
-                {
-                    case SENSEI_SUB_CMD::GET_SINGLE_PIN:
-                        msgData.msgType = RT_MSG_TYPE::DATA;
-                        msgData.data.pin.type = manageIO.getPinType(msgData.data.pin.idx);
-                        uint16_t value;
-                        msgData.status = manageIO.getPinValue(msgData.data.pin.idx,value);
-                        msgData.data.pin.value = value;
-                    break;
+                    switch (msgData.sub_cmd)
+                    {
+                        case SENSEI_SUB_CMD::GET_SINGLE_PIN:
+                            msgData.msgType = RT_MSG_TYPE::DATA;
+                            msgData.data.pin.type = manageIO.getPinType(msgData.data.pin.idx);
+                            uint16_t value;
+                            msgData.status = manageIO.getPinValue(msgData.data.pin.idx,value);
+                            msgData.data.pin.value = value;
+                        break;
 
-                    default:
-                        msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
-                }
+                        default:
+                            msgData.status = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                    }
 
                 break;
 
