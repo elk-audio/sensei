@@ -160,32 +160,31 @@ void vTaskCOM(void *pvParameters)
 
                     //--------------------------------------------------------------------- [CMD SET_VALUE]
                     case SENSEI_CMD::SET_VALUE:
-                    switch (sub_cmd)
-                    {
-                        case SENSEI_SUB_CMD::SET_SINGLE_PIN:
-                            memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
-                            retCode = SENSEI_ERROR_CODE::OK;
-                        break;
+                        switch (sub_cmd)
+                        {
+                            case SENSEI_SUB_CMD::SET_SINGLE_PIN:
+                                memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
+                                retCode = SENSEI_ERROR_CODE::OK;
+                            break;
 
-                        default:
-                            retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
-                        break;
-                    }
+                            default:
+                                retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                            break;
+                        }
                     break;
 
                     //--------------------------------------------------------------------- [CMD GET_VALUE]
                     case SENSEI_CMD::GET_VALUE:
+                        switch (sub_cmd)
+                        {
+                            case SENSEI_SUB_CMD::GET_SINGLE_PIN:
+                            memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
+                            retCode = SENSEI_ERROR_CODE::OK;
+                            break;
 
-                    switch (sub_cmd)
-                    {
-                        case SENSEI_SUB_CMD::GET_SINGLE_PIN:
-                        memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
-                        retCode = SENSEI_ERROR_CODE::OK;
-                        break;
-
-                        default:
-                        retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
-                    }
+                            default:
+                            retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                        }
                     break;
 
                     //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
@@ -234,35 +233,32 @@ void vTaskCOM(void *pvParameters)
             switch (retCode)
             {
                 case SENSEI_ERROR_CODE::NO_EXTERNAL_PROCESSING_NECESSARY:
-                manageDataPacket.prepareACK(SENSEI_ERROR_CODE::OK, timestamp, cmd, sub_cmd);
-                Serial.write(manageDataPacket.dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
-                Serial.send_now();
+                    manageDataPacket.prepareACK(SENSEI_ERROR_CODE::OK, timestamp, cmd, sub_cmd);
+                    Serial.write(manageDataPacket.dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
+                    Serial.send_now();
                 break;
 
                 case SENSEI_ERROR_CODE::OK:
-                msgData.cmd = cmd;
-                msgData.sub_cmd = sub_cmd;
-                msgData.timestamp = timestamp;
+                    msgData.cmd = cmd;
+                    msgData.sub_cmd = sub_cmd;
+                    msgData.timestamp = timestamp;
 
-
-                //Message to RT in order to process the command
-                if ((hQueueCOMtoRT_DATA != 0) && (xQueueSend(hQueueCOMtoRT_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_COM_TO_RT) != pdPASS))
-                {
-                    if (DEBUG)
+                    //Message to RT in order to process the command
+                    if ((hQueueCOMtoRT_DATA != 0) && (xQueueSend(hQueueCOMtoRT_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_COM_TO_RT) != pdPASS))
                     {
-                        SerialDebug.println("QueueCOMtoRT_DATA: msgQueueSendErrors");
+                        if (DEBUG)
+                        {
+                            SerialDebug.println("QueueCOMtoRT_DATA: msgQueueSendErrors");
+                        }
+                        taskStatus.msgQueueSendErrors++;
+                        retCode=SENSEI_ERROR_CODE::CMD_NOT_PROCESSED;
                     }
-                    taskStatus.msgQueueSendErrors++;
-                    retCode=SENSEI_ERROR_CODE::CMD_NOT_PROCESSED;
-                }
-
                 break;
 
-                default:
-                //ERRORS->Send ACK
-                manageDataPacket.prepareACK(retCode, timestamp, cmd, sub_cmd);
-                Serial.write(manageDataPacket.dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
-                Serial.send_now();
+                default: //ERRORS->Send ACK
+                    manageDataPacket.prepareACK(retCode, timestamp, cmd, sub_cmd);
+                    Serial.write(manageDataPacket.dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
+                    Serial.send_now();
             } // switch (retCode)
             //------------------------------------------------------------------------------------------- [ROUTING]
         } //if (Serial.available())
@@ -287,7 +283,6 @@ void vTaskCOM(void *pvParameters)
 
             if ((msgData.status==SENSEI_ERROR_CODE::OK) && (msgData.msgType==RT_MSG_TYPE::DATA))
             {
-
                 uint16_t idxStart;
                 uint16_t idxStop;
                 uint16_t payloadSize;
@@ -297,8 +292,8 @@ void vTaskCOM(void *pvParameters)
                 switch(msgData.cmd)
                 {
                     case SENSEI_CMD::GET_VALUE:
-                    payloadSize=sizeof(GetSetPin);
-                    pAddress=(uint8_t*)&msgData.data.pin;
+                        payloadSize=sizeof(GetSetPin);
+                        pAddress=(uint8_t*)&msgData.data.pin;
                     break;
 
                     //case :
