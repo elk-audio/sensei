@@ -67,13 +67,19 @@ void vTaskCOM(void *pvParameters)
                 {
                     //--------------------------------------------------------------------- [CMD HELLO]
                     case SENSEI_CMD::HELLO:
-                    if (systemSettings.debugMode) SerialDebug.println("COM: HELLO");
+                    if (systemSettings.debugMode)
+                    {
+                        SerialDebug.println("COM: HELLO");
+                    }
                     retCode = SENSEI_ERROR_CODE::NO_EXTERNAL_PROCESSING_NECESSARY;
                     break;
 
                     //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                     case SENSEI_CMD::INITIALIZE_SYSTEM:
-                    if (systemSettings.debugMode) SerialDebug.println("COM: INITIALIZE_SYSTEM");
+                    if (systemSettings.debugMode)
+                    {
+                        SerialDebug.println("COM: INITIALIZE_SYSTEM");
+                    }
                     systemSettings.enableSendingPackets=false;
                     memcpy(&msgData.data.hw,&manageDataPacket.dataPacket.sData.payload[0],sizeof(HardwareSettings));
                     retCode=SENSEI_ERROR_CODE::OK;
@@ -188,7 +194,10 @@ void vTaskCOM(void *pvParameters)
                     case SENSEI_CMD::ENABLE_SENDING_PACKETS:
                     memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
                     systemSettings.enableSendingPackets=msgData.data.value;
-                    if (systemSettings.debugMode) SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                    if (systemSettings.debugMode)
+                    {
+                        SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                    }
                     msgData.status=SENSEI_ERROR_CODE::OK;
                     break;
 
@@ -196,7 +205,10 @@ void vTaskCOM(void *pvParameters)
                     case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
                     memcpy(&msgData.data.value,&manageDataPacket.dataPacket.sData.payload[0],sizeof(uint8_t));
                     systemSettings.enableMultiplePackets=msgData.data.value;
-                    if (systemSettings.debugMode) SerialDebug.println("enableMultiplePackets= " + String(systemSettings.enableMultiplePackets));
+                    if (systemSettings.debugMode)
+                    {
+                        SerialDebug.println("enableMultiplePackets= " + String(systemSettings.enableMultiplePackets));
+                    }
                     msgData.status=SENSEI_ERROR_CODE::OK;
                     break;
 
@@ -238,7 +250,10 @@ void vTaskCOM(void *pvParameters)
                 //Message to RT in order to process the command
                 if ((hQueueCOMtoRT_DATA != 0) && (xQueueSend(hQueueCOMtoRT_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_COM_TO_RT) != pdPASS))
                 {
-                    if (DEBUG) SerialDebug.println("QueueCOMtoRT_DATA: msgQueueSendErrors");
+                    if (DEBUG)
+                    {
+                        SerialDebug.println("QueueCOMtoRT_DATA: msgQueueSendErrors");
+                    }
                     taskStatus.msgQueueSendErrors++;
                     retCode=SENSEI_ERROR_CODE::CMD_NOT_PROCESSED;
                 }
@@ -263,8 +278,10 @@ void vTaskCOM(void *pvParameters)
         if ((hQueueRTtoCOM_DATA != 0) && (xQueueReceive(hQueueRTtoCOM_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE)))
         {
             taskStatus.msgQueueReceived++;
-            if (systemSettings.debugMode) SerialDebug.println("QueueRTtoCOM_DATA: xQueueReceive");
-
+            if (systemSettings.debugMode)
+            {
+                SerialDebug.println("QueueRTtoCOM_DATA: xQueueReceive");
+            }
             // Send ACK
             manageDataPacket.prepareACK(msgData.status, msgData.timestamp, msgData.cmd, msgData.sub_cmd);
             Serial.write(manageDataPacket.dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
@@ -298,8 +315,9 @@ void vTaskCOM(void *pvParameters)
                     idxStop = (idxPacket + 1)*SENSEI_PAYLOAD_LENGTH - 1;
 
                     if (idxStop > payloadSize - 1)
-                    idxStop = payloadSize - 1;
-
+                    {
+                        idxStop = payloadSize - 1;
+                    }
                     manageDataPacket.preparePacket(msgData.cmd, msgData.sub_cmd, nPackets - idxPacket - 1, pAddress + idxStart, idxStop - idxStart + 1);
                     Serial.write(manageDataPacket.dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
 
@@ -314,8 +332,10 @@ void vTaskCOM(void *pvParameters)
         if ((hQueueRTtoCOM_PIN != 0) && (xQueueReceive(hQueueRTtoCOM_PIN, &msgPin, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE)))
         {
             taskStatus.msgQueueReceived++;
-            if (systemSettings.debugMode) SerialDebug.println("QueueRTtoCOM_PIN: xQueueReceive");
-
+            if (systemSettings.debugMode)
+            {
+                SerialDebug.println("QueueRTtoCOM_PIN: xQueueReceive");
+            }
             // Send PIN VALUE
             manageDataPacket.preparePacket(SENSEI_CMD::VALUE,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgPin, sizeof(GetSetPin));
             Serial.write(manageDataPacket.dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
