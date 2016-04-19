@@ -102,6 +102,16 @@ uint8_t ManageIO::getNmultiplexer()
 	return _nMul;
 }
 
+uint8_t ManageIO::getSendingMode(uint16_t idxPin)
+{
+	return _vPin[idxPin]->getSendingMode();
+}
+
+uint8_t ManageIO::getDeltaTicksContinuousMode(uint16_t idxPin)
+{
+	return _vPin[idxPin]->getSendingMode();
+}
+
 bool ManageIO::isPinValueChanged(uint16_t idxPin)
 {
 	return _vPin[idxPin]->isPinValueChanged();

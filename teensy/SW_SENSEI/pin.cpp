@@ -27,6 +27,16 @@ bool PIN::isPinValueChanged()
 	return _pinValueChanged;
 }
 
+uint8_t PIN::getSendingMode()
+{
+	return _sendingMode;
+}
+
+uint8_t PIN::getDeltaTicksContinuousMode()
+{
+	return _deltaTicksContinuousMode;
+}
+
 uint8_t PIN::getPinType()
 {
 	return _type;

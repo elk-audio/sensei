@@ -13,6 +13,8 @@ class PIN{
     uint16_t getPinValue();
     uint8_t getPinType();
     bool isPinValueChanged();
+    uint8_t getSendingMode();
+    uint8_t getDeltaTicksContinuousMode();
 
 protected:
     uint8_t _sendingMode;

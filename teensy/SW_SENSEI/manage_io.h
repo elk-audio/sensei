@@ -18,8 +18,10 @@ class ManageIO{
     ManageIMU imu;
 
     int32_t setSystem(uint16_t nPin, uint16_t _nDigitalPin);
+
     int32_t setPinValue(uint16_t idxPin, uint16_t value);
     int32_t getPinValue(uint16_t idxPin, uint16_t& value);
+
     uint16_t getPinValue(uint16_t idxPin);
 	int32_t configurePin(ePinType type, SetupPin* setupPin);
 	uint8_t getPinType(uint16_t idxPin);
@@ -32,6 +34,8 @@ class ManageIO{
 	uint16_t getNumberOfDigitalPins();
     void hardwareAcquisition();
     bool isSystemInitialized();
+    uint8_t getSendingMode(uint16_t idxPin);
+    uint8_t getDeltaTicksContinuousMode(uint16_t idxPin);
 
   private:
      std::vector<PIN*> _vPin;
