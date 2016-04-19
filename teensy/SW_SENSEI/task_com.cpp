@@ -45,13 +45,11 @@ void vTaskCOM(void *pvParameters)
     {
         if (Serial.available()>=SENSEI_LENGTH_DATA_PACKET)
         {
-
             manageDataPacket.receivePacket();
             retCode = manageDataPacket.checkPacket();
 
             if (retCode == SENSEI_ERROR_CODE::OK)
             {
-
                 manageDataPacket.getPacketID(cmd, sub_cmd, timestamp);
 
                 if (systemSettings.debugMode)
@@ -205,8 +203,6 @@ void vTaskCOM(void *pvParameters)
                         retCode = SENSEI_ERROR_CODE::CMD_NOT_VALID;
                 } //switch (cmd)
 
-
-
             } //if (retCode == SENSEI_ERROR_CODE::OK)
             else
             {
@@ -249,7 +245,6 @@ void vTaskCOM(void *pvParameters)
             } // switch (retCode)
             //------------------------------------------------------------------------------------------- [ROUTING]
         } //if (Serial.available())
-
 
         //------------------------------------------------------------------------------------------- [PROCESSING DATA FROM RT]
         // Processing MESSAGES
@@ -295,10 +290,9 @@ void vTaskCOM(void *pvParameters)
 
                     if (idxStop > payloadSize - 1)
                         idxStop = payloadSize - 1;
-                        
+
                     manageDataPacket.preparePacket(msgData.cmd, msgData.sub_cmd, nPackets - idxPacket - 1, pAddress + idxStart, idxStop - idxStart + 1);
                     manageDataPacket.send();
-
                 }
             }
         } // xQueueReceive
@@ -314,11 +308,9 @@ void vTaskCOM(void *pvParameters)
             // Send PIN VALUE
             manageDataPacket.preparePacket(SENSEI_CMD::VALUE,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgPin, sizeof(GetSetPin));
             manageDataPacket.send();
-            Serial.send_now();
         }
 
         //------------------------------------------------------------------------------------------- [PROCESSING DATA FROM RT]
-
         taskStatus.nCycles++;
     }  // for (;;)
 }
