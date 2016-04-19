@@ -1,7 +1,6 @@
 #ifndef BUTTERWORTH_H
 #define BUTTERWORTH_H
 
-#include "Arduino.h"
 #include "common.h"
 #include <stdio.h>
 #include <vector>
