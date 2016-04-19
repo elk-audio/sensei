@@ -31,12 +31,12 @@ namespace std {
     }
 }
 
-// handles for tasks
+// Handles for tasks
 TaskHandle_t hTaskRT = 0;
 TaskHandle_t hTaskCOM = 0;
 TaskHandle_t hTaskLED = 0;
 
-// handles for queue
+// Handles for queues
 QueueHandle_t hQueueRTtoCOM_DATA = 0;
 QueueHandle_t hQueueCOMtoRT_DATA = 0;
 QueueHandle_t hQueueRTtoCOM_PIN = 0;

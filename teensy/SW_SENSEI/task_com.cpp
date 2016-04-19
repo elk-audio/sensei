@@ -1,6 +1,6 @@
 #include "task_com.h"
 
-// handles for queue
+// Handles for queues
 extern QueueHandle_t hQueueRTtoCOM_DATA;
 extern QueueHandle_t hQueueRTtoCOM_PIN;
 extern QueueHandle_t hQueueRTtoCOM_IMU;
@@ -117,7 +117,11 @@ void vTaskCOM(void *pvParameters)
                                 msgData.data.setupPin.filterCoeff_a = new FilterType[pinConfiguration->filterOrder + 1]; //TODO STRUCT
                                 msgData.data.setupPin.filterCoeff_b = new FilterType[pinConfiguration->filterOrder + 1];
 
-                                butterworth.createFilterCoefficients(pinConfiguration->filterOrder, FsFilter, pinConfiguration->lowPassCutOffFilter, msgData.data.setupPin.filterCoeff_a, msgData.data.setupPin.filterCoeff_b);
+                                butterworth.createFilterCoefficients(pinConfiguration->filterOrder,
+                                                                     FsFilter,
+                                                                     pinConfiguration->lowPassCutOffFilter,
+                                                                     msgData.data.setupPin.filterCoeff_a,
+                                                                     msgData.data.setupPin.filterCoeff_b);
 
                                 retCode = SENSEI_ERROR_CODE::OK;
                             break;

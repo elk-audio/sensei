@@ -1,12 +1,11 @@
 #include "task_rt.h"
 
-// handles for queue
+// Handles for queues
 extern QueueHandle_t hQueueRTtoCOM_DATA;
 extern QueueHandle_t hQueueRTtoCOM_PIN;
 extern QueueHandle_t hQueueRTtoCOM_IMU;
 
 extern QueueHandle_t hQueueCOMtoRT_DATA;
-
 
 void vTaskRT(void *pvParameters)
 {
@@ -42,6 +41,7 @@ void vTaskRT(void *pvParameters)
         // Wait for the next cycle
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
 
+        //------------------------------------------------------------------------------------------- [HW]
         manageIO.hardwareAcquisition();
 
         if (systemSettings.enableSendingPackets)
@@ -141,7 +141,8 @@ void vTaskRT(void *pvParameters)
                         case SET_PIN:
                             if (systemSettings.debugMode)
                             {
-                                SerialDebug.println("SET_DIGITAL_PINS: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                                SerialDebug.println("SET_DIGITAL_PINS: pin=" + String(msgData.data.pin.idx) +
+                                                    " value=" + String(static_cast<bool>(msgData.data.pin.value)));
                             }
                             msgData.status = manageIO.setDigitalPin(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
                         break;
@@ -149,7 +150,8 @@ void vTaskRT(void *pvParameters)
                         case SET_BANK:
                             if (systemSettings.debugMode)
                             {
-                                SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                                SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) +
+                                                    " value=" + String(static_cast<bool>(msgData.data.pin.value)));
                             }
                             msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
                         break;
@@ -166,7 +168,8 @@ void vTaskRT(void *pvParameters)
                         case SENSEI_SUB_CMD::SET_SINGLE_PIN:
                             if (systemSettings.debugMode)
                             {
-                                SerialDebug.println("SET_SINGLE_PIN: pin=" + String(msgData.data.pin.idx) + " value=" + String(static_cast<bool>(msgData.data.pin.value)));
+                                SerialDebug.println("SET_SINGLE_PIN: pin=" + String(msgData.data.pin.idx) +
+                                                    " value=" + String(static_cast<bool>(msgData.data.pin.value)));
                             }
                             msgData.status = manageIO.setPinValue(msgData.data.pin.idx, msgData.data.pin.value);
                         break;
