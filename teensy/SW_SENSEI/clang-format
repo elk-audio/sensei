@@ -7,4 +7,3 @@ IndentCaseLabels: true
 ColumnLimit: 120
 PointerAlignment: Left
 AlignAfterOpenBracket: false
-AlignConsecutiveAssignments: true
