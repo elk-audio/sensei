@@ -10,6 +10,7 @@ public:
 	DigitalOutput();
 	~DigitalOutput();
 private:
+	
 };
 
 #endif // DIGITALOUTPUT_H

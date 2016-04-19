@@ -44,7 +44,6 @@ Filter::~Filter()
     _filter_coeff_b.clear();
 }
 
-
 FilterType Filter::processFilter(FilterType x)
 {
     if (_enable)

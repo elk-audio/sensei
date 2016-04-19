@@ -21,12 +21,10 @@ ManageIMU::ManageIMU()
         _isInitialized = false;
 }
 
-
 ManageIMU::~ManageIMU()
 {
 
 }
-
 
 void ManageIMU::clearBuffer()
 {
@@ -34,7 +32,6 @@ void ManageIMU::clearBuffer()
     SPI.transfer(SPI_CLEAR_BUFFER);
     delayMicroseconds(DELAY_SPI_YEI);
 }
-
 
 int32_t ManageIMU::writeCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
 {

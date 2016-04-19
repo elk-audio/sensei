@@ -13,7 +13,6 @@ class ManageDataPacket {
 public:
 	ManageDataPacket();
 	~ManageDataPacket();
-
 	void receivePacket();
 	void preparePacket(uint8_t cmd, uint8_t sub_cmd, uint16_t nPacketsMissing, uint8_t *pPayload, uint16_t nBytePayload);
 	void prepareACK(int32_t status, uint32_t timestamp, uint8_t cmd, uint8_t sub_cmd);
@@ -30,7 +29,6 @@ private:
 	void clearDataPacket();
 	uint16_t calcCRC();
 	bool checkCRC();
-
 	uint32_t _nPacketReceived;
 	uDataPacket _dataPacket;
 	sSenseiACKPacket* _ACKPacket;

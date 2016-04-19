@@ -33,9 +33,7 @@ class ManageIO{
     void hardwareAcquisition();
     bool isSystemInitialized();
 
-
   private:
-
      std::vector<PIN*> _vPin;
      uint8_t _nMul;
 	 uint16_t _nPin;

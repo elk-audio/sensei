@@ -270,7 +270,6 @@ void ManageIO::setDigitalPin()
 	//interrupts();
 }
 
-
 ManageIO::~ManageIO()
 {
 

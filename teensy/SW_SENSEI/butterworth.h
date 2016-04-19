@@ -13,17 +13,14 @@ typedef std::complex<FilterType> Complex;
 class Butterworth {
 
 public:
-
 	void createFilterCoefficients(int order, FilterType Fs, FilterType Fcut, FilterType* a, FilterType* b);
 
 private:
-
 	Complex* _p_poles;
 	Complex* _z_poles;
 	Complex* _z_zeros;
 	Complex* _a_coeffs;
 	Complex* _b_coeffs;
-
 	void zeros2coeffs(Complex* zeros, Complex* coeffs, int size);
 	void create_z_poles(Complex* poles, int order, FilterType cutoff);
 	void create_z_zeros(Complex* zeros, int order);

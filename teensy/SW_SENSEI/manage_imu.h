@@ -104,9 +104,7 @@ class ManageIMU {
 public:
     ManageIMU();
     ~ManageIMU();
-
     void clearBuffer();
-
     int32_t getAllComponents(ImuComponents* _components);
 
     int32_t writeCommand(uint8_t cmd);
@@ -115,14 +113,13 @@ public:
 
     int32_t getData(uint8_t cmd, void* data, uint16_t nByte);
     int32_t getValue(uint8_t cmd, void* data);
-
     int32_t resetFilter();
+
     int32_t setSettings();
     int32_t setSettings(sImuSettings* _settings);
+
     int32_t getSettings(sImuSettings* _settings);
-
     int32_t setInterruptMode();
-
 
 private:
     int32_t _initialize();

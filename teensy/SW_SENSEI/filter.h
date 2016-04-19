@@ -5,7 +5,6 @@
 
 class Filter {
 public:
-
     Filter();
     void setFilter(uint8_t filter_order, FilterType* filter_coeff_a, FilterType* filter_coeff_b);
     ~Filter();
