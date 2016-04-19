@@ -18,11 +18,11 @@ public:
 
 private:
 
-	Complex* p_poles;
-	Complex* z_poles;
-	Complex* b_coeffs;
-	Complex* z_zeros;
-	Complex* a_coeffs;
+	Complex* _p_poles;
+	Complex* _z_poles;
+	Complex* _z_zeros;
+	Complex* _a_coeffs;
+	Complex* _b_coeffs;
 
 	void zeros2coeffs(Complex* zeros, Complex* coeffs, int size);
 	void create_z_poles(Complex* poles, int order, FilterType cutoff);
