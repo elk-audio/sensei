@@ -48,7 +48,7 @@ void vTaskRT(void *pvParameters)
         {
             for (int idxPin = 0; idxPin < manageIO.getNumberOfPins(); idxPin++)
             {
-                if ( ((manageIO.getSendingMode(idxPin) == SENDING_MODE_CONTINUOUS) && ((manageIO.getDeltaTicksContinuousMode(idxPin) % taskStatus.nCycles) == 0)) ||
+                if ( ((manageIO.getSendingMode(idxPin) == SENDING_MODE_CONTINUOUS) && ((taskStatus.nCycles % manageIO.getDeltaTicksContinuousMode(idxPin)) == 0)) ||
                      ((manageIO.getSendingMode(idxPin) == SENDING_MODE_ON_VALUE_CHANGED) && (manageIO.isPinValueChanged(idxPin))) )
                 {
                     msgPin.pin.idx=idxPin;
@@ -74,7 +74,7 @@ void vTaskRT(void *pvParameters)
             taskStatus.msgQueueReceived++;
             msgData.msgType = RT_MSG_TYPE::ACK;
 
-            if (systemSettings.debugMode)
+            if (systemSettings.debugMode) //TODO
             {
                 SerialDebug.println("QueueRTtoCOM_DATA: xQueueReceive");
             }
