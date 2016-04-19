@@ -5,7 +5,7 @@
 
 class PIN{
   public:
-	 PIN();
+	PIN();
 	virtual ~PIN();
 	bool isInitialized;
 
@@ -13,7 +13,6 @@ class PIN{
     uint16_t getPinValue();
     bool isPinValueChanged();
 
-    //TODO Mettere privati
     bool pinValueChanged;
     ePinType type;
     uint16_t value;
