@@ -42,73 +42,29 @@ void vTaskRT(void *pvParameters)
         // Wait for the next cycle
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
 
-        //------------------------------------------------------------------------------------------- [HW]
-        // Hardware Polling
-        if (manageIO.isSystemInitialized())
+        manageIO.hardwareAcquisition();
+
+        if (systemSettings.enableSendingPackets)
         {
-            uint16_t idxPin;
-            for (uint8_t ch = 0; ch < CHANNELS_PER_MULTIPLEXER; ch++)
+            for (int idxPin = 0; idxPin < manageIO.getNumberOfPins(); idxPin++)
             {
-                Byte S_Address;
-                S_Address.value = ch;
-
-                digitalWrite(S0, S_Address.bit0);
-                digitalWrite(S1, S_Address.bit1);
-                digitalWrite(S2, S_Address.bit2);
-                digitalWrite(S3, S_Address.bit3);
-
-
-                for (uint8_t idxMul = 0; idxMul < manageIO.getNmultiplexer(); idxMul++)
+                if (manageIO.isPinValueChanged(idxPin)) //(manageIO.getPinType(idxPin)!=ePinType::PIN_DISABLE)
                 {
-                    idxPin = ch + idxMul * CHANNELS_PER_MULTIPLEXER;
+                    msgPin.pin.idx=idxPin;
+                    msgPin.pin.value=manageIO.getPinValue(idxPin);
+                    msgPin.pin.type=manageIO.getPinType(idxPin);
 
-                    switch(manageIO.getPinType(idxPin))
+                    if (xQueueSend(hQueueRTtoCOM_PIN, (void*)&msgPin, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
                     {
-                       case ePinType::PIN_DISABLE:
-                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
-                       break;
-
-                       case ePinType::PIN_DIGITAL_INPUT:
-                           delayMicroseconds(1); //to define
-                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
-                           manageIO.setPinValue(idxPin, digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
-                       break;
-
-                       case ePinType::PIN_DIGITAL_OUTPUT:
-                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, OUTPUT);
-                           delayMicroseconds(1);
-                           digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,static_cast<bool>(manageIO.getPinValue(idxPin)));
-                           delayMicroseconds(1);
-                           digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,LOW);
-                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLDOWN);
-                       break;
-
-                       case ePinType::PIN_ANALOG_INPUT:
-                           pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
-                           delayMicroseconds(1);
-                           manageIO.setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
-                       break;
-                    }
-
-                    if ((systemSettings.enableSendingPackets) && (manageIO.isPinValueChanged(idxPin))) //(manageIO.getPinType(idxPin)!=ePinType::PIN_DISABLE)
-                    {
-                        msgPin.pin.idx=idxPin;
-                        msgPin.pin.value=manageIO.getPinValue(idxPin);
-                        msgPin.pin.type=manageIO.getPinType(idxPin);
-
-                        if (xQueueSend(hQueueRTtoCOM_PIN, (void*)&msgPin, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+                        if (DEBUG)
                         {
-                            if (DEBUG)
-                            {
-                                SerialDebug.println("QueueRTtoCOM_PIN: xQueueSend");
-                            }
-                            taskStatus.msgQueueSendErrors++;
+                            SerialDebug.println("QueueRTtoCOM_PIN: xQueueSend");
                         }
+                        taskStatus.msgQueueSendErrors++;
                     }
-                } //Mul
-            } //Ch
-        } //manageIO.isSystemInitialized()
-        //------------------------------------------------------------------------------------------- [HW]
+                }
+            }
+        }
 
         //------------------------------------------------------------------------------------------- [CMD_COM]
         // CMD FROM COM

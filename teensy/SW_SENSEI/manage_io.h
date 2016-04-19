@@ -32,6 +32,7 @@ class ManageIO{
     uint8_t getNmultiplexer();
 	uint16_t getNumberOfPins();
 	uint16_t getNumberOfDigitalPins();
+    void hardwareAcquisition();
     bool isSystemInitialized();
 
 

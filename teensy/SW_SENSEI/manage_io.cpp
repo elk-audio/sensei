@@ -9,6 +9,64 @@ ManageIO::ManageIO()
 	_systemInitialized=false;
 }
 
+////
+void ManageIO::hardwareAcquisition()
+{
+//------------------------------------------------------------------------------------------- [HW]
+// Hardware Polling
+if (isSystemInitialized())
+{
+	uint16_t idxPin;
+	for (uint8_t ch = 0; ch < CHANNELS_PER_MULTIPLEXER; ch++)
+	{
+		Byte S_Address;
+		S_Address.value = ch;
+
+		digitalWrite(S0, S_Address.bit0);
+		digitalWrite(S1, S_Address.bit1);
+		digitalWrite(S2, S_Address.bit2);
+		digitalWrite(S3, S_Address.bit3);
+
+
+		for (uint8_t idxMul = 0; idxMul < getNmultiplexer(); idxMul++)
+		{
+			idxPin = ch + idxMul * CHANNELS_PER_MULTIPLEXER;
+
+			switch(getPinType(idxPin))
+			{
+			   case ePinType::PIN_DISABLE:
+				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+			   break;
+
+			   case ePinType::PIN_DIGITAL_INPUT:
+				   delayMicroseconds(1); //to define
+				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
+				   setPinValue(idxPin, digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
+			   break;
+
+			   case ePinType::PIN_DIGITAL_OUTPUT:
+				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, OUTPUT);
+				   delayMicroseconds(1);
+				   digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,static_cast<bool>(getPinValue(idxPin)));
+				   delayMicroseconds(1);
+				   digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,LOW);
+				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLDOWN);
+			   break;
+
+			   case ePinType::PIN_ANALOG_INPUT:
+				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+				   delayMicroseconds(1);
+				   setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
+			   break;
+			}
+
+
+		} //Mul
+	} //Ch
+} //manageIO.isSystemInitialized()
+}
+//------------------------------------------------------------------------------------------- [HW]
+////
 int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 {
 
