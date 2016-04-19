@@ -113,6 +113,8 @@ void setup()
     SerialDebug.println("|         SW_SENSEI           |");
     SerialDebug.println(" -----------------------------");
     SerialDebug.println("CPU frequency: " + String(F_CPU / 1000000) + " MHz");
+    SerialDebug.println("BUS frequency: " + String(F_BUS / 1000000) + " MHz");
+    SerialDebug.println("MEM frequency: " + String(F_MEM / 1000000) + " MHz");
     SerialDebug.print(__DATE__);
     SerialDebug.print(" ");
     SerialDebug.println(__TIME__);
