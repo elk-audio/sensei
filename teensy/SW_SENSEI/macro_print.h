@@ -1,6 +1,7 @@
 #ifndef MACRO_PRINT_H
 #define MACRO_PRINT_H
 
+//http://c.learncodethehardway.org/book/ex20.html
 
 #define PRINT_PIN_CONFIGURATION_RT                                                                                      \
 {                                                                                                                       \
