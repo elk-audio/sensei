@@ -1,9 +1,7 @@
 #ifndef MANAGEIO_H
 #define MANAGEIO_H
 
-#include "Arduino.h"
 #include "common.h"
-
 #include "pin.h"
 #include "analog_input.h"
 #include "digital_input.h"

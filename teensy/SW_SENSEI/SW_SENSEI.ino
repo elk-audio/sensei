@@ -12,9 +12,7 @@
 //teensy31.menu.speed.96.build.flags.optimize = -Ofast
 //teensy31.build.flags.cpu=-mthumb -mcpu=cortex-m4 -mfpu=neon -fsingle-precision-constant
 
-#include <Arduino.h>
 #include "common.h"
-
 #include "task_rt.h"
 #include "task_com.h"
 #include "task_led.h"
