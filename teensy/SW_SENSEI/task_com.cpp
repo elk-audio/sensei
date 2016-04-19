@@ -89,24 +89,7 @@ void vTaskCOM(void *pvParameters)
                     case SENSEI_CMD::CONFIGURE_PIN:
                         sPinConfiguration* pinConfiguration;
                         pinConfiguration = (sPinConfiguration*)&manageDataPacket.dataPacket.sData.payload[0];
-                        if (systemSettings.debugMode)
-                        {
-                            SerialDebug.println("------------------------------------");
-                            SerialDebug.println("COM: CONFIGURE_PIN");
-                            SerialDebug.println("------------------------------------");
-                            SerialDebug.println("pinType=" + String(sub_cmd));
-                            SerialDebug.println("idxPin=" + String(pinConfiguration->idxPin));
-                            SerialDebug.println("sendingMode=" + String(pinConfiguration->sendingMode));
-                            SerialDebug.println("deltaTicksContinuousMode=" + String(pinConfiguration->deltaTicksContinuousMode));
-                            SerialDebug.println("ADCBitResolution=" + String(pinConfiguration->ADCBitResolution));
-                            SerialDebug.println("filterOrder=" + String(pinConfiguration->filterOrder));
-                            SerialDebug.println("lowPassCutOffFilter=" + String(pinConfiguration->lowPassCutOffFilter));
-                            SerialDebug.println("sliderMode=" + String(pinConfiguration->sliderMode));
-                            SerialDebug.println("sliderThreshold=" + String(pinConfiguration->sliderThreshold));
-                            SerialDebug.println("------------------------------------");
-                            SerialDebug.println("");
-                        }
-
+                        PRINT_PIN_CONFIGURATION_COM
                         memset(&msgData.data.setupPin,0,sizeof(SetupPin));
 
                         msgData.data.setupPin.idxPin = pinConfiguration->idxPin;

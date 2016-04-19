@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 #include "FreeRTOS_ARM.h"
-#include "utility/queue.h"
+#include "macro_print.h"
 #include "sensei_serial_protocol.h"
 #include "SPI.h"
 #include "arm_functions.h"

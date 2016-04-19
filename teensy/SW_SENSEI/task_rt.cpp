@@ -151,22 +151,7 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD CONFIGURE_PIN]
                 case SENSEI_CMD::CONFIGURE_PIN:
-                    if (systemSettings.debugMode)
-                    {
-                        SerialDebug.println("------------------------------------");
-                        SerialDebug.println("RT: CONFIGURE_PIN");
-                        SerialDebug.println("------------------------------------");
-                        SerialDebug.println("idxPin=" + String(msgData.data.setupPin.idxPin));
-                        SerialDebug.println("pinType=" + String(msgData.sub_cmd));
-                        SerialDebug.println("sendingMode=" + String(msgData.data.setupPin.sendingMode));
-                        SerialDebug.println("deltaTicksContinuousMode=" + String(msgData.data.setupPin.deltaTicksContinuousMode));
-                        SerialDebug.println("ADCBitResolution=" + String(msgData.data.setupPin.ADCBitResolution));
-                        SerialDebug.println("filterOrder=" + String(msgData.data.setupPin.filterOrder));
-                        SerialDebug.println("sliderMode=" + String(msgData.data.setupPin.sliderMode));
-                        SerialDebug.println("sliderThreshold=" + String(msgData.data.setupPin.sliderThreshold));
-                        SerialDebug.println("------------------------------------");
-                        SerialDebug.println("");
-                    }
+                    PRINT_PIN_CONFIGURATION_RT
                     if (manageIO.isSystemInitialized())
                     {
                         switch (msgData.sub_cmd) //pinType
