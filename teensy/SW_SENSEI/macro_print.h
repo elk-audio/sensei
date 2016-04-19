@@ -30,14 +30,14 @@ if (systemSettings.debugMode)                                                   
     SerialDebug.println("COM: CONFIGURE_PIN");                                                                          \
     SerialDebug.println("------------------------------------");                                                        \
     SerialDebug.println("pinType=" + String(sub_cmd));                                                                  \
-    SerialDebug.println("idxPin=" + String(pinConfiguration->idxPin));                                                  \
-    SerialDebug.println("sendingMode=" + String(pinConfiguration->sendingMode));                                        \
-    SerialDebug.println("deltaTicksContinuousMode=" + String(pinConfiguration->deltaTicksContinuousMode));              \
-    SerialDebug.println("ADCBitResolution=" + String(pinConfiguration->ADCBitResolution));                              \
-    SerialDebug.println("filterOrder=" + String(pinConfiguration->filterOrder));                                        \
-    SerialDebug.println("lowPassCutOffFilter=" + String(pinConfiguration->lowPassCutOffFilter));                        \
-    SerialDebug.println("sliderMode=" + String(pinConfiguration->sliderMode));                                          \
-    SerialDebug.println("sliderThreshold=" + String(pinConfiguration->sliderThreshold));                                \
+    SerialDebug.println("idxPin=" + String(pinConfiguration.idxPin));                                                   \
+    SerialDebug.println("sendingMode=" + String(pinConfiguration.sendingMode));                                         \
+    SerialDebug.println("deltaTicksContinuousMode=" + String(pinConfiguration.deltaTicksContinuousMode));               \
+    SerialDebug.println("ADCBitResolution=" + String(pinConfiguration.ADCBitResolution));                               \
+    SerialDebug.println("filterOrder=" + String(pinConfiguration.filterOrder));                                         \
+    SerialDebug.println("lowPassCutOffFilter=" + String(pinConfiguration.lowPassCutOffFilter));                         \
+    SerialDebug.println("sliderMode=" + String(pinConfiguration.sliderMode));                                           \
+    SerialDebug.println("sliderThreshold=" + String(pinConfiguration.sliderThreshold));                                 \
     SerialDebug.println("------------------------------------");                                                        \
     SerialDebug.println("");                                                                                            \
 }                                                                                                                       \

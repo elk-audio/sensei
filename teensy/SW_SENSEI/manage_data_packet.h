@@ -5,28 +5,35 @@
 
 typedef union uDataPacket
 {
-	sSenseiDataPacket sData;
-	uint8_t vData[SENSEI_LENGTH_DATA_PACKET];
+	sSenseiDataPacket data;
+	uint8_t vectorData[SENSEI_LENGTH_DATA_PACKET];
 } uDataPacket;
 
 class ManageDataPacket {
 public:
 	ManageDataPacket();
 	~ManageDataPacket();
+
 	void receivePacket();
 	void preparePacket(uint8_t cmd, uint8_t sub_cmd, uint16_t nPacketsMissing, uint8_t *pPayload, uint16_t nBytePayload);
 	void prepareACK(int32_t status, uint32_t timestamp, uint8_t cmd, uint8_t sub_cmd);
+	void getPacketID(uint8_t& cmd, uint8_t& sub_cmd, uint32_t& timestamp);
+	uint8_t getCmd();
+	uint8_t getSubCmd();
+	uint32_t getTimestamp();
 	int32_t checkPacket();
-
     uint32_t getNpacketReceived();
-	uDataPacket dataPacket;
+	void setPayloadToVariable(void* dataOutput, uint16_t nByte);
+	void send();
 
 private:
-	uint32_t nPacketReceived;
-
+	void clearDataPacket();
 	uint16_t calcCRC();
 	bool checkCRC();
-	sSenseiACKPacket* ACKPacket;
+
+	uint32_t _nPacketReceived;
+	uDataPacket _dataPacket;
+	sSenseiACKPacket* _ACKPacket;
 };
 
 #endif // MANAGEDATAPACKET_H

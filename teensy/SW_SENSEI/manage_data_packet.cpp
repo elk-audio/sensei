@@ -2,7 +2,7 @@
 
 ManageDataPacket::ManageDataPacket()
 {
-	nPacketReceived = 0;
+	_nPacketReceived = 0;
 }
 
 ManageDataPacket::~ManageDataPacket()
@@ -10,25 +10,52 @@ ManageDataPacket::~ManageDataPacket()
 
 }
 
+void ManageDataPacket::setPayloadToVariable(void* dataOutput,uint16_t nByte)
+{
+	memcpy(dataOutput,&_dataPacket.data.payload[0],nByte);
+}
+
+void ManageDataPacket::getPacketID(uint8_t& cmd, uint8_t& sub_cmd, uint32_t& timestamp)
+{
+	cmd = _dataPacket.data.cmd;
+	sub_cmd = _dataPacket.data.sub_cmd;
+	timestamp = _dataPacket.data.timestamp;
+}
+
+uint8_t ManageDataPacket::getCmd()
+{
+	return _dataPacket.data.cmd;
+}
+
+uint8_t ManageDataPacket::getSubCmd()
+{
+	return _dataPacket.data.sub_cmd;
+}
+
+uint32_t ManageDataPacket::getTimestamp()
+{
+	return _dataPacket.data.timestamp;
+}
+
 void ManageDataPacket::receivePacket()
 {
-	Serial.readBytes((char*)dataPacket.vData, SENSEI_LENGTH_DATA_PACKET);
+	Serial.readBytes((char*)_dataPacket.vectorData, SENSEI_LENGTH_DATA_PACKET);
 
 	if (DEBUG)
 	{
 		for(int i=0;i<SENSEI_LENGTH_DATA_PACKET;i++)
 		{
-			SerialDebug.print("[" + String(dataPacket.vData[i]) +"] ");
+			SerialDebug.print("[" + String(_dataPacket.vectorData[i]) +"] ");
 		}
 		SerialDebug.println("---------------");
 	}
-	
-	nPacketReceived++;
+
+	_nPacketReceived++;
 }
 
 uint32_t ManageDataPacket::getNpacketReceived()
 {
-	return nPacketReceived;
+	return _nPacketReceived;
 }
 
 uint16_t ManageDataPacket::calcCRC()
@@ -37,17 +64,22 @@ uint16_t ManageDataPacket::calcCRC()
 
 	for (uint16_t idx = SENSEI_START_IDX_CRC; idx < (SENSEI_STOP_IDX_CRC + 1); idx++)
 	{
-		crc += dataPacket.vData[idx];
+		crc += _dataPacket.vectorData[idx];
 	}
 
 	return crc;
+}
+
+void ManageDataPacket::clearDataPacket()
+{
+	memset(&_dataPacket, 0x00, SENSEI_LENGTH_DATA_PACKET);
 }
 
 bool ManageDataPacket::checkCRC()
 {
 	uint16_t crc = calcCRC();
 
-	if (dataPacket.sData.crc == crc)
+	if (_dataPacket.data.crc == crc)
 	return true;
 	else
 	return false;
@@ -55,72 +87,63 @@ bool ManageDataPacket::checkCRC()
 
 void ManageDataPacket::preparePacket(uint8_t cmd, uint8_t sub_cmd, uint16_t nPacketsMissing,uint8_t *pPayload,uint16_t nBytePayload)
 {
-	//Clear packet
-	memset(&dataPacket, 0x00, SENSEI_LENGTH_DATA_PACKET);
+	clearDataPacket();
 
-	dataPacket.sData.start_header = START_HEADER;
-	dataPacket.sData.cmd = cmd;
-	dataPacket.sData.sub_cmd = sub_cmd;
+	_dataPacket.data.start_header = START_HEADER;
+	_dataPacket.data.cmd = cmd;
+	_dataPacket.data.sub_cmd = sub_cmd;
 
-	dataPacket.sData.continuation = nPacketsMissing;
-	dataPacket.sData.timestamp = micros();
-	dataPacket.sData.stop_header = STOP_HEADER;
+	_dataPacket.data.continuation = nPacketsMissing;
+	_dataPacket.data.timestamp = micros();
+	_dataPacket.data.stop_header = STOP_HEADER;
 
-	memcpy(&dataPacket.sData.payload[0], &(*pPayload), nBytePayload);
+	memcpy(&_dataPacket.data.payload[0], &(*pPayload), nBytePayload);
 
-	dataPacket.sData.crc = calcCRC();
+	_dataPacket.data.crc = calcCRC();
 }
 
 void ManageDataPacket::prepareACK(int32_t status,uint32_t timestamp, uint8_t cmd, uint8_t sub_cmd)
 {
-	//Clear packet
-	memset(&dataPacket, 0x00, SENSEI_LENGTH_DATA_PACKET);
+	clearDataPacket();
 
-	dataPacket.sData.start_header = START_HEADER;
-	dataPacket.sData.cmd = SENSEI_CMD::ACK;
-	dataPacket.sData.sub_cmd = 0x00;
+	_dataPacket.data.start_header = START_HEADER;
+	_dataPacket.data.cmd = SENSEI_CMD::ACK;
+	_dataPacket.data.sub_cmd = SENSEI_SUB_CMD::EMPTY;
 
-	ACKPacket = (sSenseiACKPacket*)&dataPacket.sData.payload[0];
-	ACKPacket->status = status;
-	ACKPacket->timestamp = timestamp;
-	ACKPacket->cmd = cmd;
-	ACKPacket->sub_cmd = sub_cmd;
+	_ACKPacket = (sSenseiACKPacket*)&_dataPacket.data.payload[0];
+	_ACKPacket->status = status;
+	_ACKPacket->timestamp = timestamp;
+	_ACKPacket->cmd = cmd;
+	_ACKPacket->sub_cmd = sub_cmd;
 
-	dataPacket.sData.continuation = 0;
-	dataPacket.sData.timestamp = micros();
-	dataPacket.sData.stop_header = STOP_HEADER;
+	_dataPacket.data.continuation = 0;
+	_dataPacket.data.timestamp = micros();
+	_dataPacket.data.stop_header = STOP_HEADER;
 
-	dataPacket.sData.crc = calcCRC();
+	_dataPacket.data.crc = calcCRC();
 
+}
+
+void ManageDataPacket::send()
+{
+	Serial.write(_dataPacket.vectorData, SENSEI_LENGTH_DATA_PACKET);
+	Serial.send_now();
 }
 
 int32_t ManageDataPacket::checkPacket()
 {
+	if (!((_dataPacket.data.start_header.vByte[0] == START_HEADER.vByte[0]) &&
+	   (_dataPacket.data.start_header.vByte[1] == START_HEADER.vByte[1])  &&
+	   (_dataPacket.data.start_header.vByte[2] == START_HEADER.vByte[2])))
+	   return SENSEI_ERROR_CODE::START_HEADER_NOT_PRESENT;
 
-	if ((dataPacket.sData.start_header.vByte[0] == START_HEADER.vByte[0]) &&
-	(dataPacket.sData.start_header.vByte[1] == START_HEADER.vByte[1]) &&
-	(dataPacket.sData.start_header.vByte[2] == START_HEADER.vByte[2]))
-	{
-		if ((dataPacket.sData.stop_header.vByte[0] == STOP_HEADER.vByte[0]) &&
-		(dataPacket.sData.stop_header.vByte[1] == STOP_HEADER.vByte[1]) &&
-		(dataPacket.sData.stop_header.vByte[2] == STOP_HEADER.vByte[2]))
-		{
-			if (checkCRC() == true)
-			{
-				return SENSEI_ERROR_CODE::OK;
-			}
-			else
-			{
-				return SENSEI_ERROR_CODE::CRC_NOT_CORRECT;
-			}
-		}
-		else
-		{
-			return SENSEI_ERROR_CODE::STOP_HEADER_NOT_PRESENT;;
-		}
-	}
+	if (!((_dataPacket.data.stop_header.vByte[0] == STOP_HEADER.vByte[0]) &&
+	   (_dataPacket.data.stop_header.vByte[1] == STOP_HEADER.vByte[1])  &&
+	   (_dataPacket.data.stop_header.vByte[2] == STOP_HEADER.vByte[2])))
+	   return SENSEI_ERROR_CODE::STOP_HEADER_NOT_PRESENT;;
+
+	if (checkCRC() == true)
+		return SENSEI_ERROR_CODE::OK;
 	else
-	{
-		return SENSEI_ERROR_CODE::START_HEADER_NOT_PRESENT;;
-	}
+		return SENSEI_ERROR_CODE::CRC_NOT_CORRECT;
 }
