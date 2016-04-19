@@ -107,9 +107,9 @@ uint8_t ManageIO::getSendingMode(uint16_t idxPin)
 	return _vPin[idxPin]->getSendingMode();
 }
 
-uint8_t ManageIO::getDeltaTicksContinuousMode(uint16_t idxPin)
+uint16_t ManageIO::getDeltaTicksContinuousMode(uint16_t idxPin)
 {
-	return _vPin[idxPin]->getSendingMode();
+	return _vPin[idxPin]->getDeltaTicksContinuousMode();
 }
 
 bool ManageIO::isPinValueChanged(uint16_t idxPin)

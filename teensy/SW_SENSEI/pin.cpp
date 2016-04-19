@@ -32,7 +32,7 @@ uint8_t PIN::getSendingMode()
 	return _sendingMode;
 }
 
-uint8_t PIN::getDeltaTicksContinuousMode()
+uint16_t PIN::getDeltaTicksContinuousMode()
 {
 	return _deltaTicksContinuousMode;
 }

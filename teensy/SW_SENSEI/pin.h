@@ -14,7 +14,7 @@ class PIN{
     uint8_t getPinType();
     bool isPinValueChanged();
     uint8_t getSendingMode();
-    uint8_t getDeltaTicksContinuousMode();
+    uint16_t getDeltaTicksContinuousMode();
 
 protected:
     uint8_t _sendingMode;
@@ -23,11 +23,8 @@ protected:
     ePinType _type;
     uint16_t _value;
     uint16_t _precValue;
-
     bool _isInitialized;
-
     void checkPinChange();
-
 };
 
 #endif // PIN_H

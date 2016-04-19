@@ -35,7 +35,7 @@ class ManageIO{
     void hardwareAcquisition();
     bool isSystemInitialized();
     uint8_t getSendingMode(uint16_t idxPin);
-    uint8_t getDeltaTicksContinuousMode(uint16_t idxPin);
+    uint16_t getDeltaTicksContinuousMode(uint16_t idxPin);
 
   private:
      std::vector<PIN*> _vPin;
