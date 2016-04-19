@@ -16,6 +16,9 @@ void vTaskRT(void *pvParameters)
     systemSettings.enableMultiplePackets=COND_MULTIPLE_PACKETS;
     systemSettings.enableSendingPackets=COND_SENDING_PACKETS;
 
+    uint32_t startTaskTimestamp, endTaskTimestamp;
+    uint32_t precStartTaskTimestamp=micros();
+
     TaskRtStatus taskStatus;
     memset(&taskStatus,0,sizeof(TaskRtStatus));
 
@@ -40,6 +43,7 @@ void vTaskRT(void *pvParameters)
     {
         // Wait for the next cycle
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
+        startTaskTimestamp = micros();
 
         //------------------------------------------------------------------------------------------- [HW]
         manageIO.hardwareAcquisition();
@@ -72,6 +76,8 @@ void vTaskRT(void *pvParameters)
         if ((hQueueCOMtoRT_DATA != 0) && (xQueueReceive(hQueueCOMtoRT_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE)))
         {
             taskStatus.msgQueueReceived++;
+
+            msgData.status = SENSEI_ERROR_CODE::CMD_NOT_VALID;
             msgData.msgType = RT_MSG_TYPE::ACK;
 
             if (systemSettings.debugMode) //TODO
@@ -182,7 +188,6 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD GET_VALUE]
                 case SENSEI_CMD::GET_VALUE:
-
                     switch (msgData.sub_cmd)
                     {
                         case SENSEI_SUB_CMD::GET_SINGLE_PIN:
@@ -199,11 +204,22 @@ void vTaskRT(void *pvParameters)
 
                 break;
 
+                //--------------------------------------------------------------------- [CMD GET_SYSTEM_STATUS]
+                case SENSEI_CMD::GET_SYSTEM_STATUS:
+                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    msgData.data.systemStatus.taskRtStatus.nCycles = taskStatus.nCycles;
+                    msgData.data.systemStatus.taskRtStatus.msgQueueReceived = taskStatus.msgQueueReceived;
+                    msgData.data.systemStatus.taskRtStatus.msgQueueSendErrors = taskStatus.msgQueueSendErrors;
+                    msgData.data.systemStatus.taskRtStatus.nCyclesExpired = taskStatus.nCyclesExpired;
+                    msgData.data.systemStatus.taskRtStatus.controlLoopDelay = taskStatus.controlLoopDelay;
+                    msgData.data.systemStatus.taskRtStatus.nCyclesCloseToExpiration = taskStatus.nCyclesCloseToExpiration;
+                    msgData.data.systemStatus.taskRtStatus.lastTocTask = taskStatus.lastTocTask;
+                    msgData.status = SENSEI_ERROR_CODE::OK;
+                break;
+
                 //---------------------------------------------------------------------
                 // END COMMANDS
                 //---------------------------------------------------------------------
-                default:
-                    msgData.status = SENSEI_ERROR_CODE::CMD_NOT_VALID;
             } //switch (msgCmd.cmd)
 
 
@@ -222,6 +238,22 @@ void vTaskRT(void *pvParameters)
         } //hQueueCOMtoRT_CMD
         //------------------------------------------------------------------------------------------- [CMD_COM]
 
+        endTaskTimestamp = micros();
+        if (manageIO.isSystemInitialized())
+        {
+            taskStatus.lastTocTask = endTaskTimestamp - startTaskTimestamp;
+            if (taskStatus.lastTocTask > 900) //to define TODO
+            {
+                taskStatus.nCyclesCloseToExpiration++;
+            }
+            if (taskStatus.lastTocTask > 1000) //to define
+            {
+               taskStatus.nCyclesExpired++;
+            }
+
+            taskStatus.controlLoopDelay += (static_cast<int32_t>(startTaskTimestamp - precStartTaskTimestamp) - 1000);
+        }
+        precStartTaskTimestamp = startTaskTimestamp;
         taskStatus.nCycles++;
 
     } //for(;;)

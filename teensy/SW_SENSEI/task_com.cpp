@@ -46,10 +46,10 @@ void vTaskCOM(void *pvParameters)
         {
             manageDataPacket.receivePacket();
             retCode = manageDataPacket.checkPacket();
-
             if (retCode == SENSEI_ERROR_CODE::OK)
             {
                 manageDataPacket.getPacketID(cmd, sub_cmd, timestamp);
+                retCode = SENSEI_ERROR_CODE::CMD_NOT_VALID;
 
                 if (systemSettings.debugMode)
                 {
@@ -195,11 +195,18 @@ void vTaskCOM(void *pvParameters)
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
+                    //--------------------------------------------------------------------- [CMD GET_SYSTEM_STATUS]
+                    case SENSEI_CMD::GET_SYSTEM_STATUS:
+                        msgData.data.systemStatus.taskComStatus.msgQueueReceived = taskStatus.msgQueueReceived ;
+                        msgData.data.systemStatus.taskComStatus.msgQueueSendErrors = taskStatus.msgQueueSendErrors;
+                        msgData.data.systemStatus.taskComStatus.nCycles = taskStatus.nCycles;
+                        msgData.data.systemStatus.taskComStatus.dataPacketReceived = manageDataPacket.getNpacketReceived();
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
                     //---------------------------------------------------------------------
                     // STOP COMMANDS
                     //---------------------------------------------------------------------
-                    default:
-                        retCode = SENSEI_ERROR_CODE::CMD_NOT_VALID;
                 } //switch (cmd)
 
             } //if (retCode == SENSEI_ERROR_CODE::OK)
@@ -276,8 +283,13 @@ void vTaskCOM(void *pvParameters)
                         pAddress=(uint8_t*)&msgData.data.pin;
                     break;
 
-                    //case :
-                    //break;
+                    case SENSEI_CMD::GET_SYSTEM_STATUS:
+                        payloadSize=sizeof(SystemStatus);
+                        pAddress=(uint8_t*)&msgData.data.systemStatus;
+                    break;
+
+                    default:
+                        payloadSize=0;
                 }
 
                 // Send Packets
@@ -305,7 +317,7 @@ void vTaskCOM(void *pvParameters)
                 SerialDebug.println("QueueRTtoCOM_PIN: xQueueReceive");
             }
             // Send PIN VALUE
-            manageDataPacket.preparePacket(SENSEI_CMD::VALUE,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgPin, sizeof(GetSetPin));
+            manageDataPacket.preparePacket(SENSEI_CMD::VALUE,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgPin, sizeof(GetSetPin)); //TODO sendData
             manageDataPacket.send();
         }
 

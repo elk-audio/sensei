@@ -42,7 +42,6 @@ typedef enum RT_MSG_TYPE
 {
 	ACK=0,
 	DATA=1,
-	VALUE=2
 } RT_MSG_TYPE;
 
 typedef struct ImuComponents
@@ -96,12 +95,12 @@ typedef  struct SystemSettings
 typedef struct TaskRtStatus
 {
     uint64_t nCycles;
-    int32_t  controlLoopDelay; //[us]
     uint32_t msgQueueReceived;
     uint16_t msgQueueSendErrors;
+	int32_t  controlLoopDelay; //[us]
 	uint16_t nCyclesExpired;
 	uint16_t nCyclesCloseToExpiration;
-	uint16_t lastTocTask;
+	uint16_t lastTocTask; //[us]
 } __attribute__((packed)) TaskRtStatus;
 
 typedef struct TaskComStatus
@@ -109,16 +108,21 @@ typedef struct TaskComStatus
     uint64_t nCycles;
     uint32_t msgQueueReceived;
     uint16_t msgQueueSendErrors;
-	uint16_t nCyclesCloseToExpiration;
-	uint16_t lastTocTask;
+	uint32_t dataPacketReceived;
 } __attribute__((packed)) TaskComStatus;
+
+typedef struct SystemStatus
+{
+	TaskRtStatus taskRtStatus;
+    TaskComStatus taskComStatus;
+} __attribute__((packed)) SystemStatus;
+
 
 typedef union Data
 {
 	SystemSettings systemSettings;
 	HardwareSettings hw;
-	TaskRtStatus taskRtStatus;
-	TaskComStatus taskComStatus;
+	SystemStatus systemStatus;
 	SetupPin setupPin;
 	GetSetPin pin;
 	uint8_t value;
