@@ -4,21 +4,21 @@ AnalogInput::AnalogInput(SetupPin* setupPin) : PIN(setupPin)
 {
 	//SerialDebug.println("AnalogInput");
 
-	type = ePinType::PIN_ANALOG_INPUT;
+	_type = ePinType::PIN_ANALOG_INPUT;
 
-	ADCBitResolution = setupPin->ADCBitResolution;
+	_ADCBitResolution = setupPin->ADCBitResolution;
 
-	filter.setFilter(setupPin->filterOrder,setupPin->filterCoeff_a,setupPin->filterCoeff_b);
+	_filter.setFilter(setupPin->filterOrder,setupPin->filterCoeff_a,setupPin->filterCoeff_b);
 
-	sliderMode = setupPin->sliderMode;
-	sliderThreshold = setupPin->sliderThreshold;
+	_sliderMode = setupPin->sliderMode;
+	_sliderThreshold = setupPin->sliderThreshold;
 
 }
 
-void AnalogInput::setPinValue(uint16_t _value)
+void AnalogInput::setPinValue(uint16_t value)
 {
 
-	value=static_cast<uint16_t>(filter.processFilter(_value))>>ADCBitResolution;
+	_value=static_cast<uint16_t>(_filter.processFilter(value))>>_ADCBitResolution;
 	checkPinChange();
 }
 
