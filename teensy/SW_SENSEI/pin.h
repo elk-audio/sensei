@@ -6,6 +6,7 @@
 class PIN{
   public:
 	PIN();
+    PIN(SetupPin* setupPin);
 	virtual ~PIN();
 	bool isInitialized;
 
@@ -13,10 +14,13 @@ class PIN{
     uint16_t getPinValue();
     bool isPinValueChanged();
 
+    uint8_t sendingMode;
+    uint16_t deltaTicksContinuousMode;
     bool pinValueChanged;
     ePinType type;
     uint16_t value;
     uint16_t precValue;
+    void checkPinChange();
 
   private:
 

@@ -5,9 +5,9 @@
 #include "digital_input.h"
 #include "filter.h"
 
-class AnalogInput : public DigitalInput  {
+class AnalogInput : public PIN  {
 public:
-	AnalogInput(SetupPin* _setup);
+	AnalogInput(SetupPin* setupPin);
 	~AnalogInput();
 
 	void setPinValue(uint16_t _value);
@@ -16,7 +16,6 @@ public:
 private:
 
 	uint8_t ADCBitResolution;
-
 	uint8_t sliderMode;
 	uint16_t sliderThreshold;
 

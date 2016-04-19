@@ -3,13 +3,11 @@
 
 #include "digital_output.h"
 
-class DigitalInput : public DigitalOutput {
+class DigitalInput : public PIN 
+{
 public:
-	DigitalInput(SetupPin* _setupPin);
+	DigitalInput(SetupPin* setupPin);
 	~DigitalInput();
-
-	uint8_t sendingMode;
-	uint16_t deltaTicksContinuousMode;
 
 private:
 
