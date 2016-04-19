@@ -9,76 +9,65 @@ ManageIO::ManageIO()
 	_systemInitialized=false;
 }
 
-////
 void ManageIO::hardwareAcquisition()
 {
-//------------------------------------------------------------------------------------------- [HW]
-// Hardware Polling
-if (isSystemInitialized())
-{
-	uint16_t idxPin;
-	for (uint8_t ch = 0; ch < CHANNELS_PER_MULTIPLEXER; ch++)
+	// Hardware Polling
+	if (isSystemInitialized())
 	{
-		Byte S_Address;
-		S_Address.value = ch;
-
-		digitalWrite(S0, S_Address.bit0);
-		digitalWrite(S1, S_Address.bit1);
-		digitalWrite(S2, S_Address.bit2);
-		digitalWrite(S3, S_Address.bit3);
-
-
-		for (uint8_t idxMul = 0; idxMul < getNmultiplexer(); idxMul++)
+		uint16_t idxPin;
+		for (uint8_t ch = 0; ch < CHANNELS_PER_MULTIPLEXER; ch++)
 		{
-			idxPin = ch + idxMul * CHANNELS_PER_MULTIPLEXER;
+			Byte S_Address;
+			S_Address.value = ch;
 
-			switch(getPinType(idxPin))
+			digitalWrite(S0, S_Address.bit0);
+			digitalWrite(S1, S_Address.bit1);
+			digitalWrite(S2, S_Address.bit2);
+			digitalWrite(S3, S_Address.bit3);
+
+			for (uint8_t idxMul = 0; idxMul < getNmultiplexer(); idxMul++)
 			{
-			   case ePinType::PIN_DISABLE:
-				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
-			   break;
+				idxPin = ch + idxMul * CHANNELS_PER_MULTIPLEXER;
 
-			   case ePinType::PIN_DIGITAL_INPUT:
-				   delayMicroseconds(1); //to define
-				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
-				   setPinValue(idxPin, digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
-			   break;
+				switch(getPinType(idxPin))
+				{
+				   case ePinType::PIN_DISABLE:
+					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+				   break;
 
-			   case ePinType::PIN_DIGITAL_OUTPUT:
-				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, OUTPUT);
-				   delayMicroseconds(1);
-				   digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,static_cast<bool>(getPinValue(idxPin)));
-				   delayMicroseconds(1);
-				   digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,LOW);
-				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLDOWN);
-			   break;
+				   case ePinType::PIN_DIGITAL_INPUT:
+					   delayMicroseconds(1); //to define
+					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
+					   setPinValue(idxPin, digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
+				   break;
 
-			   case ePinType::PIN_ANALOG_INPUT:
-				   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
-				   delayMicroseconds(1);
-				   setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
-			   break;
-			}
+				   case ePinType::PIN_DIGITAL_OUTPUT:
+					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, OUTPUT);
+					   delayMicroseconds(1);
+					   digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,static_cast<bool>(getPinValue(idxPin)));
+					   delayMicroseconds(1);
+					   digitalWrite(Z1 + VERSOR_Z_PINS * idxMul,LOW);
+					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLDOWN);
+				   break;
 
-
-		} //Mul
-	} //Ch
-} //manageIO.isSystemInitialized()
+				   case ePinType::PIN_ANALOG_INPUT:
+					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+					   delayMicroseconds(1);
+					   setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
+				   break;
+				}
+			} //Mul
+		} //Ch
+	} //manageIO.isSystemInitialized()
 }
-//------------------------------------------------------------------------------------------- [HW]
-////
+
 int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 {
-
 	if (nPin % CHANNELS_PER_MULTIPLEXER != 0)
-	{
 		return SENSEI_ERROR_CODE::INCORRECT_NUMBER_OF_PINS;
-	}
 
 	if (nDigitalPin % CHANNELS_PER_SHIFT_REGISTER != 0)
-	{
 		return SENSEI_ERROR_CODE::INCORRECT_NUMBER_OF_DIGITAL_PINS;
-	}
 
     _nPin = nPin;
 	_nDigitalPin = nDigitalPin;
@@ -121,10 +110,10 @@ bool ManageIO::isPinValueChanged(uint16_t idxPin)
 int32_t ManageIO::setPinValue(uint16_t idxPin, uint16_t value)
 {
 	if (!_systemInitialized)
-	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
+		return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
 	if (idxPin >= _nPin)
-	return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
+		return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
 
 	if (getPinType(idxPin)!=ePinType::PIN_DISABLE)
 	{
@@ -140,17 +129,18 @@ int32_t ManageIO::setPinValue(uint16_t idxPin, uint16_t value)
 uint16_t ManageIO::getPinValue(uint16_t idxPin)
 {
 	if ((!_systemInitialized) || (idxPin >= _nPin))
-	return 0;
-	return _vPin[idxPin]->getPinValue();
+		return 0;
+	else
+		return _vPin[idxPin]->getPinValue();
 }
 
 int32_t ManageIO::getPinValue(uint16_t idxPin,uint16_t& value)
 {
 	if (!_systemInitialized)
-	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
+		return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
 	if (idxPin >= _nPin)
-	return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
+		return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
 
 	value=_vPin[idxPin]->getPinValue();
 
@@ -203,7 +193,6 @@ uint16_t ManageIO::getNumberOfDigitalPins()
 bool ManageIO::isSystemInitialized()
 {
 	return _systemInitialized;
-
 }
 
 bool ManageIO::isPinInitialized(uint16_t idxPin)
@@ -261,7 +250,6 @@ int32_t ManageIO::setDigitalPin(uint16_t idxPin, bool value)
 	setDigitalPin();
 
 	return SENSEI_ERROR_CODE::OK;
-
 }
 
 void ManageIO::setDigitalPin()
