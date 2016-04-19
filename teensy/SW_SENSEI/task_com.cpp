@@ -178,8 +178,8 @@ void vTaskCOM(void *pvParameters)
                         switch (sub_cmd)
                         {
                             case SENSEI_SUB_CMD::GET_SINGLE_PIN:
-                            memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
-                            retCode = SENSEI_ERROR_CODE::OK;
+                                memcpy(&msgData.data.pin,&manageDataPacket.dataPacket.sData.payload[0],sizeof(GetSetPin));
+                                retCode = SENSEI_ERROR_CODE::OK;
                             break;
 
                             default:

@@ -22,7 +22,7 @@ void ManageDataPacket::receivePacket()
 		}
 		SerialDebug.println("---------------");
 	}
-
+	
 	nPacketReceived++;
 }
 
