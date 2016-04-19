@@ -7,9 +7,9 @@ class Filter {
 public:
 
     Filter();
-    int32_t set_filter(uint8_t filter_order, FilterType* filter_coeff_a, FilterType* filter_coeff_b);
+    void setFilter(uint8_t filter_order, FilterType* filter_coeff_a, FilterType* filter_coeff_b);
     ~Filter();
-    FilterType process_filter(FilterType x);
+    FilterType processFilter(FilterType x);
 
 private:
     bool enable;

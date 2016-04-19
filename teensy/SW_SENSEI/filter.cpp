@@ -6,7 +6,7 @@ Filter::Filter()
     enable=false;
 }
 
-int32_t Filter::set_filter(uint8_t filter_order,FilterType* filter_coeff_a,FilterType* filter_coeff_b)
+Filter::setFilter(uint8_t filter_order,FilterType* filter_coeff_a,FilterType* filter_coeff_b)
 {
     _filter_order=filter_order;
     if ((_filter_order>0) && (_filter_order <= MAX_FILTER_ORDER))
@@ -34,7 +34,6 @@ int32_t Filter::set_filter(uint8_t filter_order,FilterType* filter_coeff_a,Filte
 
         enable=true;
     }
-    return SENSEI_ERROR_CODE::OK;
 }
 
 Filter::~Filter()
