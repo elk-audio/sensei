@@ -125,10 +125,10 @@ public:
 
 
 private:
-    int32_t initialize();
-    bool isInitialized;
-    sImuSettings settings;
-    sImuInternalSettings internalSettings;
+    int32_t _initialize();
+    bool _isInitialized;
+    sImuSettings _settings;
+    sImuInternalSettings _internalSettings;
 };
 
 #endif // MANAGE_IMU_H
