@@ -9,7 +9,6 @@ extern QueueHandle_t hQueueCOMtoRT_DATA;
 
 void vTaskCOM(void *pvParameters)
 {
-
     SerialDebug.println("-> TASK: COM");
 
     SystemSettings systemSettings;
