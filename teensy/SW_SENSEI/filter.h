@@ -12,7 +12,7 @@ public:
     FilterType processFilter(FilterType x);
 
 private:
-    bool enable;
+    bool _enable;
     uint8_t _filter_order;
     vector<FilterType> _filter_coeff_a;
     vector<FilterType> _filter_coeff_b;

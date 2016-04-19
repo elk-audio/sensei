@@ -47,7 +47,7 @@ Filter::~Filter()
 
 FilterType Filter::process_filter(FilterType x)
 {
-    if (enable)
+    if (_enable)
     {
         FilterType y;
 
