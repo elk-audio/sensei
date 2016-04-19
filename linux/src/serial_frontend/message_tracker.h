@@ -14,47 +14,60 @@
 #include <mutex>
 #include <map>
 
+#include "message/base_command.h"
+
 namespace sensei {
 namespace serial_frontend {
 
-enum class ack_status
+enum class timeout
 {
-    ACKED_OK,
+    NO_MESSAGE,
+    WAITING,
     TIMED_OUT,
-    UNKNOWN_IDENTIFIER,
+    TIMED_OUT_PERMANENTLY,
 };
 
 
 class MessageTracker
 {
 public:
-    MessageTracker(std::chrono::milliseconds timeout);
+    MessageTracker(std::chrono::milliseconds timeout, int max_retries);
 
     ~MessageTracker();
 
     /**
      * @brief Log a new entry, i.e. call this when sending a packet and waiting for a response
      */
-    void store(uint64_t identifier);
+    void store(std::unique_ptr<Command>&& message, uint64_t uuid);
 
     /**
      * @brief Check the status of a received packet against the list of un-acknowledged packets.
      * If it was logged, it will automatically be removed from the list after this call.
      */
-    ack_status check_status(uint64_t identifier);
+    bool ack(uint64_t identifier);
 
     /**
-     * @brief Returns the identifier of the earliest timed out message and removes it from the
-     * list of un-acknowledged packets. Returns 0 if there are no timed out messages.
+     * @brief Returns timeout status
      */
-    uint64_t timed_out();
+    timeout timed_out();
+
+    /**
+    * @brief Returns the message_in_transit for resend or for destruction
+    */
+    std::unique_ptr<Command> get_cached_message();
 
 private:
     void update_time();
 
-    std::map<uint64_t, std::chrono::steady_clock::time_point> _entries;
     std::chrono::steady_clock::duration    _timeout;
     std::chrono::steady_clock::time_point  _current_time;
+    std::chrono::steady_clock::time_point  _send_time;
+
+    int                                    _max_retries;
+    int                                    _retries;
+    std::unique_ptr<Command>               _message_in_transit;
+
+    uint64_t    _identifier;
     std::mutex  _mutex;
 
 };

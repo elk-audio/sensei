@@ -96,7 +96,8 @@ private:
     std::unique_ptr<BaseMessage> process_serial_packet(const sSenseiDataPacket *packet);
     std::unique_ptr<BaseMessage> process_value(const sSenseiDataPacket *packet);
     std::unique_ptr<BaseMessage> process_ack(const sSenseiDataPacket *packet);
-
+    std::unique_ptr<Command> next_message_to_send();
+    void handle_timeouts();
 
     const sSenseiDataPacket* create_send_command(Command* message);
 
@@ -114,6 +115,10 @@ private:
     std::thread     _write_thread;
     std::mutex      _state_mutex;
 
+    std::mutex      _send_mutex;
+    std::condition_variable _ready_to_send_notifier;
+
+    bool _ready_to_send;
     bool _connected;
     bool _muted;
     bool _verify_acks;
