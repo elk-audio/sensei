@@ -3,10 +3,10 @@
 
 Filter::Filter()
 {
-    enable=false;
+    _enable=false;
 }
 
-Filter::setFilter(uint8_t filter_order,FilterType* filter_coeff_a,FilterType* filter_coeff_b)
+void Filter::setFilter(uint8_t filter_order,FilterType* filter_coeff_a,FilterType* filter_coeff_b)
 {
     _filter_order=filter_order;
     if ((_filter_order>0) && (_filter_order <= MAX_FILTER_ORDER))
@@ -32,7 +32,7 @@ Filter::setFilter(uint8_t filter_order,FilterType* filter_coeff_a,FilterType* fi
             SerialDebug.println("");
         }
 
-        enable=true;
+        _enable=true;
     }
 }
 
@@ -45,7 +45,7 @@ Filter::~Filter()
 }
 
 
-FilterType Filter::process_filter(FilterType x)
+FilterType Filter::processFilter(FilterType x)
 {
     if (_enable)
     {
