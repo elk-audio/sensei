@@ -109,3 +109,5 @@ linux/build/
 
 # Windows folders
 *.ini
+
+doc/~$DATA_PROTOCOL_SENSUS.xlsx
