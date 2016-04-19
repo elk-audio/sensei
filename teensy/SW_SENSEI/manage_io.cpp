@@ -104,17 +104,26 @@ uint8_t ManageIO::getNmultiplexer()
 
 uint8_t ManageIO::getSendingMode(uint16_t idxPin)
 {
-	return _vPin[idxPin]->getSendingMode();
+	if ((_systemInitialized) && (idxPin<_nPin))
+		return _vPin[idxPin]->getSendingMode();
+	else
+		return 0;
 }
 
 uint16_t ManageIO::getDeltaTicksContinuousMode(uint16_t idxPin)
 {
-	return _vPin[idxPin]->getDeltaTicksContinuousMode();
+	if ((_systemInitialized) && (idxPin<_nPin))
+		return _vPin[idxPin]->getDeltaTicksContinuousMode();
+	else
+		return 0;
 }
 
 bool ManageIO::isPinValueChanged(uint16_t idxPin)
 {
-	return _vPin[idxPin]->isPinValueChanged();
+	if ((_systemInitialized) && (idxPin<_nPin))
+		return _vPin[idxPin]->isPinValueChanged();
+	else
+		return 0;
 }
 
 int32_t ManageIO::setPinValue(uint16_t idxPin, uint16_t value)
@@ -138,10 +147,10 @@ int32_t ManageIO::setPinValue(uint16_t idxPin, uint16_t value)
 
 uint16_t ManageIO::getPinValue(uint16_t idxPin)
 {
-	if ((!_systemInitialized) || (idxPin >= _nPin))
-		return 0;
-	else
+	if ((_systemInitialized) && (idxPin<_nPin))
 		return _vPin[idxPin]->getPinValue();
+	else
+		return 0;
 }
 
 int32_t ManageIO::getPinValue(uint16_t idxPin,uint16_t& value)
@@ -155,7 +164,6 @@ int32_t ManageIO::getPinValue(uint16_t idxPin,uint16_t& value)
 	value=_vPin[idxPin]->getPinValue();
 
 	return SENSEI_ERROR_CODE::OK;
-
 }
 
 int32_t ManageIO::configurePin(ePinType type, SetupPin* setupPin)
@@ -215,7 +223,10 @@ bool ManageIO::isPinInitialized(uint16_t idxPin)
 
 uint8_t ManageIO::getPinType(uint16_t idxPin)
 {
-	return _vPin[idxPin]->getPinType();
+	if ((_systemInitialized) && (idxPin<_nPin))
+		return _vPin[idxPin]->getPinType();
+	else
+		return ePinType::PIN_DISABLE;
 }
 
 int32_t ManageIO::setDigitalBank(uint16_t idxBank, uint8_t value)
