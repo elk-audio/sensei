@@ -103,36 +103,33 @@ int32_t ManageIO::getPinValue(uint16_t idxPin,uint16_t& value)
 int32_t ManageIO::configurePin(ePinType type, SetupPin* setupPin)
 {
 	if (setupPin->idxPin >= _nPin)
-	return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
-	//SerialDebug.println("PRE setPin");
+		return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
+
 	delete _vPin[setupPin->idxPin];
 
 	switch (type)
 	{
 		case PIN_ANALOG_INPUT:
-		//SerialDebug.println("PIN_ANALOG_INPUT");
-		_vPin[setupPin->idxPin] = new AnalogInput(setupPin);
+			_vPin[setupPin->idxPin] = new AnalogInput(setupPin);
 		break;
 
 		case PIN_DIGITAL_INPUT:
-		//	SerialDebug.println("PIN_DIGITAL_INPUT");
-		_vPin[setupPin->idxPin] = new DigitalInput(setupPin);
-
+			_vPin[setupPin->idxPin] = new DigitalInput(setupPin);
 		break;
 
 		case PIN_DIGITAL_OUTPUT:
-		//SerialDebug.println("PIN_DIGITAL_OUTPUT");
-		_vPin[setupPin->idxPin] = new DigitalOutput();
+			_vPin[setupPin->idxPin] = new DigitalOutput();
 		break;
 
 		case PIN_DISABLE:
-		_vPin[setupPin->idxPin] = new PIN();
+			_vPin[setupPin->idxPin] = new PIN();
 		break;
+
+		default:
+		return SENSEI_ERROR_CODE::INCORRECT_PARAMETER_TYPE;
 	};
 
-	//SerialDebug.println("POST setPin");
 	return SENSEI_ERROR_CODE::OK;
-
 }
 
 uint16_t ManageIO::getNumberOfPins()
@@ -154,9 +151,9 @@ bool ManageIO::isSystemInitialized()
 bool ManageIO::isPinInitialized(uint16_t idxPin)
 {
 	if (_vPin[idxPin]->getPinType() == ePinType::PIN_DISABLE)
-	return false;
+		return false;
 	else
-	return true;
+		return true;
 }
 
 uint8_t ManageIO::getPinType(uint16_t idxPin)
@@ -167,10 +164,10 @@ uint8_t ManageIO::getPinType(uint16_t idxPin)
 int32_t ManageIO::setDigitalBank(uint16_t idxBank, uint8_t value)
 {
 	if (!_systemInitialized)
-	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
+		return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
 	if (idxBank >= _nDigitalBank)
-	return SENSEI_ERROR_CODE::DIGITAL_OUTPUT_IDX_BANK_NOT_VALID;
+		return SENSEI_ERROR_CODE::DIGITAL_OUTPUT_IDX_BANK_NOT_VALID;
 
 	_vBankDigitalPin[idxBank] = value;
 
@@ -183,10 +180,10 @@ int32_t ManageIO::setDigitalPin(uint16_t idxPin, bool value)
 {
 
 	if (!_systemInitialized)
-	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
+		return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
 	if (idxPin >= _nDigitalPin)
-	return SENSEI_ERROR_CODE::DIGITAL_OUTPUT_IDX_PIN_NOT_VALID;
+		return SENSEI_ERROR_CODE::DIGITAL_OUTPUT_IDX_PIN_NOT_VALID;
 
 	uint16_t idxBank = floor(static_cast<float>(idxPin) / 8);
 	uint8_t idxBit = idxPin - 8 * idxBank;
