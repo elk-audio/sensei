@@ -1,27 +1,25 @@
 #include "analog_input.h"
 
-AnalogInput::AnalogInput(SetupPin* _setupPin) : DigitalInput(_setupPin)
+AnalogInput::AnalogInput(SetupPin* setupPin) : PIN(setupPin)
 {
 	//SerialDebug.println("AnalogInput");
 
-	type = ePinType::PIN_ANALOG_INPUT;
+	_type = ePinType::PIN_ANALOG_INPUT;
 
-	ADCBitResolution = _setupPin->ADCBitResolution;
+	_ADCBitResolution = setupPin->ADCBitResolution;
 
-	filter.setFilter(_setupPin->filterOrder,_setupPin->filterCoeff_a,_setupPin->filterCoeff_b);
+	_filter.setFilter(setupPin->filterOrder,setupPin->filterCoeff_a,setupPin->filterCoeff_b);
 
-	sliderMode = _setupPin->sliderMode;
-	sliderThreshold = _setupPin->sliderThreshold;
+	_sliderMode = setupPin->sliderMode;
+	_sliderThreshold = setupPin->sliderThreshold;
 
 }
 
-void AnalogInput::setPinValue(uint16_t _value)
+void AnalogInput::setPinValue(uint16_t value)
 {
 
-	value=static_cast<uint16_t>(filter.processFilter(_value))>>ADCBitResolution;
-
-	pinValueChanged = !(value==precValue); //TODO INCORPORARE
-	precValue=value;
+	_value=static_cast<uint16_t>(_filter.processFilter(value))>>_ADCBitResolution;
+	checkPinChange();
 }
 
 AnalogInput::~AnalogInput()

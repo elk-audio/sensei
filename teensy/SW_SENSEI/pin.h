@@ -6,19 +6,25 @@
 class PIN{
   public:
 	PIN();
+    PIN(SetupPin* setupPin);
 	virtual ~PIN();
-	bool isInitialized;
 
-    virtual void setPinValue(uint16_t _value);
+    virtual void setPinValue(uint16_t value);
     uint16_t getPinValue();
+    uint8_t getPinType();
     bool isPinValueChanged();
 
-    bool pinValueChanged;
-    ePinType type;
-    uint16_t value;
-    uint16_t precValue;
+protected:
+    uint8_t _sendingMode;
+    uint16_t _deltaTicksContinuousMode;
+    bool _pinValueChanged;
+    ePinType _type;
+    uint16_t _value;
+    uint16_t _precValue;
 
-  private:
+    bool _isInitialized;
+
+    void checkPinChange();
 
 };
 

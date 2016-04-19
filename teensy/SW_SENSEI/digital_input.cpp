@@ -1,11 +1,11 @@
 #include "digital_input.h"
 
-DigitalInput::DigitalInput(SetupPin* _setupPin) : DigitalOutput()
+DigitalInput::DigitalInput(SetupPin* setupPin) : PIN(setupPin)
 {
 
-	type = ePinType::PIN_DIGITAL_INPUT;
-	sendingMode = _setupPin->sendingMode;
-	deltaTicksContinuousMode = _setupPin->deltaTicksContinuousMode;
+	_type = ePinType::PIN_DIGITAL_INPUT;
+	_sendingMode = setupPin->sendingMode;
+	_deltaTicksContinuousMode = setupPin->deltaTicksContinuousMode;
 }
 
 

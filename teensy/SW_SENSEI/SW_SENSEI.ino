@@ -1,3 +1,7 @@
+// -----------------------------
+//          SW_SENSEI
+// -----------------------------
+
 // TODO
 // - INPUT - OUTPUT classes
 // - filterCoeff

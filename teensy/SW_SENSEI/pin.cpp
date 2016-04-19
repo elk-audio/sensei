@@ -2,10 +2,19 @@
 
 PIN::PIN()
 {
-	type = ePinType::PIN_DISABLE;
-	value = 0;
-	precValue = 0;
-	pinValueChanged=false;
+	_type = ePinType::PIN_DISABLE;
+	_value = 0;
+	_precValue = 0;
+	_sendingMode = eSendingMode::SENDING_MODE_ON_REQUEST;
+    _deltaTicksContinuousMode = 0;
+	_pinValueChanged=false;
+}
+
+PIN::PIN(SetupPin* setupPin)
+{
+	PIN();
+	_sendingMode = setupPin->sendingMode;
+    _deltaTicksContinuousMode = setupPin->deltaTicksContinuousMode;
 }
 
 PIN::~PIN()
@@ -15,17 +24,27 @@ PIN::~PIN()
 
 bool PIN::isPinValueChanged()
 {
-	return pinValueChanged;
+	return _pinValueChanged;
 }
 
-void PIN::setPinValue(uint16_t _value)
+uint8_t PIN::getPinType()
 {
-    value = _value;
-	pinValueChanged = !(value==precValue);
-	precValue=value;
+	return _type;
+}
+
+void PIN::setPinValue(uint16_t value)
+{
+    _value = value;
+	checkPinChange();
+}
+
+void PIN::checkPinChange()
+{
+	_pinValueChanged = !(_value==_precValue);
+	_precValue = _value;
 }
 
 uint16_t PIN::getPinValue()
 {
-    return value;
+    return _value;
 }

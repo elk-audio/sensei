@@ -2,75 +2,75 @@
 
 ManageIO::ManageIO()
 {
-	nPin = 0;
-	nMul=0;
-	nDigitalPin = 0;
-	nDigitalBank=0;
-	systemInitialized=false;
+	_nPin = 0;
+	_nMul = 0;
+	_nDigitalPin = 0;
+	_nDigitalBank = 0;
+	_systemInitialized=false;
 }
 
-int32_t ManageIO::setSystem(uint16_t _nPin, uint16_t _nDigitalPin)
+int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 {
 
-	nPin = _nPin;
-	nDigitalPin = _nDigitalPin;
-
-	if (nPin%CHANNELS_PER_MULTIPLEXER!=0)
+	if (nPin % CHANNELS_PER_MULTIPLEXER != 0)
 	{
 		return SENSEI_ERROR_CODE::INCORRECT_NUMBER_OF_PINS;
 	}
 
-	if (_nDigitalPin%CHANNELS_PER_SHIFT_REGISTER!=0)
+	if (nDigitalPin % CHANNELS_PER_SHIFT_REGISTER != 0)
 	{
 		return SENSEI_ERROR_CODE::INCORRECT_NUMBER_OF_DIGITAL_PINS;
 	}
 
-	nMul=nPin/CHANNELS_PER_MULTIPLEXER;
+    _nPin = nPin;
+	_nDigitalPin = nDigitalPin;
+	_nMul=_nPin/CHANNELS_PER_MULTIPLEXER;
+	_nDigitalBank = static_cast<uint8_t>(ceil(static_cast<float>(_nDigitalPin) / CHANNELS_PER_SHIFT_REGISTER));
 
-	nDigitalBank = static_cast<uint8_t>(ceil(static_cast<float>(nDigitalPin) / CHANNELS_PER_SHIFT_REGISTER));
-	vBankDigitalPin = new uint8_t[nDigitalBank];
-
-
-	vPin.clear();
-	vPin.reserve(nPin);
-	for (uint16_t idxPin = 0; idxPin < nPin; idxPin++)
+    //Set vector PIN
+	_vPin.clear();
+	_vPin.reserve(_nPin);
+	for (uint16_t idxPin = 0; idxPin < _nPin; idxPin++)
 	{
-		vPin.push_back(new PIN);
+		_vPin.push_back(new PIN);
 	}
 
-	for (uint16_t idxBank = 0; idxBank < nDigitalBank; idxBank++)
+    //Set vector DigitalBank
+    _vBankDigitalPin.clear();
+    _vBankDigitalPin.reserve(_nDigitalBank);
+	for (uint16_t idxBank = 0; idxBank < _nDigitalBank; idxBank++)
 	{
-		vBankDigitalPin[idxBank] = 0x00;
+		_vBankDigitalPin.push_back(0);
 	}
 
 	setDigitalPin();
 
-	systemInitialized=true;
+	_systemInitialized=true;
 
 	return SENSEI_ERROR_CODE::OK;
 }
 
 uint8_t ManageIO::getNmultiplexer()
 {
-	return nMul;
+	return _nMul;
 }
 
-bool ManageIO::isPinValueChanged(uint16_t _idxPin)
+bool ManageIO::isPinValueChanged(uint16_t idxPin)
 {
-	return vPin[_idxPin]->isPinValueChanged();
+	return _vPin[idxPin]->isPinValueChanged();
 }
 
-int32_t ManageIO::setPinValue(uint16_t _idxPin, uint16_t _value)
+int32_t ManageIO::setPinValue(uint16_t idxPin, uint16_t value)
 {
-	if (!systemInitialized)
+	if (!_systemInitialized)
 	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
-	if (_idxPin >= nPin)
+	if (idxPin >= _nPin)
 	return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
 
-	if (getPinType(_idxPin)!=ePinType::PIN_DISABLE)
+	if (getPinType(idxPin)!=ePinType::PIN_DISABLE)
 	{
-		vPin[_idxPin]->setPinValue(_value);
+		_vPin[idxPin]->setPinValue(value);
 		return SENSEI_ERROR_CODE::OK;
 	}
 	else
@@ -79,22 +79,22 @@ int32_t ManageIO::setPinValue(uint16_t _idxPin, uint16_t _value)
 	}
 }
 
-uint16_t ManageIO::getPinValue(uint16_t _idxPin)
+uint16_t ManageIO::getPinValue(uint16_t idxPin)
 {
-	if ((!systemInitialized) || (_idxPin >= nPin))
+	if ((!_systemInitialized) || (idxPin >= _nPin))
 	return 0;
-	return vPin[_idxPin]->getPinValue();
+	return _vPin[idxPin]->getPinValue();
 }
 
-int32_t ManageIO::getPinValue(uint16_t _idxPin,uint16_t& _value)
+int32_t ManageIO::getPinValue(uint16_t idxPin,uint16_t& value)
 {
-	if (!systemInitialized)
+	if (!_systemInitialized)
 	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
-	if (_idxPin >= nPin)
+	if (idxPin >= _nPin)
 	return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
 
-	_value=vPin[_idxPin]->getPinValue();
+	value=_vPin[idxPin]->getPinValue();
 
 	return SENSEI_ERROR_CODE::OK;
 
@@ -102,32 +102,31 @@ int32_t ManageIO::getPinValue(uint16_t _idxPin,uint16_t& _value)
 
 int32_t ManageIO::configurePin(ePinType type, SetupPin* setupPin)
 {
-	if (setupPin->idxPin >= nPin)
+	if (setupPin->idxPin >= _nPin)
 	return SENSEI_ERROR_CODE::IDX_PIN_NOT_VALID;
 	//SerialDebug.println("PRE setPin");
-	delete vPin[setupPin->idxPin];
+	delete _vPin[setupPin->idxPin];
 
 	switch (type)
 	{
 		case PIN_ANALOG_INPUT:
 		//SerialDebug.println("PIN_ANALOG_INPUT");
-
-		vPin[setupPin->idxPin] = new AnalogInput(setupPin);
+		_vPin[setupPin->idxPin] = new AnalogInput(setupPin);
 		break;
 
 		case PIN_DIGITAL_INPUT:
 		//	SerialDebug.println("PIN_DIGITAL_INPUT");
-		vPin[setupPin->idxPin] = new DigitalInput(setupPin);
+		_vPin[setupPin->idxPin] = new DigitalInput(setupPin);
 
 		break;
 
 		case PIN_DIGITAL_OUTPUT:
 		//SerialDebug.println("PIN_DIGITAL_OUTPUT");
-		vPin[setupPin->idxPin] = new DigitalOutput();
+		_vPin[setupPin->idxPin] = new DigitalOutput();
 		break;
 
 		case PIN_DISABLE:
-		vPin[setupPin->idxPin] = new PIN();
+		_vPin[setupPin->idxPin] = new PIN();
 		break;
 	};
 
@@ -138,70 +137,70 @@ int32_t ManageIO::configurePin(ePinType type, SetupPin* setupPin)
 
 uint16_t ManageIO::getNumberOfPins()
 {
-	return nPin;
+	return _nPin;
 }
 
 uint16_t ManageIO::getNumberOfDigitalPins()
 {
-	return nDigitalPin;
+	return _nDigitalPin;
 }
 
 bool ManageIO::isSystemInitialized()
 {
-	return systemInitialized;
+	return _systemInitialized;
 
 }
 
-bool ManageIO::isPinInitialized(uint16_t _idxPin)
+bool ManageIO::isPinInitialized(uint16_t idxPin)
 {
-	if (vPin[_idxPin]->type == ePinType::PIN_DISABLE)
+	if (_vPin[idxPin]->getPinType() == ePinType::PIN_DISABLE)
 	return false;
 	else
 	return true;
 }
 
-uint8_t ManageIO::getPinType(uint16_t _idxPin)
+uint8_t ManageIO::getPinType(uint16_t idxPin)
 {
-	return vPin[_idxPin]->type;
+	return _vPin[idxPin]->getPinType();
 }
 
-int32_t ManageIO::setDigitalBank(uint16_t _idxBank, uint8_t _value)
+int32_t ManageIO::setDigitalBank(uint16_t idxBank, uint8_t value)
 {
-	if (!systemInitialized)
+	if (!_systemInitialized)
 	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
-	if (_idxBank >= nDigitalBank)
+	if (idxBank >= _nDigitalBank)
 	return SENSEI_ERROR_CODE::DIGITAL_OUTPUT_IDX_BANK_NOT_VALID;
 
-	vBankDigitalPin[_idxBank] = _value;
+	_vBankDigitalPin[idxBank] = value;
 
 	setDigitalPin();
 	return SENSEI_ERROR_CODE::OK;
 
 }
 
-int32_t ManageIO::setDigitalPin(uint16_t _idxPin, bool _value)
+int32_t ManageIO::setDigitalPin(uint16_t idxPin, bool value)
 {
 
-	if (!systemInitialized)
+	if (!_systemInitialized)
 	return SENSEI_ERROR_CODE::SYSTEM_NOT_INITIALIZED;
 
-	if (_idxPin >= nDigitalPin)
+	if (idxPin >= _nDigitalPin)
 	return SENSEI_ERROR_CODE::DIGITAL_OUTPUT_IDX_PIN_NOT_VALID;
 
-	uint16_t idxBank = floor(static_cast<float>(_idxPin) / 8);
-	uint8_t idxBit = _idxPin - 8 * idxBank;
+	uint16_t idxBank = floor(static_cast<float>(idxPin) / 8);
+	uint8_t idxBit = idxPin - 8 * idxBank;
 
-	if (_value)
+	if (value)
 	{
-		//vBankDigitalPin[idxBank] = vBankDigitalPin[idxBank] | (static_cast<uint8_t>(0x01) << idxBit);
-		vBankDigitalPin[idxBank] = arm_bit_set(vBankDigitalPin[idxBank], idxBit);
+		//_vBankDigitalPin[idxBank] = _vBankDigitalPin[idxBank] | (static_cast<uint8_t>(0x01) << idxBit);
+		_vBankDigitalPin[idxBank] = arm_bit_set(_vBankDigitalPin[idxBank], idxBit);
 
 	}
 	else
 	{
-		//vBankDigitalPin[idxBank] = vBankDigitalPin[idxBank] & ~(static_cast<uint8_t>(0x01) << idxBit);
-		vBankDigitalPin[idxBank] = arm_bit_clear(vBankDigitalPin[idxBank], idxBit);
+		//_vBankDigitalPin[idxBank] = _vBankDigitalPin[idxBank] & ~(static_cast<uint8_t>(0x01) << idxBit);
+		_vBankDigitalPin[idxBank] = arm_bit_clear(_vBankDigitalPin[idxBank], idxBit);
 	}
 
 	setDigitalPin();
@@ -217,9 +216,9 @@ void ManageIO::setDigitalPin()
 	digitalWrite(ST, 0);
 	//delayMicroseconds(1);
 
-	for (uint16_t idxBank = 0; idxBank < nDigitalBank; idxBank++)
+	for (uint16_t idxBank = 0; idxBank < _nDigitalBank; idxBank++)
 	{
-		shiftOut(DS, SH, LSBFIRST, vBankDigitalPin[nDigitalBank-idxBank-1]);
+		shiftOut(DS, SH, LSBFIRST, _vBankDigitalPin[_nDigitalBank-idxBank-1]);
 	}
 
 	digitalWrite(ST, 1);
