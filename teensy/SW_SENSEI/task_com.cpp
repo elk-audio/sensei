@@ -265,51 +265,60 @@ void vTaskCOM(void *pvParameters)
         if ((hQueueRTtoCOM_DATA != 0) && (xQueueReceive(hQueueRTtoCOM_DATA, &msgData, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE)))
         {
             taskStatus.msgQueueReceived++;
+
             if (systemSettings.debugMode)
             {
                 SerialDebug.println("QueueRTtoCOM_DATA: xQueueReceive");
             }
-            // Send ACK
+
+            //Send ACK
             manageDataPacket.prepareACK(msgData.status, msgData.timestamp, msgData.cmd, msgData.sub_cmd);
             manageDataPacket.send();
 
-            if ((msgData.status==SENSEI_ERROR_CODE::OK) && (msgData.msgType==RT_MSG_TYPE::DATA))
+            switch (msgData.msgType)
             {
-                uint16_t idxStart;
-                uint16_t idxStop;
-                uint16_t payloadSize;
-                uint16_t nPackets;
-                uint8_t* pAddress;
+                case RT_MSG_TYPE::DATA:
+                    uint16_t idxStart;
+                    uint16_t idxStop;
+                    uint16_t payloadSize;
+                    uint16_t nPackets;
+                    uint8_t* pAddress;
 
-                switch(msgData.cmd)
-                {
-                    case SENSEI_CMD::GET_VALUE:
-                        payloadSize=sizeof(GetSetPin);
-                        pAddress=(uint8_t*)&msgData.data.pin;
-                    break;
+                    switch(msgData.cmd)
+                    {
+                        case SENSEI_CMD::GET_VALUE:
+                            payloadSize=sizeof(GetSetPin);
+                            pAddress=(uint8_t*)&msgData.data.pin;
+                        break;
 
-                    case SENSEI_CMD::GET_SYSTEM_STATUS:
-                        payloadSize=sizeof(SystemStatus);
-                        pAddress=(uint8_t*)&msgData.data.systemStatus;
-                    break;
+                        case SENSEI_CMD::GET_SYSTEM_STATUS:
+                            payloadSize=sizeof(SystemStatus);
+                            pAddress=(uint8_t*)&msgData.data.systemStatus;
+                        break;
 
-                    default:
-                        payloadSize=0;
-                }
+                        default:
+                            payloadSize=0;
+                    }
 
-                // Send Packets
-                nPackets = static_cast<uint16_t>(ceilf(static_cast<float>(payloadSize) / static_cast<float>(SENSEI_PAYLOAD_LENGTH)));
-                for (uint16_t idxPacket = 0; idxPacket < nPackets; idxPacket++)
-                {
-                    idxStart = idxPacket*SENSEI_PAYLOAD_LENGTH;
-                    idxStop = (idxPacket + 1)*SENSEI_PAYLOAD_LENGTH - 1;
+                    // Send Packets
+                    nPackets = static_cast<uint16_t>(ceilf(static_cast<float>(payloadSize) / static_cast<float>(SENSEI_PAYLOAD_LENGTH)));
+                    for (uint16_t idxPacket = 0; idxPacket < nPackets; idxPacket++)
+                    {
+                        idxStart = idxPacket*SENSEI_PAYLOAD_LENGTH;
+                        idxStop = (idxPacket + 1)*SENSEI_PAYLOAD_LENGTH - 1;
 
-                    if (idxStop > payloadSize - 1)
-                        idxStop = payloadSize - 1;
+                        if (idxStop > payloadSize - 1)
+                            idxStop = payloadSize - 1;
 
-                    manageDataPacket.preparePacket(msgData.cmd, msgData.sub_cmd, nPackets - idxPacket - 1, pAddress + idxStart, idxStop - idxStart + 1);
-                    manageDataPacket.send();
-                }
+                        manageDataPacket.preparePacket(msgData.cmd, msgData.sub_cmd, nPackets - idxPacket - 1, pAddress + idxStart, idxStop - idxStart + 1);
+                        manageDataPacket.send();
+                    }
+                break;
+
+                case RT_MSG_TYPE::ACK:
+                    // Nothing
+                break;
+
             }
         } // xQueueReceive
 
