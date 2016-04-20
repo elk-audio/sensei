@@ -254,6 +254,7 @@ void vTaskRT(void *pvParameters)
             taskStatus.controlLoopDelay += (static_cast<int32_t>(startTaskTimestamp - precStartTaskTimestamp) - 1000);
         }
         precStartTaskTimestamp = startTaskTimestamp;
+        
         taskStatus.nCycles++;
 
     } //for(;;)
