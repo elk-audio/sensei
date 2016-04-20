@@ -127,9 +127,9 @@ class BaseMessage(object):
 class AckMessage(BaseMessage):
     cmd = 'ACK'
     payload_descriptors = [ PayloadDescriptor('status', 'i', 'OK', spd.ERROR_CODE_MAP),
+                            PayloadDescriptor('origin_timestamp', 'I'),
                             PayloadDescriptor('origin_cmd', 'B', 'HELLO', spd.CMD_MAP),
-                            PayloadDescriptor('origin_sub_cmd', 'B'),
-                            PayloadDescriptor('origin_timestamp', 'I')
+                            PayloadDescriptor('origin_sub_cmd', 'B')
                           ]
 
 class ValueMessage(BaseMessage):
