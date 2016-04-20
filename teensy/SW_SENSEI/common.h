@@ -150,7 +150,6 @@ typedef struct Msg_DATA
 	Data data;
 } __attribute__((packed)) Msg_DATA;
 
-
 // FreeRTOS
 //const uint16_t MSG_QUEUE_ITEM_SIZE = 20;
 const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE = 0;
