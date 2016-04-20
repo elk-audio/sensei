@@ -31,6 +31,7 @@ void EventHandler::init(const std::string port_name,
 
 #ifdef SENSEI_TEST_WITHOUT_CONFIG_BACKEND
     _frontend->verify_acks(false);
+    _output_backend->enable_send_raw_input(true);
 
     // temp hack: fill some configuration into event queue
     //            to test system with provided dumps
@@ -107,7 +108,7 @@ void EventHandler::_handle_command(Command* cmd)
         break;
 
     case CommandDestination::OUTPUT_BACKEND:
-        // TODO: implement me
+        _output_backend->apply_command(cmd);
         break;
     }
 }

@@ -24,14 +24,35 @@ public:
     }
 
     virtual ~OutputBackend()
-    { }
+    {}
 
     void enable_send_raw_input(const bool enabled)
     {
         _send_raw_input_active = enabled;
     }
 
-    virtual void apply_cmd(const Command *cmd) = 0;
+    virtual CommandErrorCode apply_command(const Command *cmd)
+    {
+        CommandErrorCode status = CommandErrorCode::OK;
+
+        switch(cmd->type())
+        {
+        case CommandType::SET_PIN_NAME:
+        {
+            const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
+            auto pin_idx = cmd->sensor_index();
+            _sensor_names[pin_idx] = typed_cmd->data();
+        };
+            break;
+
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
+        }
+
+        return status;
+
+    }
 
     virtual void send(const OutputValue* transformed_value, const Value* raw_input_value) = 0;
 

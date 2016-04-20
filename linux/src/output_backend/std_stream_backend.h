@@ -15,7 +15,7 @@ public:
     ~StandardStreamBackend()
     {}
 
-    void apply_cmd(const Command* cmd) override;
+    CommandErrorCode apply_command(const Command *cmd) override;
 
     void send(const OutputValue* transformed_value, const Value* raw_input_value) override;
 };
