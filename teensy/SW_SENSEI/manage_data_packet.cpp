@@ -117,7 +117,7 @@ void ManageDataPacket::prepareACK(int32_t status,uint32_t timestamp, uint8_t cmd
 	_ACKPacket->sub_cmd = sub_cmd;
 
 	_dataPacket.data.continuation = 0;
-	_dataPacket.data.timestamp = micros();
+	_dataPacket.data.timestamp = timestamp;
 	_dataPacket.data.stop_header = STOP_HEADER;
 
 	_dataPacket.data.crc = calcCRC();
