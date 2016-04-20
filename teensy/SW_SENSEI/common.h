@@ -12,16 +12,49 @@
 using namespace sensei;
 using namespace std;
 
+const uint8_t DEBUG=0;
+
+// Message Queue
+//const uint16_t MSG_QUEUE_ITEM_SIZE = 20;
+const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE = 0;
+const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM = 0;
+const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_COM_TO_RT = 0;
+
+//Hardware
 const uint8_t CHANNELS_PER_MULTIPLEXER=16;
 const uint8_t CHANNELS_PER_SHIFT_REGISTER=8;
 const uint16_t STACK_SIZE=256;
 
+const uint8_t STATUS_LED = 13;
+
+const uint8_t Z1 = 23;
+const uint8_t Z2 = 22;
+const uint8_t Z3 = 21;
+const uint8_t Z4 = 20;
+
+const uint8_t S0 = 2;
+const uint8_t S1 = 3;
+const uint8_t S2 = 4;
+const uint8_t S3 = 5;
+
+const uint8_t DS = 6;
+const uint8_t ST = 7;
+const uint8_t SH = 8;
+
+const uint8_t SPI_SS = 10;
+const uint8_t SPI_SCK = 14;
+const uint8_t SPI_MISO = 12;
+const uint8_t SPI_MOSI = 11;
+const uint8_t INT_FILTER = 9;
+
+const uint8_t VERSOR_Z_PINS = -1;
+
+// System
 #undef F
 #define F(str) str
 
+// Serial Debug
 #define SerialDebug Serial1
-
-const uint8_t DEBUG=0;
 
 typedef union uByte{
 	struct {
@@ -52,7 +85,6 @@ typedef struct ImuComponents
 	//sImuNormalizedComponentSensor normalizedComponentSensor;
 } __attribute__((packed)) ImuComponents;
 
-
 typedef struct SetupPin
 {
 	uint16_t idxPin;
@@ -67,7 +99,6 @@ typedef struct SetupPin
 	uint8_t sliderMode;
 	uint16_t sliderThreshold;
 } __attribute__((packed)) SetupPin;
-
 
 typedef struct GetSetPin
 {
@@ -117,7 +148,6 @@ typedef struct SystemStatus
     TaskComStatus taskComStatus;
 } __attribute__((packed)) SystemStatus;
 
-
 typedef union Data
 {
 	SystemSettings systemSettings;
@@ -149,36 +179,5 @@ typedef struct Msg_DATA
 	int32_t status;
 	Data data;
 } __attribute__((packed)) Msg_DATA;
-
-// FreeRTOS
-//const uint16_t MSG_QUEUE_ITEM_SIZE = 20;
-const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE = 0;
-const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM = 0;
-const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_COM_TO_RT = 0;
-
-//Hardware
-const uint8_t STATUS_LED = 13;
-
-const uint8_t VERSOR_Z_PINS = -1;
-
-const uint8_t Z1 = 23;
-const uint8_t Z2 = 22;
-const uint8_t Z3 = 21;
-const uint8_t Z4 = 20;
-
-const uint8_t S0 = 2;
-const uint8_t S1 = 3;
-const uint8_t S2 = 4;
-const uint8_t S3 = 5;
-
-const uint8_t DS = 6;
-const uint8_t ST = 7;
-const uint8_t SH = 8;
-
-const uint8_t SPI_SS = 10;
-const uint8_t SPI_SCK = 14;
-const uint8_t SPI_MISO = 12;
-const uint8_t SPI_MOSI = 11;
-const uint8_t INT_FILTER = 9;
 
 #endif // COMMON_H
