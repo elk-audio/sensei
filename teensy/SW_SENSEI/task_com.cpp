@@ -112,9 +112,9 @@ void vTaskCOM(void *pvParameters)
                                 msgData.data.setupPin.filterOrder = pinConfiguration.filterOrder;
                                 msgData.data.setupPin.sliderMode = pinConfiguration.sliderMode;
                                 msgData.data.setupPin.sliderThreshold = pinConfiguration.sliderThreshold;
-                                if (pinConfiguration.filterOrder > MAX_FILTER_ORDER)
+                                if ( (pinConfiguration.filterOrder > MAX_FILTER_ORDER) && (pinConfiguration.lowPassCutOffFilter<0) && (pinConfiguration.lowPassCutOffFilter>(DEFAULT_RT_FREQUENCY/2)) )
                                 {
-                                    retCode = SENSEI_ERROR_CODE::FILTER_ORDER;
+                                    retCode = SENSEI_ERROR_CODE::WRONG_FILTER_SETTINGS;
                                     break;
                                 }
                                 msgData.data.setupPin.filterCoeff_a = new FilterType[pinConfiguration.filterOrder + 1]; //TODO STRUCT

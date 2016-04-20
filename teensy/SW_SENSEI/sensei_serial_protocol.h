@@ -43,7 +43,7 @@ namespace sensei {
         INCORRECT_NUMBER_OF_PINS=-12,
         INCORRECT_NUMBER_OF_DIGITAL_PINS=-13,
         SYSTEM_NOT_INITIALIZED=-14,
-        FILTER_ORDER=-15,
+        WRONG_FILTER_SETTINGS=-15,
         //------------------------------------------
         TIMEOUT_ON_RESPONSE = -100,
         INCORRECT_PAYLOAD_SIZE = -101,
