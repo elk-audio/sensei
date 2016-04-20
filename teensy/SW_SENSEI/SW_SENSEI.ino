@@ -4,7 +4,6 @@
 
 // TODO
 // - filterCoeff
-// - biquad ARM implementation
 
 //#pragma GCC optimize ("-Ofast")
 //teensy31.menu.speed.96.build.flags.optimize = -Ofast
