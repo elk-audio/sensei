@@ -3,10 +3,8 @@
 // -----------------------------
 
 // TODO
-// - INPUT - OUTPUT classes
 // - filterCoeff
-// - put hardware polling into a method of ManageIO class
-// -
+// - biquad ARM implementation
 
 //#pragma GCC optimize ("-Ofast")
 //teensy31.menu.speed.96.build.flags.optimize = -Ofast
