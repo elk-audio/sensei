@@ -75,6 +75,14 @@ int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 	_nDigitalBank = static_cast<uint8_t>(ceil(static_cast<float>(_nDigitalPin) / CHANNELS_PER_SHIFT_REGISTER));
 
     //Set vector PIN
+	if (_systemInitialized)
+	{
+		for (uint16_t idxPin = 0; idxPin < _nPin; idxPin++)
+		{
+			delete(_vPin[idxPin]);
+		}
+	}
+
 	_vPin.clear();
 	_vPin.reserve(_nPin);
 	for (uint16_t idxPin = 0; idxPin < _nPin; idxPin++)
