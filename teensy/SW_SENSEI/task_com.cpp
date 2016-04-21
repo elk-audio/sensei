@@ -95,11 +95,11 @@ void vTaskCOM(void *pvParameters)
                         switch (sub_cmd) //pinType
                         {
                             case SENSEI_SUB_CMD::SET_PIN_DISABLE:
-                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
+                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
                                 retCode = SENSEI_ERROR_CODE::OK;
                             break;
 
-                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_OUTPUT:
+                            case SENSEI_SUB_CMD::SET_PIN_DIGITAL_INPUT:
                                 msgData.data.setupPin.sendingMode = pinConfiguration.sendingMode;
                                 msgData.data.setupPin.deltaTicksContinuousMode = pinConfiguration.deltaTicksContinuousMode;
                                 retCode = SENSEI_ERROR_CODE::OK;
