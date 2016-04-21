@@ -45,12 +45,12 @@ uint8_t PIN::getPinType()
 void PIN::setPinValue(uint16_t value)
 {
     _value = value;
-	checkPinChange();
+	_checkPinChange();
 }
 
-void PIN::checkPinChange()
+void PIN::_checkPinChange()
 {
-	_pinValueChanged = !(_value==_precValue);
+	_pinValueChanged = !(_value == _precValue);
 	_precValue = _value;
 }
 

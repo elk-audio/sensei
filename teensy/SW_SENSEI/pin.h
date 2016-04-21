@@ -24,7 +24,7 @@ protected:
     uint16_t _value;
     uint16_t _precValue;
     bool _isInitialized;
-    void checkPinChange();
+    void _checkPinChange();
 };
 
 #endif // PIN_H

@@ -14,7 +14,7 @@ AnalogInput::AnalogInput(SetupPin* setupPin) : PIN(setupPin)
 void AnalogInput::setPinValue(uint16_t value)
 {
 	_value=static_cast<uint16_t>(_filter.processFilter(value))>>_ADCBitResolution;
-	checkPinChange();
+	_checkPinChange();
 }
 
 AnalogInput::~AnalogInput()
