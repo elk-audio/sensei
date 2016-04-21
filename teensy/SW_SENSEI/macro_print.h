@@ -30,8 +30,8 @@ if (systemSettings.debugMode)                                                   
     SerialDebug.println("------------------------------------");                                                        \
     SerialDebug.println("COM: CONFIGURE_PIN");                                                                          \
     SerialDebug.println("------------------------------------");                                                        \
-    SerialDebug.println("pinType=" + String(sub_cmd));                                                                  \
     SerialDebug.println("idxPin=" + String(pinConfiguration.idxPin));                                                   \
+    SerialDebug.println("pinType=" + String(sub_cmd));                                                                  \
     SerialDebug.println("sendingMode=" + String(pinConfiguration.sendingMode));                                         \
     SerialDebug.println("deltaTicksContinuousMode=" + String(pinConfiguration.deltaTicksContinuousMode));               \
     SerialDebug.println("ADCBitResolution=" + String(pinConfiguration.ADCBitResolution));                               \
