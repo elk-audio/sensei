@@ -16,7 +16,9 @@
 namespace sensei {
 namespace serial_frontend {
 
-static const int MAX_NUMBER_OFF_PINS = 64 + 16;
+static const int MAX_NUMBER_OFF_INPUT_PINS = 64;
+static const int MAX_NUMBER_OFF_OUTPUT_PINS = 32;
+static const int INITIAL_TICK_DIVISOR = 1;
 static const auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
 static const int MAX_RESEND_ATTEMPTS = 3;
 /*
@@ -42,7 +44,7 @@ bool verify_message(const sSenseiDataPacket *packet)
 SerialFrontend::SerialFrontend(const std::string &port_name,
                                SynchronizedQueue<std::unique_ptr<Command>> *in_queue,
                                SynchronizedQueue<std::unique_ptr<BaseMessage>> *out_queue) :
-        _packet_factory(MAX_NUMBER_OFF_PINS),
+        _packet_factory(MAX_NUMBER_OFF_INPUT_PINS + MAX_NUMBER_OFF_OUTPUT_PINS),
         _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
         _in_queue(in_queue),
         _out_queue(out_queue),
@@ -55,6 +57,7 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
 {
     if (setup_port(port_name) == SP_OK)
     {
+        send_initialize_packet(INITIAL_TICK_DIVISOR, MAX_NUMBER_OFF_INPUT_PINS, MAX_NUMBER_OFF_OUTPUT_PINS, 0);
         _connected = true;
     }
 }
@@ -105,14 +108,6 @@ void SerialFrontend::stop()
         _write_thread.join();
     }
 }
-
-
-void SerialFrontend::initialize(int ticks, int pins, int digital_pins, uint32_t timestamp)
-{
-    const sSenseiDataPacket* packet = _packet_factory.make_initialize_system_cmd(timestamp, ticks, pins, digital_pins);
-    sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
-}
-
 
 
 void SerialFrontend::mute(bool enabled)
@@ -183,7 +178,6 @@ void SerialFrontend::read_loop()
                 // failed to create BaseMessage, TODO - log error
             }
         }
-
         handle_timeouts();
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
@@ -276,7 +270,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
     }
     if (ack->status != SENSEI_ERROR_CODE::OK)
     {
-        //std::cout << "Got bad ack: " << translate_teensy_status_code(ack->status) << " for cmd " << (int)ack->cmd << std::endl;
+        std::cout << "Got bad ack: " << translate_teensy_status_code(ack->status) << " for cmd " << (int)ack->cmd << std::endl;
 
         // TODO - log the error here as only some error codes result in an error message being sent
         switch (ack->status)
@@ -287,6 +281,16 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
         }
     }
     return nullptr;
+}
+
+/*
+ * Sends a packet to initialize the board with number of pins and tick divisor
+ */
+
+void SerialFrontend::send_initialize_packet(int ticks, int pins, int digital_pins, uint32_t timestamp)
+{
+    const sSenseiDataPacket* packet = _packet_factory.make_initialize_system_cmd(timestamp, ticks, pins, digital_pins);
+    sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
 }
 
 /*
@@ -358,9 +362,7 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
         case CommandType::SET_ENABLED:
         {
             auto cmd = static_cast<SetEnabledCommand *>(message);
-            return _packet_factory.make_config_enabled_cmd(cmd->sensor_index(),
-                                                               cmd->timestamp(),
-                                                               cmd->data());
+            return _packet_factory.make_config_enabled_cmd(cmd->timestamp(), cmd->data());
         }
         case CommandType::SET_SENDING_MODE:
         {
