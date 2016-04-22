@@ -69,8 +69,8 @@ TEST_F(SerialFrontendTest, test_create_serial_message)
 TEST_F(SerialFrontendTest, test_process_serial_packet)
 {
     sSenseiDataPacket packet;
-    teensy_analog_value_msg* payload = reinterpret_cast<teensy_analog_value_msg*>(packet.payload);
-    packet.cmd = SENSEI_CMD::GET_VALUE;
+    teensy_value_msg* payload = reinterpret_cast<teensy_value_msg*>(packet.payload);
+    packet.cmd = SENSEI_CMD::VALUE;
     packet.sub_cmd = 0;
     packet.timestamp = 1234;
     payload->pin_id = 12;
@@ -79,7 +79,7 @@ TEST_F(SerialFrontendTest, test_process_serial_packet)
     std::unique_ptr<BaseMessage> msg = _module_under_test.process_serial_packet(&packet);
     AnalogValue* valuemessage = static_cast<AnalogValue*>(msg.get());
 
-    EXPECT_EQ(MessageType::VALUE, valuemessage->base_type());
+    ASSERT_EQ(MessageType::VALUE, valuemessage->base_type());
     EXPECT_EQ(1234u, valuemessage->timestamp());
     EXPECT_EQ(12, valuemessage->sensor_index());
     EXPECT_EQ(35, valuemessage->value());
@@ -91,9 +91,3 @@ TEST_F(SerialFrontendTest, test_mute_function)
     _module_under_test.mute(true);
     EXPECT_TRUE(_module_under_test._muted);
 }
-
-
-/*TEST_F(SerialFrontendTest, test_instanciation_again)
-{
-    EXPECT_TRUE(_module_under_test.connected());
-}*/

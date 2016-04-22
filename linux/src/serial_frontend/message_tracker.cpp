@@ -3,8 +3,12 @@
 namespace sensei {
 namespace serial_frontend {
 
-MessageTracker::MessageTracker(std::chrono::milliseconds timeout) :
-_timeout(timeout)
+
+MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries) :
+        _timeout(timeout),
+        _max_retries(max_retries),
+        _retries(0),
+        _identifier(0)
 {
 }
 
@@ -13,51 +17,68 @@ MessageTracker::~MessageTracker()
 
 }
 
-void MessageTracker::store(uint64_t identifier)
+void MessageTracker::store(std::unique_ptr<Command>&& message, uint64_t uuid)
 {
-    update_time();
     std::lock_guard<std::mutex> lock(_mutex);
-    _entries.insert(std::pair<uint64_t, std::chrono::steady_clock::time_point>(identifier, _current_time));
+    update_time();
+    _message_in_transit = std::move(message);
+    _send_time = _current_time;
+    if (uuid == _identifier)
+    {
+        _retries--;
+    }
+    else
+    {
+        _identifier = uuid;
+        _retries = _max_retries - 1;
+    }
 }
 
-ack_status MessageTracker::check_status(uint64_t identifier)
+bool MessageTracker::ack(uint64_t identifier)
 {
-    update_time();
-    ack_status status = ack_status::UNKNOWN_IDENTIFIER;
     std::lock_guard<std::mutex> lock(_mutex);
-    auto entry = _entries.find(identifier);
-    if (entry != _entries.end())
+    if (identifier != _identifier)
     {
-        if (entry->second > _current_time - _timeout)
+        return false;
+    }
+    _message_in_transit = nullptr;
+    return true;
+}
+
+timeout MessageTracker::timed_out()
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    if (_message_in_transit == nullptr)
+    {
+        return timeout::NO_MESSAGE;
+    }
+    update_time();
+    if (_send_time + _timeout > _current_time)
+    {
+        return timeout::WAITING;
+    }
+    else
+    {
+        if (_retries > 0)
         {
-            status = ack_status::ACKED_OK;
+            return timeout::TIMED_OUT;
         }
         else
         {
-            status = ack_status::TIMED_OUT;
+            return timeout::TIMED_OUT_PERMANENTLY;
         }
-        _entries.erase(entry);
     }
-    return status;
 }
 
-uint64_t MessageTracker::timed_out()
+std::unique_ptr<Command> MessageTracker::get_cached_message()
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    if (_entries.empty())
+    update_time();
+    if (_message_in_transit)
     {
-        return 0;
+        return std::move(_message_in_transit);
     }
-    for(const auto &entry : _entries)
-    {
-        if (entry.second < _current_time - _timeout)
-        {
-            uint64_t id = entry.first;
-            _entries.erase(id);
-            return id;
-        }
-    }
-    return 0;
+    return nullptr;
 }
 
 void MessageTracker::update_time()

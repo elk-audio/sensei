@@ -18,7 +18,7 @@ namespace serial_frontend {
 
 static const int MAX_NUMBER_OFF_PINS = 64 + 16;
 static const auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
-
+static const int MAX_RESEND_ATTEMPTS = 3;
 /*
  * Verify that a received message has not been corrupted
  */
@@ -43,11 +43,12 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
                                SynchronizedQueue<std::unique_ptr<Command>> *in_queue,
                                SynchronizedQueue<std::unique_ptr<BaseMessage>> *out_queue) :
         _packet_factory(MAX_NUMBER_OFF_PINS),
-        _message_tracker(ACK_TIMEOUT),
+        _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
         _in_queue(in_queue),
         _out_queue(out_queue),
         _read_thread_state(running_state::STOPPED),
         _write_thread_state(running_state::STOPPED),
+        _ready_to_send(true),
         _connected(false),
         _muted(false),
         _verify_acks(true)
@@ -64,6 +65,7 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
 */
 SerialFrontend::~SerialFrontend()
 {
+    _ready_to_send = true;
     stop();
     sp_close(_port);
     sp_free_port(_port);
@@ -127,6 +129,7 @@ int SerialFrontend::setup_port(const std::string &name)
 {
     sp_return ret;
     ret = sp_get_port_by_name(name.c_str(), &_port);
+
     if (ret != SP_OK)
     {
         return ret;
@@ -136,7 +139,8 @@ int SerialFrontend::setup_port(const std::string &name)
     {
         return ret;
     }
-    /* Turn of flow control, otherwise some byte patterns can be interpreted as controls codes */
+    /* Turn of flow control, otherwise some byte patterns can be interpreted as
+     * control codes and data can be lost */
     ret = sp_set_flowcontrol(_port, SP_FLOWCONTROL_NONE);
     if (ret != SP_OK)
     {
@@ -178,15 +182,9 @@ void SerialFrontend::read_loop()
             {
                 // failed to create BaseMessage, TODO - log error
             }
-            if (_verify_acks)
-            {
-                uint64_t id;
-                while ((id = _message_tracker.timed_out()) > 0)
-                {
-                    // handle timed out message here
-                }
-            }
         }
+
+        handle_timeouts();
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _read_thread_state = running_state::STOPPED;
@@ -197,7 +195,6 @@ void SerialFrontend::read_loop()
  */
 void SerialFrontend::write_loop()
 {
-    std::unique_ptr<Command> message;
     while (_write_thread_state == running_state::RUNNING)
     {
         _in_queue->wait_for_data(std::chrono::milliseconds(READ_WRITE_TIMEOUT_MS));
@@ -205,15 +202,26 @@ void SerialFrontend::write_loop()
         {
             continue;
         }
-        message = _in_queue->pop();
+
+        std::unique_lock<std::mutex> lock(_send_mutex);
+        if (_verify_acks && !_ready_to_send )
+        {
+            _ready_to_send_notifier.wait(lock);
+        }
+        std::unique_ptr<Command> message = next_message_to_send();
         const sSenseiDataPacket* packet = create_send_command(message.get());
         if (packet)
         {
-            sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
-            if (_verify_acks)
+            int ret = sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
+            if (_verify_acks && ret > 0)
             {
-                _message_tracker.store(extract_uuid(packet));
+                _message_tracker.store(std::move(message), extract_uuid(packet));
+                _ready_to_send = false;
             }
+        }
+        else
+        {
+            // Failed to create teensy packet TODO - Log error here
         }
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
@@ -227,28 +235,31 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
 {
     switch (packet->cmd)
     {
-        case SENSEI_CMD::GET_VALUE:  // for now, assume that incoming unsolicited responses will have any of these command codes
-        case SENSEI_CMD::GET_ALL_VALUES:
+        case SENSEI_CMD::VALUE:
         {
-            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->payload);
+            const teensy_value_msg *m = reinterpret_cast<const teensy_value_msg *>(&packet->payload);
             switch (m->pin_type)
             {
                 case PIN_DIGITAL_INPUT:
                     return _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
 
                 case PIN_ANALOG_INPUT:
-                    const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->payload);
-                    return _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
+                    return _message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp);
+
+                default:
+                    return nullptr;
             }
-            break;
         }
         case SENSEI_CMD::ACK:
         {
             return process_ack(packet);
         }
+        default:
+            // Unknown command TODO - log error
+            return nullptr;
     }
-    return nullptr;
 }
+
 
 std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket *packet)
 {
@@ -256,21 +267,17 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
     uint64_t uuid = extract_uuid(ack);
     if (_verify_acks)
     {
-        switch (_message_tracker.check_status(uuid))
+        std::unique_lock<std::mutex> lock(_send_mutex);
+        if (_message_tracker.ack(uuid))
         {
-            case ack_status::ACKED_OK:
-                // Everything's fine, do nothing more
-                break;
-            case ack_status::TIMED_OUT:
-                // Make error message and return it
-                break;
-            case ack_status::UNKNOWN_IDENTIFIER:
-                // Should not happen, log an error here
-                break;
+            _ready_to_send = true;
+            _ready_to_send_notifier.notify_one();
         }
     }
     if (ack->status != SENSEI_ERROR_CODE::OK)
     {
+        //std::cout << "Got bad ack: " << translate_teensy_status_code(ack->status) << " for cmd " << (int)ack->cmd << std::endl;
+
         // TODO - log the error here as only some error codes result in an error message being sent
         switch (ack->status)
         {
@@ -283,13 +290,56 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
 }
 
 /*
+ * Return the next message to send to the teensy board. It is either the top message
+ * from in_queue or a retry of a timed out message
+ */
+std::unique_ptr<Command> SerialFrontend::next_message_to_send()
+{
+    auto message = _message_tracker.get_cached_message();
+    if (message)
+    {
+        return std::move(message);
+    }
+    return _in_queue->pop();
+}
+
+/*
+ * Check if we should stop waiting for an ack and signal timeouts upwards
+ */
+void SerialFrontend::handle_timeouts()
+{
+    std::unique_lock<std::mutex> lock(_send_mutex);
+    switch (_message_tracker.timed_out())
+    {
+        case timeout::TIMED_OUT_PERMANENTLY:
+        {
+            /* Resending timed out too many times, signal push an error message to main loop.
+             * NOTE: No break as we want to signal ready to send to the write thread too.
+             * Also note that m is destroyed when this scope exits. */
+            auto m = _message_tracker.get_cached_message();
+            auto error_message = _message_factory.make_too_many_timeouts_error(m->sensor_index(), 0);
+            _out_queue->push(std::move(error_message));
+        }
+        case timeout::TIMED_OUT:
+        {
+            /* Resend logic is handled when next_message_to_send() is called. */
+            _ready_to_send = true;
+            _ready_to_send_notifier.notify_one();
+            break;
+        }
+        case timeout::NO_MESSAGE:
+        case timeout::WAITING:
+            /* Keep waiting */
+            break;
+    }
+}
+
+/*
  * Create teensy command packet from a Command message.
- * Note that message goes out of scope and is destroyed when the function returns
  */
 const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
 {
     assert(message->base_type() == MessageType::COMMAND);
-
     switch (message->type())
     {
         case CommandType::SET_SAMPLING_RATE:
@@ -304,6 +354,13 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
             return _packet_factory.make_config_pintype_cmd(cmd->sensor_index(),
                                                            cmd->timestamp(),
                                                            cmd->data());
+        }
+        case CommandType::SET_ENABLED:
+        {
+            auto cmd = static_cast<SetEnabledCommand *>(message);
+            return _packet_factory.make_config_enabled_cmd(cmd->sensor_index(),
+                                                               cmd->timestamp(),
+                                                               cmd->data());
         }
         case CommandType::SET_SENDING_MODE:
         {
@@ -355,6 +412,7 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
                                                             cmd->data());
         }
         default:
+            // Command type we don't handle TODO - log error
             return nullptr;
     }
 }

@@ -13,7 +13,7 @@
 namespace sensei {
 namespace serial_frontend {
 
-const unsigned int READ_WRITE_TIMEOUT_MS = 100;
+const unsigned int READ_WRITE_TIMEOUT_MS = 1000;
 
 
 /*
@@ -121,6 +121,8 @@ const inline std::string& translate_teensy_status_code(int code)
             return str ="SERIAL_DEVICE_PORT_NOT_OPEN";
         case SENSEI_ERROR_CODE::GENERIC_ERROR:
             return str ="GENERIC_ERROR";
+        default:
+            return str ="Unknown error code: " + code;
     }
 
 }
@@ -128,19 +130,11 @@ const inline std::string& translate_teensy_status_code(int code)
 // set 1 byte boundary for matching
 #pragma pack(push, 1)
 
-struct teensy_digital_value_msg
+struct teensy_value_msg
 {
     uint16_t pin_id;
-    uint8_t pin_type;
-    uint8_t value;
-};
-
-struct teensy_analog_value_msg
-{
-    uint16_t pin_id;
-    uint8_t pin_type;
     uint16_t value;
-    uint16_t slider_value;
+    uint8_t pin_type;
 };
 
 struct teensy_set_value_cmd
