@@ -41,7 +41,7 @@ void EventHandler::init(const std::string port_name,
     for (int pin_idx = 0; pin_idx < 16; pin_idx++)
     {
         _event_queue.push(factory.make_set_pin_type_command(pin_idx, PinType::DIGITAL_INPUT));
-        _event_queue.push(factory.make_set_pin_name(pin_idx, std::string("digitaLINO")));
+        _event_queue.push(factory.make_set_pin_name_command(pin_idx, std::string("digitaLINO")));
         _event_queue.push(factory.make_set_enabled_command(pin_idx, true));
     }
 
@@ -49,10 +49,10 @@ void EventHandler::init(const std::string port_name,
     for (int pin_idx = 32; pin_idx < 56; pin_idx++)
     {
         _event_queue.push(factory.make_set_pin_type_command(pin_idx, PinType::ANALOG_INPUT));
-        _event_queue.push(factory.make_set_pin_name(pin_idx, std::string("analoGINO")));
+        _event_queue.push(factory.make_set_pin_name_command(pin_idx, std::string("analoGINO")));
         _event_queue.push(factory.make_set_invert_enabled_command(pin_idx, false));
-        _event_queue.push(factory.make_set_input_scale_range_low(pin_idx, 35));
-        _event_queue.push(factory.make_set_input_scale_range_high(pin_idx, 2300));
+        _event_queue.push(factory.make_set_input_scale_range_low_command(pin_idx, 35));
+        _event_queue.push(factory.make_set_input_scale_range_high_command(pin_idx, 2300));
         _event_queue.push(factory.make_set_enabled_command(pin_idx, true));
     }
 #endif
@@ -92,25 +92,29 @@ void EventHandler::handle_events()
 
 void EventHandler::_handle_command(Command* cmd)
 {
-    switch (cmd->destination())
+    CommandDestination address = cmd->destination();
+
+    // TODO: check returning error code from apply_command calls
+    if (address & CommandDestination::INTERNAL)
     {
-    case CommandDestination::INTERNAL:
         _processor->apply_command(cmd);
-        break;
-
-    case CommandDestination::SERIAL_FRONTEND:
-        _processor->apply_command(cmd);
-        _to_frontend_queue.push(std::unique_ptr<Command>(cmd));
-        break;
-
-    case CommandDestination::CONFIG_BACKEND:
-        // TODO: implement me
-        break;
-
-    case CommandDestination::OUTPUT_BACKEND:
-        _output_backend->apply_command(cmd);
-        break;
     }
+
+    if (address & CommandDestination::SERIAL_FRONTEND)
+    {
+        _to_frontend_queue.push(std::unique_ptr<Command>(cmd));
+    }
+
+    if (address & CommandDestination::CONFIG_BACKEND)
+    {
+        // TODO: implement me
+    }
+
+    if (address & CommandDestination::OUTPUT_BACKEND)
+    {
+        _output_backend->apply_command(cmd);
+    }
+
 }
 
 void EventHandler::_handle_error(Error* /* error */)
