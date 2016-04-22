@@ -15,9 +15,12 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
 {
     int sensor_index = transformed_value->sensor_index();
 
-    printf("Pin: %d, name: %s, value: %f\n", sensor_index,
-                                             _sensor_names[sensor_index].c_str(),
-                                             transformed_value->value());
+    if (_send_output_active)
+    {
+        printf("Pin: %d, name: %s, value: %f\n", sensor_index,
+                                                 _sensor_names[sensor_index].c_str(),
+                                                 transformed_value->value());
+    }
 
     if (_send_raw_input_active)
     {
@@ -60,8 +63,6 @@ CommandErrorCode StandardStreamBackend::apply_command(const Command *cmd)
         return status;
     }
 
-    // Handle digital-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    // status = CommandErrorCode::OK;
     switch(cmd->type())
     {
     default:

@@ -170,29 +170,78 @@ public:
         return std::unique_ptr<SetInvertEnabledCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_low(const int sensor_index,
-                                                                const int value,
-                                                                const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_input_scale_range_low_command(const int sensor_index,
+                                                                        const int value,
+                                                                        const uint32_t timestamp = 0)
     {
         auto msg = new SetInputScaleRangeLow(sensor_index, value, timestamp);
         return std::unique_ptr<SetInputScaleRangeLow>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_high(const int sensor_index,
-                                                                 const int value,
-                                                                 const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_input_scale_range_high_command(const int sensor_index,
+                                                                         const int value,
+                                                                         const uint32_t timestamp = 0)
     {
         auto msg = new SetInputScaleRangeHigh(sensor_index, value, timestamp);
         return std::unique_ptr<SetInputScaleRangeHigh>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_pin_name(const int sensor_index,
-                                                   const std::string name,
-                                                   const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_pin_name_command(const int sensor_index,
+                                                           const std::string name,
+                                                           const uint32_t timestamp = 0)
     {
         auto msg = new SetPinNameCommand(sensor_index, name, timestamp);
         return std::unique_ptr<SetPinNameCommand>(msg);
     }
+
+    std::unique_ptr<BaseMessage> make_set_output_enabled_command(const int sensor_index,
+                                                                 const bool enabled,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetOutputEnabledCommand(sensor_index, enabled, timestamp);
+        return std::unique_ptr<SetOutputEnabledCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_raw_output_enabled_command(const int sensor_index,
+                                                                     const bool enabled,
+                                                                     const uint32_t timestamp = 0)
+    {
+        auto msg = new SetRawOutputEnabledCommand(sensor_index, enabled, timestamp);
+        return std::unique_ptr<SetRawOutputEnabledCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_osc_output_base_path_command(const int sensor_index,
+                                                                       const std::string path,
+                                                                       const uint32_t timestamp = 0)
+    {
+        auto msg = new SetOSCOutputBasePathCommand(sensor_index, path, timestamp);
+        return std::unique_ptr<SetOSCOutputBasePathCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_osc_output_raw_path_command(const int sensor_index,
+                                                                      const std::string path,
+                                                                      const uint32_t timestamp = 0)
+    {
+        auto msg = new SetOSCOutputRawPathCommand(sensor_index, path, timestamp);
+        return std::unique_ptr<SetOSCOutputRawPathCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_osc_output_host_command(const int sensor_index,
+                                                                  const std::string hostname,
+                                                                  const uint32_t timestamp = 0)
+    {
+        auto msg = new SetOSCOutputHostCommand(sensor_index, hostname, timestamp);
+        return std::unique_ptr<SetOSCOutputHostCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_osc_output_port_command(const int sensor_index,
+                                                                  const int port,
+                                                                  const uint32_t timestamp = 0)
+    {
+        auto msg = new SetOSCOutputPortCommand(sensor_index, port, timestamp);
+        return std::unique_ptr<SetOSCOutputPortCommand>(msg);
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////
     // Errors
