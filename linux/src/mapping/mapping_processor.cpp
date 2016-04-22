@@ -24,7 +24,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
     // TODO: find a better way to manage changes of PinType,
     //       possibly without requiring SetPinType to be the 1st command received
 
-    int sensor_index = cmd->sensor_index();
+    int sensor_index = cmd->index();
     if ( (sensor_index < 0) || (sensor_index > (_max_n_sensors-1)) )
     {
         return CommandErrorCode::INVALID_PIN_INDEX;
@@ -72,7 +72,7 @@ void MappingProcessor::put_config_commands_into(CommandIterator out_iterator)
 
 void MappingProcessor::process(Value *value, output_backend::OutputBackend *backend)
 {
-    int sensor_index = value->sensor_index();
+    int sensor_index = value->index();
     if (_mappers[sensor_index] != nullptr)
     {
         _mappers[sensor_index]->process(value, backend);

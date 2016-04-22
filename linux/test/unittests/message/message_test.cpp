@@ -15,7 +15,7 @@ TEST(MessagesTest, test_value_creation)
     ASSERT_EQ(MessageType::VALUE, tmp_msg->base_type());
     auto analog_msg = static_cast<AnalogValue*>(tmp_msg.get());
     ASSERT_EQ(ValueType::ANALOG, analog_msg->type());
-    ASSERT_EQ(1, analog_msg->sensor_index());
+    ASSERT_EQ(1, analog_msg->index());
     ASSERT_EQ(10, analog_msg->value());
     ASSERT_EQ(100u, analog_msg->timestamp());
 
@@ -23,7 +23,7 @@ TEST(MessagesTest, test_value_creation)
     ASSERT_EQ(MessageType::VALUE, tmp_msg->base_type());
     auto digital_msg = static_cast<DigitalValue*>(tmp_msg.get());
     ASSERT_EQ(ValueType::DIGITAL, digital_msg->type());
-    ASSERT_EQ(1, digital_msg->sensor_index());
+    ASSERT_EQ(1, digital_msg->index());
     ASSERT_EQ(true, digital_msg->value());
     ASSERT_EQ(100u, digital_msg->timestamp());
 
@@ -31,7 +31,7 @@ TEST(MessagesTest, test_value_creation)
     ASSERT_EQ(MessageType::VALUE, tmp_msg->base_type());
     auto output_msg = static_cast<OutputValue*>(tmp_msg.get());
     ASSERT_EQ(ValueType::OUTPUT, output_msg->type());
-    ASSERT_EQ(1, output_msg->sensor_index());
+    ASSERT_EQ(1, output_msg->index());
     ASSERT_EQ(-0.1f, output_msg->value());
     ASSERT_EQ(100u, output_msg->timestamp());
 }

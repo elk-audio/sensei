@@ -51,7 +51,7 @@ protected:
         PinType pin_type = PinType::UNDEFINED;
         for (auto const& msg : stored_cmds)
         {
-            if (msg->sensor_index() != sensor_index)
+            if (msg->index() != sensor_index)
             {
                 continue;
             }

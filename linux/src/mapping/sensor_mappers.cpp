@@ -43,7 +43,7 @@ BaseSensorMapper::~BaseSensorMapper()
 
 CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
 {
-    assert(cmd->sensor_index() == _sensor_index);
+    assert(cmd->index() == _sensor_index);
 
     CommandErrorCode status = CommandErrorCode::OK;
 

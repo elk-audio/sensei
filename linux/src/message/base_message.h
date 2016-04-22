@@ -60,13 +60,13 @@ public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(BaseMessage)
 
     /**
-     * @brief Get integer tag to identify the sensor among the pins available in the board.
+     * @brief Get integer tag to identify the message in collections
      *
      * @return Index of the sensor
      */
-    int sensor_index() const
+    int index() const
     {   
-        return _sensor_index;
+        return _index;
     }
 
     /**
@@ -99,13 +99,13 @@ protected:
     BaseMessage(const int sensor_index,
                 const unsigned int timestamp=0,
                 const MessageType msg_type=MessageType::VALUE) :
-            _sensor_index(sensor_index),
+            _index(sensor_index),
             _timestamp(timestamp),
             _base_type(msg_type)
     {
     }
 
-    int _sensor_index;
+    int _index;
     uint32_t _timestamp;
     MessageType _base_type;
 

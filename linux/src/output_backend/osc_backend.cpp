@@ -52,7 +52,7 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
 {
     // TODO: see if it's worth checking errors in lo_send calls
 
-    int sensor_index = transformed_value->sensor_index();
+    int sensor_index = transformed_value->index();
 
     if (_send_output_active)
     {
@@ -92,7 +92,7 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
 {
     // Try to handle generic cases in base class method
     CommandErrorCode status = CommandErrorCode::OK;
-    auto pin_idx = cmd->sensor_index();
+    auto pin_idx = cmd->index();
 
     switch(cmd->type())
     {

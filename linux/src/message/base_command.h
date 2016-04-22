@@ -94,7 +94,7 @@ public:
     uint64_t uuid() const
     {
         uint64_t result = 0u;
-        result |= static_cast<uint64_t>(_sensor_index) << 48;
+        result |= static_cast<uint64_t>(_index) << 48;
         result |= static_cast<uint64_t>(_type) << 32;
         result |= static_cast<uint64_t>(_timestamp);
         return result;

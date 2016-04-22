@@ -32,7 +32,7 @@ public:
     virtual CommandErrorCode apply_command(const Command *cmd)
     {
         CommandErrorCode status = CommandErrorCode::OK;
-        auto pin_idx = cmd->sensor_index();
+        auto pin_idx = cmd->index();
 
         switch(cmd->type())
         {

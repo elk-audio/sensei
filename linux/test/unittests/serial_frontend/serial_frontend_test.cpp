@@ -81,7 +81,7 @@ TEST_F(SerialFrontendTest, test_process_serial_packet)
 
     ASSERT_EQ(MessageType::VALUE, valuemessage->base_type());
     EXPECT_EQ(1234u, valuemessage->timestamp());
-    EXPECT_EQ(12, valuemessage->sensor_index());
+    EXPECT_EQ(12, valuemessage->index());
     EXPECT_EQ(35, valuemessage->value());
 }
 

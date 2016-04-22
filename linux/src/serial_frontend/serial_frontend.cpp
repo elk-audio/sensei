@@ -321,7 +321,7 @@ void SerialFrontend::handle_timeouts()
              * NOTE: No break as we want to signal ready to send to the write thread too.
              * Also note that m is destroyed when this scope exits. */
             auto m = _message_tracker.get_cached_message();
-            auto error_message = _message_factory.make_too_many_timeouts_error(m->sensor_index(), 0);
+            auto error_message = _message_factory.make_too_many_timeouts_error(m->index(), 0);
             _out_queue->push(std::move(error_message));
         }
         case timeout::TIMED_OUT:
@@ -355,7 +355,7 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
         case CommandType::SET_PIN_TYPE:
         {
             auto cmd = static_cast<SetPinTypeCommand *>(message);
-            return _packet_factory.make_config_pintype_cmd(cmd->sensor_index(),
+            return _packet_factory.make_config_pintype_cmd(cmd->index(),
                                                            cmd->timestamp(),
                                                            cmd->data());
         }
@@ -367,49 +367,49 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
         case CommandType::SET_SENDING_MODE:
         {
             auto cmd = static_cast<SetSendingModeCommand *>(message);
-            return _packet_factory.make_config_sendingmode_cmd(cmd->sensor_index(),
+            return _packet_factory.make_config_sendingmode_cmd(cmd->index(),
                                                                cmd->timestamp(),
                                                                cmd->data());
         }
         case CommandType::SET_SENDING_DELTA_TICKS:
         {
             auto cmd = static_cast<SetSendingDeltaTicksCommand *>(message);
-            return _packet_factory.make_config_delta_ticks_cmd(cmd->sensor_index(),
+            return _packet_factory.make_config_delta_ticks_cmd(cmd->index(),
                                                                cmd->timestamp(),
                                                                cmd->data());
         }
         case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             auto cmd = static_cast<SetADCBitResolutionCommand *>(message);
-            return _packet_factory.make_config_adc_bitres_cmd(cmd->sensor_index(),
+            return _packet_factory.make_config_adc_bitres_cmd(cmd->index(),
                                                               cmd->timestamp(),
                                                               cmd->data());
         }
         case CommandType::SET_LOWPASS_FILTER_ORDER:
         {
             auto cmd = static_cast<SetLowpassFilterOrderCommand *>(message);
-            return _packet_factory.make_config_filter_order_cmd(cmd->sensor_index(),
+            return _packet_factory.make_config_filter_order_cmd(cmd->index(),
                                                                 cmd->timestamp(),
                                                                 cmd->data());
         }
         case CommandType::SET_LOWPASS_CUTOFF:
         {
             auto cmd = static_cast<SetLowpassCutoffCommand *>(message);
-            return _packet_factory.make_config_lowpass_cutoff_cmd(cmd->sensor_index(),
+            return _packet_factory.make_config_lowpass_cutoff_cmd(cmd->index(),
                                                                   cmd->timestamp(),
                                                                   cmd->data());
         }
         case CommandType::SET_SLIDER_THRESHOLD:
         {
             auto cmd = static_cast<SetSliderThresholdCommand *>(message);
-            return _packet_factory.make_config_slider_threshold_cmd(cmd->sensor_index(),
+            return _packet_factory.make_config_slider_threshold_cmd(cmd->index(),
                                                                     cmd->timestamp(),
                                                                     cmd->data());
         }
         case CommandType::SEND_DIGITAL_PIN_VALUE:
         {
             auto cmd = static_cast<SendDigitalPinValueCommand *>(message);
-            return _packet_factory.make_set_digital_pin_cmd(cmd->sensor_index(),
+            return _packet_factory.make_set_digital_pin_cmd(cmd->index(),
                                                             cmd->timestamp(),
                                                             cmd->data());
         }

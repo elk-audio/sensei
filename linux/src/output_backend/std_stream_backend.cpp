@@ -13,7 +13,7 @@ StandardStreamBackend::StandardStreamBackend(const int max_n_sensors) :
 
 void StandardStreamBackend::send(const OutputValue* transformed_value, const Value* raw_input_value)
 {
-    int sensor_index = transformed_value->sensor_index();
+    int sensor_index = transformed_value->index();
 
     if (_send_output_active)
     {
