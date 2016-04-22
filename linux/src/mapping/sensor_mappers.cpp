@@ -5,11 +5,11 @@
  * These are instantiated internally as components of MappingProcessor
  */
 
-#include <algorithm>
 #include <cassert>
 
 #include "mapping/sensor_mappers.h"
 #include "message/message_factory.h"
+#include "utils.h"
 
 namespace {
 
@@ -18,21 +18,6 @@ static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
-// TODO: find a better home for these
-
-template<typename Derived, typename Base>
-std::unique_ptr<Derived>
-static_unique_ptr_cast( std::unique_ptr<Base>&& p )
-{
-    auto d = static_cast<Derived *>(p.release());
-    return std::unique_ptr<Derived>(d);
-}
-
-template <typename T>
-T clip(const T& x, const T& lower, const T& upper)
-{
-    return std::max(lower, std::min(x, upper));
-}
 
 }; // Anonymous namespace
 

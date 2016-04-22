@@ -21,18 +21,13 @@ public:
             _send_output_active(true),
             _send_raw_input_active(false)
     {
-        _sensor_names.resize(static_cast<size_t>(_max_n_sensors));
+        _pin_names.resize(static_cast<size_t>(_max_n_sensors));
         _pin_types.resize(static_cast<size_t>(_max_n_sensors));
         std::fill(_pin_types.begin(), _pin_types.end(), PinType::UNDEFINED);
     }
 
     virtual ~OutputBackend()
     {}
-
-    void enable_send_raw_input(const bool enabled)
-    {
-        _send_raw_input_active = enabled;
-    }
 
     virtual CommandErrorCode apply_command(const Command *cmd)
     {
@@ -44,7 +39,7 @@ public:
         case CommandType::SET_PIN_NAME:
             {
                 const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
-                _sensor_names[pin_idx] = typed_cmd->data();
+                _pin_names[pin_idx] = typed_cmd->data();
             };
             break;
 
@@ -83,7 +78,7 @@ protected:
     int _max_n_sensors;
     bool _send_output_active;
     bool _send_raw_input_active;
-    std::vector<std::string> _sensor_names;
+    std::vector<std::string> _pin_names;
     std::vector<PinType> _pin_types;
 };
 

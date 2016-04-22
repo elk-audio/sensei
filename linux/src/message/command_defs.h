@@ -84,6 +84,7 @@ enum class CommandErrorCode
     INVALID_RANGE,
     CLIP_WARNING,
     INVALID_PIN_INDEX,
+    INVALID_URL,
     N_COMMAND_ERROR_CODES
 };
 

@@ -1,3 +1,7 @@
+/**
+ * @brief Output backend using standard output/error streams
+ * @copyright MIND Music Labs AB, Stockholm
+ */
 #ifndef SENSEI_STD_STREAM_BACKEND_H
 #define SENSEI_STD_STREAM_BACKEND_H
 

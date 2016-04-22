@@ -7,23 +7,11 @@
 #include "mapping/sensor_mappers.cpp"
 
 #include "output_backend_mockup.h"
+#include "../test_utils.h"
 
 using namespace sensei;
 using namespace sensei::mapping;
 
-// Helper functions
-
-#define CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
-#define CMD_PTR(msg) CMD_UPTR(msg).get()
-
-template<typename DerivedCommand>
-std::unique_ptr<DerivedCommand> extract_cmd_from(std::vector<std::unique_ptr<BaseMessage>>& msg_queue)
-{
-    auto tmp_msg = static_unique_ptr_cast<DerivedCommand, BaseMessage>(std::move(msg_queue.back()));
-    msg_queue.pop_back();
-
-    return std::move(tmp_msg);
-}
 
 
 class TestDigitalSensorMapper : public ::testing::Test
@@ -161,7 +149,6 @@ TEST_F(TestDigitalSensorMapper, test_raw_input_send)
     bool sensor_value = true;
     auto input_msg = factory.make_digital_value(_sensor_idx, sensor_value);
     auto input_val = static_cast<Value*>(input_msg.get());
-    _backend.enable_send_raw_input(true);
     _mapper.process(input_val, &_backend);
     ASSERT_EQ(sensor_value, _backend._last_raw_digital_input);
 }
@@ -422,7 +409,6 @@ TEST_F(TestAnalogSensorMapper, test_raw_input_send)
     int sensor_value = 100;
     auto input_msg = factory.make_analog_value(_sensor_idx, sensor_value);
     auto input_val = static_cast<Value*>(input_msg.get());
-    _backend.enable_send_raw_input(true);
     _mapper.process(input_val, &_backend);
     ASSERT_EQ(sensor_value, _backend._last_raw_analogue_input);
 }

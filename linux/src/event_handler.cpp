@@ -5,9 +5,9 @@
 #endif
 
 #include <chrono>
-#include <cassert>
 
 #include "event_handler.h"
+#include "output_backend/osc_backend.h"
 
 
 using namespace sensei;
@@ -17,7 +17,7 @@ void EventHandler::init(const std::string port_name,
                         const int max_n_sensors)
 {
     _processor.reset(new mapping::MappingProcessor(max_n_sensors));
-    _output_backend.reset(new output_backend::StandardStreamBackend(max_n_sensors));
+    _output_backend.reset(new output_backend::OSCBackend(max_n_sensors));
     _frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
 
     // TODO: use TBI logger system
@@ -31,7 +31,6 @@ void EventHandler::init(const std::string port_name,
 
 #ifdef SENSEI_TEST_WITHOUT_CONFIG_BACKEND
     _frontend->verify_acks(false);
-    _output_backend->enable_send_raw_input(true);
 
     // temp hack: fill some configuration into event queue
     //            to test system with provided dumps
