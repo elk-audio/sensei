@@ -8,12 +8,11 @@ AnalogInput::AnalogInput(SetupPin* setupPin) : PIN(setupPin)
 	_filter.setFilter(setupPin->filterOrder,setupPin->filterCoeff_a,setupPin->filterCoeff_b);
 	_sliderMode = setupPin->sliderMode;
 	_sliderThreshold = setupPin->sliderThreshold;
-
 }
 
 void AnalogInput::setPinValue(uint16_t value)
 {
-	_value=static_cast<uint16_t>(_filter.processFilter(value))>>_ADCBitResolution;
+	_value = static_cast<uint16_t>(_filter.processFilter(value)) >> _ADCBitResolution;
 	_checkPinChange();
 }
 
