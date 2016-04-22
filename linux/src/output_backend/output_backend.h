@@ -55,6 +55,20 @@ public:
             };
             break;
 
+        case CommandType::SET_SEND_OUTPUT_ENABLED:
+            {
+                const auto typed_cmd = static_cast<const SetSendOutputEnabledCommand*>(cmd);
+                _send_output_active = typed_cmd->data();
+            };
+            break;
+
+        case CommandType::SET_SEND_RAW_INPUT_ENABLED:
+            {
+                const auto typed_cmd = static_cast<const SetSendRawInputEnabledCommand*>(cmd);
+                _send_raw_input_active = typed_cmd->data();
+            };
+            break;
+
         default:
             status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
             break;

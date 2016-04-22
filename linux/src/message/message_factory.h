@@ -194,20 +194,20 @@ public:
         return std::unique_ptr<SetPinNameCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_output_enabled_command(const int sensor_index,
-                                                                 const bool enabled,
-                                                                 const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_send_output_enabled_command(const int sensor_index,
+                                                                      const bool enabled,
+                                                                      const uint32_t timestamp = 0)
     {
-        auto msg = new SetOutputEnabledCommand(sensor_index, enabled, timestamp);
-        return std::unique_ptr<SetOutputEnabledCommand>(msg);
+        auto msg = new SetSendOutputEnabledCommand(sensor_index, enabled, timestamp);
+        return std::unique_ptr<SetSendOutputEnabledCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_raw_output_enabled_command(const int sensor_index,
-                                                                     const bool enabled,
-                                                                     const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_send_raw_input_enabled_command(const int sensor_index,
+                                                                         const bool enabled,
+                                                                         const uint32_t timestamp = 0)
     {
-        auto msg = new SetRawOutputEnabledCommand(sensor_index, enabled, timestamp);
-        return std::unique_ptr<SetRawOutputEnabledCommand>(msg);
+        auto msg = new SetSendRawInputEnabledCommand(sensor_index, enabled, timestamp);
+        return std::unique_ptr<SetSendRawInputEnabledCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_set_osc_output_base_path_command(const int sensor_index,

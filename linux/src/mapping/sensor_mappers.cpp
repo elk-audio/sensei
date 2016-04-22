@@ -120,17 +120,8 @@ DigitalSensorMapper::~DigitalSensorMapper()
 
 CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
-    CommandErrorCode status = BaseSensorMapper::apply_command(cmd);
-
-    // command was consumed by parent or some error has occurred while doing it
-    if ((status == CommandErrorCode::OK) || (status != CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE) )
-    {
-        return status;
-    }
-
-    // Handle digital-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    status = CommandErrorCode::OK;
+    // Handle digital-specific configurations
+    CommandErrorCode status = CommandErrorCode::OK;
     switch(cmd->type())
     {
     case CommandType::SET_PIN_TYPE:
@@ -146,7 +137,15 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 
     }
 
-    return status;
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 
 }
 
@@ -208,17 +207,9 @@ AnalogSensorMapper::~AnalogSensorMapper()
 
 CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
-    CommandErrorCode status = BaseSensorMapper::apply_command(cmd);
-
-    // command was consumed by parent or some error has occurred while doing it
-    if ((status == CommandErrorCode::OK) || (status != CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE) )
-    {
-        return status;
-    }
 
     // Handle analog-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    status = CommandErrorCode::OK;
+    CommandErrorCode  status = CommandErrorCode::OK;
     switch(cmd->type())
     {
     // External
@@ -293,7 +284,15 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 
     }
 
-    return status;
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 
 }
 

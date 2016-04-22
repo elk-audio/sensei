@@ -207,8 +207,8 @@ TEST(MessagesTest, test_output_backend_command_creation)
     std::vector<std::unique_ptr<BaseMessage>> msg_queue;
 
     msg_queue.push_back(factory.make_set_pin_name_command(0, std::string("pippo")));
-    msg_queue.push_back(factory.make_set_output_enabled_command(0, false));
-    msg_queue.push_back(factory.make_set_raw_output_enabled_command(0, true));
+    msg_queue.push_back(factory.make_set_send_output_enabled_command(0, false));
+    msg_queue.push_back(factory.make_set_send_raw_input_enabled_command(0, true));
     msg_queue.push_back(factory.make_set_osc_output_base_path_command(0, "/sensors"));
     msg_queue.push_back(factory.make_set_osc_output_raw_path_command(0, "/raw_input"));
     msg_queue.push_back(factory.make_set_osc_output_host_command(0, "192.168.1.100"));
@@ -233,17 +233,17 @@ TEST(MessagesTest, test_output_backend_command_creation)
             };
             break;
 
-        case CommandType::SET_OUTPUT_ENABLED:
+        case CommandType::SET_SEND_OUTPUT_ENABLED:
             {
-                auto typed_cmd = static_cast<SetOutputEnabledCommand *>(cmd_msg);
-                ASSERT_EQ(false, typed_cmd->data());
+                auto typed_cmd = static_cast<SetSendOutputEnabledCommand *>(cmd_msg);
+                ASSERT_FALSE(typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_RAW_OUTPUT_ENABLED:
+        case CommandType::SET_SEND_RAW_INPUT_ENABLED:
             {
-                auto typed_cmd = static_cast<SetRawOutputEnabledCommand *>(cmd_msg);
-                ASSERT_EQ(true, typed_cmd->data());
+                auto typed_cmd = static_cast<SetSendRawInputEnabledCommand *>(cmd_msg);
+                ASSERT_TRUE(typed_cmd->data());
             };
             break;
 

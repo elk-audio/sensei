@@ -43,8 +43,8 @@ enum class CommandType
     SET_INPUT_SCALE_RANGE_HIGH,
     // Output Backend Commands
     SET_PIN_NAME,
-    SET_OUTPUT_ENABLED,
-    SET_RAW_OUTPUT_ENABLED,
+    SET_SEND_OUTPUT_ENABLED,
+    SET_SEND_RAW_INPUT_ENABLED,
     SET_OSC_OUTPUT_BASE_PATH,
     SET_OSC_OUTPUT_RAW_PATH,
     SET_OSC_OUTPUT_HOST,
@@ -189,18 +189,17 @@ SENSEI_DECLARE_COMMAND(SetPinNameCommand,
                        "Set Pin Name",
                        CommandDestination::OUTPUT_BACKEND);
 
-SENSEI_DECLARE_COMMAND(SetOutputEnabledCommand,
-                       CommandType::SET_OUTPUT_ENABLED,
+SENSEI_DECLARE_COMMAND(SetSendOutputEnabledCommand,
+                       CommandType::SET_SEND_OUTPUT_ENABLED,
                        bool,
                        "Set Output Enabled",
                        CommandDestination::OUTPUT_BACKEND);
 
-SENSEI_DECLARE_COMMAND(SetRawOutputEnabledCommand,
-                       CommandType::SET_RAW_OUTPUT_ENABLED,
+SENSEI_DECLARE_COMMAND(SetSendRawInputEnabledCommand,
+                       CommandType::SET_SEND_RAW_INPUT_ENABLED,
                        bool,
                        "Set Raw Output Enabled",
                        CommandDestination::OUTPUT_BACKEND);
-
 
 SENSEI_DECLARE_COMMAND(SetOSCOutputBasePathCommand,
                        CommandType::SET_OSC_OUTPUT_BASE_PATH,

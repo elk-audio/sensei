@@ -54,23 +54,8 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
 
 CommandErrorCode StandardStreamBackend::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
-    CommandErrorCode status = OutputBackend::apply_command(cmd);
+    // no specific commands for this subclass
 
-    // command was consumed by parent or some error has occurred while doing it
-    if ((status == CommandErrorCode::OK) || (status != CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE) )
-    {
-        return status;
-    }
-
-    switch(cmd->type())
-    {
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
-
-    }
-
-    return status;
+    return OutputBackend::apply_command(cmd);
 
 }
