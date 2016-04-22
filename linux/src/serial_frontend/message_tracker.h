@@ -14,6 +14,8 @@
 #include <mutex>
 #include <map>
 
+#include <iostream>
+
 #include "message/base_command.h"
 
 namespace sensei {
@@ -41,7 +43,7 @@ public:
     void store(std::unique_ptr<Command>&& message, uint64_t uuid);
 
     /**
-     * @brief Check the status of a received packet against the list of un-acknowledged packets.
+     * @brief Check the status of a received packet against un-acknowledged packets.
      * If it was logged, it will automatically be removed from the list after this call.
      */
     bool ack(uint64_t identifier);
@@ -53,6 +55,7 @@ public:
 
     /**
     * @brief Returns the message_in_transit for resend or for destruction
+     * Returns nullptr if there is no cached message.
     */
     std::unique_ptr<Command> get_cached_message();
 

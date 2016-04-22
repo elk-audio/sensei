@@ -48,6 +48,7 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
         _out_queue(out_queue),
         _read_thread_state(running_state::STOPPED),
         _write_thread_state(running_state::STOPPED),
+        _ready_to_send(true),
         _connected(false),
         _muted(false),
         _verify_acks(true)
@@ -64,6 +65,7 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
 */
 SerialFrontend::~SerialFrontend()
 {
+    _ready_to_send = true;
     stop();
     sp_close(_port);
     sp_free_port(_port);
@@ -127,6 +129,7 @@ int SerialFrontend::setup_port(const std::string &name)
 {
     sp_return ret;
     ret = sp_get_port_by_name(name.c_str(), &_port);
+
     if (ret != SP_OK)
     {
         return ret;
@@ -136,7 +139,8 @@ int SerialFrontend::setup_port(const std::string &name)
     {
         return ret;
     }
-    /* Turn of flow control, otherwise some byte patterns can be interpreted as controls codes */
+    /* Turn of flow control, otherwise some byte patterns can be interpreted as
+     * control codes and data can be lost */
     ret = sp_set_flowcontrol(_port, SP_FLOWCONTROL_NONE);
     if (ret != SP_OK)
     {
@@ -179,10 +183,8 @@ void SerialFrontend::read_loop()
                 // failed to create BaseMessage, TODO - log error
             }
         }
-        if (ret < 0)
-        {
-            std::cout << "Read returned: " << ret << std::endl;
-        }
+
+        handle_timeouts();
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _read_thread_state = running_state::STOPPED;
@@ -200,22 +202,26 @@ void SerialFrontend::write_loop()
         {
             continue;
         }
+
         std::unique_lock<std::mutex> lock(_send_mutex);
-        if (_verify_acks && _ready_to_send == false)
+        if (_verify_acks && !_ready_to_send )
         {
             _ready_to_send_notifier.wait(lock);
-            _ready_to_send = false;
         }
         std::unique_ptr<Command> message = next_message_to_send();
         const sSenseiDataPacket* packet = create_send_command(message.get());
         if (packet)
         {
             int ret = sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
-            if (_verify_acks && ret == SP_OK)
+            if (_verify_acks && ret > 0)
             {
-                std::cout << "Sent command " << packet->cmd << std::endl;
                 _message_tracker.store(std::move(message), extract_uuid(packet));
+                _ready_to_send = false;
             }
+        }
+        else
+        {
+            // Failed to create teensy packet TODO - Log error here
         }
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
@@ -231,24 +237,27 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
     {
         case SENSEI_CMD::VALUE:
         {
-            const teensy_digital_value_msg *m = reinterpret_cast<const teensy_digital_value_msg *>(&packet->payload);
+            const teensy_value_msg *m = reinterpret_cast<const teensy_value_msg *>(&packet->payload);
             switch (m->pin_type)
             {
                 case PIN_DIGITAL_INPUT:
                     return _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
 
                 case PIN_ANALOG_INPUT:
-                    const teensy_analog_value_msg* a = reinterpret_cast<const teensy_analog_value_msg *>(&packet->payload);
-                    return _message_factory.make_analog_value(a->pin_id, a->value, packet->timestamp);
+                    return _message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp);
+
+                default:
+                    return nullptr;
             }
-            break;
         }
         case SENSEI_CMD::ACK:
         {
             return process_ack(packet);
         }
+        default:
+            // Unknown command TODO - log error
+            return nullptr;
     }
-    return nullptr;
 }
 
 
@@ -261,14 +270,13 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
         std::unique_lock<std::mutex> lock(_send_mutex);
         if (_message_tracker.ack(uuid))
         {
-            std::cout << "Got ack for packed: " << uuid << std::endl;
             _ready_to_send = true;
             _ready_to_send_notifier.notify_one();
         }
     }
     if (ack->status != SENSEI_ERROR_CODE::OK)
     {
-        std::cout << "Got bad ack: " << translate_teensy_status_code(ack->status) << std::endl;
+        //std::cout << "Got bad ack: " << translate_teensy_status_code(ack->status) << " for cmd " << (int)ack->cmd << std::endl;
 
         // TODO - log the error here as only some error codes result in an error message being sent
         switch (ack->status)
@@ -290,7 +298,7 @@ std::unique_ptr<Command> SerialFrontend::next_message_to_send()
     auto message = _message_tracker.get_cached_message();
     if (message)
     {
-        return message;
+        return std::move(message);
     }
     return _in_queue->pop();
 }
@@ -314,7 +322,7 @@ void SerialFrontend::handle_timeouts()
         }
         case timeout::TIMED_OUT:
         {
-            std::cout << "Timed out waiting for ack! " << std::endl;
+            /* Resend logic is handled when next_message_to_send() is called. */
             _ready_to_send = true;
             _ready_to_send_notifier.notify_one();
             break;
@@ -328,12 +336,10 @@ void SerialFrontend::handle_timeouts()
 
 /*
  * Create teensy command packet from a Command message.
- * Note that message goes out of scope and is destroyed when the function returns
  */
 const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
 {
     assert(message->base_type() == MessageType::COMMAND);
-
     switch (message->type())
     {
         case CommandType::SET_SAMPLING_RATE:
@@ -348,6 +354,13 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
             return _packet_factory.make_config_pintype_cmd(cmd->sensor_index(),
                                                            cmd->timestamp(),
                                                            cmd->data());
+        }
+        case CommandType::SET_ENABLED:
+        {
+            auto cmd = static_cast<SetEnabledCommand *>(message);
+            return _packet_factory.make_config_enabled_cmd(cmd->sensor_index(),
+                                                               cmd->timestamp(),
+                                                               cmd->data());
         }
         case CommandType::SET_SENDING_MODE:
         {
@@ -399,6 +412,7 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
                                                             cmd->data());
         }
         default:
+            // Command type we don't handle TODO - log error
             return nullptr;
     }
 }

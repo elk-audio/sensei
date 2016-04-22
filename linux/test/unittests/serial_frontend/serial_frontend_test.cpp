@@ -69,7 +69,7 @@ TEST_F(SerialFrontendTest, test_create_serial_message)
 TEST_F(SerialFrontendTest, test_process_serial_packet)
 {
     sSenseiDataPacket packet;
-    teensy_analog_value_msg* payload = reinterpret_cast<teensy_analog_value_msg*>(packet.payload);
+    teensy_value_msg* payload = reinterpret_cast<teensy_value_msg*>(packet.payload);
     packet.cmd = SENSEI_CMD::VALUE;
     packet.sub_cmd = 0;
     packet.timestamp = 1234;
@@ -91,9 +91,3 @@ TEST_F(SerialFrontendTest, test_mute_function)
     _module_under_test.mute(true);
     EXPECT_TRUE(_module_under_test._muted);
 }
-
-
-/*TEST_F(SerialFrontendTest, test_instanciation_again)
-{
-    EXPECT_TRUE(_module_under_test.connected());
-}*/

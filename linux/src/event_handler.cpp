@@ -25,34 +25,44 @@ void EventHandler::init(const std::string port_name,
     {
         fprintf(stderr, "Error: serial connection failed.\n");
     }
-
-    // Start serial reading thread
+    _output_backend->enable_send_raw_input(true);
+    _frontend->verify_acks(true);
     _frontend->run();
 
+    _frontend->initialize(1,64,32,1234);
+
+    // Start serial reading thread
+
 #ifdef SENSEI_TEST_WITHOUT_CONFIG_BACKEND
-    _frontend->verify_acks(false);
 
     // temp hack: fill some configuration into event queue
     //            to test system with provided dumps
     MessageFactory factory;
 
     // Pin 0-15 : digital input
-    for (int pin_idx = 0; pin_idx < 16; pin_idx++)
+    for (int pin_idx = 0; pin_idx < 64; pin_idx++)
     {
         _event_queue.push(factory.make_set_pin_type_command(pin_idx, PinType::DIGITAL_INPUT));
+        _event_queue.push(factory.make_set_sending_mode_command(pin_idx, SendingMode::ON_VALUE_CHANGED, 101));
         _event_queue.push(factory.make_set_pin_name(pin_idx, std::string("digitaLINO")));
         _event_queue.push(factory.make_set_enabled_command(pin_idx, true));
     }
 
     // Pin 32-55 : analog input
-    for (int pin_idx = 32; pin_idx < 56; pin_idx++)
+    for (int pin_idx =63; pin_idx < 63; pin_idx++)
     {
-        _event_queue.push(factory.make_set_pin_type_command(pin_idx, PinType::ANALOG_INPUT));
+        _event_queue.push(factory.make_set_pin_type_command(pin_idx, PinType::ANALOG_INPUT, 100));
+     /*   _event_queue.push(factory.make_set_sending_mode_command(pin_idx, SendingMode::ON_VALUE_CHANGED, 101));
+        _event_queue.push(factory.make_set_lowpass_cutoff_command(pin_idx, 50, 102));
+        _event_queue.push(factory.make_set_lowpass_filter_order_command(pin_idx, 4));
+        _event_queue.push(factory.make_set_adc_bit_resolution_command(pin_idx, 12));
+        _event_queue.push(factory.make_set_slider_mode_enabled_command(pin_idx, false));
+        _event_queue.push(factory.make_set_slider_threshold_command(pin_idx, 0));*/
         _event_queue.push(factory.make_set_pin_name(pin_idx, std::string("analoGINO")));
         _event_queue.push(factory.make_set_invert_enabled_command(pin_idx, false));
-        _event_queue.push(factory.make_set_input_scale_range_low(pin_idx, 35));
-        _event_queue.push(factory.make_set_input_scale_range_high(pin_idx, 2300));
-        _event_queue.push(factory.make_set_enabled_command(pin_idx, true));
+        _event_queue.push(factory.make_set_input_scale_range_low(pin_idx, 0));
+        _event_queue.push(factory.make_set_input_scale_range_high(pin_idx, 1000));
+        _event_queue.push(factory.make_set_enabled_command(pin_idx, true, 103));
     }
 #endif
 

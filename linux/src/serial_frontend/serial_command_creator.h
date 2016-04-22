@@ -35,6 +35,7 @@ public:
     const sSenseiDataPacket* make_set_sampling_rate_cmd(uint32_t timestamp, float sampling_rate);
     const sSenseiDataPacket* make_get_value_cmd(int pin_id, uint32_t timestamp);
     const sSenseiDataPacket* make_config_pintype_cmd(int pin_id, uint32_t timestamp, PinType type);
+    const sSenseiDataPacket* make_config_enabled_cmd(int pin_id, uint32_t timestamp, bool enabled);
     const sSenseiDataPacket* make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, SendingMode mode);
     const sSenseiDataPacket* make_config_delta_ticks_cmd(int pin_id, uint32_t timestamp, int ticks);
     const sSenseiDataPacket*make_config_adc_bitres_cmd(int pin_id, uint32_t timestamp, int bits);

@@ -4,8 +4,6 @@ namespace sensei {
 namespace serial_frontend {
 
 
-
-
 MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries) :
         _timeout(timeout),
         _max_retries(max_retries),
