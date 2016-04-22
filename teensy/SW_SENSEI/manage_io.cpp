@@ -32,7 +32,7 @@ void ManageIO::hardwareAcquisition()
 				switch(getPinType(idxPin))
 				{
 				   case ePinType::PIN_DISABLE:
-					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
 				   break;
 
 				   case ePinType::PIN_DIGITAL_INPUT:
