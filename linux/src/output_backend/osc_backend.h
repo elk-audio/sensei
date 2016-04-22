@@ -14,7 +14,7 @@ namespace output_backend {
 class OSCBackend : public OutputBackend
 {
 public:
-    OSCBackend(const int max_n_sensors=64);
+    OSCBackend(const int max_n_input_pins=64);
 
     ~OSCBackend()
     {}

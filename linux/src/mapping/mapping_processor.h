@@ -19,7 +19,7 @@ class MappingProcessor
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(MappingProcessor);
 
-    MappingProcessor(const int max_n_sensors = 64);
+    MappingProcessor(const int max_n_input_pins = 64);
 
     CommandErrorCode apply_command(const Command *cmd);
 
@@ -28,7 +28,7 @@ public:
     void process(Value* value, output_backend::OutputBackend* backend);
 
 private:
-    int _max_n_sensors;
+    int _max_n_pins;
     std::vector<std::unique_ptr<BaseSensorMapper>> _mappers;
 };
 

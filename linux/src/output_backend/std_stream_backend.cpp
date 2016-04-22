@@ -6,8 +6,8 @@
 using namespace sensei;
 using namespace sensei::output_backend;
 
-StandardStreamBackend::StandardStreamBackend(const int max_n_sensors) :
-        OutputBackend(max_n_sensors)
+StandardStreamBackend::StandardStreamBackend(const int max_n_input_pins) :
+        OutputBackend(max_n_input_pins)
 {
 }
 

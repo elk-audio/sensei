@@ -14,7 +14,7 @@ namespace output_backend {
 class StandardStreamBackend : public OutputBackend
 {
 public:
-    StandardStreamBackend(const int max_n_sensors=64);
+    StandardStreamBackend(const int max_n_input_pins=64);
 
     ~StandardStreamBackend()
     {}

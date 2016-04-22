@@ -16,13 +16,13 @@ namespace output_backend {
 class OutputBackend
 {
 public:
-    OutputBackend(const int max_n_sensors = 64) :
-            _max_n_sensors(max_n_sensors),
+    OutputBackend(const int max_n_input_pins = 64) :
+            _max_n_pins(max_n_input_pins),
             _send_output_active(true),
             _send_raw_input_active(false)
     {
-        _pin_names.resize(static_cast<size_t>(_max_n_sensors));
-        _pin_types.resize(static_cast<size_t>(_max_n_sensors));
+        _pin_names.resize(static_cast<size_t>(_max_n_pins));
+        _pin_types.resize(static_cast<size_t>(_max_n_pins));
         std::fill(_pin_types.begin(), _pin_types.end(), PinType::UNDEFINED);
     }
 
@@ -75,7 +75,7 @@ public:
     virtual void send(const OutputValue* transformed_value, const Value* raw_input_value) = 0;
 
 protected:
-    int _max_n_sensors;
+    int _max_n_pins;
     bool _send_output_active;
     bool _send_raw_input_active;
     std::vector<std::string> _pin_names;

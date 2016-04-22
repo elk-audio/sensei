@@ -34,16 +34,16 @@ std::string concatenate_osc_paths(std::string a, std::string b)
 
 }; // anonymous namespace
 
-OSCBackend::OSCBackend(const int max_n_sensors) :
-    OutputBackend(max_n_sensors),
+OSCBackend::OSCBackend(const int max_n_input_pins) :
+    OutputBackend(max_n_input_pins),
     _base_path("sensors"),
     _base_raw_path("raw_input"),
     _host("localhost"),
     _port(23023)
 
 {
-    _full_out_paths.resize(static_cast<size_t>(max_n_sensors));
-    _full_raw_paths.resize(static_cast<size_t>(max_n_sensors));
+    _full_out_paths.resize(static_cast<size_t>(max_n_input_pins));
+    _full_raw_paths.resize(static_cast<size_t>(max_n_input_pins));
     _compute_full_paths();
     _compute_address();
 }

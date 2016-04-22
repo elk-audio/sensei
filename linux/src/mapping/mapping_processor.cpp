@@ -12,10 +12,10 @@
 using namespace sensei;
 using namespace sensei::mapping;
 
-MappingProcessor::MappingProcessor(const int max_n_sensors) :
-    _max_n_sensors(max_n_sensors)
+MappingProcessor::MappingProcessor(const int max_n_input_pins) :
+    _max_n_pins(max_n_input_pins)
 {
-    _mappers.resize(_max_n_sensors);
+    _mappers.resize(_max_n_pins);
     std::fill(_mappers.begin(), _mappers.end(), nullptr);
 }
 
@@ -25,7 +25,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
     //       possibly without requiring SetPinType to be the 1st command received
 
     int sensor_index = cmd->index();
-    if ( (sensor_index < 0) || (sensor_index > (_max_n_sensors-1)) )
+    if ( (sensor_index < 0) || (sensor_index > (_max_n_pins-1)) )
     {
         return CommandErrorCode::INVALID_PIN_INDEX;
     }
