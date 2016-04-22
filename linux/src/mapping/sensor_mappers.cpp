@@ -5,11 +5,11 @@
  * These are instantiated internally as components of MappingProcessor
  */
 
-#include <algorithm>
 #include <cassert>
 
 #include "mapping/sensor_mappers.h"
 #include "message/message_factory.h"
+#include "utils.h"
 
 namespace {
 
@@ -18,21 +18,6 @@ static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
-// TODO: find a better home for these
-
-template<typename Derived, typename Base>
-std::unique_ptr<Derived>
-static_unique_ptr_cast( std::unique_ptr<Base>&& p )
-{
-    auto d = static_cast<Derived *>(p.release());
-    return std::unique_ptr<Derived>(d);
-}
-
-template <typename T>
-T clip(const T& x, const T& lower, const T& upper)
-{
-    return std::max(lower, std::min(x, upper));
-}
 
 }; // Anonymous namespace
 
@@ -120,17 +105,8 @@ DigitalSensorMapper::~DigitalSensorMapper()
 
 CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
-    CommandErrorCode status = BaseSensorMapper::apply_command(cmd);
-
-    // command was consumed by parent or some error has occurred while doing it
-    if ((status == CommandErrorCode::OK) || (status != CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE) )
-    {
-        return status;
-    }
-
-    // Handle digital-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    status = CommandErrorCode::OK;
+    // Handle digital-specific configurations
+    CommandErrorCode status = CommandErrorCode::OK;
     switch(cmd->type())
     {
     case CommandType::SET_PIN_TYPE:
@@ -146,7 +122,15 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 
     }
 
-    return status;
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 
 }
 
@@ -208,17 +192,9 @@ AnalogSensorMapper::~AnalogSensorMapper()
 
 CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
-    CommandErrorCode status = BaseSensorMapper::apply_command(cmd);
-
-    // command was consumed by parent or some error has occurred while doing it
-    if ((status == CommandErrorCode::OK) || (status != CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE) )
-    {
-        return status;
-    }
 
     // Handle analog-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    status = CommandErrorCode::OK;
+    CommandErrorCode  status = CommandErrorCode::OK;
     switch(cmd->type())
     {
     // External
@@ -293,7 +269,15 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 
     }
 
-    return status;
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 
 }
 
@@ -309,8 +293,8 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
     *out_iterator = factory.make_set_slider_mode_enabled_command(_sensor_index, _slider_mode_enabled);
     *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
-    *out_iterator = factory.make_set_input_scale_range_low(_sensor_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high(_sensor_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
 }
 
 void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* backend)

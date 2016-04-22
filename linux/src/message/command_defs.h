@@ -43,6 +43,12 @@ enum class CommandType
     SET_INPUT_SCALE_RANGE_HIGH,
     // Output Backend Commands
     SET_PIN_NAME,
+    SET_SEND_OUTPUT_ENABLED,
+    SET_SEND_RAW_INPUT_ENABLED,
+    SET_OSC_OUTPUT_BASE_PATH,
+    SET_OSC_OUTPUT_RAW_PATH,
+    SET_OSC_OUTPUT_HOST,
+    SET_OSC_OUTPUT_PORT,
     N_COMMAND_TAGS
 };
 
@@ -78,6 +84,7 @@ enum class CommandErrorCode
     INVALID_RANGE,
     CLIP_WARNING,
     INVALID_PIN_INDEX,
+    INVALID_URL,
     N_COMMAND_ERROR_CODES
 };
 
@@ -91,67 +98,69 @@ SENSEI_DECLARE_COMMAND(SetSamplingRateCommand,
                        CommandType::SET_SAMPLING_RATE,
                        float,
                        "Set Sampling Rate",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetEnabledCommand,
                        CommandType::SET_ENABLED,
                        bool,
                        "Set Enabled",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetPinTypeCommand,
                        CommandType::SET_PIN_TYPE,
                        PinType,
                        "Set Pin Type",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND
+                           | CommandDestination::INTERNAL
+                           | CommandDestination::OUTPUT_BACKEND);
 
 SENSEI_DECLARE_COMMAND(SetSendingModeCommand,
                        CommandType::SET_SENDING_MODE,
-                       SendingMode ,
+                       SendingMode,
                        "Set Sending Mode",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetSendingDeltaTicksCommand,
                        CommandType::SET_SENDING_DELTA_TICKS,
                        int,
                        "Set Sending Delta Ticks",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
                        CommandType::SET_ADC_BIT_RESOLUTION,
                        int,
                        "Set ADC Bit Resolution",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetLowpassFilterOrderCommand,
                        CommandType::SET_LOWPASS_FILTER_ORDER,
                        int,
                        "Set Lowpass Filter order",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetLowpassCutoffCommand,
                        CommandType::SET_LOWPASS_CUTOFF,
                        float,
                        "Set Lowpass Cutoff",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetSliderModeEnabledCommand,
                        CommandType::SET_SLIDER_MODE_ENABLED,
                        bool,
                        "Set Slider Mode Enabled",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
                        CommandType::SET_SLIDER_THRESHOLD,
                        int,
                        "Set Slider Threshold",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SendDigitalPinValueCommand,
                        CommandType::SEND_DIGITAL_PIN_VALUE,
                        bool,
                        "Send Digital Pin Value",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 // Internal commands
 
@@ -179,6 +188,42 @@ SENSEI_DECLARE_COMMAND(SetPinNameCommand,
                        CommandType::SET_PIN_NAME,
                        std::string,
                        "Set Pin Name",
+                       CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetSendOutputEnabledCommand,
+                       CommandType::SET_SEND_OUTPUT_ENABLED,
+                       bool,
+                       "Set Output Enabled",
+                       CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetSendRawInputEnabledCommand,
+                       CommandType::SET_SEND_RAW_INPUT_ENABLED,
+                       bool,
+                       "Set Raw Output Enabled",
+                       CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetOSCOutputBasePathCommand,
+                       CommandType::SET_OSC_OUTPUT_BASE_PATH,
+                       std::string,
+                       "Set OSC output base path",
+                       CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetOSCOutputRawPathCommand,
+                       CommandType::SET_OSC_OUTPUT_RAW_PATH,
+                       std::string,
+                       "Set OSC output raw path",
+                       CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetOSCOutputHostCommand,
+                       CommandType::SET_OSC_OUTPUT_HOST,
+                       std::string,
+                       "Set OSC output host",
+                       CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetOSCOutputPortCommand,
+                       CommandType::SET_OSC_OUTPUT_PORT,
+                       int,
+                       "Set OSC output port",
                        CommandDestination::OUTPUT_BACKEND);
 
 ////////////////////////////////////////////////////////////////////////////////

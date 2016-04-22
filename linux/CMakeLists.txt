@@ -6,7 +6,7 @@ project(sensei)
 ####################
 
 # Global flags
-set(PROJECT_CXX_FLAGS "-Wall -Wextra -std=c++11 -fno-rtti")
+set(PROJECT_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-rtti")
 set(PROJECT_LINK_FLAGS "")
 
 # Platform specific stuff
@@ -32,7 +32,8 @@ set(COMPILATION_UNITS src/main.cpp
                       src/mapping/sensor_mappers.cpp
                       src/mapping/mapping_processor.cpp
                       src/event_handler.cpp
-                      src/output_backend/std_stream_backend.cpp)
+                      src/output_backend/std_stream_backend.cpp
+                      src/output_backend/osc_backend.cpp)
 
 # Enumerate all the headers separately so that CLion can index them
 
@@ -54,7 +55,8 @@ set(EXTRA_CLION_SOURCES src/message/base_message.h
                         src/output_backend/std_stream_backend.h
                         src/locked_queue.h
                         src/synchronized_queue.h
-                        src/event_handler.h)
+                        src/event_handler.h
+                        src/output_backend/osc_backend.h src/utils.h)
 
 set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" )
 

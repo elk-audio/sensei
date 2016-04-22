@@ -3,13 +3,12 @@
 
 #include <memory>
 #include <string>
-#include <output_backend/std_stream_backend.h>
 
 #include "synchronized_queue.h"
 #include "mapping/mapping_processor.h"
 #include "message/message_factory.h"
 #include "serial_frontend/serial_frontend.h"
-#include "output_backend/output_backend.h"
+#include <output_backend/output_backend.h>
 
 namespace sensei {
 
@@ -40,7 +39,7 @@ private:
     // Sub-components instances
     std::unique_ptr<serial_frontend::SerialFrontend> _frontend;
     std::unique_ptr<mapping::MappingProcessor> _processor;
-    std::unique_ptr<output_backend::StandardStreamBackend> _output_backend;
+    std::unique_ptr<output_backend::OutputBackend> _output_backend;
 };
 
 }; // namespace sensei

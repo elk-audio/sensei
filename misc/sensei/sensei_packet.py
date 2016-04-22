@@ -108,7 +108,7 @@ class BaseMessage(object):
         return repr_str
 
     def _create_payload(self):
-        init_values = [ pd.byte_value(self.__getattribute__(k)) for k, pd in self.payload_map.items() ]
+        init_values = [ pd.byte_value(self.__getattribute__(pd.name)) for pd in self.payload_descriptors ]
         init_values.extend(np.zeros(self.zeropad_size, dtype=np.uint8))
         self.payload = struct.pack(self.payload_fmt, *init_values)
 
