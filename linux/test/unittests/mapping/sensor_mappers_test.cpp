@@ -191,8 +191,10 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_slider_mode_enabled_command(_sensor_idx, _slider_mode_enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low(_sensor_idx, _input_scale_low))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high(_sensor_idx, _input_scale_high))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
+                                                                                                _input_scale_low))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
+                                                                                                 _input_scale_high))));
 
         for (auto const& cmd : config_cmds)
         {
@@ -306,14 +308,16 @@ TEST_F(TestAnalogSensorMapper, test_config_fail)
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_slider_threshold_command(_sensor_idx, 123456)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low(_sensor_idx, -20)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx, -20)));
     ASSERT_EQ(CommandErrorCode::INVALID_RANGE, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high(_sensor_idx, -20)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx, -20)));
     ASSERT_EQ(CommandErrorCode::INVALID_RANGE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low(_sensor_idx, _input_scale_high+1)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
+                                                                                       _input_scale_high + 1)));
     ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high(_sensor_idx, _input_scale_low-1)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
+                                                                                        _input_scale_low - 1)));
     ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
 }
 
@@ -330,7 +334,8 @@ TEST_F(TestAnalogSensorMapper, test_process)
     if ( ((_input_scale_low + _input_scale_high) % 2 ) == 1 )
     {
         _input_scale_low += 1;
-        ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low(_sensor_idx, _input_scale_low)));
+        ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
+                                                                                           _input_scale_low)));
         ASSERT_EQ(CommandErrorCode::OK, ret);
     }
     auto input_msg = factory.make_analog_value(_sensor_idx,

@@ -309,8 +309,8 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
     *out_iterator = factory.make_set_slider_mode_enabled_command(_sensor_index, _slider_mode_enabled);
     *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
-    *out_iterator = factory.make_set_input_scale_range_low(_sensor_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high(_sensor_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
 }
 
 void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
