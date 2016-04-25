@@ -9,23 +9,30 @@
 namespace sensei {
 namespace config {
 
-class JsonConfiguration : public base_configuration
+class JsonConfiguration : public BaseConfiguration
 {
 public:
-    JsonConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue) : base_configuration(queue)
-    { }
+    JsonConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& file) :
+            BaseConfiguration(queue, file)
+    {
+    }
 
-    JsonConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& file);
+    ~JsonConfiguration()
+    {
 
-    ~JsonConfiguration();
+    }
+    /*
+     * Open file, parse json and put commands in queue
+     */
+    void read() override;
+
 private:
-    void apply_configuration(const std::string& file_name);
-    int handle_sensor(const Json::Value& sensor);
+    int handle_pin(const Json::Value &pin);
     int handle_backend(const Json::Value& backend);
+    int handle_osc_backend(const Json::Value& backend, int id);
+    int handle_stdout_backend(const Json::Value& backend, int id);
 
     MessageFactory _message_factory;
-
-    std::string _file_name;
 };
 
 

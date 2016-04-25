@@ -3,8 +3,10 @@
 		{
 			"id" : 0,
 			"type" : "osc",
-			"prefix" : "/sensei/sensors",
-			"port" : 123
+            "host" : "localhost",
+			"port" : 23023,
+			"base_path" : "/sensei/sensors",
+            "base_raw_input_path" : "/sensei/raw_input"
 		}
 	],
 
@@ -12,22 +14,22 @@
 	"sensors" : [
 		{
 			"id" : 1,
-			"pin_type" : 1,
+			"pin_type" : "analog_input",
 			"enabled": true,
 			"mode" : "continuous",
-			"delta_tics" : 4,
+			"delta_ticks" : 4,
 			"adc_resolution" : 8,
 			"lowpass_cutoff" : 300,
 			"lowpass_order" : 4,
 			"slider_mode" : false,
 			"slider_threshold" : 10
-			},
+        },
 		{
 			"id" : 0,
-			"pin_type" : 0,
+			"pin_type" : "digital_input",
 			"enabled": true,
-			"mode" : "continuous",
-			"delta_tics" : 4
-			}
+			"mode" : "on_value_changed",
+			"delta_ticks" : 4
+        }
 	]
 }

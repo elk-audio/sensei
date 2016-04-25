@@ -15,13 +15,18 @@
 namespace sensei {
 namespace config {
 
-class base_configuration
+class BaseConfiguration
 {
 
-
-
 public:
-    virtual ~base_configuration()
+    BaseConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& source) :
+            _queue(queue),
+            _source(source),
+            _enabled(false)
+    {
+    }
+
+    virtual ~BaseConfiguration()
     {
     }
 
@@ -30,7 +35,7 @@ public:
     * updates will be converted into internal commands and put in the queue. If
     * not, they will be silently dropped.
     *
-    * @param [in] enabled Sets updates enabled/disabled
+    * @param [in] enabled sets updates enabled/disabled
     */
     void updates(bool enabled)
     {
@@ -46,6 +51,11 @@ public:
     }
 
     /**
+     * @brief Read configuration and construct messages from it
+     */
+    virtual void read()
+    {}
+    /**
      * @brief Receive configuration data for exporting to file/socket/etc
      */
     // TODO - Think about input variables here
@@ -53,14 +63,8 @@ public:
 
 
 protected:
-    base_configuration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue) :
-            _queue(queue),
-            _enabled(false)
-    {
-
-    }
-
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
+    std::string _source;
     bool _enabled;
 
 
