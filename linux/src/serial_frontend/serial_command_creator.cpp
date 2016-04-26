@@ -38,6 +38,14 @@ const sSenseiDataPacket* SerialCommandCreator::make_initialize_system_cmd(uint32
     return &_cmd_buffer;
 }
 
+const sSenseiDataPacket* SerialCommandCreator::make_enable_sending_packets_cmd(uint32_t timestamp, bool enabled)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::ENABLE_SENDING_PACKETS);
+    _cmd_buffer.sub_cmd = EMPTY;
+    _cmd_buffer.payload[0] = enabled;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
+    return &_cmd_buffer;
+}
 
 const sSenseiDataPacket* SerialCommandCreator::make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value)
 {
@@ -106,7 +114,8 @@ const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(int pin_id, ui
 
 const sSenseiDataPacket* SerialCommandCreator::make_config_enabled_cmd(uint32_t timestamp, bool enabled)
 {
-    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::ENABLE_SENDING_PACKETS);
+    // TODO - implement this properly when there is support in the fw for this command
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::HELLO);
     _cmd_buffer.sub_cmd = EMPTY;
     _cmd_buffer.payload[0] = enabled;
     _cmd_buffer.crc = calculate_crc(&_cmd_buffer);

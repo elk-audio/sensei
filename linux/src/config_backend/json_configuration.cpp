@@ -73,7 +73,7 @@ ConfigStatus JsonConfiguration::read()
         }
     }
     /* The last commands enables sending of packets */
-    _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, false)));
+    _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, true)));
     return ConfigStatus::OK;
 }
 

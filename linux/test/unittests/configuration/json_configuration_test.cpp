@@ -125,5 +125,5 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
 
     /* Lastly we should have an EnableSendingPackets command to turn on all pins */
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::ENABLE_SENDING_PACKETS, EnableSendingPacketsCommand, index, (int)false);
+    EXPECT_COMMAND(m, CommandType::ENABLE_SENDING_PACKETS, EnableSendingPacketsCommand, index, (int)true);
 }
