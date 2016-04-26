@@ -8,7 +8,8 @@
 #include "mapping/mapping_processor.h"
 #include "message/message_factory.h"
 #include "serial_frontend/serial_frontend.h"
-#include <output_backend/output_backend.h>
+#include "output_backend/output_backend.h"
+#include "config_backend/base_configuration.h"
 
 namespace sensei {
 
@@ -22,11 +23,17 @@ public:
     {}
 
     void init(const std::string port_name,
-              const int max_n_sensors);
+              const int max_n_pins,
+              const std::string config_file);
 
     void handle_events();
 
     void deinit();
+
+    void reload_config()
+    {
+        _config_backend->read();
+    }
 
 private:
     void _handle_command(Command* cmd);
@@ -40,6 +47,7 @@ private:
     std::unique_ptr<serial_frontend::SerialFrontend> _frontend;
     std::unique_ptr<mapping::MappingProcessor> _processor;
     std::unique_ptr<output_backend::OutputBackend> _output_backend;
+    std::unique_ptr<config::BaseConfiguration> _config_backend;
 };
 
 }; // namespace sensei
