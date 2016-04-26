@@ -45,16 +45,16 @@ void JsonConfiguration::read()
     const Json::Value& sensors = config["sensors"];
     if (backends.isArray())
     {
-        for(const Json::Value& i : backends)
+        for(const Json::Value& backend : backends)
         {
-            handle_backend(i);
+            handle_backend(backend);
         }
     }
     if (sensors.isArray())
     {
-        for(const Json::Value& i : sensors)
+        for(const Json::Value& sensor : sensors)
         {
-            handle_pin(i);
+            handle_pin(sensor);
         }
     }
 }

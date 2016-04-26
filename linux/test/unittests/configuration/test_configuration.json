@@ -2,18 +2,27 @@
 	"backends" : [
 		{
 			"id" : 0,
+			"enabled": true,
+			"raw_input_enabled": false,
 			"type" : "osc",
             "host" : "localhost",
 			"port" : 23023,
 			"base_path" : "/sensei/sensors",
             "base_raw_input_path" : "/sensei/raw_input"
-		}
+		},
+        {
+            "id" : 1,
+            "enabled": true,
+            "raw_input_enabled": true,
+            "type" : "stdout"
+        }
 	],
 
 
 	"sensors" : [
 		{
 			"id" : 1,
+			"name": "ribbon_1",
 			"pin_type" : "analog_input",
 			"enabled": true,
 			"mode" : "continuous",
@@ -22,10 +31,13 @@
 			"lowpass_cutoff" : 300,
 			"lowpass_order" : 4,
 			"slider_mode" : false,
-			"slider_threshold" : 10
-        },
+			"slider_threshold" : 10,
+			"inverted" : false,
+			"range" : [10 , 240]
+		},
 		{
 			"id" : 0,
+			"name": "button_0",
 			"pin_type" : "digital_input",
 			"enabled": true,
 			"mode" : "on_value_changed",
