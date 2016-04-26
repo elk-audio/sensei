@@ -4,7 +4,7 @@
 
 #include "message/message_factory.h"
 #include "base_configuration.h"
-//#include "message/base_message.h"
+#include <json/json.h>
 
 namespace sensei {
 namespace config {
