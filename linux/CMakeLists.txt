@@ -63,7 +63,6 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/event_handler.h
                         src/utils.h)
 
-
 set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
 
 #########################
@@ -77,6 +76,11 @@ set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/third-party/install/liblo/include"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/")
 
+# /usr/local doesn't get added by default in Mac OS X
+if (APPLE)
+    set(INCLUDE_DIRS "${INCLUDE_DIRS}" /usr/local/include)
+endif()
+
 include_directories(${INCLUDE_DIRS})
 
 #################################
@@ -86,6 +90,10 @@ include_directories(${INCLUDE_DIRS})
 set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
                    "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a"
                    pthread jsoncpp)
+
+if (APPLE)
+    link_directories(/usr/local/lib)
+endif()
 
 #############################################
 #  Subdirectory projects                    #

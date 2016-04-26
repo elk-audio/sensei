@@ -26,15 +26,16 @@ SET(TEST_FILES unittests/sample_test.cpp
 #  Include directories relative to test  #
 ##########################################
 
-include_directories(${PROJECT_SOURCE_DIR}/test/gtest_1_7_0/include)
+set(INCLUDE_DIRS "${INCLUDE_DIRS}"
+                 ${PROJECT_SOURCE_DIR}/test/gtest_1_7_0/include)
+
+include_directories(${INCLUDE_DIRS})
 
 #################################
 #  Statically linked libraries  #
 #################################
 
-set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
-                   "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a"
-                   jsoncpp
+set(LINK_LIBRARIES "${LINK_LIBRARIES}"
                    gtest
                    gtest_main)
 
