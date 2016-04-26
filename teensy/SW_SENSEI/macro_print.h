@@ -44,4 +44,4 @@ if (systemSettings.debugMode)                                                   
 }                                                                                                                       \
 }                                                                                                                       \
 
-#endif // MACRO_H
+#endif // MACRO_PRINT_H
