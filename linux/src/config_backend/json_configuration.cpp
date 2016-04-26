@@ -42,6 +42,9 @@ ConfigStatus JsonConfiguration::read()
     {
         return ConfigStatus::PARSING_ERROR;
     }
+
+    /* Start by disabling all pins to mute the board while sending the configuration commands */
+    _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, false)));
     const Json::Value& backends = config["backends"];
     const Json::Value& sensors = config["sensors"];
     ConfigStatus status;
@@ -68,7 +71,9 @@ ConfigStatus JsonConfiguration::read()
             }
         }
     }
-    return  ConfigStatus::OK;
+    /* The last commands enables sending of packets */
+    _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, false)));
+    return ConfigStatus::OK;
 }
 
 /*

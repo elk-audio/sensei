@@ -55,6 +55,8 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     /* First we should receive the backend related commands */
     std::unique_ptr<BaseMessage> m = std::move(_queue.pop());
     int index = 0;
+    EXPECT_COMMAND(m, CommandType::ENABLE_SENDING_PACKETS, EnableSendingPacketsCommand, index, (int)false);
+    m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SEND_OUTPUT_ENABLED, SetSendOutputEnabledCommand, index, (int)true);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SEND_RAW_INPUT_ENABLED, SetSendRawInputEnabledCommand, index, (int)false);
@@ -117,8 +119,11 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int)true);
     m = std::move(_queue.pop());
-
     EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::ON_VALUE_CHANGED);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
+
+    /* Lastly we should have an EnableSendingPackets command to turn on all pins */
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::ENABLE_SENDING_PACKETS, EnableSendingPacketsCommand, index, (int)false);
 }
