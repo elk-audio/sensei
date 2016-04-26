@@ -27,6 +27,7 @@ Json::Value read_configuration(std::ifstream& file)
     return config;
 }
 
+
 /*
  * Open _source as a file and parse is as a json file
  */
@@ -76,6 +77,7 @@ ConfigStatus JsonConfiguration::read()
     return ConfigStatus::OK;
 }
 
+
 /*
  * Read all existing configuration keys for a single pin. And create
  * and queue configuration commands from them.
@@ -100,9 +102,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& name = pin["name"];
     if (name.isString())
     {
-        auto m = _message_factory.make_set_pin_name_command(pin_id,
-                                                            name.asString(),
-                                                            0);
+        auto m = _message_factory.make_set_pin_name_command(pin_id, name.asString());
         _queue->push(std::move(m));
     }
 
@@ -114,21 +114,15 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
         const std::string& pin_type_str = pin_type.asString();
         if (pin_type_str == "analog_input")
         {
-            m = _message_factory.make_set_pin_type_command(pin_id,
-                                                           PinType::ANALOG_INPUT,
-                                                           0);
+            m = _message_factory.make_set_pin_type_command(pin_id, PinType::ANALOG_INPUT);
         }
         else if (pin_type_str == "digital_input")
         {
-            m = _message_factory.make_set_pin_type_command(pin_id,
-                                                           PinType::DIGITAL_INPUT,
-                                                           0);
+            m = _message_factory.make_set_pin_type_command(pin_id, PinType::DIGITAL_INPUT);
         }
         else if (pin_type_str == "digital_output")
         {
-            m = _message_factory.make_set_pin_type_command(pin_id,
-                                                           PinType::DIGITAL_OUTPUT,
-                                                           0);
+            m = _message_factory.make_set_pin_type_command(pin_id, PinType::DIGITAL_OUTPUT);
         }
         else
         {
@@ -141,9 +135,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& enabled = pin["enabled"];
     if (enabled.isBool())
     {
-        auto m = _message_factory.make_set_enabled_command(pin_id,
-                                                           enabled.asBool(),
-                                                           0);
+        auto m = _message_factory.make_set_enabled_command(pin_id, enabled.asBool());
         _queue->push(std::move(m));
     }
 
@@ -154,16 +146,12 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
         const std::string& mode_str = mode.asString();
         if (mode_str == "continuous")
         {
-            auto m = _message_factory.make_set_sending_mode_command(pin_id,
-                                                                    SendingMode::CONTINUOUS,
-                                                                    0);
+            auto m = _message_factory.make_set_sending_mode_command(pin_id, SendingMode::CONTINUOUS);
             _queue->push(std::move(m));
         }
         else if (mode_str == "on_value_changed")
         {
-            auto m = _message_factory.make_set_sending_mode_command(pin_id,
-                                                                    SendingMode::ON_VALUE_CHANGED,
-                                                                    0);
+            auto m = _message_factory.make_set_sending_mode_command(pin_id, SendingMode::ON_VALUE_CHANGED);
             _queue->push(std::move(m));
         }
         else
@@ -176,9 +164,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& ticks = pin["delta_ticks"];
     if (ticks.isInt())
     {
-        auto m = _message_factory.make_set_sending_delta_ticks_command(pin_id,
-                                                                       ticks.asInt(),
-                                                                       0);
+        auto m = _message_factory.make_set_sending_delta_ticks_command(pin_id, ticks.asInt());
         _queue->push(std::move(m));
     }
 
@@ -186,9 +172,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& res = pin["adc_resolution"];
     if (res.isInt())
     {
-        auto m = _message_factory.make_set_adc_bit_resolution_command(pin_id,
-                                                                      res.asInt(),
-                                                                      0);
+        auto m = _message_factory.make_set_adc_bit_resolution_command(pin_id, res.asInt());
         _queue->push(std::move(m));
     }
 
@@ -196,9 +180,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& cutoff = pin["lowpass_cutoff"];
     if (cutoff.isNumeric())
     {
-        auto m = _message_factory.make_set_lowpass_cutoff_command(pin_id,
-                                                                  cutoff.asFloat(),
-                                                                  0);
+        auto m = _message_factory.make_set_lowpass_cutoff_command(pin_id, cutoff.asFloat());
         _queue->push(std::move(m));
     }
 
@@ -206,9 +188,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& order = pin["lowpass_order"];
     if (order.isInt())
     {
-        auto m = _message_factory.make_set_lowpass_filter_order_command(pin_id,
-                                                                        order.asInt(),
-                                                                        0);
+        auto m = _message_factory.make_set_lowpass_filter_order_command(pin_id, order.asInt());
         _queue->push(std::move(m));
     }
 
@@ -216,9 +196,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& slider_mode = pin["slider_mode"];
     if (slider_mode.isBool())
     {
-        auto m = _message_factory.make_set_slider_mode_enabled_command(pin_id,
-                                                                       slider_mode.asBool(),
-                                                                       0);
+        auto m = _message_factory.make_set_slider_mode_enabled_command(pin_id, slider_mode.asBool());
         _queue->push(std::move(m));
     }
 
@@ -226,9 +204,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& threshold = pin["slider_threshold"];
     if (threshold.isInt())
     {
-        auto m = _message_factory.make_set_slider_threshold_command(pin_id,
-                                                                    threshold.asInt(),
-                                                                    0);
+        auto m = _message_factory.make_set_slider_threshold_command(pin_id, threshold.asInt());
         _queue->push(std::move(m));
     }
 
@@ -236,9 +212,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& inverted = pin["inverted"];
     if (inverted.isBool())
     {
-        auto m = _message_factory.make_set_invert_enabled_command(pin_id,
-                                                                  inverted.asBool(),
-                                                                  0);
+        auto m = _message_factory.make_set_invert_enabled_command(pin_id, inverted.asBool());
         _queue->push(std::move(m));
     }
 
@@ -246,12 +220,8 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& range = pin["range"];
     if (range.isArray() && range.size() >= 2)
     {
-        auto low = _message_factory.make_set_input_scale_range_low_command(pin_id,
-                                                                           range[0].asInt(),
-                                                                           0);
-        auto high = _message_factory.make_set_input_scale_range_high_command(pin_id,
-                                                                             range[1].asInt(),
-                                                                             0);
+        auto low = _message_factory.make_set_input_scale_range_low_command(pin_id, range[0].asInt());
+        auto high = _message_factory.make_set_input_scale_range_high_command(pin_id, range[1].asInt());
         _queue->push(std::move(low));
         _queue->push(std::move(high));
 
@@ -280,17 +250,13 @@ ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend)
     const Json::Value& enabled = backend["enabled"];
     if (enabled.isBool())
     {
-        auto m = _message_factory.make_set_send_output_enabled_command(backend_id,
-                                                                       enabled.asBool(),
-                                                                       0);
+        auto m = _message_factory.make_set_send_output_enabled_command(backend_id, enabled.asBool());
         _queue->push(std::move(m));
     }
     const Json::Value& raw_input_enabled = backend["raw_input_enabled"];
     if (raw_input_enabled.isBool())
     {
-        auto m = _message_factory.make_set_send_raw_input_enabled_command(backend_id,
-                                                                         raw_input_enabled.asBool(),
-                                                                         0);
+        auto m = _message_factory.make_set_send_raw_input_enabled_command(backend_id, raw_input_enabled.asBool());
         _queue->push(std::move(m));
     }
 
@@ -307,6 +273,7 @@ ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend)
     return ConfigStatus::OK ;
 }
 
+
 /*
  * Handle configuration specific to OSC backend
  */
@@ -316,9 +283,7 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
     const Json::Value& host = backend["host"];
     if (host.isString())
     {
-        auto m = _message_factory.make_set_osc_output_host_command(id,
-                                                                   host.asString(),
-                                                                   0);
+        auto m = _message_factory.make_set_osc_output_host_command(id, host.asString());
         _queue->push(std::move(m));
     }
 
@@ -326,27 +291,21 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
     const Json::Value& port = backend["port"];
     if (port.isInt())
     {
-        auto m = _message_factory.make_set_osc_output_port_command(id,
-                                                                   port.asInt(),
-                                                                   0);
+        auto m = _message_factory.make_set_osc_output_port_command(id, port.asInt());
         _queue->push(std::move(m));
     }
     /* read base path configuration */
     const Json::Value& path = backend["base_path"];
     if (path.isString())
     {
-        auto m = _message_factory.make_set_osc_output_base_path_command(id,
-                                                                        path.asString(),
-                                                                        0);
+        auto m = _message_factory.make_set_osc_output_base_path_command(id, path.asString());
         _queue->push(std::move(m));
     }
     /* read base path for raw inputs  */
     const Json::Value& raw_path = backend["base_raw_input_path"];
     if (raw_path.isString())
     {
-        auto m = _message_factory.make_set_osc_output_raw_path_command(id,
-                                                                       raw_path.asString(),
-                                                                       0);
+        auto m = _message_factory.make_set_osc_output_raw_path_command(id, raw_path.asString());
         _queue->push(std::move(m));
     }
     return ConfigStatus::OK;
