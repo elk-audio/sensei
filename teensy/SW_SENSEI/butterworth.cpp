@@ -18,10 +18,12 @@ void Butterworth::createFilterCoefficients(int order, FilterType Fs, FilterType 
 	FilterType k0_numer = 0.0;
 	FilterType k0_denom = 0.0;
 
-	for (int i = 0; i < order + 1; ++i){
+	for (int i = 0; i < order + 1; ++i)
+	{
 		k0_numer += _b_coeffs[i].real();
 		k0_denom += _a_coeffs[i].real();
 	}
+
 	FilterType k0 = k0_numer / k0_denom;
 
 	for (int i = 0; i < order + 1; i++)
@@ -42,14 +44,16 @@ void Butterworth::zeros2coeffs(Complex * zeros, Complex * coeffs, int size)
 	int * b = new int[size + 1];
 	memset(b, 0, sizeof(int)*(size + 1));
 	int i = 0;
-	while (!b[size]){
+	while (!b[size])
+	{
 		i = 0;
 		while (b[i]) b[i++] = 0;
 		b[i] = 1;
 
 		int subset_size = 0;
 		Complex summand = 1.0;
-		for (i = 0; i < size; i++){
+		for (i = 0; i < size; i++)
+		{
 			if (b[i]){
 				summand *= zeros[i];
 				++subset_size;
@@ -60,7 +64,8 @@ void Butterworth::zeros2coeffs(Complex * zeros, Complex * coeffs, int size)
 
 	delete[] b;
 
-	for (int i = (size + 1) % 2; i < size; i += 2){
+	for (int i = (size + 1) % 2; i < size; i += 2)
+	{
 		coeffs[i] = -coeffs[i];
 	}
 
@@ -70,7 +75,8 @@ void Butterworth::zeros2coeffs(Complex * zeros, Complex * coeffs, int size)
 void Butterworth::create_z_poles(Complex * poles, int order, FilterType cutoff)//cutoff Hz
 {
 	FilterType arg;
-	for (int i = 0; i < order; ++i){
+	for (int i = 0; i < order; ++i)
+	{
 		arg = M_PI*(2 * i + order + 1) / 2 / order;
 
 		poles[i] =  Complex(std::cos(arg), std::sin(arg));
@@ -81,7 +87,8 @@ void Butterworth::create_z_poles(Complex * poles, int order, FilterType cutoff)/
 
 void Butterworth::create_z_zeros(Complex * zeros, int order)
 {
-	for (int i = 0; i < order; ++i){
+	for (int i = 0; i < order; ++i)
+	{
 		zeros[i] = Complex(-1.0, 0.0);
 	}
 }
@@ -93,7 +100,8 @@ FilterType Butterworth::warp_freq(FilterType freq, FilterType Fs)
 
 void Butterworth::p2z(Complex * p, Complex * z, int size, FilterType Fs)
 {
-	for (int i = 0; i < size; ++i){
+	for (int i = 0; i < size; ++i)
+	{
 		z[i] = (Complex(2 * Fs, 0.0) + p[i]) / (Complex(2 * Fs, 0.0) - p[i]);
 	}
 }
@@ -101,7 +109,8 @@ void Butterworth::p2z(Complex * p, Complex * z, int size, FilterType Fs)
 void Butterworth::inverse_poly(Complex * coeffs, int size)
 {
 	Complex denom = coeffs[size - 1];
-	for (int i = 0; i < size; ++i){
+	for (int i = 0; i < size; ++i)
+	{
 		coeffs[i] /= denom;
 	}
 	reverse(coeffs, coeffs + size);
