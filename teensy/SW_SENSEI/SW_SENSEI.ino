@@ -1,6 +1,10 @@
-// -----------------------------
-//          SW_SENSEI
-// -----------------------------
+/**
+ * @file SW_SENSEI.ino
+ * @brief Main SW_SENSEI
+ * @author Simone Minto
+ * @copyright MIND Music Labs AB, Stockholm
+ * @date 2016-03-10
+ */
 
 // TODO
 // - filterCoeff
@@ -37,10 +41,9 @@ QueueHandle_t hQueueCOMtoRT_DATA = 0;
 QueueHandle_t hQueueRTtoCOM_PIN = 0;
 QueueHandle_t hQueueRTtoCOM_IMU = 0;
 
-
 void setup()
 {
-    //Hardware
+    //Hardware setup
     pinMode(DS, OUTPUT);
     pinMode(ST, OUTPUT);
     pinMode(SH, OUTPUT);
@@ -80,6 +83,7 @@ void setup()
     SerialDebug.begin(115200);
     SerialDebug.setTimeout(250);
 
+    //SPI Communication
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
     SPI.setClockDivider(SPI_CLOCK_DIV2);
@@ -106,6 +110,7 @@ void setup()
     xTaskCreate(vTaskCOM,"task_COM",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskCOM);
     xTaskCreate(vTaskLED,"task_LED",configMINIMAL_STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskLED);
 
+    //Print
     SerialDebug.println(" -----------------------------");
     SerialDebug.println("|         SW_SENSEI           |");
     SerialDebug.println(" -----------------------------");
@@ -120,6 +125,7 @@ void setup()
 
     delay(100);
 
+    //Start FreeRTOS scheduler
     vTaskStartScheduler();
 
     while (1);
