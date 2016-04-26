@@ -58,6 +58,8 @@ TEST(MessagesTest, test_external_command_creation)
     msg_queue.push_back(factory.make_set_slider_mode_enabled_command(8, true));
     msg_queue.push_back(factory.make_set_slider_threshold_command(9, 9));
     msg_queue.push_back(factory.make_send_digital_value_command(10, true));
+    msg_queue.push_back(factory.make_enable_sending_packets_command(0, true));
+
 
     // Parse messages in queue
     for (auto const& msg : msg_queue)
@@ -140,6 +142,13 @@ TEST(MessagesTest, test_external_command_creation)
             };
             break;
 
+        case CommandType::ENABLE_SENDING_PACKETS:
+            {
+                auto typed_cmd = static_cast<EnableSendingPacketsCommand *>(cmd_msg);
+                ASSERT_EQ(true, typed_cmd->data());
+            };
+            break;
+
         default:
             FAIL();
         }
@@ -206,6 +215,7 @@ TEST(MessagesTest, test_output_backend_command_creation)
 
     std::vector<std::unique_ptr<BaseMessage>> msg_queue;
 
+    msg_queue.push_back(factory.make_set_backend_type_command(0, BackendType::OSC));
     msg_queue.push_back(factory.make_set_pin_name_command(0, std::string("pippo")));
     msg_queue.push_back(factory.make_set_send_output_enabled_command(0, false));
     msg_queue.push_back(factory.make_set_send_raw_input_enabled_command(0, true));
@@ -225,6 +235,13 @@ TEST(MessagesTest, test_output_backend_command_creation)
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
         {
+
+        case CommandType::SET_BACKEND_TYPE:
+            {
+                auto typed_cmd = static_cast<SetBackendTypeCommand *>(cmd_msg);
+                ASSERT_EQ(BackendType::OSC, typed_cmd->data());
+            };
+            break;
 
         case CommandType::SET_PIN_NAME:
             {

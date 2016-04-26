@@ -37,11 +37,13 @@ enum class CommandType
     SET_SLIDER_MODE_ENABLED,
     SET_SLIDER_THRESHOLD,
     SEND_DIGITAL_PIN_VALUE,
+    ENABLE_SENDING_PACKETS,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_SCALE_RANGE_LOW,
     SET_INPUT_SCALE_RANGE_HIGH,
     // Output Backend Commands
+    SET_BACKEND_TYPE,
     SET_PIN_NAME,
     SET_SEND_OUTPUT_ENABLED,
     SET_SEND_RAW_INPUT_ENABLED,
@@ -62,6 +64,17 @@ enum class PinType
     ANALOG_INPUT,
     UNDEFINED,
     N_PIN_TYPES
+};
+
+/**
+ * @brief Backend Types
+ */
+enum class BackendType
+{
+    NONE,
+    OSC,
+    STD_STREAM,
+    N_BACKEND_TYPES
 };
 
 /**
@@ -162,6 +175,12 @@ SENSEI_DECLARE_COMMAND(SendDigitalPinValueCommand,
                        "Send Digital Pin Value",
                        CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
+SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
+                       CommandType::ENABLE_SENDING_PACKETS,
+                       bool,
+                       "Enable Sending Packets",
+                       CommandDestination::SERIAL_FRONTEND);
+
 // Internal commands
 
 SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
@@ -183,6 +202,12 @@ SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
                        CommandDestination::INTERNAL);
 
 // Output Backend commands
+
+SENSEI_DECLARE_COMMAND(SetBackendTypeCommand,
+                       CommandType::SET_BACKEND_TYPE,
+                       BackendType,
+                       "Set Backend Type",
+                       CommandDestination::OUTPUT_BACKEND);
 
 SENSEI_DECLARE_COMMAND(SetPinNameCommand,
                        CommandType::SET_PIN_NAME,
