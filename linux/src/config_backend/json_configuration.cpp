@@ -15,47 +15,60 @@ namespace sensei {
 namespace config {
 
 
-Json::Value read_configuration(const std::string& file_name)
+Json::Value read_configuration(std::ifstream& file)
 {
     Json::Value config;
     Json::Reader reader;
-    std::ifstream file(file_name);
-    if (file.good())
+    bool parse_ok = reader.parse(file, config, false);
+    if (!parse_ok)
     {
-        bool parse_ok = reader.parse(file, config, false);
-        if (!parse_ok)
-        {
-            // TODO - Log the error instead of just printing it.
-            std::cout << "error parsing file" << reader.getFormattedErrorMessages() << std::endl;
-        }
-    }
-    else
-    {
-        std::cout << "error opening file!!" << std::endl;
+        // TODO - Log the error  << reader.getFormattedErrorMessages() << std::endl;
     }
     return config;
 }
 
-
-void JsonConfiguration::read()
+/*
+ * Open _source as a file and parse is as a json file
+ */
+ConfigStatus JsonConfiguration::read()
 {
-    Json::Value config = std::move(read_configuration(_source));
+    std::ifstream file(_source);
+    if (!file.good())
+    {
+        return ConfigStatus::IO_ERROR;
+    }
+    Json::Value config = std::move(read_configuration(file));
+    if (config.isNull())
+    {
+        return ConfigStatus::PARSING_ERROR;
+    }
     const Json::Value& backends = config["backends"];
     const Json::Value& sensors = config["sensors"];
+    ConfigStatus status;
+
     if (backends.isArray())
     {
         for(const Json::Value& backend : backends)
         {
-            handle_backend(backend);
+            status = handle_backend(backend);
+            if (status != ConfigStatus::OK)
+            {
+                return status;
+            }
         }
     }
     if (sensors.isArray())
     {
         for(const Json::Value& sensor : sensors)
         {
-            handle_pin(sensor);
+            status = handle_pin(sensor);
+            if (status != ConfigStatus::OK)
+            {
+                return status;
+            }
         }
     }
+    return  ConfigStatus::OK;
 }
 
 /*
@@ -64,7 +77,7 @@ void JsonConfiguration::read()
  * "id" is the only required key, also note that pin type must be
  * handled as the first key.
  */
-int JsonConfiguration::handle_pin(const Json::Value &pin)
+ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
 {
     int pin_id;
     const Json::Value& id = pin["id"];
@@ -74,8 +87,18 @@ int JsonConfiguration::handle_pin(const Json::Value &pin)
     }
     else
     {
-        /* pin id is a mandatory parameter */
-        return -1;
+        /* id is a mandatory parameter */
+        return ConfigStatus::PARAMETER_ERROR;
+    }
+
+    /* read pin name */
+    const Json::Value& name = pin["name"];
+    if (name.isString())
+    {
+        auto m = _message_factory.make_set_pin_name_command(pin_id,
+                                                            name.asString(),
+                                                            0);
+        _queue->push(std::move(m));
     }
 
     /* read pin type configuration */
@@ -102,10 +125,11 @@ int JsonConfiguration::handle_pin(const Json::Value &pin)
                                                            PinType::DIGITAL_OUTPUT,
                                                            0);
         }
-        if (m)
+        else
         {
-            _queue->push(std::move(m));
+            return ConfigStatus::PARAMETER_ERROR;
         }
+        _queue->push(std::move(m));
     }
 
     /* read pin enabled/disabled configuration */
@@ -136,6 +160,10 @@ int JsonConfiguration::handle_pin(const Json::Value &pin)
                                                                     SendingMode::ON_VALUE_CHANGED,
                                                                     0);
             _queue->push(std::move(m));
+        }
+        else
+        {
+            return ConfigStatus::PARAMETER_ERROR;
         }
     }
 
@@ -198,14 +226,39 @@ int JsonConfiguration::handle_pin(const Json::Value &pin)
                                                                     0);
         _queue->push(std::move(m));
     }
-    return 0;
+
+    /* read inverted configuration */
+    const Json::Value& inverted = pin["inverted"];
+    if (inverted.isBool())
+    {
+        auto m = _message_factory.make_set_invert_enabled_command(pin_id,
+                                                                  inverted.asBool(),
+                                                                  0);
+        _queue->push(std::move(m));
+    }
+
+    /* read range configuration */
+    const Json::Value& range = pin["range"];
+    if (range.isArray() && range.size() >= 2)
+    {
+        auto low = _message_factory.make_set_input_scale_range_low_command(pin_id,
+                                                                           range[0].asInt(),
+                                                                           0);
+        auto high = _message_factory.make_set_input_scale_range_high_command(pin_id,
+                                                                             range[1].asInt(),
+                                                                             0);
+        _queue->push(std::move(low));
+        _queue->push(std::move(high));
+
+    }
+    return ConfigStatus::OK ;
 }
 
 
 /*
  * Handle a backend configuration
  */
-int JsonConfiguration::handle_backend(const Json::Value& backend)
+ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend)
 {
     int backend_id;
     const Json::Value& id = backend["id"];
@@ -216,30 +269,43 @@ int JsonConfiguration::handle_backend(const Json::Value& backend)
     else
     {
         /* id is a mandatory parameter */
-        return -1;
+        return ConfigStatus::PARAMETER_ERROR;
     }
 
-    /* read backend type configuration */
+    const Json::Value& enabled = backend["enabled"];
+    if (enabled.isBool())
+    {
+        auto m = _message_factory.make_set_send_output_enabled_command(backend_id,
+                                                                       enabled.asBool(),
+                                                                       0);
+        _queue->push(std::move(m));
+    }
+    const Json::Value& raw_input_enabled = backend["raw_input_enabled"];
+    if (raw_input_enabled.isBool())
+    {
+        auto m = _message_factory.make_set_send_raw_input_enabled_command(backend_id,
+                                                                         raw_input_enabled.asBool(),
+                                                                         0);
+        _queue->push(std::move(m));
+    }
+
+    /* Type specific configuration */
     const Json::Value& backend_type = backend["type"];
     if (backend_type.isString())
     {
-        std::unique_ptr<BaseMessage> m = nullptr;
         const std::string& backend_type_str = backend_type.asString();
         if (backend_type_str == "osc")
         {
             return handle_osc_backend(backend, backend_id);
         }
-        else if (backend_type_str == "stdout")
-        {
-            return handle_stdout_backend(backend, backend_id);
-        }
     }
-
-    return 0;
+    return ConfigStatus::OK ;
 }
 
-
-int JsonConfiguration::handle_osc_backend(const Json::Value& backend, int id)
+/*
+ * Handle configuration specific to OSC backend
+ */
+ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, int id)
 {
     /* read host configuration */
     const Json::Value& host = backend["host"];
@@ -278,21 +344,7 @@ int JsonConfiguration::handle_osc_backend(const Json::Value& backend, int id)
                                                                        0);
         _queue->push(std::move(m));
     }
-    return 0;
-}
-
-int JsonConfiguration::handle_stdout_backend(const Json::Value& backend, int id)
-{
-    /* Add more keys here if needed, this is mainly a placeholder to supress errors */
-    const Json::Value& host = backend["host"];
-    if (host.isString())
-    {
-        auto m = _message_factory.make_set_osc_output_host_command(id,
-                                                                   host.asString(),
-                                                                   0);
-        _queue->push(std::move(m));
-    }
-    return 0;
+    return ConfigStatus::OK;
 }
 
 } // end namespace config

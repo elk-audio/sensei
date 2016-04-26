@@ -9,13 +9,12 @@ using namespace config;
 
 static const std::string test_file = "../../../test/unittests/configuration/test_configuration.json";
 
-TEST(JsonConfigurationTestInternal, test_read_configuration)
-{
-    Json::Value config = read_configuration(test_file);
-    EXPECT_FALSE(config.isNull());
-    EXPECT_TRUE(config.isObject());
-}
-
+/* Macro to reduce the footprint when verifying a single command */
+#define EXPECT_COMMAND(message, commandtype, commandclass, id, expected_value) { \
+    Command* c = static_cast<Command *>(message.get()); \
+    ASSERT_EQ(commandtype, c->type()); \
+    EXPECT_EQ(id, c->index());  \
+    EXPECT_EQ(expected_value, static_cast<commandclass *>(c)->data()); }
 
 
 class JsonConfigurationTest : public ::testing::Test
@@ -36,119 +35,90 @@ protected:
     JsonConfiguration _module_under_test;
 };
 
+TEST_F(JsonConfigurationTest, test_invalid_file)
+{
+    JsonConfiguration test_module(&_queue, "/non/existing/file.json");
+    EXPECT_EQ(ConfigStatus::IO_ERROR, test_module.read());
+}
+
 /*
  * Parse a json config file and verify that all commands were created correctly
  */
-TEST_F(JsonConfigurationTest, test_apply_configuration)
+TEST_F(JsonConfigurationTest, test_read_configuration)
 {
     EXPECT_TRUE(_queue.empty());
-    _module_under_test.read();
-    ASSERT_FALSE(_queue.empty());
+    ConfigStatus status = _module_under_test.read();
+    EXPECT_EQ(ConfigStatus::OK, status);
+    EXPECT_FALSE(_queue.empty());
 
-    /* Noe verify the commands one by one */
+    /* Now verify the commands one by one */
     /* First we should receive the backend related commands */
     std::unique_ptr<BaseMessage> m = std::move(_queue.pop());
-    Command* c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_OSC_OUTPUT_HOST, c->type());
-    EXPECT_EQ(0, c->index());
-    EXPECT_EQ("localhost", static_cast<SetOSCOutputHostCommand*>(c)->data());
-
+    int index = 0;
+    EXPECT_COMMAND(m, CommandType::SET_SEND_OUTPUT_ENABLED, SetSendOutputEnabledCommand, index, (int)true);
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_OSC_OUTPUT_PORT, c->type());
-    EXPECT_EQ(0, c->index());
-    EXPECT_EQ(23023, static_cast<SetOSCOutputPortCommand*>(c)->data());
-
+    EXPECT_COMMAND(m, CommandType::SET_SEND_RAW_INPUT_ENABLED, SetSendRawInputEnabledCommand, index, (int)false);
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_OSC_OUTPUT_BASE_PATH, c->type());
-    EXPECT_EQ(0, c->index());
-    EXPECT_EQ("/sensei/sensors", static_cast<SetOSCOutputBasePathCommand*>(c)->data());
-
+    EXPECT_COMMAND(m, CommandType::SET_OSC_OUTPUT_HOST, SetOSCOutputHostCommand, index, "localhost");
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_OSC_OUTPUT_RAW_PATH, c->type());
-    EXPECT_EQ(0 , c->index());
-    EXPECT_EQ("/sensei/raw_input", static_cast<SetOSCOutputRawPathCommand*>(c)->data());
+    EXPECT_COMMAND(m, CommandType::SET_OSC_OUTPUT_PORT, SetOSCOutputPortCommand, index, 23023);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_OSC_OUTPUT_BASE_PATH, SetOSCOutputBasePathCommand, index, "/sensei/sensors");
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_OSC_OUTPUT_RAW_PATH, SetOSCOutputRawPathCommand, index, "/sensei/raw_input");
+
+    /* stdout backend */
+    index = 1;
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SEND_OUTPUT_ENABLED, SetSendOutputEnabledCommand, index, (int)true);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SEND_RAW_INPUT_ENABLED, SetSendRawInputEnabledCommand, index, (int)true);
 
 
     /* And now the sensors, first an analog input configuration */
+    /* HW setup */
+    index = 1;
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_PIN_TYPE, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_EQ(PinType::ANALOG_INPUT, static_cast<SetPinTypeCommand*>(c)->data());
+    EXPECT_COMMAND(m, CommandType::SET_PIN_NAME, SetPinNameCommand, index, "ribbon_1");
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_PIN_TYPE, SetPinTypeCommand, index, PinType::ANALOG_INPUT);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int)true);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::CONTINUOUS);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ADC_BIT_RESOLUTION, SetADCBitResolutionCommand, index, 8);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_LOWPASS_CUTOFF, SetLowpassCutoffCommand, index, 300);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_LOWPASS_FILTER_ORDER, SetLowpassFilterOrderCommand, index, 4);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SLIDER_MODE_ENABLED, SetSliderModeEnabledCommand, index, (int)false)
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SLIDER_THRESHOLD, SetSliderThresholdCommand, index, 10);
 
+    /* Mapping configuration */
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_ENABLED, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_EQ(true, static_cast<SetEnabledCommand*>(c)->data());
-
+    EXPECT_COMMAND(m, CommandType::SET_INVERT_ENABLED, SetInvertEnabledCommand, index, (int)false);
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_SENDING_MODE, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_EQ(SendingMode::CONTINUOUS, static_cast<SetSendingModeCommand*>(c)->data());
-
+    EXPECT_COMMAND(m, CommandType::SET_INPUT_SCALE_RANGE_LOW, SetInputScaleRangeLow, index, 10);
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_EQ(4, static_cast<SetSendingDeltaTicksCommand*>(c)->data());
-
+    EXPECT_COMMAND(m, CommandType::SET_INPUT_SCALE_RANGE_HIGH, SetInputScaleRangeHigh, index, 240);
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_ADC_BIT_RESOLUTION, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_EQ(8, static_cast<SetADCBitResolutionCommand*>(c)->data());
-
-    m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_LOWPASS_CUTOFF, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_FLOAT_EQ(300, static_cast<SetLowpassCutoffCommand*>(c)->data());
-
-    m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_LOWPASS_FILTER_ORDER, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_EQ(4, static_cast<SetLowpassFilterOrderCommand*>(c)->data());
-
-    m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_SLIDER_MODE_ENABLED, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_FALSE(static_cast<SetSliderModeEnabledCommand*>(c)->data());
-
-    m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_SLIDER_THRESHOLD, c->type());
-    EXPECT_EQ(1, c->index());
-    EXPECT_EQ(10, static_cast<SetSliderThresholdCommand*>(c)->data());
 
     /* Then a pin configured as a digital input */
+    /* HW setup */
+    index = 0;
+    EXPECT_COMMAND(m, CommandType::SET_PIN_NAME, SetPinNameCommand, index, "button_0");
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_PIN_TYPE, c->type());
-    EXPECT_EQ(0, c->index());
-    EXPECT_EQ(PinType::DIGITAL_INPUT, static_cast<SetPinTypeCommand*>(c)->data());
+    EXPECT_COMMAND(m, CommandType::SET_PIN_TYPE, SetPinTypeCommand, index, PinType::DIGITAL_INPUT);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int)true);
+    m = std::move(_queue.pop());
 
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::ON_VALUE_CHANGED);
     m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_ENABLED, c->type());
-    EXPECT_EQ(0, c->index());
-    EXPECT_EQ(true, static_cast<SetEnabledCommand*>(c)->data());
-
-    m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_SENDING_MODE, c->type());
-    EXPECT_EQ(0, c->index());
-    EXPECT_EQ(SendingMode::ON_VALUE_CHANGED, static_cast<SetSendingModeCommand*>(c)->data());
-
-    m = std::move(_queue.pop());
-    c = static_cast<Command*>(m.get());
-    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, c->type());
-    EXPECT_EQ(0, c->index());
-    EXPECT_EQ(4, static_cast<SetSendingDeltaTicksCommand*>(c)->data());
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
 }

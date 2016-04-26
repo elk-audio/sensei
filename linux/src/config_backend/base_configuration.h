@@ -15,6 +15,15 @@
 namespace sensei {
 namespace config {
 
+enum class ConfigStatus {
+    OK,
+    IO_ERROR,
+    PARSING_ERROR,
+    PARAMETER_ERROR,
+};
+
+
+
 class BaseConfiguration
 {
 
@@ -53,8 +62,10 @@ public:
     /**
      * @brief Read configuration and construct messages from it
      */
-    virtual void read()
-    {}
+    virtual ConfigStatus read()
+    {
+        return ConfigStatus::OK;
+    }
     /**
      * @brief Receive configuration data for exporting to file/socket/etc
      */
@@ -66,8 +77,6 @@ protected:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
     std::string _source;
     bool _enabled;
-
-
 
 };
 

@@ -24,13 +24,12 @@ public:
     /*
      * Open file, parse json and put commands in queue
      */
-    void read() override;
+    ConfigStatus read() override;
 
 private:
-    int handle_pin(const Json::Value &pin);
-    int handle_backend(const Json::Value& backend);
-    int handle_osc_backend(const Json::Value& backend, int id);
-    int handle_stdout_backend(const Json::Value& backend, int id);
+    ConfigStatus handle_pin(const Json::Value &pin);
+    ConfigStatus handle_backend(const Json::Value& backend);
+    ConfigStatus handle_osc_backend(const Json::Value& backend, int id);
 
     MessageFactory _message_factory;
 };
