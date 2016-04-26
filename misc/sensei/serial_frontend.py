@@ -1,5 +1,6 @@
 import time
 
+import numpy as np
 import serial
 
 import sensei_packet as sp
@@ -55,6 +56,15 @@ class SerialFrontend(object):
                          packet_type=None,
                          max_n_packets=1,
                          timeout_secs=DEFAULT_RECEIVE_TIMEOUT_SECS):
+        """Receive messages with given constraints.
+           Input:
+                packet_type   : receive only messages of the given type if specified
+                max_n_packets : stop after receiving the given number of messages
+                timeout_secs  : stop after the given time
+
+           Output:
+                list of received messages
+        """
         msgs_received = []
         cur_n_packets_received = 0
         start_time = time.time()
@@ -74,6 +84,32 @@ class SerialFrontend(object):
 
         self.n_packets_received += cur_n_packets_received
         return msgs_received
+
+    def acquire_signal(self, pin_idx, acquisition_time_secs=5):
+        """Acquire an analog signal from a given pin.
+           Input:
+                pin_idx               : pin idx (should be configured as ANALOG_INPUT)
+                acquisition_time_secs : time in seconds to receive data
+           Output:
+                timestamps, values : Numpy arrays with time and value coordinates
+        """
+        N_PACKETS_PER_TICK = 10
+        timestamps = []
+        values = []
+        self.enable_sending_packets(True)
+        start_time = time.time()
+        while ( (time.time() - start_time) < acquisition_time_secs ):
+            msgs = self.receive_messages('VALUE', N_PACKETS_PER_TICK)
+            pin_msgs = [m for m in msgs if (m.pin_idx == pin_idx)]
+            values.extend([m.value for m in pin_msgs])
+            timestamps.extend([m.packet.timestamp for m in pin_msgs])
+        self.enable_sending_packets(False)
+        values = np.array(values, dtype='float64')
+        timestamps = np.array(timestamps, dtype='float64')
+        timestamps -= timestamps[0]
+        timestamps *= 1.0e-6
+
+        return timestamps, values
 
     def _send_packet(self, packet):
         n_bytes_sent = self.port.write(packet.binary_dump)
