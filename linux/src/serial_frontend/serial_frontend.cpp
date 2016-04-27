@@ -55,6 +55,11 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
         _muted(false),
         _verify_acks(true)
 {
+#ifndef NDEBUG
+    /* Set the debug handler to NULL, this removes useless calls to getenv
+     * and speeds up the program   */
+    sp_set_debug_handler(nullptr);
+#endif
     if (setup_port(port_name) == SP_OK)
     {
         send_initialize_packet(INITIAL_TICK_DIVISOR, MAX_NUMBER_OFF_INPUT_PINS, MAX_NUMBER_OFF_OUTPUT_PINS, 0);
