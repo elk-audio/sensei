@@ -21,12 +21,12 @@ public:
     ~OutputBackendMockup()
     {}
 
-    CommandErrorCode apply_command(const Command* /*cmd*/) override
+    CommandErrorCode apply_command(std::unique_ptr<Command> /*cmd*/) override
     {
         return CommandErrorCode::OK;
     }
 
-    void send(const OutputValue* transformed_value, const Value* raw_input_value)
+    void send(std::unique_ptr<OutputValue> transformed_value, std::unique_ptr<Value> raw_input_value)
     {
         _last_output_value = transformed_value->value();
         _last_timestamp = transformed_value->timestamp();
@@ -35,14 +35,14 @@ public:
         {
         case ValueType::ANALOG:
         {
-            auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
+            auto typed_val = static_cast<const AnalogValue *>(raw_input_value.get());
             _last_raw_analogue_input = typed_val->value();
         }
             break;
 
         case ValueType::DIGITAL:
         {
-            auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
+            auto typed_val = static_cast<const DigitalValue *>(raw_input_value.get());
             _last_raw_digital_input = typed_val->value();
         }
             break;

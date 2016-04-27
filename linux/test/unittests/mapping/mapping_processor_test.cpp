@@ -30,9 +30,9 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(0, PinType::DIGITAL_INPUT))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(1, PinType::ANALOG_INPUT))));
 
-        for (auto const& c : config_cmds)
+        for (auto& cmd : config_cmds)
         {
-            _processor.apply_command(c.get());
+            _processor.apply_command(std::move(cmd));
         }
 
     }
@@ -94,12 +94,12 @@ TEST_F(TestMappingProcessor, undefined_mappers_return_empty_process)
     OutputBackendMockup backend;
 
     auto input_msg = factory.make_digital_value(2, false);
-    auto input_val = static_cast<Value*>(input_msg.get());
+    auto input_val = static_unique_ptr_cast<Value, BaseMessage>(std::move(input_msg));
 
     // Put some weird value out-of-range and verify that is not touched by process
     float fake_reference_value = -123456.789f;
     backend._last_output_value = fake_reference_value;
-    _processor.process(input_val, &backend);
+    _processor.process(std::move(input_val), &backend);
     ASSERT_FLOAT_EQ(fake_reference_value, backend._last_output_value);
 }
 

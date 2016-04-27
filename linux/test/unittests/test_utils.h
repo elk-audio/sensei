@@ -5,8 +5,7 @@
 #include "message/message_factory.h"
 
 
-#define CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
-#define CMD_PTR(msg) CMD_UPTR(msg).get()
+#define CMD_UPTR(msg) std::move(static_unique_ptr_cast<Command, BaseMessage>(msg))
 
 template<typename DerivedCommand>
 std::unique_ptr<DerivedCommand> extract_cmd_from(std::vector<std::unique_ptr<sensei::BaseMessage>>& msg_queue)

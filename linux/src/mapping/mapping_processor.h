@@ -21,11 +21,11 @@ public:
 
     MappingProcessor(const int max_n_input_pins = 64);
 
-    CommandErrorCode apply_command(const Command *cmd);
+    CommandErrorCode apply_command(std::unique_ptr<Command> cmd);
 
     void put_config_commands_into(CommandIterator out_iterator);
 
-    void process(Value* value, output_backend::OutputBackend* backend);
+    void process(std::unique_ptr<Value> value, output_backend::OutputBackend *backend);
 
 private:
     int _max_n_pins;

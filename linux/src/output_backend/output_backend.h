@@ -29,7 +29,7 @@ public:
     virtual ~OutputBackend()
     {}
 
-    virtual CommandErrorCode apply_command(const Command *cmd)
+    virtual CommandErrorCode apply_command(std::unique_ptr<Command> cmd)
     {
         CommandErrorCode status = CommandErrorCode::OK;
         auto pin_idx = cmd->index();
@@ -38,28 +38,28 @@ public:
         {
         case CommandType::SET_PIN_NAME:
             {
-                const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
+                const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd.get());
                 _pin_names[pin_idx] = typed_cmd->data();
             };
             break;
 
         case CommandType::SET_PIN_TYPE:
             {
-                const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd);
+                const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd.get());
                 _pin_types[pin_idx] = typed_cmd->data();
             };
             break;
 
         case CommandType::SET_SEND_OUTPUT_ENABLED:
             {
-                const auto typed_cmd = static_cast<const SetSendOutputEnabledCommand*>(cmd);
+                const auto typed_cmd = static_cast<const SetSendOutputEnabledCommand*>(cmd.get());
                 _send_output_active = typed_cmd->data();
             };
             break;
 
         case CommandType::SET_SEND_RAW_INPUT_ENABLED:
             {
-                const auto typed_cmd = static_cast<const SetSendRawInputEnabledCommand*>(cmd);
+                const auto typed_cmd = static_cast<const SetSendRawInputEnabledCommand*>(cmd.get());
                 _send_raw_input_active = typed_cmd->data();
             };
             break;
@@ -72,7 +72,7 @@ public:
         return status;
     }
 
-    virtual void send(const OutputValue* transformed_value, const Value* raw_input_value) = 0;
+    virtual void send(std::unique_ptr<OutputValue> transformed_value, std::unique_ptr<Value> raw_input_value) = 0;
 
 protected:
     int _max_n_pins;
