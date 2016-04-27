@@ -39,9 +39,9 @@ void EventHandler::deinit()
     _config_backend.reset(nullptr);
 }
 
-void EventHandler::handle_events()
+void EventHandler::handle_events(std::chrono::milliseconds wait_period)
 {
-    _event_queue.wait_for_data(std::chrono::milliseconds(0));
+    _event_queue.wait_for_data(wait_period);
     if (! _event_queue.empty())
     {
         std::unique_ptr<BaseMessage> event = _event_queue.pop();

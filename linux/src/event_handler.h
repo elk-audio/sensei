@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <chrono>
 
 #include "synchronized_queue.h"
 #include "mapping/mapping_processor.h"
@@ -26,7 +27,7 @@ public:
               const int max_n_pins,
               const std::string config_file);
 
-    void handle_events();
+    void handle_events(std::chrono::milliseconds wait_period);
 
     void deinit();
 

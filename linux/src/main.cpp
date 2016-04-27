@@ -1,5 +1,4 @@
 #include <vector>
-#include <thread>
 #include <fstream>
 #include <csignal>
 #include <cassert>
@@ -14,7 +13,7 @@
 
 #define SENSEI_DEFAULT_N_PINS               64
 #define SENSEI_DEFAULT_N_PINS_STR           "64"
-#define SENSEI_DEFAULT_SLEEP_PERIOD_MS      10
+#define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_SERIAL_DEVICE        "/dev/ttyS01"
 #define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
@@ -205,7 +204,7 @@ int main(int argc, char* argv[])
     }
 
     int n_pins = SENSEI_DEFAULT_N_PINS;
-    std::chrono::milliseconds sleep_period_ms{SENSEI_DEFAULT_SLEEP_PERIOD_MS};
+    std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
     std::string port_name = std::string(SENSEI_DEFAULT_SERIAL_DEVICE);
     std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
     for (int i=0; i<cl_parser.optionsCount(); i++)
@@ -241,7 +240,7 @@ int main(int argc, char* argv[])
                     SenseiArg::print_error("Option '", opt, "' invalid number\n");
                     return 1;
                 }
-                sleep_period_ms = std::chrono::milliseconds(parsed_int);
+                wait_period_ms = std::chrono::milliseconds(parsed_int);
             }
             break;
 
@@ -284,13 +283,12 @@ int main(int argc, char* argv[])
 
     while (main_loop_running)
     {
-        event_handler.handle_events();
+        event_handler.handle_events(wait_period_ms);
         if (config_reload_pending)
         {
             event_handler.reload_config();
             config_reload_pending = 0;
         }
-        std::this_thread::sleep_for(sleep_period_ms);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
