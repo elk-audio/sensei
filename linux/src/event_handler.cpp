@@ -42,7 +42,7 @@ void EventHandler::deinit()
 void EventHandler::handle_events(std::chrono::milliseconds wait_period)
 {
     _event_queue.wait_for_data(wait_period);
-    if (! _event_queue.empty())
+    while (! _event_queue.empty())
     {
         std::unique_ptr<BaseMessage> event = _event_queue.pop();
         switch(event->base_type())
