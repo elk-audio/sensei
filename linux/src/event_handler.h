@@ -37,8 +37,8 @@ public:
     }
 
 private:
-    void _handle_command(Command* cmd);
-    void _handle_error(Error* error);
+    void _handle_command(std::unique_ptr<Command> cmd);
+    void _handle_error(std::unique_ptr<Error> error);
 
     // Inter-modules communication queues
     SynchronizedQueue<std::unique_ptr<Command>> _to_frontend_queue;
