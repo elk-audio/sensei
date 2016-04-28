@@ -183,7 +183,10 @@ void SerialFrontend::read_loop()
                 // failed to create BaseMessage, TODO - log error
             }
         }
-        handle_timeouts();
+        if (!_ready_to_send)
+        {
+            handle_timeouts(); /* It's more efficient to not check this every time */
+        }
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _read_thread_state = running_state::STOPPED;
@@ -317,7 +320,7 @@ std::unique_ptr<Command> SerialFrontend::next_message_to_send()
  */
 void SerialFrontend::handle_timeouts()
 {
-    std::unique_lock<std::mutex> lock(_send_mutex);
+    std::lock_guard<std::mutex> lock(_send_mutex);
     switch (_message_tracker.timed_out())
     {
         case timeout::TIMED_OUT_PERMANENTLY:
