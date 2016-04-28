@@ -44,7 +44,7 @@ public:
      * or CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE
      * if command is not appropriate for configuring this sensor.
      */
-    virtual CommandErrorCode apply_command(std::unique_ptr<Command> cmd);
+    virtual CommandErrorCode apply_command(const Command *cmd);
 
     /**
      * @brief Fill the given container with a sequence of commands that match internal configuration.
@@ -62,7 +62,7 @@ public:
      * @param [in] value Input value coming from the serial frontend
      * @param [out] out_iterator Iterator to a collection to which output values will be added
      */
-    virtual void process(std::unique_ptr<Value> value, output_backend::OutputBackend *backend) = 0;
+    virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
 
 protected:
     PinType _pin_type;
@@ -82,11 +82,11 @@ public:
 
     ~DigitalSensorMapper();
 
-    CommandErrorCode apply_command(std::unique_ptr<Command> cmd) override;
+    CommandErrorCode apply_command(const Command *cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(std::unique_ptr<Value> value, output_backend::OutputBackend *backend) override;
+    void process(Value *value, output_backend::OutputBackend *backend) override;
 
 private:
 
@@ -102,11 +102,11 @@ public:
 
     ~AnalogSensorMapper();
 
-    CommandErrorCode apply_command(std::unique_ptr<Command> cmd) override;
+    CommandErrorCode apply_command(const Command *cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(std::unique_ptr<Value> value, output_backend::OutputBackend *backend) override;
+    void process(Value *value, output_backend::OutputBackend *backend) override;
 
 private:
     CommandErrorCode _set_adc_bit_resolution(const int resolution);

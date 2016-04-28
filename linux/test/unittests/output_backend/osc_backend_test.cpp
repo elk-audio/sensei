@@ -60,9 +60,9 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(1, PinType::ANALOG_INPUT))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_name_command(1, "bob"))));
 
-        for (auto& cmd : config_cmds)
+        for (auto const& cmd : config_cmds)
         {
-            auto status = _backend.apply_command(std::move(cmd));
+            auto status = _backend.apply_command(cmd.get());
             ASSERT_EQ(CommandErrorCode::OK, status);
         }
 
@@ -161,23 +161,23 @@ TEST_F(TestOscBackend, test_send_output)
 
     // Enable output and disable raw input
     std::vector<std::unique_ptr<Command>> config_cmds;
-    config_cmds.push_back(CMD_UPTR(factory.make_set_send_output_enabled_command(0, true)));
-    config_cmds.push_back(CMD_UPTR(factory.make_set_send_raw_input_enabled_command(0, false)));
-    for (auto& cmd : config_cmds)
+    config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_output_enabled_command(0, true))));
+    config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_raw_input_enabled_command(0, false))));
+    for (auto const& cmd : config_cmds)
     {
-        auto status = _backend.apply_command(std::move(cmd));
+        auto status = _backend.apply_command(cmd.get());
         ASSERT_EQ(CommandErrorCode::OK, status);
     }
 
     auto value_msg = factory.make_output_value(0, 1.0f);
-    auto value = static_unique_ptr_cast<OutputValue, BaseMessage>(std::move(value_msg));
-    _backend.send(std::move(value), nullptr);
+    auto value = static_cast<OutputValue*>(value_msg.get());
+    _backend.send(value, nullptr);
     lo_server_recv(_osc_server);
     ASSERT_EQ(_last_alice_received, 1.0f);
 
     value_msg = factory.make_output_value(1, 0.12345f);
-    value = static_unique_ptr_cast<OutputValue, BaseMessage>(std::move(value_msg));
-    _backend.send(std::move(value), nullptr);
+    value = static_cast<OutputValue*>(value_msg.get());
+    _backend.send(value, nullptr);
     lo_server_recv(_osc_server);
     ASSERT_EQ(_last_bob_received, 0.12345f);
 }
@@ -188,11 +188,11 @@ TEST_F(TestOscBackend, test_send_raw_input)
 
     // Enable raw input
     std::vector<std::unique_ptr<Command>> config_cmds;
-    config_cmds.push_back(CMD_UPTR(factory.make_set_send_output_enabled_command(0, false)));
-    config_cmds.push_back(CMD_UPTR(factory.make_set_send_raw_input_enabled_command(0, true)));
-    for (auto & cmd : config_cmds)
+    config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_output_enabled_command(0, false))));
+    config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_raw_input_enabled_command(0, true))));
+    for (auto const& cmd : config_cmds)
     {
-        auto status = _backend.apply_command(std::move(cmd));
+        auto status = _backend.apply_command(cmd.get());
         ASSERT_EQ(CommandErrorCode::OK, status);
     }
 
@@ -201,16 +201,16 @@ TEST_F(TestOscBackend, test_send_raw_input)
     auto digital_input_msg = factory.make_digital_value(0, true);
     auto analog_input_msg = factory.make_analog_value(1, 176);
 
-    auto value_alice = static_unique_ptr_cast<OutputValue, BaseMessage>(std::move(value_msg_alice));
-    auto value_bob = static_unique_ptr_cast<OutputValue, BaseMessage>(std::move(value_msg_bob));
-    auto analog_input = static_unique_ptr_cast<AnalogValue, BaseMessage>(std::move(analog_input_msg));
-    auto digital_input = static_unique_ptr_cast<DigitalValue, BaseMessage>(std::move(digital_input_msg));
+    auto value_alice = static_cast<OutputValue*>(value_msg_alice.get());
+    auto value_bob = static_cast<OutputValue*>(value_msg_bob.get());
+    auto analog_input = static_cast<AnalogValue*>(analog_input_msg.get());
+    auto digital_input = static_cast<DigitalValue*>(digital_input_msg.get());
 
-    _backend.send(std::move(value_alice), std::move(digital_input));
+    _backend.send(value_alice, digital_input);
     lo_server_recv(_osc_server);
     ASSERT_EQ(1, _last_raw_alice_received);
 
-    _backend.send(std::move(value_bob), std::move(analog_input));
+    _backend.send(value_bob, analog_input);
     lo_server_recv(_osc_server);
     ASSERT_EQ(176, _last_raw_bob_received);
 }

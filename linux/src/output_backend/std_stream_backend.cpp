@@ -11,7 +11,7 @@ StandardStreamBackend::StandardStreamBackend(const int max_n_input_pins) :
 {
 }
 
-void StandardStreamBackend::send(std::unique_ptr<OutputValue> transformed_value, std::unique_ptr<Value> raw_input_value)
+void StandardStreamBackend::send(const OutputValue* transformed_value, const Value* raw_input_value)
 {
     int sensor_index = transformed_value->index();
 
@@ -29,7 +29,7 @@ void StandardStreamBackend::send(std::unique_ptr<OutputValue> transformed_value,
         {
         case ValueType::ANALOG:
             {
-                auto typed_val = static_cast<const AnalogValue *>(raw_input_value.get());
+                auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
                                                                                 _pin_names[sensor_index].c_str(),
                                                                                 typed_val->value());
@@ -38,7 +38,7 @@ void StandardStreamBackend::send(std::unique_ptr<OutputValue> transformed_value,
 
         case ValueType::DIGITAL:
             {
-                auto typed_val = static_cast<const DigitalValue *>(raw_input_value.get());
+                auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
                                                                                 _pin_names[sensor_index].c_str(),
                                                                                 typed_val->value());
@@ -52,10 +52,10 @@ void StandardStreamBackend::send(std::unique_ptr<OutputValue> transformed_value,
 
 }
 
-CommandErrorCode StandardStreamBackend::apply_command(std::unique_ptr<Command> cmd)
+CommandErrorCode StandardStreamBackend::apply_command(const Command *cmd)
 {
     // no specific commands for this subclass
 
-    return OutputBackend::apply_command(std::move(cmd));
+    return OutputBackend::apply_command(cmd);
 
 }

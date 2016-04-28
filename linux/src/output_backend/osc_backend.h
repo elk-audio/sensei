@@ -19,9 +19,9 @@ public:
     ~OSCBackend()
     {}
 
-    CommandErrorCode apply_command(std::unique_ptr<Command> cmd) override;
+    CommandErrorCode apply_command(const Command *cmd) override;
 
-    void send(std::unique_ptr<OutputValue> transformed_value, std::unique_ptr<Value> raw_input_value) override;
+    void send(const OutputValue* transformed_value, const Value* raw_input_value) override;
 
 private:
     void _compute_full_paths();

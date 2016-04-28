@@ -4,7 +4,6 @@
 #include "event_handler.h"
 #include "output_backend/osc_backend.h"
 #include "config_backend/json_configuration.h"
-#include "utils.h"
 
 
 using namespace sensei;
@@ -49,43 +48,34 @@ void EventHandler::handle_events(std::chrono::milliseconds wait_period)
         switch(event->base_type())
         {
         case MessageType::VALUE:
-            {
-                auto value = static_unique_ptr_cast<Value, BaseMessage>(std::move(event));
-                _processor->process(std::move(value), _output_backend.get());
-            }
+            _processor->process(static_cast<Value*>(event.release()), _output_backend.get());
             break;
 
         case MessageType::COMMAND:
-            {
-                auto cmd = static_unique_ptr_cast<Command, BaseMessage>(std::move(event));
-                _handle_command(std::move(cmd));
-            }
+            _handle_command(static_cast<Command*>(event.release()));
             break;
 
         case MessageType::ERROR:
-            {
-                auto error = static_unique_ptr_cast<Error, BaseMessage>(std::move(event));
-                _handle_error(std::move(error));
-            }
+            _handle_error(static_cast<Error*>(event.release()));
             break;
         }
     }
 }
 
 
-void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
+void EventHandler::_handle_command(Command* cmd)
 {
     CommandDestination address = cmd->destination();
 
     // TODO: check returning error code from apply_command calls
     if (address & CommandDestination::INTERNAL)
     {
-        _processor->apply_command(std::move(cmd));
+        _processor->apply_command(cmd);
     }
 
     if (address & CommandDestination::SERIAL_FRONTEND)
     {
-        _to_frontend_queue.push(std::move(cmd));
+        _to_frontend_queue.push(std::unique_ptr<Command>(cmd));
     }
 
     if (address & CommandDestination::CONFIG_BACKEND)
@@ -95,12 +85,12 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
     if (address & CommandDestination::OUTPUT_BACKEND)
     {
-        _output_backend->apply_command(std::move(cmd));
+        _output_backend->apply_command(cmd);
     }
 
 }
 
-void EventHandler::_handle_error(std::unique_ptr<Error> /* error */)
+void EventHandler::_handle_error(Error* /* error */)
 {
     // TODO: implement me
 }

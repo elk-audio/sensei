@@ -8,9 +8,6 @@
 #include <algorithm>
 #include <memory>
 
-
-// TODO: handle deleter template parameter when objects will be created with
-//       custom allocator
 template<typename Derived, typename Base>
 std::unique_ptr<Derived>
 static_unique_ptr_cast( std::unique_ptr<Base>&& p )

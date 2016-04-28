@@ -48,7 +48,7 @@ OSCBackend::OSCBackend(const int max_n_input_pins) :
     _compute_address();
 }
 
-void OSCBackend::send(std::unique_ptr<OutputValue> transformed_value, std::unique_ptr<Value> raw_input_value)
+void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_input_value)
 {
     // TODO: see if it's worth checking errors in lo_send calls
 
@@ -67,14 +67,14 @@ void OSCBackend::send(std::unique_ptr<OutputValue> transformed_value, std::uniqu
         {
         case ValueType::ANALOG:
             {
-                auto typed_val = static_cast<const AnalogValue *>(raw_input_value.get());
+                auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
                 input_val = static_cast<int>(typed_val->value());
             }
             break;
 
         case ValueType::DIGITAL:
             {
-                auto typed_val = static_cast<const DigitalValue *>(raw_input_value.get());
+                auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
                 input_val = static_cast<int>(typed_val->value());
             }
             break;
@@ -88,19 +88,18 @@ void OSCBackend::send(std::unique_ptr<OutputValue> transformed_value, std::uniqu
 
 }
 
-CommandErrorCode OSCBackend::apply_command(std::unique_ptr<Command> cmd)
+CommandErrorCode OSCBackend::apply_command(const Command *cmd)
 {
     // Try to handle generic cases in base class method
     CommandErrorCode status = CommandErrorCode::OK;
     auto pin_idx = cmd->index();
-    auto cmd_raw = cmd.get();
 
     switch(cmd->type())
     {
 
     case CommandType::SET_PIN_NAME:
         {
-            const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd_raw);
+            const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
             _pin_names[pin_idx] = typed_cmd->data();
             _compute_full_paths();
         };
@@ -108,7 +107,7 @@ CommandErrorCode OSCBackend::apply_command(std::unique_ptr<Command> cmd)
 
     case CommandType::SET_PIN_TYPE:
         {
-            const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd_raw);
+            const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd);
             _pin_types[pin_idx] = typed_cmd->data();
             _compute_full_paths();
         };
@@ -116,7 +115,7 @@ CommandErrorCode OSCBackend::apply_command(std::unique_ptr<Command> cmd)
 
     case CommandType::SET_OSC_OUTPUT_BASE_PATH:
         {
-            const auto typed_cmd = static_cast<const SetOSCOutputBasePathCommand*>(cmd_raw);
+            const auto typed_cmd = static_cast<const SetOSCOutputBasePathCommand*>(cmd);
             _base_path = typed_cmd->data();
             _compute_full_paths();
         };
@@ -124,7 +123,7 @@ CommandErrorCode OSCBackend::apply_command(std::unique_ptr<Command> cmd)
 
     case CommandType::SET_OSC_OUTPUT_RAW_PATH:
         {
-            const auto typed_cmd = static_cast<const SetOSCOutputRawPathCommand*>(cmd_raw);
+            const auto typed_cmd = static_cast<const SetOSCOutputRawPathCommand*>(cmd);
             _base_raw_path = typed_cmd->data();
             _compute_full_paths();
         };
@@ -132,7 +131,7 @@ CommandErrorCode OSCBackend::apply_command(std::unique_ptr<Command> cmd)
 
     case CommandType::SET_OSC_OUTPUT_HOST:
         {
-            const auto typed_cmd = static_cast<const SetOSCOutputHostCommand*>(cmd_raw);
+            const auto typed_cmd = static_cast<const SetOSCOutputHostCommand*>(cmd);
             _host = typed_cmd->data();
             status = _compute_address();
         };
@@ -140,7 +139,7 @@ CommandErrorCode OSCBackend::apply_command(std::unique_ptr<Command> cmd)
 
     case CommandType::SET_OSC_OUTPUT_PORT:
         {
-            const auto typed_cmd = static_cast<const SetOSCOutputPortCommand*>(cmd_raw);
+            const auto typed_cmd = static_cast<const SetOSCOutputPortCommand*>(cmd);
             _port = typed_cmd->data();
             status = _compute_address();
         };
@@ -155,7 +154,7 @@ CommandErrorCode OSCBackend::apply_command(std::unique_ptr<Command> cmd)
     // If command was not handled, try in the parent class
     if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
     {
-        return OutputBackend::apply_command(std::move(cmd));
+        return OutputBackend::apply_command(cmd);
     }
     else
     {
