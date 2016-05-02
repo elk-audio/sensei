@@ -8,6 +8,7 @@
 #include "SPI.h"
 #include "arm_functions.h"
 #include <vector>
+#include "limits.h"
 
 using namespace sensei;
 using namespace std;

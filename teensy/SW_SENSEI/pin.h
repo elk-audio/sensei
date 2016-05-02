@@ -26,7 +26,7 @@ protected:
     uint16_t _precValue;
     bool _isInitialized;
     void _checkPinChange();
-    uint16_t _ticksRemainingForSending;
+    uint16_t _ticksForSending;
     bool _pinValueChangedInsideInterval;
     void _setPinValue(uint16_t value);
 };
