@@ -25,7 +25,7 @@ PIN::~PIN()
 
 bool PIN::isTimeToSend()
 {
-	if (_deltaTicksContinuousMode == 0)
+	if ( (_deltaTicksContinuousMode == 0) || (_type == ePinType::PIN_DIGITAL_INPUT) )
 	{
 		return true;
 	}
