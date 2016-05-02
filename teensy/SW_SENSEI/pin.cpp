@@ -15,11 +15,33 @@ PIN::PIN(SetupPin* setupPin)
 	PIN();
 	_sendingMode = setupPin->sendingMode;
     _deltaTicksContinuousMode = setupPin->deltaTicksContinuousMode;
+	_ticksRemainingForSending = _deltaTicksContinuousMode;
 }
 
 PIN::~PIN()
 {
 
+}
+
+bool PIN::isTimeToSend()
+{
+	if (_deltaTicksContinuousMode == 0)
+	{
+		return true;
+	}
+	else
+	{
+		_ticksRemainingForSending--;
+		if (_ticksRemainingForSending == 0)
+		{
+			_ticksRemainingForSending = _deltaTicksContinuousMode;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 }
 
 bool PIN::isPinValueChanged()

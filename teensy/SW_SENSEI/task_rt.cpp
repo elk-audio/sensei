@@ -52,8 +52,8 @@ void vTaskRT(void *pvParameters)
         {
             for (int idxPin = 0; idxPin < manageIO.getNumberOfPins(); idxPin++)
             {
-                if ( ((manageIO.getSendingMode(idxPin) == SENDING_MODE_CONTINUOUS) && ((taskStatus.nCycles % manageIO.getDeltaTicksContinuousMode(idxPin)) == 0)) ||
-                     ((manageIO.getSendingMode(idxPin) == SENDING_MODE_ON_VALUE_CHANGED) && (manageIO.isPinValueChanged(idxPin))) )
+                if ( ((manageIO.getSendingMode(idxPin) == SENDING_MODE_CONTINUOUS) && ((taskStatus.nCycles % manageIO.getDeltaTicksContinuousMode(idxPin)) == 0) ) ||
+                     ((manageIO.getSendingMode(idxPin) == SENDING_MODE_ON_VALUE_CHANGED) && (manageIO.isPinValueChanged(idxPin)) && (manageIO.isTimeToSend(idxPin))) )
                 {
                     msgPin.pin.idx=idxPin;
                     msgPin.pin.value=manageIO.getPinValue(idxPin);

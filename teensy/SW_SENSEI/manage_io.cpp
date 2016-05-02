@@ -126,6 +126,11 @@ uint16_t ManageIO::getDeltaTicksContinuousMode(uint16_t idxPin)
 		return 0;
 }
 
+bool ManageIO::isTimeToSend(uint16_t idxPin)
+{
+	return _vPin[idxPin]->isTimeToSend();
+}
+
 bool ManageIO::isPinValueChanged(uint16_t idxPin)
 {
 	if ((_systemInitialized) && (idxPin<_nPin))
@@ -268,7 +273,6 @@ int32_t ManageIO::setDigitalPin(uint16_t idxPin, bool value)
 	{
 		//_vBankDigitalPin[idxBank] = _vBankDigitalPin[idxBank] | (static_cast<uint8_t>(0x01) << idxBit);
 		_vBankDigitalPin[idxBank] = arm_bit_set(_vBankDigitalPin[idxBank], idxBit);
-
 	}
 	else
 	{
