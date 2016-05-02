@@ -94,7 +94,6 @@ void setup()
     analogReadResolution(12);
     analogReadAveraging(1);
     analogReference(EXTERNAL);
-    digitalWrite(SPI_SS, HIGH);
 
     // Startup
     for (uint8_t idx = 0; idx < 10; idx++)
