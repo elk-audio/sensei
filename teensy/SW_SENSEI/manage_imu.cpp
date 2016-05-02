@@ -33,6 +33,13 @@ void ManageIMU::clearBuffer()
     delayMicroseconds(DELAY_SPI_YEI);
 }
 
+bool ManageIMU::getInterruptStatus()
+{
+    uint8_t imuInterruptStatus=0;
+    getValue(CMD_IMU::GET_INTERRUPT_STATUS, &imuInterruptStatus);
+    return static_cast<bool>(imuInterruptStatus);
+}
+
 int32_t ManageIMU::writeCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
 {
     //SerialDebug.println("writeCommand");

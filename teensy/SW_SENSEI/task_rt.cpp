@@ -45,6 +45,25 @@ void vTaskRT(void *pvParameters)
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
         startTaskTimestamp = micros();
 
+        //------------------------------------------------------------------------------------------- [IMU]
+        if (manageIO.imu.getInterruptStatus())
+        {
+            SerialDebug.println("IMU Ready!");
+            //retCode==manageIO.imu.getAllComponents(imuComponents);
+            if (xQueueSend(hQueueRTtoCOM_IMU, (void*)&msgImu, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+            {
+                if (DEBUG) //TODO
+                {
+                    SerialDebug.println("hQueueRTtoCOM_IMU: xQueueSend");
+                }
+                taskStatus.msgQueueSendErrors++;
+            }
+        }
+        else
+        {
+            SerialDebug.println("IMU busy!");
+        }
+
         //------------------------------------------------------------------------------------------- [HW]
         manageIO.hardwareAcquisition();
 
