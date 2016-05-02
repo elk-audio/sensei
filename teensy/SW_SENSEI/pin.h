@@ -28,6 +28,7 @@ protected:
     void _checkPinChange();
     uint16_t _ticksRemainingForSending;
     bool _pinValueChangedInsideInterval;
+    void _setPinValue(uint16_t value);
 };
 
 #endif // PIN_H
