@@ -205,7 +205,7 @@ namespace sensei {
         // SET_VALUE
         //----------------------------------------------
 		SET_SINGLE_PIN=0,
-        
+
         //----------------------------------------------
         // GET_VALUE
         //----------------------------------------------
@@ -328,11 +328,9 @@ namespace sensei {
     typedef enum eImuGetData
     {
         IMU_GET_ALL_DATA,
-        IMU_GET_DATA_COMPONENT_SENSOR,
-        IMU_GET_DATA_COMPONENT_SENSOR_NORMALIZED,
         IMU_GET_DATA_QUATERNION,
         IMU_GET_DATA_LINEARACCELERATION,
-        IMU_GET_DATA_QUATERNION_LINEARACCELERATION,
+        IMU_GET_DATA_COMPONENT_SENSOR,
         N_IMU_DATA_TYPES
     } eImuGetData;
 
