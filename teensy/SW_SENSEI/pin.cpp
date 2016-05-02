@@ -16,7 +16,7 @@ PIN::PIN(SetupPin* setupPin)
 	PIN();
 	_sendingMode = setupPin->sendingMode;
     _deltaTicksContinuousMode = setupPin->deltaTicksContinuousMode;
-	_ticksRemainingForSending = _deltaTicksContinuousMode;
+	_ticksForSending = _deltaTicksContinuousMode;
 }
 
 PIN::~PIN()
@@ -26,7 +26,7 @@ PIN::~PIN()
 
 bool PIN::isMomentToSendValue()
 {
-	if ( (_deltaTicksContinuousMode == 0) || (_type == ePinType::PIN_DIGITAL_INPUT) )
+	if (_type == ePinType::PIN_DIGITAL_INPUT)
 	{
 		return isPinValueChanged();
 	}
@@ -36,10 +36,10 @@ bool PIN::isMomentToSendValue()
 		{
 			_pinValueChangedInsideInterval=true;
 		}
-		_ticksRemainingForSending--;
-		if (_ticksRemainingForSending == 0)
+		_ticksForSending++;
+		if (_ticksForSending >= _deltaTicksContinuousMode)
 		{
-			_ticksRemainingForSending = _deltaTicksContinuousMode;
+			_ticksForSending = 0;
 
 			if (_pinValueChangedInsideInterval)
 			{
