@@ -126,9 +126,9 @@ uint16_t ManageIO::getDeltaTicksContinuousMode(uint16_t idxPin)
 		return 0;
 }
 
-bool ManageIO::isTimeToSend(uint16_t idxPin)
+bool ManageIO::isMomentToSendValue(uint16_t idxPin)
 {
-	return _vPin[idxPin]->isTimeToSend();
+	return _vPin[idxPin]->isMomentToSendValue();
 }
 
 bool ManageIO::isPinValueChanged(uint16_t idxPin)

@@ -8,6 +8,7 @@ PIN::PIN()
 	_sendingMode = eSendingMode::SENDING_MODE_ON_REQUEST;
     _deltaTicksContinuousMode = 0;
 	_pinValueChanged=false;
+	_pinValueChangedInsideInterval=false;
 }
 
 PIN::PIN(SetupPin* setupPin)
@@ -23,19 +24,33 @@ PIN::~PIN()
 
 }
 
-bool PIN::isTimeToSend()
+bool PIN::isMomentToSendValue()
 {
 	if ( (_deltaTicksContinuousMode == 0) || (_type == ePinType::PIN_DIGITAL_INPUT) )
 	{
-		return true;
+		return isPinValueChanged();
 	}
 	else
 	{
+		if (_pinValueChanged)
+		{
+			_pinValueChangedInsideInterval=true;
+			SerialDebug.println("AA");
+		}
 		_ticksRemainingForSending--;
 		if (_ticksRemainingForSending == 0)
 		{
 			_ticksRemainingForSending = _deltaTicksContinuousMode;
-			return true;
+
+			if (_pinValueChangedInsideInterval)
+			{
+				_pinValueChangedInsideInterval = false;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 		else
 		{

@@ -15,7 +15,7 @@ class PIN{
     bool isPinValueChanged();
     uint8_t getSendingMode();
     uint16_t getDeltaTicksContinuousMode();
-    bool isTimeToSend();
+    bool isMomentToSendValue();
 
 protected:
     uint8_t _sendingMode;
@@ -27,6 +27,7 @@ protected:
     bool _isInitialized;
     void _checkPinChange();
     uint16_t _ticksRemainingForSending;
+    bool _pinValueChangedInsideInterval;
 };
 
 #endif // PIN_H

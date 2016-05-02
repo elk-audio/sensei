@@ -34,7 +34,7 @@ class ManageIO{
 	uint16_t getNumberOfDigitalPins();
     void hardwareAcquisition();
     bool isSystemInitialized();
-    bool isTimeToSend(uint16_t idxPin);
+    bool isMomentToSendValue(uint16_t idxPin);
     uint8_t getSendingMode(uint16_t idxPin);
     uint16_t getDeltaTicksContinuousMode(uint16_t idxPin);
 
