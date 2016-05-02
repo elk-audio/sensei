@@ -77,17 +77,16 @@ uint8_t PIN::getPinType()
 {
 	return _type;
 }
-
 void PIN::setPinValue(uint16_t value)
 {
     _value = value;
 	_checkPinChange();
+	_precValue = _value;
 }
 
 void PIN::_checkPinChange()
 {
 	_pinValueChanged = !(_value == _precValue);
-	_precValue = _value;
 }
 
 uint16_t PIN::getPinValue()
