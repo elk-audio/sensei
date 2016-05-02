@@ -34,6 +34,13 @@ void Filter::setFilter(uint8_t filter_order,FilterType* filter_coeff_a,FilterTyp
 
         _enable=true;
     }
+    else
+    {
+        if (1) //if (DEBUG) //TODO
+        {
+            SerialDebug.println("-> Filter disabled");
+        }
+    }
 }
 
 Filter::~Filter()

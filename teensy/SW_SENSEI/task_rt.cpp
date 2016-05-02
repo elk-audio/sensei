@@ -127,8 +127,11 @@ void vTaskRT(void *pvParameters)
 
                             case SENSEI_SUB_CMD::SET_PIN_ANALOG_INPUT:
                                 msgData.status = manageIO.configurePin(ePinType::PIN_ANALOG_INPUT, &msgData.data.setupPin);
-                                delete[] msgData.data.setupPin.filterCoeff_a;
-                                delete[] msgData.data.setupPin.filterCoeff_b;
+                                if (msgData.data.setupPin.filterOrder > 0)
+                                {
+                                    delete[] msgData.data.setupPin.filterCoeff_a;
+                                    delete[] msgData.data.setupPin.filterCoeff_b;
+                                }
                             break;
 
                             default:
@@ -254,7 +257,7 @@ void vTaskRT(void *pvParameters)
             taskStatus.controlLoopDelay += (static_cast<int32_t>(startTaskTimestamp - precStartTaskTimestamp) - 1000);
         }
         precStartTaskTimestamp = startTaskTimestamp;
-        
+
         taskStatus.nCycles++;
 
     } //for(;;)

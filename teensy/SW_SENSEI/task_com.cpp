@@ -112,6 +112,7 @@ void vTaskCOM(void *pvParameters)
                                 msgData.data.setupPin.filterOrder = pinConfiguration.filterOrder;
                                 msgData.data.setupPin.sliderMode = pinConfiguration.sliderMode;
                                 msgData.data.setupPin.sliderThreshold = pinConfiguration.sliderThreshold;
+
                                 if ( (pinConfiguration.filterOrder > MAX_FILTER_ORDER) ||
                                      (pinConfiguration.lowPassCutOffFilter<0) ||
                                      (pinConfiguration.lowPassCutOffFilter>(DEFAULT_RT_FREQUENCY/2)) )
@@ -119,14 +120,23 @@ void vTaskCOM(void *pvParameters)
                                     retCode = SENSEI_ERROR_CODE::WRONG_FILTER_SETTINGS;
                                     break;
                                 }
-                                msgData.data.setupPin.filterCoeff_a = new FilterType[pinConfiguration.filterOrder + 1]; //TODO STRUCT
-                                msgData.data.setupPin.filterCoeff_b = new FilterType[pinConfiguration.filterOrder + 1];
 
-                                butterworth.createFilterCoefficients(pinConfiguration.filterOrder,
-                                                                     FsFilter,
-                                                                     pinConfiguration.lowPassCutOffFilter,
-                                                                     msgData.data.setupPin.filterCoeff_a,
-                                                                     msgData.data.setupPin.filterCoeff_b);
+                                if (pinConfiguration.lowPassCutOffFilter==0.0)
+                                {
+                                    msgData.data.setupPin.filterOrder=0;
+                                }
+
+                                if (msgData.data.setupPin.filterOrder > 0)
+                                {
+                                    msgData.data.setupPin.filterCoeff_a = new FilterType[pinConfiguration.filterOrder + 1]; //TODO STRUCT
+                                    msgData.data.setupPin.filterCoeff_b = new FilterType[pinConfiguration.filterOrder + 1];
+
+                                    butterworth.createFilterCoefficients(msgData.data.setupPin.filterOrder,
+                                                                         FsFilter,
+                                                                         pinConfiguration.lowPassCutOffFilter,
+                                                                         msgData.data.setupPin.filterCoeff_a,
+                                                                         msgData.data.setupPin.filterCoeff_b);
+                                }
 
                                 retCode = SENSEI_ERROR_CODE::OK;
                             break;
