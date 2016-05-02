@@ -34,7 +34,8 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/serial_frontend/serial_frontend.cpp
                       src/serial_frontend/serial_command_creator.cpp
                       src/serial_frontend/message_tracker.cpp
-                      src/main.cpp)
+                      src/main.cpp
+                      src/logging.cpp)
 
 
 # Enumerate all the headers separately so that CLion can index them
@@ -61,9 +62,10 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/locked_queue.h
                         src/synchronized_queue.h
                         src/event_handler.h
-                        src/utils.h)
+                        src/utils.h
+                        src/logging.h)
 
-set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
+set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" src/logging.h src/logging.cpp)
 
 #########################
 #  Include Directories  #
@@ -74,7 +76,8 @@ set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/../common"
                  "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/include"
                  "${PROJECT_SOURCE_DIR}/third-party/install/liblo/include"
-                 "${PROJECT_SOURCE_DIR}/third-party/optionparser/")
+                 "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
+                 "${PROJECT_SOURCE_DIR}/third-party")
 
 # /usr/local doesn't get added by default in Mac OS X
 if (APPLE)

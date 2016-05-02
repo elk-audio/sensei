@@ -13,6 +13,9 @@
 #include "serial_frontend.h"
 #include "serial_frontend_internal.h"
 
+#include "logging.h"
+
+
 namespace sensei {
 namespace serial_frontend {
 
@@ -21,6 +24,9 @@ static const int MAX_NUMBER_OFF_OUTPUT_PINS = 32;
 static const int INITIAL_TICK_DIVISOR = 1;
 static const auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
 static const int MAX_RESEND_ATTEMPTS = 3;
+
+SENSEI_GET_LOGGER;
+
 /*
  * Verify that a received message has not been corrupted
  */
@@ -62,8 +68,13 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
 #endif
     if (setup_port(port_name) == SP_OK)
     {
+        SENSEI_LOG_INFO("Serial port opened ok, sending initialize packet");
         send_initialize_packet(INITIAL_TICK_DIVISOR, MAX_NUMBER_OFF_INPUT_PINS, MAX_NUMBER_OFF_OUTPUT_PINS, 0);
         _connected = true;
+    }
+    else
+    {
+        SENSEI_LOG_ERROR("Failed to open serial port");
     }
 }
 
@@ -88,11 +99,16 @@ bool SerialFrontend::connected()
 
 void SerialFrontend::run()
 {
+    SENSEI_LOG_INFO("Starting read and write threads");
     if (_read_thread_state != running_state::RUNNING && _write_thread_state != running_state::RUNNING)
     {
         change_state(running_state::RUNNING);
         _read_thread = std::thread(&SerialFrontend::read_loop, this);
         _write_thread = std::thread(&SerialFrontend::write_loop, this);
+    }
+    else
+    {
+        SENSEI_LOG_WARNING("Read and write threads not stopped");
     }
 }
 
@@ -103,6 +119,7 @@ void SerialFrontend::stop()
     {
         return;
     }
+    SENSEI_LOG_INFO("Stopping read and write threads");
     change_state(running_state::STOPPING);
     if (_read_thread.joinable())
     {
@@ -171,16 +188,12 @@ void SerialFrontend::read_loop()
             sSenseiDataPacket *packet = reinterpret_cast<sSenseiDataPacket*>(buffer);
             if (verify_message(packet) == false)
             {
-                continue; // log an error message here when logging functionality is in place
+                SENSEI_LOG_WARNING("Serial packet failed verification");
             }
             std::unique_ptr<BaseMessage> m = process_serial_packet(packet);
             if (m)
             {
                 _out_queue->push(std::move(m));
-            }
-            else
-            {
-                // failed to create BaseMessage, TODO - log error
             }
         }
         if (!_ready_to_send)
@@ -217,8 +230,14 @@ void SerialFrontend::write_loop()
             int ret = sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
             if (_verify_acks && ret > 0)
             {
-                _message_tracker.store(std::move(message), extract_uuid(packet));
+                uint64_t uuid = extract_uuid(packet);
+                SENSEI_LOG_INFO("Sent serial packet {}", uuid);
+                _message_tracker.store(std::move(message), uuid);
                 _ready_to_send = false;
+            }
+            else if (ret < 0)
+            {
+                SENSEI_LOG_WARNING("Sending serial packed failed with code {}", ret);
             }
         }
         else
@@ -249,6 +268,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
                     return _message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp);
 
                 default:
+                    SENSEI_LOG_WARNING("Unhandled pin type: {}", packet->cmd);
                     return nullptr;
             }
         }
@@ -257,7 +277,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSensei
             return process_ack(packet);
         }
         default:
-            // Unknown command TODO - log error
+            SENSEI_LOG_WARNING("Unhandled command type: {}", packet->cmd);
             return nullptr;
     }
 }
@@ -267,6 +287,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
 {
     const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet->payload);
     uint64_t uuid = extract_uuid(ack);
+    SENSEI_LOG_INFO("Got ack for packet: {}", uuid);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);
@@ -278,9 +299,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
     }
     if (ack->status != SENSEI_ERROR_CODE::OK)
     {
-        std::cout << "Got bad ack: " << translate_teensy_status_code(ack->status) << " for cmd " << (int)ack->cmd << std::endl;
-
-        // TODO - log the error here as only some error codes result in an error message being sent
+        SENSEI_LOG_WARNING("Received bad ack, status: {}", translate_teensy_status_code(ack->status));
         switch (ack->status)
         {
             case SENSEI_ERROR_CODE::CRC_NOT_CORRECT:
@@ -330,6 +349,7 @@ void SerialFrontend::handle_timeouts()
              * Also note that m is destroyed when this scope exits. */
             auto m = _message_tracker.get_cached_message();
             auto error_message = _message_factory.make_too_many_timeouts_error(m->index(), 0);
+            SENSEI_LOG_WARNING("Message {} timed out, sending next message.", m->representation());
             _out_queue->push(std::move(error_message));
         }
         case timeout::TIMED_OUT:
@@ -428,7 +448,7 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
                                                             cmd->data());
         }
         default:
-            // Command type we don't handle TODO - log error
+            SENSEI_LOG_WARNING("Unsupported command type {}", static_cast<int>(message->base_type()));
             return nullptr;
     }
 }

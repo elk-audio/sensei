@@ -2,6 +2,12 @@
 add_subdirectory(gtest_1_7_0)
 enable_testing()
 
+#####################################
+#  Disable logging at compile time  #
+#####################################
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_LOGGING")
+
 ################
 #  Test Files  #
 ################

@@ -70,7 +70,7 @@ uint64_t inline extract_uuid(const sSenseiDataPacket* packet)
 /*
  * Translate a teensy status code to a string for debugging and logging.
  */
-const inline std::string& translate_teensy_status_code(int code)
+inline std::string& translate_teensy_status_code(int code)
 {
     static std::string str;
     switch (code)

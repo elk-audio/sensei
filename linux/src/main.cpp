@@ -7,6 +7,8 @@
 
 #include "event_handler.h"
 
+#include "logging.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // Global constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,6 +27,9 @@
 sensei::EventHandler event_handler;
 static volatile sig_atomic_t main_loop_running = 1;
 static volatile sig_atomic_t config_reload_pending = 0;
+
+SENSEI_GET_LOGGER;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Signal handlers
@@ -281,6 +286,7 @@ int main(int argc, char* argv[])
     // Main loop
     ////////////////////////////////////////////////////////////////////////////////
 
+    SENSEI_LOG_INFO("Starting  main loop");
     while (main_loop_running)
     {
         event_handler.handle_events(wait_period_ms);
