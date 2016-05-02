@@ -35,7 +35,6 @@ bool PIN::isMomentToSendValue()
 		if (_pinValueChanged)
 		{
 			_pinValueChangedInsideInterval=true;
-			SerialDebug.println("AA");
 		}
 		_ticksRemainingForSending--;
 		if (_ticksRemainingForSending == 0)
