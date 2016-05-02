@@ -83,7 +83,6 @@ typedef struct ImuComponents
 	sImuQuaternion quaternion;
     sImuComponentSensor componentSensor;
     sImuLinearAcceleration linearAcceleration;
-	//sImuNormalizedComponentSensor normalizedComponentSensor;
 } __attribute__((packed)) ImuComponents;
 
 typedef struct SetupPin
