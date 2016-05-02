@@ -196,7 +196,7 @@ void vTaskCOM(void *pvParameters)
                         systemSettings.enableSendingPackets = msgData.data.value;
                         if (systemSettings.debugMode) //TODO
                         {
-                            SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                            SerialDebug.println("enableSendingPackets = " + String(systemSettings.enableSendingPackets));
                         }
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
@@ -207,7 +207,7 @@ void vTaskCOM(void *pvParameters)
                         systemSettings.enableMultiplePackets = msgData.data.value;
                         if (systemSettings.debugMode) //TODO
                         {
-                            SerialDebug.println("enableMultiplePackets= " + String(systemSettings.enableMultiplePackets));
+                            SerialDebug.println("enableMultiplePackets = " + String(systemSettings.enableMultiplePackets));
                         }
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
