@@ -29,7 +29,7 @@ std::shared_ptr<spdlog::logger> setup_logging()
     const std::string LOGGER_NAME   = "Sensei_logger";
     const int  MAX_LOG_FILE_SIZE    = 10000000;              // In bytes
     const bool LOGGER_FORCE_FLUSH   = true;
-    const spdlog::level::level_enum MIN_LOG_LEVEL = spdlog::level::debug;
+    const spdlog::level::level_enum MIN_LOG_LEVEL = spdlog::level::info;
 
     spdlog::set_level(MIN_LOG_LEVEL);
     spdlog::set_async_mode(LOGGER_QUEUE_SIZE);

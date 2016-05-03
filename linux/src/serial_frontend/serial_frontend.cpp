@@ -231,7 +231,7 @@ void SerialFrontend::write_loop()
             if (_verify_acks && ret > 0)
             {
                 uint64_t uuid = extract_uuid(packet);
-                SENSEI_LOG_INFO("Sent serial packet {}", uuid);
+                SENSEI_LOG_DEBUG("Sent serial packet {}", uuid);
                 _message_tracker.store(std::move(message), uuid);
                 _ready_to_send = false;
             }
@@ -287,7 +287,7 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
 {
     const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet->payload);
     uint64_t uuid = extract_uuid(ack);
-    SENSEI_LOG_INFO("Got ack for packet: {}", uuid);
+    SENSEI_LOG_DEBUG("Got ack for packet: {}", uuid);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);

@@ -9,11 +9,12 @@
 #include <iostream>
 
 #include "json_configuration.h"
-
+#include "logging.h"
 
 namespace sensei {
 namespace config {
 
+SENSEI_GET_LOGGER;
 
 Json::Value read_configuration(std::ifstream& file)
 {
@@ -22,7 +23,7 @@ Json::Value read_configuration(std::ifstream& file)
     bool parse_ok = reader.parse(file, config, false);
     if (!parse_ok)
     {
-        // TODO - Log the error  << reader.getFormattedErrorMessages() << std::endl;
+        SENSEI_LOG_ERROR("Error parsing JSON configuration file, {}", reader.getFormattedErrorMessages());
     }
     return config;
 }
@@ -33,9 +34,11 @@ Json::Value read_configuration(std::ifstream& file)
  */
 ConfigStatus JsonConfiguration::read()
 {
+    SENSEI_LOG_INFO("Reading configuration file");
     std::ifstream file(_source);
     if (!file.good())
     {
+        SENSEI_LOG_ERROR("Couldn't open JSON configuration file: {}", _source);
         return ConfigStatus::IO_ERROR;
     }
     Json::Value config = std::move(read_configuration(file));
@@ -95,6 +98,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     else
     {
         /* id is a mandatory parameter */
+        SENSEI_LOG_WARNING("Pin id not found in configuration");
         return ConfigStatus::PARAMETER_ERROR;
     }
 
@@ -126,6 +130,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
         }
         else
         {
+            SENSEI_LOG_WARNING("\"{}\" is not a recognized pin type", pin_type_str);
             return ConfigStatus::PARAMETER_ERROR;
         }
         _queue->push(std::move(m));
@@ -156,6 +161,7 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
         }
         else
         {
+            SENSEI_LOG_WARNING("\"{}\" is not a recognized sending mode", mode_str);
             return ConfigStatus::PARAMETER_ERROR;
         }
     }
@@ -244,6 +250,7 @@ ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend)
     else
     {
         /* id is a mandatory parameter */
+        SENSEI_LOG_WARNING("Backend id not found in configuration");
         return ConfigStatus::PARAMETER_ERROR;
     }
 

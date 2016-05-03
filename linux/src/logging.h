@@ -29,7 +29,7 @@
 #define ENABLE_DEBUG_FILE_AND_LINE_NUM
 
 /* Use this macro  at the top of every file to declare a local logger */
-#define SENSEI_GET_LOGGER auto spdlog_instance = sensei::Logger::get_logger()
+#define SENSEI_GET_LOGGER static auto spdlog_instance = sensei::Logger::get_logger()
 
 #ifdef ENABLE_DEBUG_FILE_AND_LINE_NUM
     #define SENSEI_EXTENDED_LOG << " (" << __FILE__ << " @" << __LINE__ <<")"
