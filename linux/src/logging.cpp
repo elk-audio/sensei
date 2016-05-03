@@ -6,9 +6,10 @@ namespace sensei {
 
 std::shared_ptr<spdlog::logger> Logger::get_logger()
 {
-    /* Note: A static function variable avoids all initialization
-     * order issues associated with a static member variable */
-
+    /*
+     * Note: A static function variable avoids all initialization
+     * order issues associated with a static member variable
+     */
     static auto spdlog_instance = setup_logging();
     if (!spdlog_instance)
     {
@@ -22,7 +23,7 @@ std::shared_ptr<spdlog::logger> setup_logging()
     /*
      * Note, configuration parameters are defined here to guarantee
      * that they are defined before calling get_logger()
-     * */
+     */
     const size_t LOGGER_QUEUE_SIZE  = 4096;                  // Should be power of 2
     const std::string LOGGER_FILE   = "log";
     const std::string LOGGER_NAME   = "Sensei_logger";

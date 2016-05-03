@@ -45,10 +45,10 @@
  * -DDISABLE_MACROS unfortunately
  */
 
-#define SENSEI_LOG_DEBUG(...) spdlog_instance->debug(__VA_ARGS__)  SENSEI_EXTENDED_LOG
-#define SENSEI_LOG_INFO(...) spdlog_instance->info(__VA_ARGS__)
-#define SENSEI_LOG_WARNING(...) spdlog_instance->warn(__VA_ARGS__)
-#define SENSEI_LOG_ERROR(...) spdlog_instance->error(__VA_ARGS__)
+#define SENSEI_LOG_DEBUG(...)    spdlog_instance->debug(__VA_ARGS__)  SENSEI_EXTENDED_LOG
+#define SENSEI_LOG_INFO(...)     spdlog_instance->info(__VA_ARGS__)
+#define SENSEI_LOG_WARNING(...)  spdlog_instance->warn(__VA_ARGS__)
+#define SENSEI_LOG_ERROR(...)    spdlog_instance->error(__VA_ARGS__)
 #define SENSEI_LOG_CRITICAL(...) spdlog_instance->crit(__VA_ARGS__)
 
 namespace sensei {
@@ -67,14 +67,10 @@ std::shared_ptr<spdlog::logger> setup_logging();
 /* Define empty macros */
 #define SENSEI_GET_LOGGER
 #define SENSEI_LOG_DEBUG(...)
-#define SENSEI_LOG_TRACE(...)
 #define SENSEI_LOG_INFO(...)
 #define SENSEI_LOG_WARNING(...)
 #define SENSEI_LOG_ERROR(...)
 #define SENSEI_LOG_CRITICAL(...)
-#define SENSEI_LOG_TRACE_EXT(...)
-#define SENSEI_LOG_DEBUG_EXT(...)
-
 #endif
 
 #endif //SENSEI_LOGGING_H

@@ -65,7 +65,7 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/utils.h
                         src/logging.h)
 
-set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" src/logging.h src/logging.cpp)
+set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
 
 #########################
 #  Include Directories  #
