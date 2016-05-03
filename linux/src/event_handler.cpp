@@ -5,10 +5,11 @@
 #include "output_backend/osc_backend.h"
 #include "config_backend/json_configuration.h"
 #include "utils.h"
-
+#include "logging.h"
 
 using namespace sensei;
 
+SENSEI_GET_LOGGER;
 
 void EventHandler::init(const std::string port_name,
                         const int max_n_pins,
@@ -20,12 +21,30 @@ void EventHandler::init(const std::string port_name,
     _frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
     _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
 
-    _config_backend->read();
+    auto ret = _config_backend->read();
+    if (ret != config::ConfigStatus::OK)
+    {
+        switch (ret)
+        {
+        case config::ConfigStatus::IO_ERROR:
+            SENSEI_LOG_ERROR("I/O error while reading config file");
+            break;
 
-    // TODO: use TBI logger system
+        case config::ConfigStatus::PARSING_ERROR:
+            SENSEI_LOG_ERROR("Couldn't parse config file");
+            break;
+
+        case config::ConfigStatus::PARAMETER_ERROR:
+            SENSEI_LOG_ERROR("Wrong parameter in config file");
+
+        default:
+            break;
+        }
+    }
+
     if (!_frontend->connected())
     {
-        std::cerr << "Error: serial connection failed." << std::endl;
+        SENSEI_LOG_ERROR("Serial connection failed.");
     }
     _frontend->verify_acks(true);
     _frontend->run();
@@ -74,18 +93,60 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 {
     CommandDestination address = cmd->destination();
 
-    // TODO: check returning error code from apply_command calls
-
     // Process first non-sink destinations
     // using non-owning raw pointer
     if (address & CommandDestination::INTERNAL)
     {
-        _processor->apply_command(cmd.get());
+        CommandErrorCode ret = _processor->apply_command(cmd.get());
+        if (ret != CommandErrorCode::OK)
+        {
+            switch (ret)
+            {
+            case CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE:
+                SENSEI_LOG_ERROR("Internal Mapping, Unhandled command: {}, pin: {}", cmd->representation(), cmd->index());
+                break;
+
+            case CommandErrorCode::INVALID_PIN_INDEX:
+                SENSEI_LOG_ERROR("Invalid pin index {} for command: {}", cmd->index(), cmd->representation());
+                break;
+
+            case CommandErrorCode::INVALID_RANGE:
+                SENSEI_LOG_ERROR("Invalid range for command: {}, pin: {}", cmd->representation(), cmd->index());
+                break;
+
+            case CommandErrorCode::INVALID_VALUE:
+                SENSEI_LOG_ERROR("Invalid range for command: {}, pin: {}", cmd->representation(), cmd->index());
+                break;
+
+            case CommandErrorCode::CLIP_WARNING:
+                SENSEI_LOG_WARNING("Clipped value for command: {}, pin: {}", cmd->representation(), cmd->index());
+                break;
+
+            default:
+                break;
+            }
+        }
     }
 
     if (address & CommandDestination::OUTPUT_BACKEND)
     {
-        _output_backend->apply_command(cmd.get());
+        CommandErrorCode ret = _output_backend->apply_command(cmd.get());
+        if (ret != CommandErrorCode::OK)
+        {
+            switch (ret)
+            {
+            case CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE:
+                SENSEI_LOG_ERROR("Output Backend, Unhandled command: {}, index: ", cmd->representation(), cmd->index());
+                break;
+
+            case CommandErrorCode::INVALID_URL:
+                SENSEI_LOG_ERROR("Invalid OSC Backend URL");
+                break;
+
+            default:
+                break;
+            }
+        }
     }
 
     if (address & CommandDestination::CONFIG_BACKEND)
@@ -102,7 +163,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
 }
 
-void EventHandler::_handle_error(std::unique_ptr<Error> /* error */)
+void EventHandler::_handle_error(std::unique_ptr<Error> error)
 {
-    // TODO: implement me
+    SENSEI_LOG_ERROR("Hardware Error: {}", error->representation());
 }
