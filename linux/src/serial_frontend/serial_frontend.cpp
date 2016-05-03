@@ -433,6 +433,13 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
                                                                   cmd->timestamp(),
                                                                   cmd->data());
         }
+        case CommandType::SET_SLIDER_MODE_ENABLED:
+        {
+            auto cmd = static_cast<SetSliderModeEnabledCommand *>(message);
+            return _packet_factory.make_config_slidermode_cmd(cmd->index(),
+                                                              cmd->timestamp(),
+                                                              cmd->data());
+        }
         case CommandType::SET_SLIDER_THRESHOLD:
         {
             auto cmd = static_cast<SetSliderThresholdCommand *>(message);
