@@ -163,7 +163,7 @@ void vTaskRT(void *pvParameters)
                                 SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) +
                                                     " value=" + String(static_cast<bool>(msgData.data.pin.value)));
                             }
-                            msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
+                            msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, msgData.data.pin.value);
                         break;
 
                         default:
