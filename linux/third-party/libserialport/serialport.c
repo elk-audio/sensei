@@ -1580,8 +1580,8 @@ static enum sp_return get_flow(int fd, struct port_data *data)
 	since ptys don't support them and we need ptys for dev/testing */
 	if (ioctl(fd, TCGETX, termx) < 0) {
 		free(termx);
-		RETURN_OK();
-		//RETURN_FAIL("Getting termiox failed");
+		//RETURN_OK();
+		RETURN_FAIL("Getting termiox failed");
 	}
 
 	get_termiox_flow(termx, &data->rts_flow, &data->cts_flow,
@@ -1607,8 +1607,8 @@ static enum sp_return set_flow(int fd, struct port_data *data)
 	since ptys don't support them and we need ptys for dev/testing */
 	if (ioctl(fd, TCGETX, termx) < 0) {
 		free(termx);
-		RETURN_OK();
-		//RETURN_FAIL("Getting termiox failed");
+		//RETURN_OK();
+		RETURN_FAIL("Getting termiox failed");
 	}
 
 	DEBUG("Setting advanced flow control");
@@ -1739,8 +1739,8 @@ static enum sp_return get_config(struct sp_port *port, struct port_data *data,
     /* Hacking this to not throw errors in case these ioctls fail 
 	since ptys don't support them and we need ptys for dev/testing */
 	if (ioctl(port->fd, TIOCMGET, &data->controlbits) < 0)
-		data->controlbits = TIOCM_LE | TIOCM_DTR | TIOCM_CTS;
-	//	RETURN_FAIL("TIOCMGET ioctl failed");
+		//data->controlbits = TIOCM_LE | TIOCM_DTR | TIOCM_CTS;
+		RETURN_FAIL("TIOCMGET ioctl failed");
 
 #ifdef USE_TERMIOX
 	int ret = get_flow(port->fd, data);

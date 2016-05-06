@@ -29,7 +29,7 @@ public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(BaseSensorMapper)
 
     BaseSensorMapper(const PinType pin_type = PinType::ANALOG_INPUT,
-                     const int sensor_index = 0);
+                     const int pin_index = 0);
 
     virtual ~BaseSensorMapper();
 
@@ -66,8 +66,8 @@ public:
 
 protected:
     PinType _pin_type;
-    int _sensor_index;
-    bool _sensor_enabled;
+    int _pin_index;
+    bool _pin_enabled;
     SendingMode _sending_mode;
 
     bool _invert_value;
@@ -78,7 +78,7 @@ class DigitalSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DigitalSensorMapper)
 
-    DigitalSensorMapper(const int sensor_index = 0);
+    DigitalSensorMapper(const int pin_index = 0);
 
     ~DigitalSensorMapper();
 
@@ -97,7 +97,7 @@ class AnalogSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AnalogSensorMapper)
 
-    AnalogSensorMapper(const int sensor_index = 0,
+    AnalogSensorMapper(const int pin_index = 0,
                        const float adc_sampling_rate = 1000.0f);
 
     ~AnalogSensorMapper();

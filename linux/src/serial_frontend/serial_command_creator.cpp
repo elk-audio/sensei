@@ -34,9 +34,18 @@ const sSenseiDataPacket* SerialCommandCreator::make_initialize_system_cmd(uint32
     cmd->ticksDelayRtTask = ticks_delay;
     cmd->nPins = pins;
     cmd->nDigitalPins = digital_pins;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
     return &_cmd_buffer;
 }
 
+const sSenseiDataPacket* SerialCommandCreator::make_enable_sending_packets_cmd(uint32_t timestamp, bool enabled)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::ENABLE_SENDING_PACKETS);
+    _cmd_buffer.sub_cmd = EMPTY;
+    _cmd_buffer.payload[0] = enabled;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
+    return &_cmd_buffer;
+}
 
 const sSenseiDataPacket* SerialCommandCreator::make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value)
 {
@@ -49,6 +58,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_set_digital_pin_cmd(int pin_
     teensy_set_value_cmd* cmd = reinterpret_cast<teensy_set_value_cmd*>(&_cmd_buffer.payload);
     cmd->pin_idx = pin_id;
     cmd->value = value;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
     return &_cmd_buffer;
 }
 
@@ -63,6 +73,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_set_bank_cmd(int pin_id, uin
     teensy_set_value_cmd* cmd = reinterpret_cast<teensy_set_value_cmd*>(&_cmd_buffer.payload);
     cmd->pin_idx = pin_id;
     cmd->value = value;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
     return &_cmd_buffer;
 }
 
@@ -83,6 +94,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_set_sampling_rate_cmd(uint32
     {
         cmd->sample_rate_divisor = static_cast<int>(1000 / sampling_rate);
     }
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
     return &_cmd_buffer;
 }
 
@@ -96,6 +108,17 @@ const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(int pin_id, ui
     _cmd_buffer.sub_cmd = EMPTY;
     teensy_set_value_cmd* cmd = reinterpret_cast<teensy_set_value_cmd*>(&_cmd_buffer.payload);
     cmd->pin_idx = pin_id;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_config_enabled_cmd(uint32_t timestamp, bool enabled)
+{
+    // TODO - implement this properly when there is support in the fw for this command
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::HELLO);
+    _cmd_buffer.sub_cmd = EMPTY;
+    _cmd_buffer.payload[0] = enabled;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
     return &_cmd_buffer;
 }
 
@@ -103,6 +126,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(int pin_id, ui
 /*
  * Settings for commands below are cached for every pin.
  */
+
 const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_id, uint32_t timestamp, PinType type)
 {
     if (pin_id >= _max_pins)
@@ -194,7 +218,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_adc_bitres_cmd(int pi
             cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_12_BIT;
             break;
         default:
-            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_12_BIT;
+            cached_cfg.cfg_data.ADCBitResolution = ePinAdcBitResolution::PIN_ADC_RESOLUTION_8_BIT;
             break;
     }
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);

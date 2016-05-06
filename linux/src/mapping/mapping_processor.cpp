@@ -12,10 +12,10 @@
 using namespace sensei;
 using namespace sensei::mapping;
 
-MappingProcessor::MappingProcessor(const int max_n_sensors) :
-    _max_n_sensors(max_n_sensors)
+MappingProcessor::MappingProcessor(const int max_n_input_pins) :
+    _max_n_pins(max_n_input_pins)
 {
-    _mappers.resize(_max_n_sensors);
+    _mappers.resize(_max_n_pins);
     std::fill(_mappers.begin(), _mappers.end(), nullptr);
 }
 
@@ -24,8 +24,8 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
     // TODO: find a better way to manage changes of PinType,
     //       possibly without requiring SetPinType to be the 1st command received
 
-    int sensor_index = cmd->sensor_index();
-    if ( (sensor_index < 0) || (sensor_index > (_max_n_sensors-1)) )
+    int sensor_index = cmd->index();
+    if ( (sensor_index < 0) || (sensor_index > (_max_n_pins-1)) )
     {
         return CommandErrorCode::INVALID_PIN_INDEX;
     }
@@ -72,7 +72,7 @@ void MappingProcessor::put_config_commands_into(CommandIterator out_iterator)
 
 void MappingProcessor::process(Value *value, output_backend::OutputBackend *backend)
 {
-    int sensor_index = value->sensor_index();
+    int sensor_index = value->index();
     if (_mappers[sensor_index] != nullptr)
     {
         _mappers[sensor_index]->process(value, backend);

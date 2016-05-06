@@ -109,3 +109,6 @@ linux/build/
 
 # Windows folders
 *.ini
+
+# Python pyc
+*.pyc

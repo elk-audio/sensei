@@ -6,18 +6,21 @@
 using namespace sensei;
 using namespace sensei::output_backend;
 
-StandardStreamBackend::StandardStreamBackend(const int max_n_sensors) :
-        OutputBackend(max_n_sensors)
+StandardStreamBackend::StandardStreamBackend(const int max_n_input_pins) :
+        OutputBackend(max_n_input_pins)
 {
 }
 
 void StandardStreamBackend::send(const OutputValue* transformed_value, const Value* raw_input_value)
 {
-    int sensor_index = transformed_value->sensor_index();
+    int sensor_index = transformed_value->index();
 
-    printf("Pin: %d, name: %s, value: %f\n", sensor_index,
-                                             _sensor_names[sensor_index].c_str(),
-                                             transformed_value->value());
+    if (_send_output_active)
+    {
+        printf("Pin: %d, name: %s, value: %f\n", sensor_index,
+                                                 _pin_names[sensor_index].c_str(),
+                                                 transformed_value->value());
+    }
 
     if (_send_raw_input_active)
     {
@@ -28,7 +31,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
             {
                 auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
-                                                                                _sensor_names[sensor_index].c_str(),
+                                                                                _pin_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }
             break;
@@ -37,7 +40,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
             {
                 auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
-                                                                                _sensor_names[sensor_index].c_str(),
+                                                                                _pin_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }
             break;
@@ -49,6 +52,10 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
 
 }
 
-void StandardStreamBackend::apply_cmd(const Command* /*cmd*/)
+CommandErrorCode StandardStreamBackend::apply_command(const Command *cmd)
 {
+    // no specific commands for this subclass
+
+    return OutputBackend::apply_command(cmd);
+
 }

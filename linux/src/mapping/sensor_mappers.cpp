@@ -5,11 +5,11 @@
  * These are instantiated internally as components of MappingProcessor
  */
 
-#include <algorithm>
 #include <cassert>
 
 #include "mapping/sensor_mappers.h"
 #include "message/message_factory.h"
+#include "utils.h"
 
 namespace {
 
@@ -18,21 +18,6 @@ static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
-// TODO: find a better home for these
-
-template<typename Derived, typename Base>
-std::unique_ptr<Derived>
-static_unique_ptr_cast( std::unique_ptr<Base>&& p )
-{
-    auto d = static_cast<Derived *>(p.release());
-    return std::unique_ptr<Derived>(d);
-}
-
-template <typename T>
-T clip(const T& x, const T& lower, const T& upper)
-{
-    return std::max(lower, std::min(x, upper));
-}
 
 }; // Anonymous namespace
 
@@ -43,10 +28,10 @@ using namespace sensei::mapping;
 // BaseSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int sensor_index) :
+BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int pin_index) :
     _pin_type(pin_type),
-    _sensor_index(sensor_index),
-    _sensor_enabled(false),
+    _pin_index(pin_index),
+    _pin_enabled(false),
     _sending_mode(SendingMode::OFF),
     _invert_value(false)
 {
@@ -58,17 +43,17 @@ BaseSensorMapper::~BaseSensorMapper()
 
 CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
 {
-    assert(cmd->sensor_index() == _sensor_index);
+    assert(cmd->index() == _pin_index);
 
     CommandErrorCode status = CommandErrorCode::OK;
 
-    // Handle here per-sensor configuration common between sensor types
+    // Handle here per-pin configuration common between sensor types
     switch(cmd->type())
     {
     case CommandType::SET_ENABLED:
         {
             const auto typed_cmd = static_cast<const SetEnabledCommand*>(cmd);
-            _sensor_enabled = typed_cmd->data();
+            _pin_enabled = typed_cmd->data();
         };
         break;
 
@@ -100,17 +85,17 @@ void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
     MessageFactory factory;
 
-    *out_iterator = factory.make_set_enabled_command(_sensor_index, _sensor_enabled);
-    *out_iterator = factory.make_set_sending_mode_command(_sensor_index, _sending_mode);
-    *out_iterator = factory.make_set_invert_enabled_command(_sensor_index, _invert_value);
+    *out_iterator = factory.make_set_enabled_command(_pin_index, _pin_enabled);
+    *out_iterator = factory.make_set_sending_mode_command(_pin_index, _sending_mode);
+    *out_iterator = factory.make_set_invert_enabled_command(_pin_index, _invert_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // DigitalSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-DigitalSensorMapper::DigitalSensorMapper(const int sensor_index) :
-    BaseSensorMapper(PinType::DIGITAL_INPUT, sensor_index)
+DigitalSensorMapper::DigitalSensorMapper(const int pin_index) :
+    BaseSensorMapper(PinType::DIGITAL_INPUT, pin_index)
 {
 }
 
@@ -120,17 +105,8 @@ DigitalSensorMapper::~DigitalSensorMapper()
 
 CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
-    CommandErrorCode status = BaseSensorMapper::apply_command(cmd);
-
-    // command was consumed by parent or some error has occurred while doing it
-    if ((status == CommandErrorCode::OK) || (status != CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE) )
-    {
-        return status;
-    }
-
-    // Handle digital-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    status = CommandErrorCode::OK;
+    // Handle digital-specific configurations
+    CommandErrorCode status = CommandErrorCode::OK;
     switch(cmd->type())
     {
     case CommandType::SET_PIN_TYPE:
@@ -146,7 +122,15 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 
     }
 
-    return status;
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 
 }
 
@@ -155,12 +139,12 @@ void DigitalSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_pin_type_command(_sensor_index, PinType::DIGITAL_INPUT);
+    *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::DIGITAL_INPUT);
 }
 
 void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
 {
-    if (! _sensor_enabled)
+    if (! _pin_enabled)
     {
         return;
     }
@@ -176,7 +160,7 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     MessageFactory factory;
     // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
     // it gets optimized away by the compiler in release mode
-    auto temp_msg = factory.make_output_value(_sensor_index,
+    auto temp_msg = factory.make_output_value(_pin_index,
                                               out_val,
                                               value->timestamp());
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
@@ -187,9 +171,9 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
 // AnalogSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-AnalogSensorMapper::AnalogSensorMapper(const int sensor_index,
+AnalogSensorMapper::AnalogSensorMapper(const int pin_index,
                                        const float adc_sampling_rate) :
-    BaseSensorMapper(PinType::ANALOG_INPUT, sensor_index),
+    BaseSensorMapper(PinType::ANALOG_INPUT, pin_index),
     _delta_ticks_sending(1),
     _lowpass_filter_order(4),
     _lowpass_cutoff(DEFAULT_LOWPASS_CUTOFF),
@@ -208,17 +192,9 @@ AnalogSensorMapper::~AnalogSensorMapper()
 
 CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
-    CommandErrorCode status = BaseSensorMapper::apply_command(cmd);
-
-    // command was consumed by parent or some error has occurred while doing it
-    if ((status == CommandErrorCode::OK) || (status != CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE) )
-    {
-        return status;
-    }
 
     // Handle analog-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    status = CommandErrorCode::OK;
+    CommandErrorCode  status = CommandErrorCode::OK;
     switch(cmd->type())
     {
     // External
@@ -293,7 +269,15 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 
     }
 
-    return status;
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 
 }
 
@@ -302,20 +286,20 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_pin_type_command(_sensor_index, PinType::ANALOG_INPUT);
-    *out_iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
-    *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
-    *out_iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
-    *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
-    *out_iterator = factory.make_set_slider_mode_enabled_command(_sensor_index, _slider_mode_enabled);
-    *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
-    *out_iterator = factory.make_set_input_scale_range_low(_sensor_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high(_sensor_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::ANALOG_INPUT);
+    *out_iterator = factory.make_set_sending_delta_ticks_command(_pin_index, _delta_ticks_sending);
+    *out_iterator = factory.make_set_adc_bit_resolution_command(_pin_index, _adc_bit_resolution);
+    *out_iterator = factory.make_set_lowpass_filter_order_command(_pin_index, _lowpass_filter_order);
+    *out_iterator = factory.make_set_lowpass_cutoff_command(_pin_index, _lowpass_cutoff);
+    *out_iterator = factory.make_set_slider_mode_enabled_command(_pin_index, _slider_mode_enabled);
+    *out_iterator = factory.make_set_slider_threshold_command(_pin_index, _slider_threshold);
+    *out_iterator = factory.make_set_input_scale_range_low_command(_pin_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high_command(_pin_index, _input_scale_range_high);
 }
 
 void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
-    if (! _sensor_enabled)
+    if (! _pin_enabled)
     {
         return;
     }
@@ -333,7 +317,7 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
     MessageFactory factory;
     // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
     // it gets optimized away by the compiler in release mode
-    auto temp_msg = factory.make_output_value(_sensor_index,
+    auto temp_msg = factory.make_output_value(_pin_index,
                                               out_val,
                                               value->timestamp());
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());

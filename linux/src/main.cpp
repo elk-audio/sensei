@@ -1,15 +1,13 @@
 #include <vector>
-#include <thread>
-#include <chrono>
-#include <cstdlib>
+#include <fstream>
 #include <csignal>
-#include <cstdio>
 #include <cassert>
 
 #include "optionparser.h"
 
 #include "event_handler.h"
-#include "serial_frontend/serial_frontend.h"
+
+#include "logging.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global constants
@@ -17,9 +15,10 @@
 
 #define SENSEI_DEFAULT_N_PINS               64
 #define SENSEI_DEFAULT_N_PINS_STR           "64"
-#define SENSEI_DEFAULT_SLEEP_PERIOD_MS      10
+#define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_SERIAL_DEVICE        "/dev/ttyS01"
+#define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -27,16 +26,28 @@
 
 sensei::EventHandler event_handler;
 static volatile sig_atomic_t main_loop_running = 1;
+static volatile sig_atomic_t config_reload_pending = 0;
+
+SENSEI_GET_LOGGER;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Signal handlers
 ////////////////////////////////////////////////////////////////////////////////
 
-static void system_signal_handler(int sig_number)
+static void kill_signal_handler(int sig_number)
 {
     if ( (sig_number == SIGINT) || (sig_number == SIGTERM) )
     {
         main_loop_running = 0;
+    }
+}
+
+static void user_signal_handler(int sig_number)
+{
+    if (sig_number == SIGUSR1)
+    {
+        config_reload_pending = 1;
     }
 }
 
@@ -106,7 +117,8 @@ enum OptionIndex
     HELP,
     PORT,
     N_PINS,
-    SLEEP_PERIOD
+    SLEEP_PERIOD,
+    CONFIG_FILENAME
 };
 
 const option::Descriptor usage[] =
@@ -125,7 +137,7 @@ const option::Descriptor usage[] =
         "h?",
         "help",
         SenseiArg::None,
-        "\t-h --help \tPrint usage and exit."
+        "\t\t-h --help \tPrint usage and exit."
     },
     {
         PORT,
@@ -133,7 +145,7 @@ const option::Descriptor usage[] =
         "p",
         "port",
         SenseiArg::NonEmpty,
-        "\t-p <device>, --port=<device> \tSpecify serial port device [default=" SENSEI_DEFAULT_SERIAL_DEVICE "]."
+        "\t\t-p <device>, --port=<device> \tSpecify serial port device [default=" SENSEI_DEFAULT_SERIAL_DEVICE "]."
     },
     {
         N_PINS,
@@ -141,7 +153,7 @@ const option::Descriptor usage[] =
         "n",
         "pins",
         SenseiArg::Numeric,
-        "\t-n <value>, --pins=<value> \tSpecify number of configurable pins [default=" SENSEI_DEFAULT_N_PINS_STR "]."
+        "\t\t-n <value>, --pins=<value> \tSpecify number of configurable pins [default=" SENSEI_DEFAULT_N_PINS_STR "]."
     },
     {
         SLEEP_PERIOD,
@@ -149,7 +161,15 @@ const option::Descriptor usage[] =
         "s",
         "sleep",
         SenseiArg::Numeric,
-        "\t-s <value>, --sleep=<value> \tSpecify event loop sleep period in ms [default=" SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR "]."
+        "\t\t-s <value>, --sleep=<value> \tSpecify event loop sleep period in ms [default=" SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR "]."
+    },
+    {
+        CONFIG_FILENAME,
+        0,
+        "f",
+        "file",
+        SenseiArg::NonEmpty,
+        "\t\t-f <file>, --file=<file> \tSpecify JSON configuration file [default=" SENSEI_DEFAULT_CONFIG_FILENAME "]."
     },
     { 0, 0, 0, 0, 0, 0}
 };
@@ -189,8 +209,9 @@ int main(int argc, char* argv[])
     }
 
     int n_pins = SENSEI_DEFAULT_N_PINS;
-    std::chrono::milliseconds sleep_period_ms{SENSEI_DEFAULT_SLEEP_PERIOD_MS};
+    std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
     std::string port_name = std::string(SENSEI_DEFAULT_SERIAL_DEVICE);
+    std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
     for (int i=0; i<cl_parser.optionsCount(); i++)
     {
         option::Option& opt = cl_buffer[i];
@@ -224,12 +245,16 @@ int main(int argc, char* argv[])
                     SenseiArg::print_error("Option '", opt, "' invalid number\n");
                     return 1;
                 }
-                sleep_period_ms = std::chrono::milliseconds(parsed_int);
+                wait_period_ms = std::chrono::milliseconds(parsed_int);
             }
             break;
 
         case PORT:
             port_name.assign(opt.arg);
+            break;
+
+        case CONFIG_FILENAME:
+            config_filename.assign(opt.arg);
             break;
 
         default:
@@ -238,23 +263,38 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Post-config checks
+    std::ifstream config_file(config_filename.c_str());
+    if (! config_file.good())
+    {
+        std::cerr << "Failed to open config file " << config_filename << std::endl;
+        config_file.close();
+        return 1;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // Initialization
     ////////////////////////////////////////////////////////////////////////////////
 
-    signal(SIGINT, system_signal_handler);
-    signal(SIGTERM, system_signal_handler);
+    signal(SIGINT, kill_signal_handler);
+    signal(SIGTERM, kill_signal_handler);
+    signal(SIGUSR1, user_signal_handler);
 
-    event_handler.init(port_name, n_pins);
+    event_handler.init(port_name, n_pins, config_filename);
 
     ////////////////////////////////////////////////////////////////////////////////
     // Main loop
     ////////////////////////////////////////////////////////////////////////////////
 
+    SENSEI_LOG_INFO("Starting  main loop");
     while (main_loop_running)
     {
-        event_handler.handle_events();
-        std::this_thread::sleep_for(sleep_period_ms);
+        event_handler.handle_events(wait_period_ms);
+        if (config_reload_pending)
+        {
+            event_handler.reload_config();
+            config_reload_pending = 0;
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -262,7 +302,7 @@ int main(int argc, char* argv[])
     ////////////////////////////////////////////////////////////////////////////////
 
     event_handler.deinit();
-    printf("I have deinitialized everything, ready to shut down.\n");
+    printf("Sensei terminated.\n");
 
     return 0;
 }

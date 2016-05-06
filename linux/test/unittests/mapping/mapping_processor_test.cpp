@@ -4,6 +4,8 @@
 #include "message/message_factory.h"
 #include "output_backend_mockup.h"
 
+#include "../test_utils.h"
+
 using namespace sensei;
 using namespace sensei::mapping;
 
@@ -25,15 +27,8 @@ protected:
         MessageFactory factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
 
-        // Set pin 0 to digital
-        auto cmd_msg = factory.make_set_pin_type_command(0, PinType::DIGITAL_INPUT);
-        auto cmd = std::unique_ptr<Command>(static_cast<Command*>(cmd_msg.release()));
-        config_cmds.push_back(std::move(cmd));
-
-        // Set pin 1 to analog
-        cmd_msg = factory.make_set_pin_type_command(1, PinType::ANALOG_INPUT);
-        cmd = std::unique_ptr<Command>(static_cast<Command*>(cmd_msg.release()));
-        config_cmds.push_back(std::move(cmd));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(0, PinType::DIGITAL_INPUT))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(1, PinType::ANALOG_INPUT))));
 
         for (auto const& c : config_cmds)
         {
@@ -56,7 +51,7 @@ protected:
         PinType pin_type = PinType::UNDEFINED;
         for (auto const& msg : stored_cmds)
         {
-            if (msg->sensor_index() != sensor_index)
+            if (msg->index() != sensor_index)
             {
                 continue;
             }

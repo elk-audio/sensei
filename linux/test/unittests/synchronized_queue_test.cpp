@@ -11,10 +11,11 @@ public:
 };
 
 const int ITERATIONS = 5;
+std::mutex mutex;
 
 void push_loop(SynchronizedQueue<TestContainer>* module_under_test, std::condition_variable* notifier)
 {
-    std::mutex mutex;
+
     std::unique_lock<std::mutex> lock(mutex);
     for (int i = 0; i < ITERATIONS ; ++i)
     {
@@ -22,7 +23,7 @@ void push_loop(SynchronizedQueue<TestContainer>* module_under_test, std::conditi
         m.a = i;
         module_under_test->push(m);
         // wait for notifications from the main thread
-        notifier->wait_for(lock, std::chrono::milliseconds(100));
+        notifier->wait_for(lock, std::chrono::milliseconds(20));
     }
 }
 /*
@@ -45,6 +46,7 @@ TEST(SynchronizedQueueTest, ordertest)
         // But that is not critical since wait_for_data returns immediately if there
         // is data.
         module_under_test.wait_for_data(std::chrono::milliseconds(10));
+        std::lock_guard<std::mutex> lock(mutex);
         if (module_under_test.empty() == false)
         {
             TestContainer m = module_under_test.pop();

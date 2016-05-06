@@ -11,6 +11,8 @@
 #ifndef SENSEI_BASE_COMMAND_H
 #define SENSEI_BASE_COMMAND_H
 
+#include <type_traits>
+
 #include "message/base_message.h"
 
 namespace sensei {
@@ -21,14 +23,38 @@ enum class CommandType;
 
 /**
  * @brief Target addresses for commands
+ *
+ * Use operator overloading and typetraits to emulate old-style C flags composition
+ * within a type-safe enum
  */
-enum class CommandDestination
+enum class CommandDestination : int
 {
-    INTERNAL,
-    SERIAL_FRONTEND,
-    OUTPUT_BACKEND,
-    CONFIG_BACKEND
+    INTERNAL = 1 << 0,
+    SERIAL_FRONTEND = 1 << 1,
+    OUTPUT_BACKEND = 1 << 2,
+    CONFIG_BACKEND = 1 << 3
 };
+
+using CommandDestinationType = std::underlying_type_t <CommandDestination>;
+
+inline CommandDestination operator | (CommandDestination lhs, CommandDestination rhs)
+{
+    return static_cast<CommandDestination>(
+            static_cast<CommandDestinationType>(lhs) | static_cast<CommandDestinationType>(rhs)
+    );
+}
+
+inline CommandDestination& operator |= (CommandDestination& lhs, CommandDestination rhs)
+{
+    lhs = static_cast<CommandDestination>(static_cast<CommandDestinationType>(lhs) | static_cast<CommandDestinationType>(rhs));
+    return lhs;
+}
+
+inline bool operator & (CommandDestination lhs, CommandDestination rhs)
+{
+    return static_cast<bool>(static_cast<CommandDestinationType>(lhs) & static_cast<CommandDestinationType>(rhs));
+}
+
 
 /**
  * @brief Abstract base class for commands.
@@ -68,7 +94,7 @@ public:
     uint64_t uuid() const
     {
         uint64_t result = 0u;
-        result |= static_cast<uint64_t>(_sensor_index) << 48;
+        result |= static_cast<uint64_t>(_index) << 48;
         result |= static_cast<uint64_t>(_type) << 32;
         result |= static_cast<uint64_t>(_timestamp);
         return result;
