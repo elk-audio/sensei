@@ -45,7 +45,7 @@ private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
 
     // Sub-components instances
-    std::unique_ptr<serial_frontend::SerialFrontend> _frontend;
+    std::unique_ptr<serial_frontend::SerialFrontend> _serial_frontend;
     std::unique_ptr<mapping::MappingProcessor> _processor;
     std::unique_ptr<output_backend::OutputBackend> _output_backend;
     std::unique_ptr<config::BaseConfiguration> _config_backend;

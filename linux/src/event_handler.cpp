@@ -20,9 +20,9 @@ void EventHandler::init(const std::string port_name,
 {
     _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
     _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
-    _frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
+    _serial_frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
     _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
-    _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_digital_out_pins, max_n_input_pins));
+    _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_input_pins, max_n_digital_out_pins));
 
     auto ret = _config_backend->read();
     if (ret != config::ConfigStatus::OK)
@@ -45,18 +45,18 @@ void EventHandler::init(const std::string port_name,
         }
     }
 
-    if (!_frontend->connected())
+    if (!_serial_frontend->connected())
     {
         SENSEI_LOG_ERROR("Serial connection failed.");
     }
-    _frontend->verify_acks(true);
-    _frontend->run();
+    _serial_frontend->verify_acks(true);
+    _serial_frontend->run();
 
 }
 
 void EventHandler::deinit()
 {
-    _frontend.reset(nullptr);
+    _serial_frontend.reset(nullptr);
     _processor.reset(nullptr);
     _output_backend.reset(nullptr);
     _config_backend.reset(nullptr);
@@ -150,6 +150,10 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
                 SENSEI_LOG_ERROR("Invalid OSC Backend URL");
                 break;
 
+            case CommandErrorCode::INVALID_PORT_NUMBER:
+                SENSEI_LOG_ERROR("Invalid OSC output port number");
+                break;
+
             default:
                 break;
             }
@@ -159,6 +163,24 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
     if (address & CommandDestination::CONFIG_BACKEND)
     {
         // TODO: implement me
+    }
+
+    if (address & CommandDestination::USER_FRONTEND)
+    {
+        CommandErrorCode ret = _user_frontend->apply_command(cmd.get());
+        if (ret != CommandErrorCode::OK)
+        {
+            switch (ret)
+            {
+            case CommandErrorCode::INVALID_PORT_NUMBER:
+                SENSEI_LOG_ERROR("Invalid OSC input port number");
+                break;
+
+            default:
+                break;
+            }
+        }
+
     }
 
     // At last, pass the message to serial receiver queue

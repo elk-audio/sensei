@@ -262,6 +262,13 @@ public:
         return std::unique_ptr<SetOSCOutputPortCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_osc_input_port_command(const int index,
+                                                                 const int port,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetOSCInputPortCommand(index, port, timestamp);
+        return std::unique_ptr<SetOSCInputPortCommand>(msg);
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // Errors

@@ -47,20 +47,53 @@ static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, l
 }; // anonymous namespace
 
 OSCUserFrontend::OSCUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue,
-                                 const int max_n_digital_out_pins,
-                                 const int max_n_input_pins) :
-        UserFrontend(queue, max_n_digital_out_pins, max_n_input_pins),
+                                 const int max_n_input_pins,
+                                 const int max_n_digital_out_pins) :
+        UserFrontend(queue, max_n_input_pins, max_n_digital_out_pins),
             _osc_server(nullptr),
             _server_port(DEFAULT_SERVER_PORT)
 {
     _start_server();
 }
 
-CommandErrorCode OSCUserFrontend::apply_command(const Command* /*cmd*/)
+CommandErrorCode OSCUserFrontend::apply_command(const Command* cmd)
 {
-    // TODO:
-    // implement me (at least set port command)
-    return CommandErrorCode::OK;
+    CommandErrorCode status = CommandErrorCode::OK;
+
+    switch(cmd->type())
+    {
+
+    case CommandType::SET_OSC_INPUT_PORT:
+        {
+            const auto typed_cmd = static_cast<const SetOSCInputPortCommand*>(cmd);
+            auto port = typed_cmd->data();
+            if ((port < 1000) || (port > 65535))
+            {
+                status = CommandErrorCode::INVALID_PORT_NUMBER;
+            }
+            else
+            {
+                _server_port = port;
+                _stop_server();
+                _start_server();
+            }
+        };
+        break;
+
+    default:
+        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+        break;
+    }
+
+    // If command was not handled, try in the parent class
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return UserFrontend::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 }
 
 void OSCUserFrontend::_start_server()

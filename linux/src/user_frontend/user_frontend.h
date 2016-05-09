@@ -19,8 +19,8 @@ class UserFrontend
 {
 public:
     UserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue,
-                 const int max_n_digital_out_pins,
-                 const int max_n_input_pins) :
+                 const int max_n_input_pins,
+                 const int max_n_digital_out_pins) :
             _queue(queue),
             _max_n_input_pins(max_n_input_pins),
             _max_n_out_pins(max_n_digital_out_pins)
