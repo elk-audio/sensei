@@ -51,6 +51,7 @@ enum class CommandType
     SET_OSC_OUTPUT_RAW_PATH,
     SET_OSC_OUTPUT_HOST,
     SET_OSC_OUTPUT_PORT,
+    SET_OSC_INPUT_PORT,
     N_COMMAND_TAGS
 };
 
@@ -99,6 +100,7 @@ enum class CommandErrorCode
     INVALID_PIN_INDEX,
     INVALID_URL,
     UNINITIALIZED_PIN,
+    INVALID_PORT_NUMBER,
     N_COMMAND_ERROR_CODES
 };
 
@@ -251,6 +253,12 @@ SENSEI_DECLARE_COMMAND(SetOSCOutputPortCommand,
                        int,
                        "Set OSC output port",
                        CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetOSCInputPortCommand,
+                       CommandType::SET_OSC_INPUT_PORT,
+                       int,
+                       "Set OSC input port",
+                       CommandDestination::USER_FRONTEND);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Container specifications

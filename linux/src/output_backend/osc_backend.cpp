@@ -90,7 +90,6 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
 
 CommandErrorCode OSCBackend::apply_command(const Command *cmd)
 {
-    // Try to handle generic cases in base class method
     CommandErrorCode status = CommandErrorCode::OK;
     auto pin_idx = cmd->index();
 
@@ -141,7 +140,14 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
         {
             const auto typed_cmd = static_cast<const SetOSCOutputPortCommand*>(cmd);
             _port = typed_cmd->data();
-            status = _compute_address();
+            if ((_port < 1000) || (_port > 65535))
+            {
+                status = CommandErrorCode::INVALID_PORT_NUMBER;
+            }
+            else
+            {
+                status = _compute_address();
+            }
         };
         break;
 

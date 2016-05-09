@@ -299,6 +299,38 @@ TEST(MessagesTest, test_output_backend_command_creation)
 
 }
 
+TEST(MessagesTest, test_user_frontend_message_creation)
+{
+    MessageFactory factory;
+
+    std::vector<std::unique_ptr<BaseMessage>> msg_queue;
+
+    msg_queue.push_back(factory.make_set_osc_input_port_command(0, 9999));
+
+    for (auto const& msg : msg_queue)
+    {
+
+        ASSERT_EQ(MessageType::COMMAND, msg->base_type());
+        auto cmd_msg = static_cast<Command*>(msg.get());
+        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::USER_FRONTEND);
+
+        CommandType cmd_type = cmd_msg->type();
+        switch(cmd_type)
+        {
+        case CommandType::SET_OSC_INPUT_PORT:
+            {
+                auto typed_cmd = static_cast<SetOSCInputPortCommand *>(cmd_msg);
+                ASSERT_EQ(9999, typed_cmd->data());
+            };
+            break;
+
+        default:
+            FAIL();
+        }
+    }
+
+}
+
 
 TEST(MessagesTest, test_error_creation)
 {

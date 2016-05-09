@@ -155,6 +155,19 @@ TEST_F(TestOscBackend, test_path_creation)
     ASSERT_EQ("/test_input_raw/analog/bob", _backend._full_raw_paths[1]);
 }
 
+TEST_F(TestOscBackend, test_wrong_port_fail)
+{
+    MessageFactory factory;
+
+    auto cmd = CMD_UPTR(factory.make_set_osc_output_port_command(0, 100));
+    auto status = _backend.apply_command(cmd.get());
+    ASSERT_EQ(CommandErrorCode::INVALID_PORT_NUMBER, status);
+
+    cmd = CMD_UPTR(factory.make_set_osc_output_port_command(0, 70000));
+    status = _backend.apply_command(cmd.get());
+    ASSERT_EQ(CommandErrorCode::INVALID_PORT_NUMBER, status);
+}
+
 TEST_F(TestOscBackend, test_send_output)
 {
     MessageFactory factory;
