@@ -13,8 +13,10 @@
 // Global constants
 ////////////////////////////////////////////////////////////////////////////////
 
-#define SENSEI_DEFAULT_N_PINS               64
-#define SENSEI_DEFAULT_N_PINS_STR           "64"
+#define SENSEI_DEFAULT_N_INPUT_PINS         64
+#define SENSEI_DEFAULT_N_INPUT_PINS_STR     "64"
+#define SENSEI_DEFAULT_N_OUTPUT_PINS        32
+#define SENSEI_DEFAULT_N_OUTPUT_PINS_STR    "32"
 #define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_SERIAL_DEVICE        "/dev/ttyS01"
@@ -116,7 +118,8 @@ enum OptionIndex
     UNKNOWN,
     HELP,
     PORT,
-    N_PINS,
+    N_INPUT_PINS,
+    N_OUTPUT_PINS,
     SLEEP_PERIOD,
     CONFIG_FILENAME
 };
@@ -148,12 +151,20 @@ const option::Descriptor usage[] =
         "\t\t-p <device>, --port=<device> \tSpecify serial port device [default=" SENSEI_DEFAULT_SERIAL_DEVICE "]."
     },
     {
-        N_PINS,
+        N_INPUT_PINS,
         0,
-        "n",
-        "pins",
+        "i",
+        "input-pins",
         SenseiArg::Numeric,
-        "\t\t-n <value>, --pins=<value> \tSpecify number of configurable pins [default=" SENSEI_DEFAULT_N_PINS_STR "]."
+        "\t\t-i <value>, --input-pins=<value> \tSpecify number of configurable pins [default=" SENSEI_DEFAULT_N_INPUT_PINS_STR "]."
+    },
+    {
+        N_OUTPUT_PINS,
+        0,
+        "o",
+        "output-pins",
+        SenseiArg::Numeric,
+        "\t\t-o <value>, --output-pins=<value> \tSpecify number of digital output pins [default=" SENSEI_DEFAULT_N_OUTPUT_PINS_STR "]."
     },
     {
         SLEEP_PERIOD,
@@ -208,7 +219,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    int n_pins = SENSEI_DEFAULT_N_PINS;
+    int n_input_pins = SENSEI_DEFAULT_N_INPUT_PINS;
+    int n_output_pins = SENSEI_DEFAULT_N_OUTPUT_PINS;
     std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
     std::string port_name = std::string(SENSEI_DEFAULT_SERIAL_DEVICE);
     std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
@@ -223,7 +235,7 @@ int main(int argc, char* argv[])
             assert(false);
             break;
 
-        case N_PINS:
+        case N_INPUT_PINS:
             {
                 int parsed_int = atoi(opt.arg);
                 // horrible, but that's how atoi works and std::stoi needs exceptions
@@ -232,7 +244,20 @@ int main(int argc, char* argv[])
                     SenseiArg::print_error("Option '", opt, "' invalid number\n");
                     return 1;
                 }
-                n_pins = parsed_int;
+                n_input_pins = parsed_int;
+            }
+            break;
+
+        case N_OUTPUT_PINS:
+            {
+                int parsed_int = atoi(opt.arg);
+                // horrible, but that's how atoi works and std::stoi needs exceptions
+                if (parsed_int == 0)
+                {
+                    SenseiArg::print_error("Option '", opt, "' invalid number\n");
+                    return 1;
+                }
+                n_output_pins = parsed_int;
             }
             break;
 
@@ -280,7 +305,8 @@ int main(int argc, char* argv[])
     signal(SIGTERM, kill_signal_handler);
     signal(SIGUSR1, user_signal_handler);
 
-    event_handler.init(port_name, n_pins, config_filename);
+    event_handler.init(port_name, n_input_pins, n_output_pins,
+                       config_filename);
 
     ////////////////////////////////////////////////////////////////////////////////
     // Main loop

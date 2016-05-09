@@ -4,6 +4,7 @@
 #include "event_handler.h"
 #include "output_backend/osc_backend.h"
 #include "config_backend/json_configuration.h"
+#include "user_frontend/osc_user_frontend.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -12,14 +13,16 @@ using namespace sensei;
 SENSEI_GET_LOGGER;
 
 void EventHandler::init(const std::string port_name,
-                        const int max_n_pins,
+                        const int max_n_input_pins,
+                        const int max_n_digital_out_pins,
                         const std::string config_file)
 
 {
-    _processor.reset(new mapping::MappingProcessor(max_n_pins));
-    _output_backend.reset(new output_backend::OSCBackend(max_n_pins));
+    _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
+    _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
     _frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
     _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
+    _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_digital_out_pins, max_n_input_pins));
 
     auto ret = _config_backend->read();
     if (ret != config::ConfigStatus::OK)
@@ -120,6 +123,10 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
             case CommandErrorCode::CLIP_WARNING:
                 SENSEI_LOG_WARNING("Clipped value for command: {}, pin: {}", cmd->representation(), cmd->index());
+                break;
+
+            case CommandErrorCode::UNINITIALIZED_PIN:
+                SENSEI_LOG_WARNING("Dropping command {} for uninitialized pin {}", cmd->representation(), cmd->index());
                 break;
 
             default:

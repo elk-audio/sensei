@@ -98,6 +98,7 @@ enum class CommandErrorCode
     CLIP_WARNING,
     INVALID_PIN_INDEX,
     INVALID_URL,
+    UNINITIALIZED_PIN,
     N_COMMAND_ERROR_CODES
 };
 
@@ -173,7 +174,7 @@ SENSEI_DECLARE_COMMAND(SendDigitalPinValueCommand,
                        CommandType::SEND_DIGITAL_PIN_VALUE,
                        bool,
                        "Send Digital Pin Value",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::SERIAL_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
                        CommandType::ENABLE_SENDING_PACKETS,

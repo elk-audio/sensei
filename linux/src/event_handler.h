@@ -11,6 +11,7 @@
 #include "serial_frontend/serial_frontend.h"
 #include "output_backend/output_backend.h"
 #include "config_backend/base_configuration.h"
+#include "user_frontend/user_frontend.h"
 
 namespace sensei {
 
@@ -23,9 +24,8 @@ public:
     ~EventHandler()
     {}
 
-    void init(const std::string port_name,
-              const int max_n_pins,
-              const std::string config_file);
+    void init(const std::string port_name, const int max_n_input_pins, const int max_n_digital_out_pins,
+                  const std::string config_file);
 
     void handle_events(std::chrono::milliseconds wait_period);
 
@@ -49,6 +49,7 @@ private:
     std::unique_ptr<mapping::MappingProcessor> _processor;
     std::unique_ptr<output_backend::OutputBackend> _output_backend;
     std::unique_ptr<config::BaseConfiguration> _config_backend;
+    std::unique_ptr<user_frontend::UserFrontend> _user_frontend;
 };
 
 }; // namespace sensei

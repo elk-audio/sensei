@@ -8,9 +8,12 @@
 #include <cassert>
 
 #include "mapping_processor.h"
+#include "logging.h"
 
 using namespace sensei;
 using namespace sensei::mapping;
+
+SENSEI_GET_LOGGER;
 
 MappingProcessor::MappingProcessor(const int max_n_input_pins) :
     _max_n_pins(max_n_input_pins)
@@ -53,7 +56,11 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
     }
     else
     {
-        assert(_mappers[sensor_index] != nullptr);
+        // Apply command only to already initialized pins
+        if (_mappers[sensor_index] == nullptr)
+        {
+            return CommandErrorCode::UNINITIALIZED_PIN;
+        }
         return _mappers[sensor_index]->apply_command(cmd);
     }
 
@@ -79,7 +86,7 @@ void MappingProcessor::process(Value *value, output_backend::OutputBackend *back
     }
     else
     {
-        // TODO: log an error instead
+        SENSEI_LOG_ERROR("Got value message for initialized pin {}", value->index());
     }
 }
 
