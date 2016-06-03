@@ -112,3 +112,6 @@ linux/build/
 
 # Python pyc
 *.pyc
+
+# Odroid bin folder
+bin/
