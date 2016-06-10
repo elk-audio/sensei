@@ -86,9 +86,10 @@ private:
     void read_loop();
     void write_loop();
 
-    std::unique_ptr<BaseMessage> process_serial_packet(const sSenseiDataPacket *packet);
-    std::unique_ptr<BaseMessage> process_value(const sSenseiDataPacket *packet);
-    std::unique_ptr<BaseMessage> process_ack(const sSenseiDataPacket *packet);
+    void process_serial_packet(const sSenseiDataPacket *packet);
+    void process_value(const sSenseiDataPacket *packet);
+    void process_imu_data(const sSenseiDataPacket *packet);
+    void process_ack(const sSenseiDataPacket *packet);
     void send_initialize_packet(int ticks, int pins, int digital_pins, uint32_t timestamp);
     std::unique_ptr<Command> next_message_to_send();
     void handle_timeouts();
@@ -98,6 +99,7 @@ private:
     MessageFactory       _message_factory;
     SerialCommandCreator _packet_factory;
     MessageTracker       _message_tracker;
+    MessageConcatenator  _message_concatenator;
 
     sp_port *_port;
     SynchronizedQueue<std::unique_ptr<Command>>* _in_queue;

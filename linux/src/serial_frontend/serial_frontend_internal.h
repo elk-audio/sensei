@@ -7,6 +7,7 @@
 #define SERIAL_FRONTEND_INTERNAL_H
 
 #include <string>
+#include <cstring>
 
 #include "../../../common/sensei_serial_protocol.h"
 
@@ -126,6 +127,41 @@ inline std::string& translate_teensy_status_code(int code)
     }
 
 }
+
+/*
+ * Simple convenience class for assembling serial packets sent as several parts.
+ * Returns a pointer to a complete assembled payload if the fragments completed
+ * a message or nullptr if it didn't
+ */
+class MessageConcatenator
+{
+public:
+    MessageConcatenator() {}
+    ~MessageConcatenator() {}
+    const char* add(const sSenseiDataPacket *packet)
+    {
+        if (!_waiting && !packet->continuation)
+        {
+            return packet->payload;
+        }
+        if (packet->continuation)
+        {
+            memcpy(_storage, packet->payload, SENSEI_PAYLOAD_LENGTH);
+            _waiting = true;
+            return nullptr;
+        }
+        if (_waiting && !packet->continuation)
+        {
+            memcpy(_storage + SENSEI_PAYLOAD_LENGTH, packet->payload, SENSEI_PAYLOAD_LENGTH);
+            _waiting = false;
+            return _storage;
+        }
+    }
+
+private:
+    bool _waiting{false};
+    char _storage[SENSEI_PAYLOAD_LENGTH * 2];
+};
 
 // set 1 byte boundary for matching
 #pragma pack(push, 1)

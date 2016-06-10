@@ -190,11 +190,7 @@ void SerialFrontend::read_loop()
             {
                 SENSEI_LOG_WARNING("Serial packet failed verification");
             }
-            std::unique_ptr<BaseMessage> m = process_serial_packet(packet);
-            if (m)
-            {
-                _out_queue->push(std::move(m));
-            }
+            process_serial_packet(packet);
         }
         if (!_ready_to_send)
         {
@@ -257,38 +253,90 @@ void SerialFrontend::write_loop()
 /*
  * Create internal message representation from received teensy packet
  */
-std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
+void SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
 {
     switch (packet->cmd)
     {
         case SENSEI_CMD::VALUE:
-        {
-            const teensy_value_msg *m = reinterpret_cast<const teensy_value_msg *>(&packet->payload);
-            switch (m->pin_type)
-            {
-                case PIN_DIGITAL_INPUT:
-                    return _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
+            process_value(packet);
+            break;
 
-                case PIN_ANALOG_INPUT:
-                    return _message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp);
+        case SENSEI_CMD::IMU_GET_DATA:
+            process_imu_data(packet);
+            break;
 
-                default:
-                    SENSEI_LOG_WARNING("Unhandled pin type: {}", packet->cmd);
-                    return nullptr;
-            }
-        }
         case SENSEI_CMD::ACK:
-        {
-            return process_ack(packet);
-        }
+            process_ack(packet);
+            break;
+
         default:
             SENSEI_LOG_WARNING("Unhandled command type: {}", packet->cmd);
-            return nullptr;
     }
 }
 
+void SerialFrontend::process_value(const sSenseiDataPacket *packet)
+{
+    const teensy_value_msg *m = reinterpret_cast<const teensy_value_msg *>(&packet->payload);
+    switch (m->pin_type)
+    {
+        case PIN_DIGITAL_INPUT:
+            _out_queue->push(_message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp));
 
-std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket *packet)
+        case PIN_ANALOG_INPUT:
+            _out_queue->push(_message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp));
+
+        default:
+            SENSEI_LOG_WARNING("Unhandled pin type: {}", packet->cmd);
+    }
+
+}
+
+void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
+{
+    const char* assembled_payload = _message_concatenator.add(packet);
+    if (!assembled_payload)
+    {
+        return;
+    }
+    switch (packet->sub_cmd)
+    {
+        case SENSEI_SUB_CMD::GET_ALL_DATA:
+        {
+            const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
+            break;
+        }
+        case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR:
+        {
+            const sImuComponentSensor *data = reinterpret_cast<const sImuComponentSensor*>(assembled_payload);
+            break;
+        }
+        case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR_NORMALIZED:
+        {
+            const sImuNormalizedComponentSensor *data = reinterpret_cast<const sImuNormalizedComponentSensor*>(assembled_payload);
+            break;
+        }
+        case SENSEI_SUB_CMD::GET_DATA_QUATERNION:
+        {
+            const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
+            break;
+        }
+        case SENSEI_SUB_CMD::GET_DATA_LINEARACCELERATION:
+        {
+            const sImuLinearAcceleration *data = reinterpret_cast<const sImuLinearAcceleration*>(assembled_payload);
+            break;
+        }
+        case SENSEI_SUB_CMD::GET_DATA_QUATERNION_LINEARACCELERATION:
+        {
+            // TODO - not supported in sensei_frontend_internal.h
+            break;
+        }
+        default:
+            SENSEI_LOG_WARNING("Unrecognized IMU sub command {}", packet->sub_cmd);
+    }
+    SENSEI_LOG_INFO("IMU data received");
+}
+
+void SerialFrontend::process_ack(const sSenseiDataPacket *packet)
 {
     const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet->payload);
     uint64_t uuid = extract_uuid(ack);
@@ -309,10 +357,9 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
         {
             case SENSEI_ERROR_CODE::CRC_NOT_CORRECT:
                 // TODO - count the number of crc errors and only report error when they are too many
-                return _message_factory.make_bad_crc_error(0, ack->timestamp);
+                _out_queue->push(_message_factory.make_bad_crc_error(0, ack->timestamp));
         }
     }
-    return nullptr;
 }
 
 /*

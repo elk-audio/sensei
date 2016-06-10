@@ -76,7 +76,10 @@ TEST_F(SerialFrontendTest, test_process_serial_packet)
     payload->pin_id = 12;
     payload->pin_type = PIN_ANALOG_INPUT;
     payload->value = 35;
-    std::unique_ptr<BaseMessage> msg = _module_under_test.process_serial_packet(&packet);
+    _module_under_test.process_serial_packet(&packet);
+    // The message is put in the queue so assert that it exists and retrieve it
+    ASSERT_FALSE(_out_queue.empty());
+    std::unique_ptr<BaseMessage> msg = _out_queue.pop();
     AnalogValue* valuemessage = static_cast<AnalogValue*>(msg.get());
 
     ASSERT_EQ(MessageType::VALUE, valuemessage->base_type());
