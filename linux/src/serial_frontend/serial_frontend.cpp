@@ -200,6 +200,11 @@ void SerialFrontend::read_loop()
         {
             handle_timeouts(); /* It's more efficient to not check this every time */
         }
+        if (ret < 0)
+        {
+            SENSEI_LOG_WARNING("Serialport returned {} on read", ret);
+            sleep(1);
+        }
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _read_thread_state = running_state::STOPPED;
