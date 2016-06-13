@@ -302,7 +302,7 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
     {
         case SENSEI_SUB_CMD::GET_ALL_DATA:
         {
-            const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
+            // TODO - not supported in sensei_frontend_internal.h
             break;
         }
         case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR:
@@ -318,6 +318,7 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
         case SENSEI_SUB_CMD::GET_DATA_QUATERNION:
         {
             const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
+            EulerAngles angles = quat_to_euler(data->qw, data->qx, data->qy, data->qz);
             break;
         }
         case SENSEI_SUB_CMD::GET_DATA_LINEARACCELERATION:

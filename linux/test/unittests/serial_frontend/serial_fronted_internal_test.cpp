@@ -14,7 +14,8 @@ static uint8_t test_msg[] = { 0x1, 0x2, 0x3, 0xff, 0x0, 0x0, 0x0, 0x0,
                               0xe2, 0xf6, 0x10, 0xc3, 0x4, 0x4, 0x5, 0x6 };
 
 // Test standalone functions
-TEST (TestHelperFunctions, test_compare_packet_header) {
+TEST (TestHelperFunctions, test_compare_packet_header)
+{
     PACKET_HEADER hdr1 = {1, 2, 3};
     PACKET_HEADER hdr2 = {4, 5, 6};
     EXPECT_EQ(0, compare_packet_header(hdr1, hdr1));
@@ -26,6 +27,25 @@ TEST (TestHelperFunctions, test_calculate_crc)
     uint16_t crc = calculate_crc(reinterpret_cast<sSenseiDataPacket*>(test_msg));
     EXPECT_EQ(0x04c3, crc);
 }
+
+/*
+ * Test values from http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/
+ */
+TEST (TestHelperFunctions, test_quat_to_euler)
+{
+    // Test general case
+    EulerAngles angles = quat_to_euler(1, 0.3, 0.2, 0.4);
+    EXPECT_FLOAT_EQ(0.260602392, angles.yaw);
+    EXPECT_FLOAT_EQ(1.168080485, angles.pitch);
+    EXPECT_FLOAT_EQ(0.721654851, angles.roll);
+
+    // Test a singularity (North Pole)
+    angles = quat_to_euler(0.5, 0.5, 0.5, 0.5);
+    EXPECT_FLOAT_EQ(1.570796327, angles.yaw);
+    EXPECT_FLOAT_EQ(1.570796327, angles.pitch);
+    EXPECT_FLOAT_EQ(0, angles.roll);
+}
+
 
 TEST (TestMessageConcatenator, test_message_concatenation)
 {

@@ -183,6 +183,68 @@ TEST_F(TestSerialCommandCreator, test_make_config_slider_threshold_cmd)
     EXPECT_EQ(9, pin_config->idxPin);
 }
 
+TEST_F(TestSerialCommandCreator, test_make_imu_enable_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_enable_cmd(test_tstamp, true);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_START, packet->cmd);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_filtermode_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_filtermode_cmd(test_tstamp, eImuFilterType::IMU_FILTER_Q_COMP);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(eImuFilterType::IMU_FILTER_Q_COMP, imu_settings->filterMode);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_accelerometer_range_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_accelerometer_range_cmd(test_tstamp, 3);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(IMU_SENSOR_ACCELEROMETER_RANGE_4G, imu_settings->accerelometerRange);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_gyroscope_range_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_gyroscope_range_cmd(test_tstamp, 500);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(IMU_SENSOR_GYROSCOPE_RANGE_500, imu_settings->gyroscopeRange);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_compass_range_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_compass_range_cmd(test_tstamp, 2.5f);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(IMU_SENSOR_COMPASS_RANGE_2_50, imu_settings->compassRange);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_compass_enable_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_compass_enable_cmd(test_tstamp, true);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(true, imu_settings->compassEnable);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_delta_tics_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_delta_tics_cmd(test_tstamp, 5);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(5, imu_settings->deltaTicksContinuousMode);
+}
+
 TEST_F(TestSerialCommandCreator, test_cacheing)
 {
     const sSenseiDataPacket* packet = _module_under_test.make_config_adc_bitres_cmd(10, test_tstamp, 10);
@@ -194,4 +256,15 @@ TEST_F(TestSerialCommandCreator, test_cacheing)
     EXPECT_EQ(PIN_ANALOG_INPUT, packet->sub_cmd);
     EXPECT_EQ(SENDING_MODE_CONTINUOUS, pin_config->sendingMode);
     EXPECT_EQ(10, pin_config->idxPin);
+}
+
+TEST_F(TestSerialCommandCreator, test_cacheing_imu)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_compass_range_cmd(test_tstamp, 10);
+    packet = _module_under_test.make_imu_set_compass_enable_cmd(test_tstamp, true);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(IMU_SENSOR_COMPASS_RANGE_8_10, imu_settings->compassRange);
+    EXPECT_EQ(true, imu_settings->compassEnable);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
 }

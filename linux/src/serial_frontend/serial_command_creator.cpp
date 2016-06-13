@@ -8,10 +8,11 @@ namespace serial_frontend {
 
 SerialCommandCreator::SerialCommandCreator(int max_pins) :
         _max_pins(max_pins),
-        _cached_cfgs(_max_pins)
+        _cached_cfgs(_max_pins),
+        _cached_imu_cfgs({0, 0, 0, 0, 0, 0, 0})
 {
     int id = 0;
-    for (std::vector<pin_config>::iterator i = _cached_cfgs.begin(); i < _cached_cfgs.end() ; ++i)
+    for (std::vector<pin_config>::iterator i = _cached_cfgs.begin(); i < _cached_cfgs.end(); ++i)
     {
         memset(i.base(), 0, sizeof(pin_config));
         i->cfg_data.idxPin = id++;
@@ -133,7 +134,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_i
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     switch (type)
     {
         case PinType::DIGITAL_INPUT:
@@ -160,7 +161,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(int p
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     switch (mode)
     {
         case SendingMode::CONTINUOUS:
@@ -187,7 +188,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_delta_ticks_cmd(int p
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.deltaTicksContinuousMode = ticks;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
@@ -199,7 +200,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_adc_bitres_cmd(int pi
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     switch (bits)
     {
         case 8:
@@ -231,7 +232,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_filter_order_cmd(int 
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.filterOrder = order;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
@@ -243,7 +244,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_lowpass_cutoff_cmd(in
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.lowPassCutOffFilter = cutoff;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
@@ -255,7 +256,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_slidermode_cmd(int pi
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.sliderMode = mode;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
@@ -267,12 +268,153 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_slider_threshold_cmd(
     {
         return nullptr;
     }
-    pin_config& cached_cfg = _cached_cfgs[pin_id];
+    pin_config &cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.sliderThreshold = threshold;
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }
 
+/*
+ * IMU commands below
+ */
+const sSenseiDataPacket* SerialCommandCreator::make_imu_enable_cmd(uint32_t timestamp, bool enable)
+{
+    initialize_common_data(_cmd_buffer, timestamp, enable ? SENSEI_CMD::IMU_START : SENSEI_CMD::IMU_STOP);
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_filtermode_cmd(uint32_t timestamp, int mode)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    switch (mode)
+    {
+        case eImuFilterType::IMU_FILTER_IMU:
+            _cached_imu_cfgs.filterMode = IMU_FILTER_IMU;
+            break;
+        case eImuFilterType::IMU_FILTER_KALMAN:
+            _cached_imu_cfgs.filterMode = IMU_FILTER_KALMAN;
+            break;
+        case eImuFilterType::IMU_FILTER_Q_COMP:
+            _cached_imu_cfgs.filterMode = IMU_FILTER_Q_COMP;
+            break;
+        case eImuFilterType::IMU_FILTER_Q_GRAD:
+            _cached_imu_cfgs.filterMode = IMU_FILTER_Q_GRAD;
+            break;
+        default:
+            _cached_imu_cfgs.filterMode = IMU_FILTER_IMU;
+    }
+    sImuSettings *settings = reinterpret_cast<sImuSettings*>(_cmd_buffer.payload);
+    *settings = _cached_imu_cfgs;
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_accelerometer_range_cmd(uint32_t timestamp, int range)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    if (range <= 2)
+    {
+        _cached_imu_cfgs.accerelometerRange = eImuSensorAccelerometerRange::IMU_SENSOR_ACCELEROMETER_RANGE_2G;
+    }
+    else if (range <= 4)
+    {
+        _cached_imu_cfgs.accerelometerRange = eImuSensorAccelerometerRange::IMU_SENSOR_ACCELEROMETER_RANGE_4G;
+    }
+    else
+    {
+        _cached_imu_cfgs.accerelometerRange = eImuSensorAccelerometerRange::IMU_SENSOR_ACCELEROMETER_RANGE_8G;
+    }
+    sImuSettings* settings = reinterpret_cast<sImuSettings*>(_cmd_buffer.payload);
+    *settings = _cached_imu_cfgs;
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_gyroscope_range_cmd(uint32_t timestamp, int range)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    if (range <= 250)
+    {
+        _cached_imu_cfgs.gyroscopeRange = eImuSensorGyroscopeRange::IMU_SENSOR_GYROSCOPE_RANGE_250;
+    }
+    else if (range <= 500)
+    {
+        _cached_imu_cfgs.gyroscopeRange = eImuSensorGyroscopeRange::IMU_SENSOR_GYROSCOPE_RANGE_500;
+    }
+    else
+    {
+        _cached_imu_cfgs.gyroscopeRange = eImuSensorGyroscopeRange::IMU_SENSOR_GYROSCOPE_RANGE_2000;
+    }
+    sImuSettings* settings = reinterpret_cast<sImuSettings*>(_cmd_buffer.payload);
+    *settings = _cached_imu_cfgs;
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_compass_range_cmd(uint32_t timestamp, float range)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    if (range <= 0.88)
+    {
+        _cached_imu_cfgs.compassRange = eImuSensorCompassRange::IMU_SENSOR_COMPASS_RANGE_0_88;
+    }
+    else if (range <= 1.3)
+    {
+        _cached_imu_cfgs.compassRange = eImuSensorCompassRange::IMU_SENSOR_COMPASS_RANGE_1_30;
+    }
+    else if (range <= 1.9)
+    {
+        _cached_imu_cfgs.compassRange = eImuSensorCompassRange::IMU_SENSOR_COMPASS_RANGE_1_90;
+    }
+    else if (range <= 2.5)
+    {
+        _cached_imu_cfgs.compassRange = eImuSensorCompassRange::IMU_SENSOR_COMPASS_RANGE_2_50;
+    }
+    else if (range <= 4)
+    {
+        _cached_imu_cfgs.compassRange = eImuSensorCompassRange::IMU_SENSOR_COMPASS_RANGE_4_00;
+    }
+    else if (range <= 5.6)
+    {
+        _cached_imu_cfgs.compassRange = eImuSensorCompassRange::IMU_SENSOR_COMPASS_RANGE_5_60;
+    }
+    else
+    {
+        _cached_imu_cfgs.compassRange = eImuSensorCompassRange::IMU_SENSOR_COMPASS_RANGE_8_10;
+    }
+    sImuSettings* settings = reinterpret_cast<sImuSettings*>(_cmd_buffer.payload);
+    *settings = _cached_imu_cfgs;
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_compass_enable_cmd(uint32_t timestamp, bool enabled)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    _cached_imu_cfgs.compassEnable = enabled;
+    sImuSettings* settings = reinterpret_cast<sImuSettings*>(_cmd_buffer.payload);
+    *settings = _cached_imu_cfgs;
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_delta_tics_cmd(uint32_t timestamp, int ticks_delay)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    _cached_imu_cfgs.deltaTicksContinuousMode = ticks_delay;
+    sImuSettings* settings = reinterpret_cast<sImuSetting*>(_cmd_buffer.payload);
+    *settings = _cached_imu_cfgs;
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_type_of_data_cmd(uint32_t timestamp, int type)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    // TODO - Don't really know what this command does!
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_get_quaternion_data(uint32_t timestamp)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_GET_DATA);
+    _cmd_buffer.sub_cmd = SENSEI_SUB_CMD::GET_DATA_QUATERNION;
+    return &_cmd_buffer;
+}
 /*
  * Helper functions
  */
