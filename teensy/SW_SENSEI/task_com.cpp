@@ -10,6 +10,7 @@ extern QueueHandle_t hQueueCOMtoRT_DATA;
 void vTaskCOM(void *pvParameters)
 {
     SerialDebug.println("-> TASK: COM");
+    delay(DELAY_START_TASK_COM);
 
     SystemSettings systemSettings;
     systemSettings.debugMode = COND_DEBUG_MODE;
@@ -344,6 +345,19 @@ void vTaskCOM(void *pvParameters)
             }
             // Send PIN VALUE
             manageDataPacket.preparePacket(SENSEI_CMD::VALUE,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgPin, sizeof(GetSetPin)); //TODO sendData
+            manageDataPacket.send();
+        }
+
+        //Message IMU from RT to COM
+        if ((hQueueRTtoCOM_IMU != 0) && (xQueueReceive(hQueueRTtoCOM_IMU, &msgImu, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE)))
+        {
+            taskStatus.msgQueueReceived++;
+            if (systemSettings.debugMode)
+            {
+                SerialDebug.println("QueueRTtoCOM_IMU: xQueueReceive");
+            }
+            // Send PIN VALUE
+            manageDataPacket.preparePacket(SENSEI_CMD::VALUE_IMU,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgImu.imuComponents, sizeof(ImuComponents)); //TODO sendData
             manageDataPacket.send();
         }
 

@@ -28,6 +28,7 @@ void vTaskRT(void *pvParameters)
     xLastWakeTime = xTaskGetTickCount();
     //FilterType FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
 
+    //Manage IO
     ManageIO manageIO;
 
     // Message Queue Structs
@@ -39,11 +40,61 @@ void vTaskRT(void *pvParameters)
     hQueueRTtoCOM_PIN = xQueueCreate(10, sizeof(MsgRTtoCOM_PIN));
     hQueueRTtoCOM_DATA = xQueueCreate(64, sizeof(Msg_DATA));
 
+
     for (;;)
     {
         // Wait for the next cycle
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
         startTaskTimestamp = micros();
+
+        //------------------------------------------------------------------------------------------- [IMU]
+        if (systemSettings.enableSendingPackets)
+        {
+            if (manageIO.imu.getInterruptStatus())
+            {
+                //SerialDebug.println("IMU Ready!");
+                if (manageIO.imu.getAllSensorComponents(&msgImu.imuComponents) == SENSEI_ERROR_CODE::OK)
+                {
+                    float squareAccelerationNorm = msgImu.imuComponents.linearAcceleration.lax * msgImu.imuComponents.linearAcceleration.lax +
+                                                   msgImu.imuComponents.linearAcceleration.lay * msgImu.imuComponents.linearAcceleration.lay +
+                                                   msgImu.imuComponents.linearAcceleration.laz * msgImu.imuComponents.linearAcceleration.laz;
+
+                    if ((taskStatus.nCycles % 25) == 0)
+                    {
+                        SerialDebug.println("squareAccelerationNorm=" + String(squareAccelerationNorm));
+                        SerialDebug.println("qw=" + String(msgImu.imuComponents.quaternion.qw));
+                        SerialDebug.println("qx=" + String(msgImu.imuComponents.quaternion.qx));
+                        SerialDebug.println("qy=" + String(msgImu.imuComponents.quaternion.qy));
+                        SerialDebug.println("qz=" + String(msgImu.imuComponents.quaternion.qz));
+                        SerialDebug.println("ax=" + String(msgImu.imuComponents.linearAcceleration.lax));
+                        SerialDebug.println("ay=" + String(msgImu.imuComponents.linearAcceleration.lay));
+                        SerialDebug.println("az=" + String(msgImu.imuComponents.linearAcceleration.laz));
+
+                    }
+
+                    if (squareAccelerationNorm>0.1) //check norm
+                    {
+
+                        if (xQueueSend(hQueueRTtoCOM_IMU, (void*)&msgImu, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+                        {
+                            if (DEBUG) //TODO
+                            {
+                                SerialDebug.println("hQueueRTtoCOM_IMU: xQueueSend");
+                            }
+                            taskStatus.msgQueueSendErrors++;
+                        }
+                    }
+                }
+                else
+                {
+                    SerialDebug.println("IMU ERRORS");
+                }
+            }
+            else
+            {
+                //SerialDebug.println("IMU busy!");
+            }
+        }
 
         //------------------------------------------------------------------------------------------- [HW]
         manageIO.hardwareAcquisition();

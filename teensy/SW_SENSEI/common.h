@@ -14,6 +14,7 @@ using namespace sensei;
 using namespace std;
 
 const uint8_t DEBUG=0;
+const uint16_t DELAY_START_TASK_COM = 100; // [ms]
 
 // Message Queue
 //const uint16_t MSG_QUEUE_ITEM_SIZE = 20;
@@ -81,8 +82,8 @@ typedef enum RT_MSG_TYPE
 typedef struct ImuComponents
 {
 	sImuQuaternion quaternion;
-    sImuComponentSensor componentSensor;
-    sImuLinearAcceleration linearAcceleration;
+	sImuLinearAcceleration linearAcceleration;
+    //sImuComponentSensor sensors;
 } __attribute__((packed)) ImuComponents;
 
 typedef struct SetupPin
@@ -162,7 +163,7 @@ typedef struct MsgRTtoCOM_IMU
 {
 	uint8_t msgType;
 	int32_t status;
-	ImuComponents imu;
+	ImuComponents imuComponents;
 } __attribute__((packed)) MsgRTtoCOM_IMU;
 
 typedef struct MsgRTtoCOM_PIN

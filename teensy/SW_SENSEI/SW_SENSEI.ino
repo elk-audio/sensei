@@ -1,7 +1,7 @@
 /**
  * @file SW_SENSEI.ino
  * @brief Main SW_SENSEI
- * @author Simone Minto
+ * @author Simone Minto (simone.minto@prorob.it)
  * @copyright MIND Music Labs AB, Stockholm
  * @date 2016-03-10
  */
@@ -60,21 +60,21 @@ void setup()
     pinMode(INT_FILTER, INPUT);
 
     //Disable Shift Register
-    digitalWrite(DS, 0);
-    digitalWrite(SH, 0);
-    digitalWrite(ST, 1);
+    digitalWrite(DS, LOW);
+    digitalWrite(SH, LOW);
+    digitalWrite(ST, HIGH);
     digitalWrite(SPI_SS, LOW);
 
     //Disable SPI Chip Select
     digitalWrite(SPI_SS, HIGH);
 
     // Reset Shift register
-    digitalWrite(ST, 0);
+    digitalWrite(ST, LOW);
     for (uint8_t i=0;i<16;i++)
     {
         shiftOut(DS, SH, LSBFIRST, 0x00);
     }
-    digitalWrite(ST, 1);
+    digitalWrite(ST, HIGH);
 
     //Serial communication
     Serial.begin(115200);
@@ -96,7 +96,7 @@ void setup()
     analogReference(EXTERNAL);
 
     // Startup
-    for (uint8_t idx = 0; idx < 10; idx++)
+    for (uint8_t idx = 0; idx < 5; idx++)
     {
         digitalWrite(STATUS_LED, 1);
         delay(100);
@@ -105,8 +105,8 @@ void setup()
     }
 
     //TODO [!]
-    xTaskCreate(vTaskRT,"task_RT",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskRT); //-1
     xTaskCreate(vTaskCOM,"task_COM",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskCOM);
+    xTaskCreate(vTaskRT,"task_RT",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskRT); //-1
     xTaskCreate(vTaskLED,"task_LED",configMINIMAL_STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskLED);
 
     //Print
