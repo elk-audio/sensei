@@ -28,6 +28,7 @@ void vTaskRT(void *pvParameters)
     xLastWakeTime = xTaskGetTickCount();
     //FilterType FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
 
+    //Manage IO
     ManageIO manageIO;
 
     // Message Queue Structs
@@ -39,6 +40,7 @@ void vTaskRT(void *pvParameters)
     hQueueRTtoCOM_PIN = xQueueCreate(10, sizeof(MsgRTtoCOM_PIN));
     hQueueRTtoCOM_DATA = xQueueCreate(64, sizeof(Msg_DATA));
 
+
     for (;;)
     {
         // Wait for the next cycle
@@ -46,22 +48,52 @@ void vTaskRT(void *pvParameters)
         startTaskTimestamp = micros();
 
         //------------------------------------------------------------------------------------------- [IMU]
-        if (manageIO.imu.getInterruptStatus())
+        if (systemSettings.enableSendingPackets)
         {
-            SerialDebug.println("IMU Ready!");
-            //retCode==manageIO.imu.getAllComponents(imuComponents);
-            if (xQueueSend(hQueueRTtoCOM_IMU, (void*)&msgImu, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+            if (manageIO.imu.getInterruptStatus())
             {
-                if (DEBUG) //TODO
+                //SerialDebug.println("IMU Ready!");
+                if (manageIO.imu.getAllSensorComponents(&msgImu.imuComponents) == SENSEI_ERROR_CODE::OK)
                 {
-                    SerialDebug.println("hQueueRTtoCOM_IMU: xQueueSend");
+                    float squareAccelerationNorm = msgImu.imuComponents.linearAcceleration.lax * msgImu.imuComponents.linearAcceleration.lax +
+                                                   msgImu.imuComponents.linearAcceleration.lay * msgImu.imuComponents.linearAcceleration.lay +
+                                                   msgImu.imuComponents.linearAcceleration.laz * msgImu.imuComponents.linearAcceleration.laz;
+
+                    if ((taskStatus.nCycles % 25) == 0)
+                    {
+                        SerialDebug.println("squareAccelerationNorm=" + String(squareAccelerationNorm));
+                        SerialDebug.println("qw=" + String(msgImu.imuComponents.quaternion.qw));
+                        SerialDebug.println("qx=" + String(msgImu.imuComponents.quaternion.qx));
+                        SerialDebug.println("qy=" + String(msgImu.imuComponents.quaternion.qy));
+                        SerialDebug.println("qz=" + String(msgImu.imuComponents.quaternion.qz));
+                        SerialDebug.println("ax=" + String(msgImu.imuComponents.linearAcceleration.lax));
+                        SerialDebug.println("ay=" + String(msgImu.imuComponents.linearAcceleration.lay));
+                        SerialDebug.println("az=" + String(msgImu.imuComponents.linearAcceleration.laz));
+
+                    }
+
+                    if (squareAccelerationNorm>0.1) //check norm
+                    {
+
+                        if (xQueueSend(hQueueRTtoCOM_IMU, (void*)&msgImu, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+                        {
+                            if (DEBUG) //TODO
+                            {
+                                SerialDebug.println("hQueueRTtoCOM_IMU: xQueueSend");
+                            }
+                            taskStatus.msgQueueSendErrors++;
+                        }
+                    }
                 }
-                taskStatus.msgQueueSendErrors++;
+                else
+                {
+                    SerialDebug.println("IMU ERRORS");
+                }
             }
-        }
-        else
-        {
-            SerialDebug.println("IMU busy!");
+            else
+            {
+                //SerialDebug.println("IMU busy!");
+            }
         }
 
         //------------------------------------------------------------------------------------------- [HW]
@@ -182,7 +214,7 @@ void vTaskRT(void *pvParameters)
                                 SerialDebug.println("SET_DIGITAL_PINS: idxBank=" + String(msgData.data.pin.idx) +
                                                     " value=" + String(static_cast<bool>(msgData.data.pin.value)));
                             }
-                            msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, static_cast<bool>(msgData.data.pin.value));
+                            msgData.status = manageIO.setDigitalBank(msgData.data.pin.idx, msgData.data.pin.value);
                         break;
 
                         default:

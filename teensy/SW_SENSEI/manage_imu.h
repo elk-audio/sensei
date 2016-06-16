@@ -3,8 +3,9 @@
 
 #include "common.h"
 
-#define SPI_MAX_TRANSFERS_PER_CMD 50000
-#define DELAY_SPI_YEI 5 //[us]
+#define SPI_MAX_ITER_WAIT_CMD 4000
+#define DELAY_SPI_YEI 1 //[us]
+#define DELAY_SPI_YEI_CLEAR_BUFFER 50 //[us]
 
 // Default settings
 #define AXIS_DIRECTION_RIGHT_FORWARD_UP_RHANDED 1
@@ -12,19 +13,20 @@
 
 typedef enum SPI_CMD
 {
-    START_DATA_TRANSFER=0xF6,
-    START_NO_RESP_HEADER=0xF7,
-    START_RESP_HEADER=0xF9,
-    CLEAR_BUFFER=0x01,
-    IDLE_STATE=0x00,
-    READY_STATE=0x01,
-    BUSY_STATE=0x02,
-    ACC_STATE=0x04,
+    START_DATA_TRANSFER = 0xF6,
+    DATA_BYTE = 0xFF,
+    CLEAR_BUFFER = 0x01,
+
+    IDLE_STATE = 0x00,
+    READY_STATE = 0x01,
+    BUSY_STATE = 0x02,
+    ACC_STATE = 0x04,
 } SPI_CMD;
 
 typedef enum CMD_IMU
 {
     NO_SLOT = 255,
+
     READ_TARED_ORIENTATION_AS_QUATERNION = 0,
     READ_TARED_ORIENTATION_AS_EULER_ANGLES = 1,
     READ_TARED_ORIENTATION_AS_ROTATION_MATRIX = 2,
@@ -76,6 +78,7 @@ typedef enum CMD_IMU
     SET_REFERENCE_VECTOR_MODE = 105,
     GET_CALIBRATION_MODE = 170,
     GET_REFERENCE_VECTOR_MODE = 135,
+    RESTORE_DEFAULT_SETTINGS = 224,
     SOFTWARE_RESET = 226
 } CMD_IMU;
 
@@ -106,17 +109,16 @@ public:
     ManageIMU();
     ~ManageIMU();
 
-    int32_t writeCommand(uint8_t cmd);
-    int32_t writeCommand(uint8_t cmd, uint8_t value);
-    int32_t writeCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
+    int32_t sendCommand(uint8_t cmd);
+    int32_t sendCommand(uint8_t cmd, uint8_t value);
+    int32_t sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
 
-    int32_t getData(uint8_t cmd, void* data, uint16_t nByte);
     int32_t getValue(uint8_t cmd, void* data);
+    int32_t getData(uint8_t cmd, void* data, uint16_t nByte);
 
-    void clearBuffer();
     bool getInterruptStatus();
     int32_t setInterruptMode();
-    int32_t getAllComponents(ImuComponents* _components);
+    int32_t getAllSensorComponents(ImuComponents* _components);
     int32_t resetFilter();
 
     int32_t setSettings();
@@ -126,7 +128,16 @@ public:
 
 private:
     int32_t _initialize();
+
+    void _clearBuffer();
+    void _startCommunication();
+    void _sendCmd(uint8_t cmd);
+    uint8_t _readByte();
+    void _writeByte(uint8_t value);
+    int32_t _waitStatus(uint8_t status);
+
     bool _isInitialized;
+    uint8_t _retSpi;
     sImuSettings _settings;
     sImuInternalSettings _internalSettings;
 };
