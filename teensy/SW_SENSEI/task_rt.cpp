@@ -59,7 +59,17 @@ void vTaskRT(void *pvParameters)
                                                    msgImu.imuComponents.linearAcceleration.lay * msgImu.imuComponents.linearAcceleration.lay +
                                                    msgImu.imuComponents.linearAcceleration.laz * msgImu.imuComponents.linearAcceleration.laz;
 
-                    if ((taskStatus.nCycles % 25) == 0)
+                    float squareQuaternionsNorm = msgImu.imuComponents.quaternion.qw * msgImu.imuComponents.quaternion.qw +
+                                                  msgImu.imuComponents.quaternion.qx * msgImu.imuComponents.quaternion.qx +
+                                                  msgImu.imuComponents.quaternion.qy * msgImu.imuComponents.quaternion.qy +
+                                                  msgImu.imuComponents.quaternion.qz * msgImu.imuComponents.quaternion.qz;
+
+                    if (abs(1.0-squareQuaternionsNorm)>0.1)
+                    {
+                        SerialDebug.println("squareQuaternionsNorm error!");
+                    }
+
+                    if (0)//((taskStatus.nCycles % 25) == 0)
                     {
                         SerialDebug.println("squareAccelerationNorm=" + String(squareAccelerationNorm));
                         SerialDebug.println("qw=" + String(msgImu.imuComponents.quaternion.qw));
