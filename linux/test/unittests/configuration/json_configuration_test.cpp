@@ -123,7 +123,34 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
 
-    /* Lastly we should have an EnableSendingPackets command to turn on all pins */
+    /* The a virtual pin to use for IMU data */
+    index = 61;
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_PIN_NAME, SetPinNameCommand, index, "yaw");
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_PIN_TYPE, SetPinTypeCommand, index, PinType::IMU_INPUT);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_VIRTUAL_PIN, SetVirtualPinCommand, index, ImuIndex::YAW);
+
+    /* Now we should be receiving the IMU related commands */
+    index = 0;
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_SENDING_DELTA_TICKS, SetImuSendingDeltaTicksCommand, 0, 5);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_FILTER_MODE, SetImuFilterModeCommand, 0, 1);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_ACC_RANGE_MAX, SetImuAccelerometerRangeMaxCommand, 0, 4);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_GYRO_RANGE_MAX, SetImuGyroscopeRangeMaxCommand, 0, 500);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_COMPASS_RANGE_MAX, SetImuCompassRangeMax, 0, 5);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_COMPASS_ENABLED, SetImuCompassEnabled, 0, (int)true);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_ENABLED, SetImuEnabledCommand, 0, (int)true);
+
+
+/* Lastly we should have an EnableSendingPackets command to turn on all pins */
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::ENABLE_SENDING_PACKETS, EnableSendingPacketsCommand, index, (int)true);
 }

@@ -71,6 +71,7 @@ void EventHandler::handle_events(std::chrono::milliseconds wait_period)
         switch(event->base_type())
         {
         case MessageType::VALUE:
+            SENSEI_LOG_INFO("Event handler: got value.");
             _processor->process(static_cast<Value*>(event.get()), _output_backend.get());
             break;
 

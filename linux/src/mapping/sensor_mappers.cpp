@@ -10,6 +10,7 @@
 #include "mapping/sensor_mappers.h"
 #include "message/message_factory.h"
 #include "utils.h"
+#include "logging.h"
 
 namespace {
 
@@ -21,8 +22,11 @@ static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
 }; // Anonymous namespace
 
+SENSEI_GET_LOGGER;
+
 using namespace sensei;
 using namespace sensei::mapping;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // BaseSensorMapper
@@ -417,3 +421,82 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(const int value
     return CommandErrorCode::OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ImuMapper
+////////////////////////////////////////////////////////////////////////////////
+
+ImuMapper::ImuMapper(const int pin_index) :
+        BaseSensorMapper(PinType::IMU_INPUT, pin_index)
+{
+    SENSEI_LOG_INFO("ImuMapper constructor called");
+}
+
+ImuMapper::~ImuMapper()
+{
+}
+
+CommandErrorCode ImuMapper::apply_command(const Command *cmd)
+{
+    // Handle digital-specific configurations
+    CommandErrorCode status = CommandErrorCode::OK;
+    SENSEI_LOG_INFO("ImuMapper: Got a set pintype command {}!", (int)cmd->type());
+    switch(cmd->type())
+    {
+        case CommandType::SET_PIN_TYPE:
+        {
+            // This is set internally and not from the user, so just assert for bugs
+            assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::IMU_INPUT);
+        };
+            break;
+
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
+
+    }
+
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
+
+}
+
+void ImuMapper::put_config_commands_into(CommandIterator out_iterator)
+{
+    BaseSensorMapper::put_config_commands_into(out_iterator);
+
+    MessageFactory factory;
+    *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::IMU_INPUT);
+}
+
+void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
+{
+    SENSEI_LOG_INFO("ImuMapper process called");
+    if (! _pin_enabled)
+    {
+        return;
+    }
+    assert(value->type() == ValueType::IMU);
+
+    auto imu_val = static_cast<ImuValue*>(value);
+    float out_val = imu_val->value();
+    if (_invert_value)
+    {
+        out_val = 1.0f - out_val;
+    }
+
+    MessageFactory factory;
+    // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
+    // it gets optimized away by the compiler in release mode
+    auto temp_msg = factory.make_output_value(_pin_index,
+                                              out_val,
+                                              value->timestamp());
+    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+    backend->send(transformed_value, value);
+}

@@ -38,6 +38,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
         CommandErrorCode status = CommandErrorCode::OK;
         const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd);
         auto pin_type = typed_cmd->data();
+        SENSEI_LOG_INFO("Got a set pin type command, pintype {}", (int)pin_type);
         switch(pin_type)
         {
         case PinType::DIGITAL_INPUT:
@@ -46,6 +47,10 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
 
         case PinType::ANALOG_INPUT:
             _mappers[sensor_index].reset(new AnalogSensorMapper(sensor_index));
+            break;
+
+        case PinType::IMU_INPUT:
+            _mappers[sensor_index].reset(new ImuMapper(sensor_index));
             break;
 
         default:
@@ -80,6 +85,7 @@ void MappingProcessor::put_config_commands_into(CommandIterator out_iterator)
 void MappingProcessor::process(Value *value, output_backend::OutputBackend *backend)
 {
     int sensor_index = value->index();
+    SENSEI_LOG_INFO("Mappingprocessor: processing a value for pin {}", sensor_index);
     if (_mappers[sensor_index] != nullptr)
     {
         _mappers[sensor_index]->process(value, backend);

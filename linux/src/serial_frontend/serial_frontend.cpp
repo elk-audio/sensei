@@ -66,6 +66,10 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
      * and speeds up the program   */
     sp_set_debug_handler(nullptr);
 #endif
+    for (int& port : _virtual_pin_table)
+    {
+        port = -1;
+    }
     if (setup_port(port_name) == SP_OK)
     {
         SENSEI_LOG_INFO("Serial port opened ok, sending initialize packet");
@@ -261,7 +265,7 @@ void SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
             process_value(packet);
             break;
 
-        case SENSEI_CMD::IMU_GET_DATA:
+        case SENSEI_CMD::IMU_VALUE:
             process_imu_data(packet);
             break;
 
@@ -281,12 +285,14 @@ void SerialFrontend::process_value(const sSenseiDataPacket *packet)
     {
         case PIN_DIGITAL_INPUT:
             _out_queue->push(_message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp));
+            break;
 
         case PIN_ANALOG_INPUT:
             _out_queue->push(_message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp));
+            break;
 
         default:
-            SENSEI_LOG_WARNING("Unhandled pin type: {}", packet->cmd);
+            SENSEI_LOG_WARNING("Unhandled pin type: {} from pin {}", m->pin_type, m->pin_id);
     }
 
 }
@@ -305,11 +311,11 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
             // TODO - not supported in sensei_frontend_internal.h
             break;
         }
-        case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR:
+        /*case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR:
         {
             const sImuComponentSensor *data = reinterpret_cast<const sImuComponentSensor*>(assembled_payload);
             break;
-        }
+        }*/
         case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR_NORMALIZED:
         {
             const sImuNormalizedComponentSensor *data = reinterpret_cast<const sImuNormalizedComponentSensor*>(assembled_payload);
@@ -319,6 +325,22 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
         {
             const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
             EulerAngles angles = quat_to_euler(data->qw, data->qx, data->qy, data->qz);
+            auto yaw_msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::YAW],
+                                                           angles.yaw,
+                                                           packet->timestamp);
+            auto pitch_msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::PITCH],
+                                                             angles.pitch,
+                                                             packet->timestamp);
+            auto roll_msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::ROLL],
+                                                            angles.roll,
+                                                            packet->timestamp);
+
+            _out_queue->push(std::move(yaw_msg));
+            _out_queue->push(std::move(pitch_msg));
+            _out_queue->push(std::move(roll_msg));
+            SENSEI_LOG_INFO("pushing imu messages");
+            //_out_queue->push(_message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp));
+
             break;
         }
         case SENSEI_SUB_CMD::GET_DATA_LINEARACCELERATION:
@@ -334,7 +356,7 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
         default:
             SENSEI_LOG_WARNING("Unrecognized IMU sub command {}", packet->sub_cmd);
     }
-    SENSEI_LOG_INFO("IMU data received");
+    //SENSEI_LOG_INFO("IMU data received, data {}", packet->sub_cmd);
 }
 
 void SerialFrontend::process_ack(const sSenseiDataPacket *packet)
@@ -425,8 +447,16 @@ void SerialFrontend::handle_timeouts()
 const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
 {
     assert(message->base_type() == MessageType::COMMAND);
+    SENSEI_LOG_INFO("Got command {} ", message->representation());
     switch (message->type())
     {
+        case CommandType::SET_VIRTUAL_PIN:
+        {
+            /* This command is internal to the SerialFrontend and is not passed on the the Teensy */
+            auto cmd = static_cast<SetVirtualPinCommand *>(message);
+            _virtual_pin_table[cmd->data()] = cmd->index();
+            return nullptr;
+        }
         case CommandType::ENABLE_SENDING_PACKETS:
         {
             auto cmd = static_cast<EnableSendingPacketsCommand *>(message);
@@ -448,6 +478,13 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
         }
         case CommandType::SET_ENABLED:
         {
+            /* If the pin index is used for a virtual pin to map to imu data
+             * then don't send anything to the teensy */
+            for (int& i : _virtual_pin_table)
+            {
+                if (message->index() == i)
+                    break;
+            }
             auto cmd = static_cast<SetEnabledCommand *>(message);
             return _packet_factory.make_config_enabled_cmd(cmd->timestamp(), cmd->data());
         }
@@ -506,6 +543,48 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
             return _packet_factory.make_set_digital_pin_cmd(cmd->index(),
                                                             cmd->timestamp(),
                                                             cmd->data());
+        }
+        case CommandType::SET_IMU_ENABLED:
+        {
+            auto cmd = static_cast<SetImuEnabledCommand*>(message);
+            return _packet_factory.make_imu_enable_cmd(cmd->timestamp(),
+                                                       cmd->data());
+        }
+        case CommandType::SET_IMU_FILTER_MODE:
+        {
+            auto cmd = static_cast<SetImuFilterModeCommand*>(message);
+            return _packet_factory.make_imu_set_filtermode_cmd(cmd->timestamp(),
+                                                               cmd->data());
+        }
+        case CommandType::SET_IMU_SENDING_DELTA_TICKS:
+        {
+            auto cmd = static_cast<SetImuSendingDeltaTicksCommand*>(message);
+            return _packet_factory.make_imu_set_delta_tics_cmd(cmd->timestamp(),
+                                                               cmd->data());
+        }
+        case CommandType::SET_IMU_ACC_RANGE_MAX:
+        {
+            auto cmd = static_cast<SetImuAccelerometerRangeMaxCommand*>(message);
+            return _packet_factory.make_imu_set_accelerometer_range_cmd(cmd->timestamp(),
+                                                                        cmd->data());
+        }
+        case CommandType::SET_IMU_GYRO_RANGE_MAX:
+        {
+            auto cmd = static_cast<SetImuGyroscopeRangeMaxCommand*>(message);
+            return _packet_factory.make_imu_set_gyroscope_range_cmd(cmd->timestamp(),
+                                                                    cmd->data());
+        }
+        case CommandType::SET_IMU_COMPASS_RANGE_MAX:
+        {
+            auto cmd = static_cast<SetImuCompassRangeMax*>(message);
+            return _packet_factory.make_imu_set_compass_range_cmd(cmd->timestamp(),
+                                                                  cmd->data());
+        }
+        case CommandType::SET_IMU_COMPASS_ENABLED:
+        {
+            auto cmd = static_cast<SetImuCompassEnabled*>(message);
+            return _packet_factory.make_imu_set_compass_enable_cmd(cmd->timestamp(),
+                                                                   cmd->data());
         }
         default:
             SENSEI_LOG_WARNING("Unsupported command type {}", static_cast<int>(message->base_type()));

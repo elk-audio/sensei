@@ -18,6 +18,14 @@ static uint8_t test_msg[] = { 0x1, 0x2, 0x3, 0xff, 0x0, 0x0, 0x0, 0x0,
                               0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe8,
                               0xe2, 0xf6, 0x10, 0xc3, 0x4, 0x4, 0x5, 0x6 };
 
+static uint8_t imu_test[] = { 0x1, 0x2, 0x3, 0xce, 0x01, 0x0, 0x0, 0x0,
+                              0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                              0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                              0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                              0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                              0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+                              0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe8,
+                              0xe2, 0xf6, 0x10, 0xc3, 0x4, 0x4, 0x5, 0x6 };
 // Test standalone functions
 
 TEST (TestHelperFunctions, test_verify_message)
@@ -93,4 +101,38 @@ TEST_F(SerialFrontendTest, test_mute_function)
     EXPECT_FALSE(_module_under_test._muted);
     _module_under_test.mute(true);
     EXPECT_TRUE(_module_under_test._muted);
+}
+
+TEST_F(SerialFrontendTest, test_imu_packet)
+{
+    /* Set ut the virtual ports table, would be done from a config file otherwise */
+    _module_under_test._virtual_pin_table[ImuIndex::YAW] = 0;
+    _module_under_test._virtual_pin_table[ImuIndex::PITCH] = 1;
+    _module_under_test._virtual_pin_table[ImuIndex::ROLL] = 2;
+    sSenseiDataPacket* packet = reinterpret_cast<sSenseiDataPacket*>(imu_test);
+    _module_under_test.process_serial_packet(packet);
+    /* This should result in 3 imu messages */
+    ASSERT_FALSE(_out_queue.empty());
+    auto msg = _out_queue.pop();
+    auto typed_msg = static_cast<ImuValue*>(msg.get());
+    EXPECT_EQ(ImuIndex::YAW, typed_msg->index());
+    EXPECT_EQ(0, typed_msg->value());
+
+    msg = _out_queue.pop();
+    typed_msg = static_cast<ImuValue*>(msg.get());
+    EXPECT_EQ(ImuIndex::PITCH, typed_msg->index());
+    EXPECT_EQ(0, typed_msg->value());
+
+    msg = _out_queue.pop();
+    typed_msg = static_cast<ImuValue*>(msg.get());
+    EXPECT_EQ(ImuIndex::ROLL, typed_msg->index());
+    EXPECT_EQ(0, typed_msg->value());
+}
+
+TEST_F(SerialFrontendTest, test_enable_virtual_pin)
+{
+
+    //_module_under_test._virtual_pin_table[ImuIndex::ROLL] = 2;
+
+
 }

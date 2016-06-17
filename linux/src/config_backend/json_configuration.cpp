@@ -51,6 +51,7 @@ ConfigStatus JsonConfiguration::read()
     _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, false)));
     const Json::Value& backends = config["backends"];
     const Json::Value& sensors = config["sensors"];
+    const Json::Value& imu = config["imu"];
     ConfigStatus status;
 
     if (backends.isArray())
@@ -74,6 +75,11 @@ ConfigStatus JsonConfiguration::read()
                 return status;
             }
         }
+    }
+    status = handle_imu(imu);
+    if (status != ConfigStatus::OK)
+    {
+        return status;
     }
     /* The last commands enables sending of packets */
     _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, true)));
@@ -124,6 +130,10 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
         {
             m = _message_factory.make_set_pin_type_command(pin_id, PinType::DIGITAL_INPUT);
         }
+        else if (pin_type_str == "imu_input")
+        {
+            m = _message_factory.make_set_pin_type_command(pin_id, PinType::IMU_INPUT);
+        }
         else if (pin_type_str == "digital_output")
         {
             m = _message_factory.make_set_pin_type_command(pin_id, PinType::DIGITAL_OUTPUT);
@@ -134,6 +144,29 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
             return ConfigStatus::PARAMETER_ERROR;
         }
         _queue->push(std::move(m));
+    }
+    /* Read Imu parameter to map to this pin */
+    const Json::Value& param = pin["parameter"];
+    if (param.isString())
+    {
+        const std::string parameter = param.asString();
+        std::unique_ptr<BaseMessage> m;
+        if (parameter == "yaw")
+        {
+            m = _message_factory.make_set_virtual_pin_command(pin_id, ImuIndex::YAW);
+        }
+        else if (parameter == "pitch")
+        {
+            m = _message_factory.make_set_virtual_pin_command(pin_id, ImuIndex::PITCH);
+        }
+        else if (parameter == "roll")
+        {
+            m = _message_factory.make_set_virtual_pin_command(pin_id, ImuIndex::ROLL);
+        }
+        if (m)
+        {
+            _queue->push(std::move(m));
+        }
     }
 
     /* read pin enabled/disabled configuration */
@@ -294,7 +327,7 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
         _queue->push(std::move(m));
     }
 
-    /* read porn number configuration */
+    /* read port number configuration */
     const Json::Value& port = backend["port"];
     if (port.isInt())
     {
@@ -317,6 +350,66 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
     }
     return ConfigStatus::OK;
 }
+
+ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
+{
+    if (imu.empty())
+    {
+        return ConfigStatus::OK; /* Imu config is empty or not present, do nothing */
+    }
+    /* Read delta ticks configuration */
+    const Json::Value& ticks = imu["delta_ticks"];
+    if (ticks.isInt())
+    {
+        auto m = _message_factory.make_imu_sending_delta_ticks_command(ticks.asInt());
+        _queue->push(std::move(m));
+    }
+    /* Read filter mode configuration */
+    const Json::Value& mode = imu["filter_mode"];
+    if (mode.isString())
+    {
+        // TODO - For now, don't really bother which filter mode we set
+        auto m = _message_factory.make_imu_set_filter_mode_command(1);
+        _queue->push(std::move(m));
+    }
+    /* Read accelerometer range max value configuration */
+    const Json::Value& acc_range = imu["accelerometer_range_max"];
+    if (acc_range.isNumeric())
+    {
+        auto m = _message_factory.make_imu_set_acc_range_max_command(acc_range.asInt());
+        _queue->push(std::move(m));
+    }
+    /* Read gyroscope range max value configuration */
+    const Json::Value& gyro_range = imu["gyroscope_range_max"];
+    if (gyro_range.isNumeric())
+    {
+        auto m = _message_factory.make_imu_set_gyro_range_max_command(gyro_range.asInt());
+        _queue->push(std::move(m));
+    }
+    /* Read compass range max value configuration */
+    const Json::Value& comp_range = imu["compass_range_max"];
+    if (comp_range.isNumeric())
+    {
+        auto m = _message_factory.make_imu_set_compass_range_max_command(comp_range.asInt());
+        _queue->push(std::move(m));
+    }
+    /* Read delta ticks configuration */
+    const Json::Value& compass = imu["compass_enabled"];
+    if (compass.isBool())
+    {
+        auto m = _message_factory.make_imu_enable_compass_command(compass.asBool());
+        _queue->push(std::move(m));
+    }
+    /* Read IMU enabled configuration */
+    const Json::Value& enabled = imu["enabled"];
+    if (enabled.isBool())
+    {
+        auto m = _message_factory.make_enable_imu_command(enabled.asBool());
+        _queue->push(std::move(m));
+    }
+    return ConfigStatus::OK;
+}
+
 
 } // end namespace config
 } // end namespace sensei

@@ -114,6 +114,7 @@ private:
     std::mutex      _send_mutex;
     std::condition_variable _ready_to_send_notifier;
 
+    int  _virtual_pin_table[ImuIndex::N_IMU_INDEXES];
     bool _ready_to_send;
     bool _connected;
     bool _muted;

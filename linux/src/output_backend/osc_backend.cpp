@@ -4,10 +4,14 @@
 
 #include "osc_backend.h"
 
+#include "logging.h"
+
 using namespace sensei;
 using namespace sensei::output_backend;
 
 namespace {
+
+SENSEI_GET_LOGGER;
 
 void trim_osc_path_components(std::string& s)
 {
@@ -54,6 +58,7 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
 
     int sensor_index = transformed_value->index();
 
+    SENSEI_LOG_INFO("OSC backend, got value to send");
     if (_send_output_active)
     {
         lo_send(_address, _full_out_paths[sensor_index].c_str(), "f", transformed_value->value());
@@ -75,6 +80,13 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
         case ValueType::DIGITAL:
             {
                 auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
+                input_val = static_cast<int>(typed_val->value());
+            }
+            break;
+
+        case ValueType::IMU:
+            {
+                auto typed_val = static_cast<const ImuValue *>(raw_input_value);
                 input_val = static_cast<int>(typed_val->value());
             }
             break;
@@ -184,6 +196,10 @@ void OSCBackend::_compute_full_paths()
 
         case PinType::DIGITAL_INPUT:
             cur_sensor_type = std::string("digital");
+            break;
+
+        case PinType::IMU_INPUT:
+            cur_sensor_type = std::string("imu");
             break;
 
         default:
