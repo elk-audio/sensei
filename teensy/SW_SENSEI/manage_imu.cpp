@@ -7,18 +7,22 @@ ManageIMU::ManageIMU()
     _internalSettings.calibrationMode = IMU_CALIBRATION_MODE_BIAS;
     _internalSettings.referenceVectorMode = IMU_REFERENCE_VECTOR_SINGLE_AUTO_CONTINUOUS_MODE;
 
-    _settings.filterMode = IMU_FILTER_KALMAN; //TODO DEFAULT
+    //Default IMU's settings
+    _settings.filterMode = IMU_FILTER_KALMAN;
     _settings.accerelometerRange = IMU_SENSOR_ACCELEROMETER_RANGE_2G;
     _settings.gyroscopeRange = IMU_SENSOR_GYROSCOPE_RANGE_2000;
     _settings.compassRange = IMU_SENSOR_COMPASS_RANGE_1_30;
     _settings.compassEnable = 0;
+    _settings.sendingMode = SENDING_MODE_ON_REQUEST;
     _settings.deltaTicksContinuousMode = 0;
-    _settings.typeOfData = IMU_GET_ALL_DATA;
+    _settings.typeOfData = IMU_GET_LINEAR_ACCELERATION | IMU_GET_QUATERNIONS;
+    _settings.minLinearAccelerationSquareNorm = IMU_MIN_LINEAR_ACCELERATION_NORM * IMU_MIN_LINEAR_ACCELERATION_NORM;
+
 
     if (_initialize() == SENSEI_ERROR_CODE::OK)
     {
         _isInitialized = true;
-        SerialDebug.println("-> IMU: OK");
+        SerialDebug.println("-> IMU: OK - MAX_SUB_CMD = " + String(IMU_MAX_SUB_CMD));
     }
     else
     {
@@ -43,7 +47,7 @@ void ManageIMU::_startCommunication()
     _writeByte(START_DATA_TRANSFER);
 }
 
-uint8_t ManageIMU::_readByte() //TODO inline
+uint8_t ManageIMU::_readByte()
 {
     uint8_t retSpi;
 
@@ -56,7 +60,7 @@ uint8_t ManageIMU::_readByte() //TODO inline
     return retSpi;
 }
 
-void ManageIMU::_writeByte(uint8_t value) //TODO inline
+void ManageIMU::_writeByte(uint8_t value)
 {
 
     digitalWrite(SPI_SS,LOW);
@@ -66,7 +70,7 @@ void ManageIMU::_writeByte(uint8_t value) //TODO inline
     delayMicroseconds(DELAY_SPI_YEI);
 }
 
-int32_t ManageIMU::_waitStatus(uint8_t status) //TODO inline
+int32_t ManageIMU::_waitStatus(uint8_t status)
 {
     uint16_t iter = 0;
     while ( (_retSpi != status) && (_retSpi != IDLE_STATE) && (iter < SPI_MAX_ITER_WAIT_CMD) )
@@ -162,6 +166,11 @@ int32_t ManageIMU::getData(uint8_t cmd, void* data, uint16_t nByte)
     }
 
     return SENSEI_ERROR_CODE::OK;
+}
+
+uint8_t ManageIMU::getTypeOfData()
+{
+    return _settings.typeOfData;
 }
 
 bool ManageIMU::getInterruptStatus()
@@ -290,13 +299,77 @@ int32_t ManageIMU::getSettings(sImuSettings* settings)
         return SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED;
     }
 
+    settings->sendingMode = _settings.sendingMode;
     settings->deltaTicksContinuousMode = _settings.deltaTicksContinuousMode;
     settings->typeOfData = _settings.typeOfData;
+    settings->minLinearAccelerationSquareNorm = _settings.minLinearAccelerationSquareNorm;
 
     return SENSEI_ERROR_CODE::OK;
 }
 
-int32_t ManageIMU::getAllSensorComponents(ImuComponents* components)
+
+int32_t ManageIMU::getSensorComponents(uint8_t components,uint8_t* data_vector,uint16_t& packetSize)
+{
+    //SerialDebug.println("getSensorComponents");
+
+    uint8_t comp_cmd;
+    uint8_t comp_size;
+    uint8_t* ptr = (uint8_t*)data_vector;
+
+    for(int idx_comp=0; idx_comp<IMU_MAX_COMPONENTS; idx_comp++)
+    {
+        if (components & (0x01 << idx_comp))
+        {
+            //SerialDebug.println("POST idx_comp=" + String(idx_comp));
+
+            switch (idx_comp)
+            {
+                case 0x00:
+                    //SerialDebug.println("READ_CORRECTED_LINEAR_ACCELERATION_IN_GLOBAL_SPACE");
+                    comp_cmd = READ_CORRECTED_LINEAR_ACCELERATION_IN_GLOBAL_SPACE;
+                    comp_size = sizeof(sImuLinearAcceleration);
+                break;
+
+                case 0x01:
+                    //SerialDebug.println("READ_TARED_ORIENTATION_AS_QUATERNION");
+                    comp_cmd = READ_TARED_ORIENTATION_AS_QUATERNION;
+                    comp_size = sizeof(sImuQuaternion);
+                break;
+
+                case 0x02:
+                    //SerialDebug.println("READ_ALL_CORRECTED_COMPONENT_SENSOR_DATA");
+                    comp_cmd = READ_ALL_CORRECTED_COMPONENT_SENSOR_DATA;
+                    comp_size = sizeof(sImuComponentSensor);
+                break;
+
+                case 0x03:
+                    //SerialDebug.println("READ_ALL_NORMALIZED_COMPONENT_SENSOR_DATA");
+                    comp_cmd = READ_ALL_NORMALIZED_COMPONENT_SENSOR_DATA;
+                    comp_size = sizeof(sImuNormalizedComponentSensor);
+                break;
+
+                default:
+                    comp_size = 0;
+            }
+
+            if (comp_size > 0)
+            {
+                if (getData(comp_cmd,
+                            ptr + packetSize,
+                            comp_size)
+                            != SENSEI_ERROR_CODE::OK)
+                {
+                    return SENSEI_ERROR_CODE::IMU_GENERIC_ERROR;
+                }
+                packetSize+=comp_size;
+            }
+        }
+    }
+
+    return SENSEI_ERROR_CODE::OK;
+}
+
+/*int32_t ManageIMU::getAllSensorComponents(ImuComponents* components)
 {
     uint8_t* ptr = (uint8_t*)components;
 
@@ -318,20 +391,20 @@ int32_t ManageIMU::getAllSensorComponents(ImuComponents* components)
         return SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED;
     }
 
-    // Get accelerometer, gyroscope, magnetometer
-    /*if (getData(CMD_IMU::READ_ALL_CORRECTED_COMPONENT_SENSOR_DATA,
+    //Get accelerometer, gyroscope, magnetometer
+    if (getData(CMD_IMU::READ_ALL_CORRECTED_COMPONENT_SENSOR_DATA,
                   ptr + sizeof(sImuQuaternion) + sizeof(sImuLinearAcceleration),
                   sizeof(sImuComponentSensor))
                   != SENSEI_ERROR_CODE::OK)
     {
          return SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED;
     }
-    */
     return SENSEI_ERROR_CODE::OK;
-}
+}*/
 
 int32_t ManageIMU::setSettings(sImuSettings* settings)
 {
+
     if (settings->filterMode < N_IMU_FILTER_TYPES)
     {
         _settings.filterMode = settings->filterMode;
@@ -341,14 +414,47 @@ int32_t ManageIMU::setSettings(sImuSettings* settings)
         return SENSEI_ERROR_CODE::INCORRECT_PARAMETER_TYPE;
     }
 
-    //TODO
-    _settings.filterMode = settings->filterMode; //N_IMU_FILTER_TYPES
-    _settings.accerelometerRange = settings->accerelometerRange; //N_IMU_SENSOR_ACCELEROMETER_RANGES
-    _settings.gyroscopeRange = settings->gyroscopeRange; //N_IMU_SENSOR_GYROSCOPE_RANGES
-    _settings.compassRange = settings->compassRange; //N_IMU_SENSOR_COMPASS_RANGES
+    if (settings->accerelometerRange < N_IMU_SENSOR_ACCELEROMETER_RANGES)
+    {
+        _settings.accerelometerRange = settings->accerelometerRange;
+    }
+    else
+    {
+        return SENSEI_ERROR_CODE::INCORRECT_PARAMETER_TYPE;
+    }
+
+    if (settings->gyroscopeRange < N_IMU_SENSOR_GYROSCOPE_RANGES)
+    {
+        _settings.gyroscopeRange = settings->gyroscopeRange;
+    }
+    else
+    {
+        return SENSEI_ERROR_CODE::INCORRECT_PARAMETER_TYPE;
+    }
+
+    if (settings->gyroscopeRange < N_IMU_SENSOR_COMPASS_RANGES)
+    {
+        _settings.compassRange = settings->compassRange;
+    }
+    else
+    {
+        return SENSEI_ERROR_CODE::INCORRECT_PARAMETER_TYPE;
+    }
+
+    if (settings->typeOfData > 0 && settings->typeOfData <= IMU_MAX_SUB_CMD)
+    {
+        _settings.typeOfData = settings->typeOfData;
+    }
+    else
+    {
+        return SENSEI_ERROR_CODE::INCORRECT_PARAMETER_TYPE;
+    }
+
     _settings.compassEnable = settings->compassEnable;
+    _settings.sendingMode = settings->sendingMode;
     _settings.deltaTicksContinuousMode = settings->deltaTicksContinuousMode;
-    _settings.typeOfData = settings->typeOfData; //N_IMU_DATA_TYPES
+    _settings.typeOfData = settings->typeOfData;
+    _settings.minLinearAccelerationSquareNorm = settings->minLinearAccelerationSquareNorm;
 
     return setSettings();
 }
@@ -388,4 +494,49 @@ int32_t ManageIMU::setSettings()
     }
 
     return SENSEI_ERROR_CODE::OK;
+}
+
+int32_t ManageIMU::gyroscopeCalibration()
+{
+    return sendCommand(BEGIN_GYROSCOPE_AUTOCALIBRATION);
+}
+
+int32_t ManageIMU::tareWithCurrentOrientation()
+{
+    return sendCommand(TARE_WITH_CURRENT_ORIENTATION);
+}
+
+//int32_t ManageIMU::resetTare()
+//{
+//    return sendCommand(RESET_BASE_OFFSET);
+//}
+
+float ManageIMU::getMinLinearAccelerationSquareNorm()
+{
+    return _settings.minLinearAccelerationSquareNorm;
+}
+
+uint8_t ManageIMU::getSendingMode()
+{
+    return _settings.sendingMode;
+}
+
+uint16_t ManageIMU::getDeltaTicksContinuousMode()
+{
+    return _settings.deltaTicksContinuousMode;
+}
+
+void ManageIMU::printDebugImuSettings()
+{
+    SerialDebug.println("IMU SETTINGS (RT):");
+    SerialDebug.println("   filterMode = " + String(_settings.filterMode));
+    SerialDebug.println("   accerelometerRange = " + String(_settings.accerelometerRange));
+    SerialDebug.println("   gyroscopeRange = " + String(_settings.gyroscopeRange));
+    SerialDebug.println("   compassRange = " + String(_settings.compassRange));
+    SerialDebug.println("   compassEnable = " + String(_settings.compassEnable));
+    SerialDebug.println("   sendingMode = " + String(_settings.sendingMode));
+    SerialDebug.println("   deltaTicksContinuousMode = " + String(_settings.deltaTicksContinuousMode));
+    SerialDebug.println("   typeOfData = " + String(_settings.typeOfData));
+    SerialDebug.println("   minLinearAccelerationNorm = " + String(sqrt(_settings.minLinearAccelerationSquareNorm)));
+    SerialDebug.println("");
 }

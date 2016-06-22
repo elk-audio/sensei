@@ -17,7 +17,7 @@ const uint8_t DEBUG=0;
 const uint16_t DELAY_START_TASK_COM = 100; // [ms]
 
 // Message Queue
-//const uint16_t MSG_QUEUE_ITEM_SIZE = 20;
+const uint16_t MSG_QUEUE_ITEM_SIZE = 64;
 const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_RECEIVE = 0;
 const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM = 0;
 const uint16_t MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_COM_TO_RT = 0;
@@ -51,6 +51,9 @@ const uint8_t INT_FILTER = 9;
 
 const uint8_t VERSOR_Z_PINS = -1;
 
+//IMU
+const float IMU_MIN_LINEAR_ACCELERATION_NORM = 0.1;
+
 // System
 #undef F
 #define F(str) str
@@ -79,12 +82,6 @@ typedef enum RT_MSG_TYPE
 	DATA=1,
 } RT_MSG_TYPE;
 
-typedef struct ImuComponents
-{
-	sImuQuaternion quaternion;
-	sImuLinearAcceleration linearAcceleration;
-    //sImuComponentSensor sensors;
-} __attribute__((packed)) ImuComponents;
 
 typedef struct SetupPin
 {
@@ -108,20 +105,24 @@ typedef struct GetSetPin
 	uint8_t type;
 }   __attribute__((packed)) GetSetPin;
 
-typedef  struct HardwareSettings
+typedef struct HardwareSettings
 {
-	uint8_t ticksDelay;
+	uint8_t ticksDelayRtTask;
 	uint16_t nPin;
 	uint16_t nDigitalPin;
 }   __attribute__((packed)) HardwareSettings;
 
-typedef  struct SystemSettings
+typedef struct SystemSettings
 {
-	uint16_t nPin;
-	uint16_t nDigitalPin;
+	//systemSettings.debugMode=COND_DEBUG_MODE;
+    //systemSettings.enableMultiplePackets=COND_MULTIPLE_PACKETS;
+    //systemSettings.enableSendingPackets=COND_SENDING_PACKETS;
+    //systemSettings.enableImu=COND_IMU_ENABLED;
+	//SystemSettings() : nPin(0), nDigitalPin(0), debugMode(COND_DEBUG_MODE), enableMultiplePackets(COND_MULTIPLE_PACKETS), enableSendingPackets(COND_SENDING_PACKETS), enableImu(COND_IMU_ENABLED) {}
 	bool debugMode;
-	bool enableMultiplePackets;
-	bool enableSendingPackets;
+	bool enabledMultiplePackets;
+	bool enabledSendingPackets;
+	bool enabledImu;
 }   __attribute__((packed)) SystemSettings;
 
 typedef struct TaskRtStatus
@@ -149,22 +150,35 @@ typedef struct SystemStatus
     TaskComStatus taskComStatus;
 } __attribute__((packed)) SystemStatus;
 
+
+typedef uint8_t VectorDataImu[sizeof(sImuQuaternion) + sizeof(sImuLinearAcceleration) +sizeof(sImuComponentSensor) + sizeof(sImuNormalizedComponentSensor)];
+
 typedef union Data
 {
 	SystemSettings systemSettings;
 	HardwareSettings hw;
+	sImuSettings imuSettings;
+	VectorDataImu vectorDataImu;
 	SystemStatus systemStatus;
 	SetupPin setupPin;
 	GetSetPin pin;
 	uint8_t value;
 } Data;
 
+
+//[vectorDataImu]
+//quaternion
+//linearAcceleration
+//component sensor
+//normalized component sensor
 typedef struct MsgRTtoCOM_IMU
 {
 	uint8_t msgType;
 	int32_t status;
-	ImuComponents imuComponents;
+	uint16_t packetSize;
+	VectorDataImu vectorDataImu;
 } __attribute__((packed)) MsgRTtoCOM_IMU;
+
 
 typedef struct MsgRTtoCOM_PIN
 {
@@ -179,6 +193,7 @@ typedef struct Msg_DATA
 	uint8_t msgType;
 	int32_t status;
 	Data data;
+	uint16_t packetSize;
 } __attribute__((packed)) Msg_DATA;
 
 #endif // COMMON_H
