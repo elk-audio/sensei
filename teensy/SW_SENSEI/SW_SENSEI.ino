@@ -104,7 +104,6 @@ void setup()
         delay(50);
     }
 
-    //TODO [!]
     xTaskCreate(vTaskCOM,"task_COM",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskCOM);
     xTaskCreate(vTaskRT,"task_RT",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskRT); //-1
     xTaskCreate(vTaskLED,"task_LED",configMINIMAL_STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskLED);
@@ -119,7 +118,6 @@ void setup()
     SerialDebug.print(__DATE__);
     SerialDebug.print(" ");
     SerialDebug.println(__TIME__);
-    SerialDebug.println("!!! FREERTOS:checkPriority !!!");
     SerialDebug.println(" -----------------------------");
 
     delay(100);
