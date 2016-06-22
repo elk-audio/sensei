@@ -342,14 +342,14 @@ namespace sensei {
         float ngx;
     } __attribute__((packed)) sImuNormalizedComponentSensor;
 
-    typedef enum eImuGetData
+    /*typedef enum eImuGetData
     {
         IMU_GET_ALL_DATA,
         IMU_GET_DATA_QUATERNION,
         IMU_GET_DATA_LINEARACCELERATION,
         IMU_GET_DATA_COMPONENT_SENSOR,
         N_IMU_DATA_TYPES
-    } eImuGetData;
+    } eImuGetData;*/
 
 
     typedef enum ePinType{
