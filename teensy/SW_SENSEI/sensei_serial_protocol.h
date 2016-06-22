@@ -19,9 +19,11 @@ namespace sensei {
 
     const uint8_t MAX_FILTER_ORDER = 12;
 
+    // Start conditions
     const bool COND_DEBUG_MODE = false;
     const bool COND_MULTIPLE_PACKETS = false;
     const bool COND_SENDING_PACKETS = false;
+    const bool COND_IMU_ENABLED = false;
 
     typedef enum SENSEI_ERROR_CODE {
 
@@ -54,9 +56,11 @@ namespace sensei {
         INCOMPLETE_PARAMETERS=-106,
         WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS=-107,
         //------------------------------------------
-        IMU_COMMUNICATION_ERROR = -3000,
-        IMU_NOT_CONNECTED = -3001,
-        IMU_CMD_NOT_EXECUTED = -3002,
+        IMU_GENERIC_ERROR = -3000,
+        IMU_COMMUNICATION_ERROR = -3001,
+        IMU_NOT_CONNECTED = -3002,
+        IMU_CMD_NOT_EXECUTED = -3003,
+        IMU_DISABLED = -3004,
         //------------------------------------------
         SERIAL_DEVICE_GENERIC_ERROR = -4000,
         SERIAL_DEVICE_PORT_NOT_OPEN = -4001,
@@ -150,15 +154,13 @@ namespace sensei {
         SET_VALUE = 104,
         SET_DIGITAL_PINS = 105,
         //----------------------------------------------
-		IMU_START=200,
-		IMU_STOP=201,
-        IMU_SET_SETTINGS = 202,
-        IMU_GET_SETTINGS = 203,
-        IMU_GYROSCOPE_CALIBRATION = 204,
-        IMU_RESET_FILTER = 205,
-        IMU_GET_DATA = 206,
-        IMU_TARE_WITH_CURRENT_ORIENTATION = 207,
-        IMU_RESET_TARE=208,
+		IMU_ENABLE=200,
+        IMU_SET_SETTINGS = 201,
+        IMU_GET_SETTINGS = 202,
+        IMU_GYROSCOPE_CALIBRATION = 203,
+        IMU_RESET_FILTER = 204,
+        IMU_GET_DATA = 205,
+        IMU_TARE_WITH_CURRENT_ORIENTATION = 206,
         //----------------------------------------------
         STOP_BOARD = 250,
         //----------------------------------------------
@@ -272,10 +274,41 @@ namespace sensei {
         uint8_t gyroscopeRange;
         uint8_t compassRange;
         uint8_t compassEnable;
+        uint8_t sendingMode;
         uint16_t deltaTicksContinuousMode; //0->REQUEST_MODE
 		uint8_t typeOfData; // -> eImuGetData
-
+        float minLinearAccelerationSquareNorm;
     } __attribute__((packed)) sImuSettings;
+
+    //quaternion
+    //linearAcceleration
+    //component sensor
+    //normalized component sensor
+    const uint8_t IMU_GET_LINEAR_ACCELERATION = (0x01 << 0);
+    const uint8_t IMU_CLEAR_BIT_LINEAR_ACCELERATION = 0xFE;
+    const uint8_t IMU_GET_QUATERNIONS = (0x01 << 1);
+    const uint8_t IMU_GET_SENSOR_COMPONENTS = (0x01 << 2);
+    const uint8_t IMU_GET_NORMALIZED_SENSOR_COMPONENTS = (0x01 << 3);
+
+    const uint8_t IMU_MAX_SUB_CMD = IMU_GET_LINEAR_ACCELERATION | IMU_GET_QUATERNIONS | IMU_GET_SENSOR_COMPONENTS | IMU_GET_NORMALIZED_SENSOR_COMPONENTS;
+    const uint8_t IMU_MAX_COMPONENTS = 4;
+
+    typedef struct sImuLinearAcceleration
+    {
+        // To respect the order in IMU data frame: integer and floating point values coming from the sensor are stored in big-endian format
+        float laz;
+        float lay;
+        float lax;
+    } __attribute__((packed)) sImuLinearAcceleration;
+
+    typedef struct sImuQuaternion
+    {
+        // To respect the order in IMU data frame: integer and floating point values coming from the sensor are stored in big-endian format
+        float qw;
+        float qz;
+        float qy;
+        float qx;
+    } __attribute__((packed)) sImuQuaternion;
 
     typedef struct sImuComponentSensor
     {
@@ -309,23 +342,6 @@ namespace sensei {
         float ngx;
     } __attribute__((packed)) sImuNormalizedComponentSensor;
 
-    typedef struct sImuLinearAcceleration
-    {
-        // To respect the order in IMU data frame: integer and floating point values coming from the sensor are stored in big-endian format
-        float laz;
-        float lay;
-        float lax;
-    } __attribute__((packed)) sImuLinearAcceleration;
-
-    typedef struct sImuQuaternion
-    {
-        // To respect the order in IMU data frame: integer and floating point values coming from the sensor are stored in big-endian format
-        float qw;
-        float qz;
-        float qy;
-        float qx;
-    } __attribute__((packed)) sImuQuaternion;
-
     typedef enum eImuGetData
     {
         IMU_GET_ALL_DATA,
@@ -334,6 +350,7 @@ namespace sensei {
         IMU_GET_DATA_COMPONENT_SENSOR,
         N_IMU_DATA_TYPES
     } eImuGetData;
+
 
     typedef enum ePinType{
         PIN_DISABLE=0,

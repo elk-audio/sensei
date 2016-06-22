@@ -13,17 +13,24 @@ void vTaskRT(void *pvParameters)
 
     SystemSettings systemSettings;
     systemSettings.debugMode=COND_DEBUG_MODE;
-    systemSettings.enableMultiplePackets=COND_MULTIPLE_PACKETS;
-    systemSettings.enableSendingPackets=COND_SENDING_PACKETS;
+    systemSettings.enabledMultiplePackets=COND_MULTIPLE_PACKETS;
+    systemSettings.enabledSendingPackets=COND_SENDING_PACKETS;
+    systemSettings.enabledImu=COND_IMU_ENABLED;
 
     uint32_t startTaskTimestamp, endTaskTimestamp;
     uint32_t precStartTaskTimestamp=micros();
+
+    sImuSettings imuSettings;
+    memset(&imuSettings,0,sizeof(sImuSettings));
+
+    sImuLinearAcceleration* linearAcceleration;
+    uint32_t lastTickImuSentData=0;
 
     TaskRtStatus taskStatus;
     memset(&taskStatus,0,sizeof(TaskRtStatus));
 
     TickType_t xLastWakeTime;
-    TickType_t xFrequency = 1; // 1 ms -> 1000Hz //TODO define
+    TickType_t xFrequency = 1; // 1 ms -> 1000Hz
 
     xLastWakeTime = xTaskGetTickCount();
     //FilterType FsFilter = DEFAULT_RT_FREQUENCY; //[Hz]
@@ -36,9 +43,9 @@ void vTaskRT(void *pvParameters)
     MsgRTtoCOM_PIN msgPin;
     Msg_DATA msgData;
 
-    hQueueRTtoCOM_IMU = xQueueCreate(10, sizeof(MsgRTtoCOM_IMU)); //TODO define
-    hQueueRTtoCOM_PIN = xQueueCreate(10, sizeof(MsgRTtoCOM_PIN));
-    hQueueRTtoCOM_DATA = xQueueCreate(64, sizeof(Msg_DATA));
+    hQueueRTtoCOM_IMU = xQueueCreate(MSG_QUEUE_ITEM_SIZE, sizeof(MsgRTtoCOM_IMU));
+    hQueueRTtoCOM_PIN = xQueueCreate(MSG_QUEUE_ITEM_SIZE, sizeof(MsgRTtoCOM_PIN));
+    hQueueRTtoCOM_DATA = xQueueCreate(MSG_QUEUE_ITEM_SIZE, sizeof(Msg_DATA));
 
 
     for (;;)
@@ -48,58 +55,79 @@ void vTaskRT(void *pvParameters)
         startTaskTimestamp = micros();
 
         //------------------------------------------------------------------------------------------- [IMU]
-        if (systemSettings.enableSendingPackets)
+        if (systemSettings.enabledSendingPackets && systemSettings.enabledImu)
         {
+            uint8_t imuTypeOfData = manageIO.imu.getTypeOfData();
+            uint16_t imuPacketSize = 0;
+            uint8_t imuSendingMode = manageIO.imu.getSendingMode();
+            uint16_t imuTicksContinuousMode = manageIO.imu.getDeltaTicksContinuousMode();
+            uint32_t retImu = SENSEI_ERROR_CODE::IMU_GENERIC_ERROR;
+
             if (manageIO.imu.getInterruptStatus())
             {
-                //SerialDebug.println("IMU Ready!");
-                if (manageIO.imu.getAllSensorComponents(&msgImu.imuComponents) == SENSEI_ERROR_CODE::OK)
+                //SENDING_MODE_CONTINUOUS
+                if (
+                    (imuSendingMode == SENDING_MODE_CONTINUOUS) &&
+                    (taskStatus.nCycles % imuTicksContinuousMode == 0)
+                   )
                 {
-                    float squareAccelerationNorm = msgImu.imuComponents.linearAcceleration.lax * msgImu.imuComponents.linearAcceleration.lax +
-                                                   msgImu.imuComponents.linearAcceleration.lay * msgImu.imuComponents.linearAcceleration.lay +
-                                                   msgImu.imuComponents.linearAcceleration.laz * msgImu.imuComponents.linearAcceleration.laz;
 
-                    if ((taskStatus.nCycles % 25) == 0)
+                    retImu = manageIO.imu.getSensorComponents(imuTypeOfData,(uint8_t*)&msgImu.vectorDataImu,imuPacketSize);
+
+                }
+                //SENDING_MODE_ON_VALUE_CHANGED
+                else if (
+                         (imuSendingMode == SENDING_MODE_ON_VALUE_CHANGED) &&
+                         (taskStatus.nCycles > (lastTickImuSentData + imuTicksContinuousMode))
+                        )
+                {
+                    //SerialDebug.println("!!");
+                    if (manageIO.imu.getSensorComponents(IMU_GET_LINEAR_ACCELERATION,(uint8_t*)&msgImu.vectorDataImu,imuPacketSize) == SENSEI_ERROR_CODE::OK)
                     {
-                        SerialDebug.println("squareAccelerationNorm=" + String(squareAccelerationNorm));
-                        SerialDebug.println("qw=" + String(msgImu.imuComponents.quaternion.qw));
-                        SerialDebug.println("qx=" + String(msgImu.imuComponents.quaternion.qx));
-                        SerialDebug.println("qy=" + String(msgImu.imuComponents.quaternion.qy));
-                        SerialDebug.println("qz=" + String(msgImu.imuComponents.quaternion.qz));
-                        SerialDebug.println("ax=" + String(msgImu.imuComponents.linearAcceleration.lax));
-                        SerialDebug.println("ay=" + String(msgImu.imuComponents.linearAcceleration.lay));
-                        SerialDebug.println("az=" + String(msgImu.imuComponents.linearAcceleration.laz));
+                        linearAcceleration = (sImuLinearAcceleration*)msgImu.vectorDataImu;
+                        float squareAccelerationNorm = linearAcceleration->lax * linearAcceleration->lax +
+                                                       linearAcceleration->lay * linearAcceleration->lay +
+                                                       linearAcceleration->laz * linearAcceleration->laz;
 
-                    }
-
-                    if (squareAccelerationNorm>0.1) //check norm
-                    {
-
-                        if (xQueueSend(hQueueRTtoCOM_IMU, (void*)&msgImu, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+                        if (squareAccelerationNorm > manageIO.imu.getMinLinearAccelerationSquareNorm())
                         {
-                            if (DEBUG) //TODO
+                            if ((imuTypeOfData & IMU_GET_LINEAR_ACCELERATION) == 0x00)
                             {
-                                SerialDebug.println("hQueueRTtoCOM_IMU: xQueueSend");
+                                imuPacketSize = 0;
                             }
-                            taskStatus.msgQueueSendErrors++;
+
+                            retImu = manageIO.imu.getSensorComponents(imuTypeOfData & IMU_CLEAR_BIT_LINEAR_ACCELERATION,
+                                                                      (uint8_t*)msgImu.vectorDataImu,
+                                                                      imuPacketSize);
+                            //SerialDebug.println("ax=" + String(linearAcceleration->lax) + " ay=" + String(linearAcceleration->lay) + " az=" + String(linearAcceleration->laz));
+
                         }
                     }
                 }
-                else
+
+                if (retImu == SENSEI_ERROR_CODE::OK)
                 {
-                    SerialDebug.println("IMU ERRORS");
-                }
-            }
-            else
-            {
-                //SerialDebug.println("IMU busy!");
+                    // Send Message Queue
+                    //SerialDebug.println("hQueueRTtoCOM_IMU [" + String((float)taskStatus.nCycles) + "]");
+                    msgImu.packetSize = imuPacketSize;
+                    lastTickImuSentData = taskStatus.nCycles;
+
+                    if (xQueueSend(hQueueRTtoCOM_IMU, (void*)&msgImu, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
+                    {
+                       if (DEBUG)
+                       {
+                           SerialDebug.println("hQueueRTtoCOM_IMU: xQueueSend");
+                       }
+                       taskStatus.msgQueueSendErrors++;
+                    }
+                } // else: No Data Ready
             }
         }
 
         //------------------------------------------------------------------------------------------- [HW]
         manageIO.hardwareAcquisition();
 
-        if (systemSettings.enableSendingPackets)
+        if (systemSettings.enabledSendingPackets)
         {
             for (int idxPin = 0; idxPin < manageIO.getNumberOfPins(); idxPin++)
             {
@@ -112,7 +140,7 @@ void vTaskRT(void *pvParameters)
 
                     if (xQueueSend(hQueueRTtoCOM_PIN, (void*)&msgPin, (TickType_t)MSG_QUEUE_MAX_TICKS_WAIT_TO_SEND_RT_TO_COM) != pdPASS)
                     {
-                        if (DEBUG) //TODO
+                        if (DEBUG)
                         {
                             SerialDebug.println("QueueRTtoCOM_PIN: xQueueSend");
                         }
@@ -131,7 +159,7 @@ void vTaskRT(void *pvParameters)
             msgData.status = SENSEI_ERROR_CODE::CMD_NOT_VALID;
             msgData.msgType = RT_MSG_TYPE::ACK;
 
-            if (systemSettings.debugMode) //TODO
+            if (systemSettings.debugMode)
             {
                 SerialDebug.println("QueueRTtoCOM_DATA: xQueueReceive");
             }
@@ -142,24 +170,23 @@ void vTaskRT(void *pvParameters)
             {
                 //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                 case SENSEI_CMD::INITIALIZE_SYSTEM:
+                    systemSettings.enabledSendingPackets=false;
                     msgData.status = manageIO.setSystem(msgData.data.hw.nPin, msgData.data.hw.nDigitalPin);
-                    systemSettings.enableSendingPackets=false;
-                    msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
                 case SENSEI_CMD::ENABLE_SENDING_PACKETS:
-                    systemSettings.enableSendingPackets = static_cast<bool>(msgData.data.value);
+                    systemSettings.enabledSendingPackets = static_cast<bool>(msgData.data.value);
                     if (DEBUG)
                     {
-                        SerialDebug.println("enableSendingPackets= " + String(systemSettings.enableSendingPackets));
+                        SerialDebug.println("enabledSendingPackets= " + String(systemSettings.enabledSendingPackets));
                     }
                     msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
                 //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
                 case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
-                    systemSettings.enableMultiplePackets = static_cast<bool>(msgData.data.value);
+                    systemSettings.enabledMultiplePackets = static_cast<bool>(msgData.data.value);
                     msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
@@ -271,6 +298,78 @@ void vTaskRT(void *pvParameters)
                     msgData.status = SENSEI_ERROR_CODE::OK;
                 break;
 
+                //-----------------
+                // IMU COMMANDS
+                //-----------------
+                //--------------------------------------------------------------------- [CMD IMU_ENABLE]
+                case SENSEI_CMD::IMU_ENABLE:
+                    systemSettings.enabledImu = static_cast<bool>(msgData.data.value);
+                    msgData.status = SENSEI_ERROR_CODE::OK;
+                break;
+
+                //--------------------------------------------------------------------- [CMD IMU_SET_SETTINGS]
+                case SENSEI_CMD::IMU_SET_SETTINGS:
+                    msgData.status = manageIO.imu.setSettings(&msgData.data.imuSettings);
+                break;
+
+                //--------------------------------------------------------------------- [CMD CMD_IMU_GET_SETTINGS]
+                case SENSEI_CMD::IMU_GET_SETTINGS:
+                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    msgData.status = manageIO.imu.getSettings(&msgData.data.imuSettings);
+                    manageIO.imu.printDebugImuSettings();
+                break;
+
+                //--------------------------------------------------------------------- [CMD CMD_IMU_GYROSCOPE_CALIBRATION]
+                case SENSEI_CMD::IMU_GYROSCOPE_CALIBRATION:
+                    if (systemSettings.enabledImu)
+                    {
+                        msgData.status = manageIO.imu.gyroscopeCalibration();
+                    }
+                    else
+                    {
+                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
+                    }
+                break;
+
+                //--------------------------------------------------------------------- [CMD CMD_IMU_RESET_FILTER]
+                case SENSEI_CMD::IMU_RESET_FILTER:
+                    if (systemSettings.enabledImu)
+                    {
+                        msgData.status = manageIO.imu.resetFilter();
+                    }
+                    else
+                    {
+                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
+                    }
+                break;
+
+                //--------------------------------------------------------------------- [CMD CMD_IMU_GET_DATA]
+                case SENSEI_CMD::IMU_GET_DATA:
+                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    if (systemSettings.enabledImu)
+                    {
+                        uint16_t imuPacketSize = 0;
+                        msgData.status = manageIO.imu.getSensorComponents(msgData.sub_cmd,(uint8_t*)&msgData.data.vectorDataImu,imuPacketSize);
+                        msgData.packetSize = imuPacketSize;
+                    }
+                    else
+                    {
+                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
+                    }
+                break;
+
+                //--------------------------------------------------------------------- [CMD IMU_TARE_WITH_CURRENT_ORIENTATION]
+                case SENSEI_CMD::IMU_TARE_WITH_CURRENT_ORIENTATION:
+                    if (systemSettings.enabledImu)
+                    {
+                        msgData.status = manageIO.imu.tareWithCurrentOrientation();
+                    }
+                    else
+                    {
+                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
+                    }
+                break;
+
                 //---------------------------------------------------------------------
                 // END COMMANDS
                 //---------------------------------------------------------------------
@@ -293,6 +392,7 @@ void vTaskRT(void *pvParameters)
         //------------------------------------------------------------------------------------------- [CMD_COM]
 
         endTaskTimestamp = micros();
+
         if (manageIO.isSystemInitialized())
         {
             taskStatus.lastTocTask = endTaskTimestamp - startTaskTimestamp;

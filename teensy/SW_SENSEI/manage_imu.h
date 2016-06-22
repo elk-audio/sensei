@@ -43,7 +43,6 @@ typedef enum CMD_IMU
 
     SET_AXIS_DIRECTION = 116,
     GET_AXIS_DIRECTION = 143,
-    RESET_BASE_OFFSET = 20,
     SET_DECOMPOSITION_ORDER = 16,
     GET_DECOMPOSITION_ORDER = 156,
 
@@ -56,6 +55,7 @@ typedef enum CMD_IMU
     SET_STREAMING_TIMING = 82,
     START_STREAMING = 85,
     STOP_STREAMING = 86,
+    RESET_BASE_OFFSET = 20,
     TARE_WITH_CURRENT_ORIENTATION = 96,
     SET_COMPASS_ENABLE = 109,
     RESET_FILTER = 120,
@@ -118,13 +118,28 @@ public:
 
     bool getInterruptStatus();
     int32_t setInterruptMode();
-    int32_t getAllSensorComponents(ImuComponents* _components);
+
+    int32_t getSensorComponents(uint8_t components, uint8_t* data_vector, uint16_t& packetSize);
+
     int32_t resetFilter();
 
     int32_t setSettings();
     int32_t setSettings(sImuSettings* _settings);
 
     int32_t getSettings(sImuSettings* _settings);
+
+    int32_t gyroscopeCalibration();
+    int32_t tareWithCurrentOrientation();
+
+    float getMinLinearAccelerationSquareNorm();
+    uint16_t getDeltaTicksContinuousMode();
+    uint8_t getTypeOfData();
+    uint8_t getSendingMode();
+
+
+    void printDebugImuSettings();
+
+    //int32_t resetTare();
 
 private:
     int32_t _initialize();

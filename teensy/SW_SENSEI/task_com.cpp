@@ -12,10 +12,14 @@ void vTaskCOM(void *pvParameters)
     SerialDebug.println("-> TASK: COM");
     delay(DELAY_START_TASK_COM);
 
+    sImuSettings imuSettings;
+    memset(&imuSettings,0,sizeof(sImuSettings));
+
     SystemSettings systemSettings;
-    systemSettings.debugMode = COND_DEBUG_MODE;
-    systemSettings.enableMultiplePackets = COND_MULTIPLE_PACKETS;
-    systemSettings.enableSendingPackets = COND_SENDING_PACKETS;
+    systemSettings.debugMode=COND_DEBUG_MODE;
+    systemSettings.enabledMultiplePackets=COND_MULTIPLE_PACKETS;
+    systemSettings.enabledSendingPackets=COND_SENDING_PACKETS;
+    systemSettings.enabledImu=COND_IMU_ENABLED;
 
     TaskComStatus taskStatus;
     memset(&taskStatus,0,sizeof(TaskComStatus));
@@ -25,7 +29,7 @@ void vTaskCOM(void *pvParameters)
     MsgRTtoCOM_PIN msgPin;
     Msg_DATA msgData;
 
-    hQueueCOMtoRT_DATA = xQueueCreate(64, sizeof(Msg_DATA)); //TODO define
+    hQueueCOMtoRT_DATA = xQueueCreate(MSG_QUEUE_ITEM_SIZE, sizeof(Msg_DATA));
 
     // Filtering
     Butterworth butterworth;
@@ -66,7 +70,7 @@ void vTaskCOM(void *pvParameters)
                 {
                     //--------------------------------------------------------------------- [CMD HELLO]
                     case SENSEI_CMD::HELLO:
-                        if (systemSettings.debugMode) //TODO
+                        if (systemSettings.debugMode)
                         {
                             SerialDebug.println("COM: HELLO");
                         }
@@ -75,11 +79,11 @@ void vTaskCOM(void *pvParameters)
 
                     //--------------------------------------------------------------------- [CMD INITIALIZE_SYSTEM]
                     case SENSEI_CMD::INITIALIZE_SYSTEM:
-                        if (systemSettings.debugMode) //TODO
+                        if (systemSettings.debugMode)
                         {
                             SerialDebug.println("COM: INITIALIZE_SYSTEM");
                         }
-                        systemSettings.enableSendingPackets=false;
+                        systemSettings.enabledSendingPackets=false;
                         manageDataPacket.setPayloadToVariable(&msgData.data.hw, sizeof(HardwareSettings));
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
@@ -194,10 +198,10 @@ void vTaskCOM(void *pvParameters)
                     //--------------------------------------------------------------------- [CMD ENABLE_SENDING_PACKETS]
                     case SENSEI_CMD::ENABLE_SENDING_PACKETS:
                         manageDataPacket.setPayloadToVariable(&msgData.data.value, sizeof(uint8_t));
-                        systemSettings.enableSendingPackets = msgData.data.value;
-                        if (systemSettings.debugMode) //TODO
+                        systemSettings.enabledSendingPackets = msgData.data.value;
+                        if (systemSettings.debugMode)
                         {
-                            SerialDebug.println("enableSendingPackets = " + String(systemSettings.enableSendingPackets));
+                            SerialDebug.println("enabledSendingPackets = " + String(systemSettings.enabledSendingPackets));
                         }
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
@@ -205,10 +209,10 @@ void vTaskCOM(void *pvParameters)
                     //--------------------------------------------------------------------- [CMD ENABLE_MULTIPLE_PACKETS]
                     case SENSEI_CMD::ENABLE_MULTIPLE_PACKETS:
                         manageDataPacket.setPayloadToVariable(&msgData.data.value, sizeof(uint8_t));
-                        systemSettings.enableMultiplePackets = msgData.data.value;
-                        if (systemSettings.debugMode) //TODO
+                        systemSettings.enabledMultiplePackets = msgData.data.value;
+                        if (systemSettings.debugMode)
                         {
-                            SerialDebug.println("enableMultiplePackets = " + String(systemSettings.enableMultiplePackets));
+                            SerialDebug.println("enableMultiplePackets = " + String(systemSettings.enabledMultiplePackets));
                         }
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
@@ -222,6 +226,68 @@ void vTaskCOM(void *pvParameters)
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
+                    //-----------------
+                    // IMU COMMANDS
+                    //-----------------
+                    //--------------------------------------------------------------------- [CMD IMU_ENABLE]
+                    case SENSEI_CMD::IMU_ENABLE:
+                        manageDataPacket.setPayloadToVariable(&msgData.data.value, sizeof(uint8_t));
+                        systemSettings.enabledImu = msgData.data.value;
+                        SerialDebug.println("enabledImu = " + String(systemSettings.enabledImu));
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD IMU_SET_SETTINGS]
+                    case SENSEI_CMD::IMU_SET_SETTINGS:
+
+                        manageDataPacket.setPayloadToVariable(&msgData.data.imuSettings, sizeof(sImuSettings));
+                        SerialDebug.println("IMU SETTINGS (COM):");
+                        SerialDebug.println("   filterMode = " + String(msgData.data.imuSettings.filterMode));
+                        SerialDebug.println("   accerelometerRange = " + String(msgData.data.imuSettings.accerelometerRange));
+                        SerialDebug.println("   gyroscopeRange = " + String(msgData.data.imuSettings.gyroscopeRange));
+                        SerialDebug.println("   compassRange = " + String(msgData.data.imuSettings.compassRange));
+                        SerialDebug.println("   compassEnable = " + String(msgData.data.imuSettings.compassEnable));
+                        SerialDebug.println("   sendingMode = " + String(msgData.data.imuSettings.sendingMode));
+                        SerialDebug.println("   deltaTicksContinuousMode = " + String(msgData.data.imuSettings.deltaTicksContinuousMode));
+                        SerialDebug.println("   typeOfData = " + String(msgData.data.imuSettings.typeOfData));
+                        SerialDebug.println("   minLinearAccelerationNorm = " + String(sqrt(msgData.data.imuSettings.minLinearAccelerationSquareNorm)));
+                        SerialDebug.println("");
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD CMD_IMU_GET_SETTINGS]
+                    case SENSEI_CMD::IMU_GET_SETTINGS:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD CMD_IMU_GYROSCOPE_CALIBRATION]
+                    case SENSEI_CMD::IMU_GYROSCOPE_CALIBRATION:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD CMD_IMU_RESET_FILTER]
+                    case SENSEI_CMD::IMU_RESET_FILTER:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD CMD_IMU_GET_DATA]
+                    case SENSEI_CMD::IMU_GET_DATA:
+                        if (sub_cmd > 0 && sub_cmd <= IMU_MAX_SUB_CMD)
+                        {
+                            retCode = SENSEI_ERROR_CODE::OK;
+                        }
+                        else
+                        {
+                            retCode = SENSEI_ERROR_CODE::SUB_CMD_NOT_VALID;
+                        }
+
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD IMU_TARE_WITH_CURRENT_ORIENTATION]
+                    case SENSEI_CMD::IMU_TARE_WITH_CURRENT_ORIENTATION:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
                     //---------------------------------------------------------------------
                     // STOP COMMANDS
                     //---------------------------------------------------------------------
@@ -230,7 +296,7 @@ void vTaskCOM(void *pvParameters)
             } //if (retCode == SENSEI_ERROR_CODE::OK)
             else
             {
-                //Se non riconosco il pacchetto dati
+                //Unknow packet received
                 cmd = 0;
                 sub_cmd = 0;
                 timestamp = 0;
@@ -309,6 +375,17 @@ void vTaskCOM(void *pvParameters)
                             pAddress=(uint8_t*)&msgData.data.systemStatus;
                         break;
 
+                        case SENSEI_CMD::IMU_GET_SETTINGS:
+                            payloadSize=sizeof(sImuSettings);
+                            pAddress=(uint8_t*)&msgData.data.imuSettings;
+                        break;
+
+                        case SENSEI_CMD::IMU_GET_DATA:
+                            //SerialDebug.println("msgData.packetSize=" + String(msgData.packetSize));
+                            payloadSize=msgData.packetSize;
+                            pAddress=(uint8_t*)&msgData.data.vectorDataImu;
+                        break;
+
                         default:
                             payloadSize=0;
                     }
@@ -344,7 +421,7 @@ void vTaskCOM(void *pvParameters)
                 SerialDebug.println("QueueRTtoCOM_PIN: xQueueReceive");
             }
             // Send PIN VALUE
-            manageDataPacket.preparePacket(SENSEI_CMD::VALUE,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgPin, sizeof(GetSetPin)); //TODO sendData
+            manageDataPacket.preparePacket(SENSEI_CMD::VALUE,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgPin, sizeof(GetSetPin));
             manageDataPacket.send();
         }
 
@@ -356,8 +433,8 @@ void vTaskCOM(void *pvParameters)
             {
                 SerialDebug.println("QueueRTtoCOM_IMU: xQueueReceive");
             }
-            // Send PIN VALUE
-            manageDataPacket.preparePacket(SENSEI_CMD::VALUE_IMU,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgImu.imuComponents, sizeof(ImuComponents)); //TODO sendData
+            // Send IMU_VALUE
+            manageDataPacket.preparePacket(SENSEI_CMD::VALUE_IMU,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgImu.vectorDataImu, msgImu.packetSize);
             manageDataPacket.send();
         }
 
