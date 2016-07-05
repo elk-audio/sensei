@@ -351,11 +351,39 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
     return ConfigStatus::OK;
 }
 
+/*
+ * Handle IMU configuration
+ */
 ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
 {
     if (imu.empty())
     {
         return ConfigStatus::OK; /* Imu config is empty or not present, do nothing */
+    }
+    /* Read data mode configuration */
+    const Json::Value& data_mode = imu["data_mode"];
+    if (data_mode.isString())
+    {
+        int mode;
+        if (data_mode.asString() == "all")
+        {
+            mode = 0;
+        }
+        else if (data_mode.asString() == "quaternions")
+        {
+            mode = 1;
+        }
+        else if (data_mode.asString() == "linearacceleration")
+        {
+            mode = 2;
+        }
+        else
+        {
+            SENSEI_LOG_ERROR("{} was not a recognized data mode", data_mode.asString());
+            mode = 0;
+        }
+        auto m = _message_factory.make_imu_set_data_mode_command(mode);
+        _queue->push(std::move(m));
     }
     /* Read delta ticks configuration */
     const Json::Value& ticks = imu["delta_ticks"];
@@ -407,6 +435,7 @@ ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
         auto m = _message_factory.make_enable_imu_command(enabled.asBool());
         _queue->push(std::move(m));
     }
+
     return ConfigStatus::OK;
 }
 

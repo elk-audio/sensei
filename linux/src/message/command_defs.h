@@ -41,6 +41,7 @@ enum class CommandType
     ENABLE_SENDING_PACKETS,
     // Imu specific commands
     SET_IMU_ENABLED,
+    SET_IMU_DATA_MODE,
     SET_IMU_SENDING_DELTA_TICKS,
     SET_IMU_FILTER_MODE,
     SET_IMU_ACC_RANGE_MAX,
@@ -78,7 +79,7 @@ enum class PinType
 };
 
 /**
- * @brief Index for mapping viturla pins to Imu parameters
+ * @brief Index for pins to Imu parameters
  */
 enum ImuIndex
 {
@@ -217,6 +218,12 @@ SENSEI_DECLARE_COMMAND(SetImuEnabledCommand,
                        CommandType::SET_IMU_ENABLED,
                        bool,
                        "Enable IMU",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetImuDataModeCommand,
+                       CommandType::SET_IMU_DATA_MODE,
+                       int,
+                       "Set IMU type of data sent",
                        CommandDestination::SERIAL_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuSendingDeltaTicksCommand,

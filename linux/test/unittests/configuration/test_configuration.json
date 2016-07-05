@@ -53,6 +53,7 @@
 
 	"imu" : {
 		"enabled" : true,
+		"data_mode" : "quaternions",
 		"delta_ticks" : 5,
 		"filter_mode" : "kalman",
 		"accelerometer_range_max" : 4,

@@ -195,6 +195,13 @@ public:
         return std::unique_ptr<SetImuEnabledCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_imu_set_data_mode_command(const int mode,
+                                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuDataModeCommand(0, mode, timestamp);
+        return std::unique_ptr<SetImuDataModeCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_imu_sending_delta_ticks_command(const int ticks,
                                                                       const uint32_t timestamp = 0)
     {

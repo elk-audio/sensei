@@ -61,7 +61,7 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
         _muted(false),
         _verify_acks(true)
 {
-#ifndef NDEBUG
+#ifndef DEBUG
     /* Set the debug handler to NULL, this removes useless calls to getenv
      * and speeds up the program   */
     sp_set_debug_handler(nullptr);
@@ -229,7 +229,7 @@ void SerialFrontend::write_loop()
             _ready_to_send_notifier.wait(lock);
         }
         std::unique_ptr<Command> message = next_message_to_send();
-        const sSenseiDataPacket* packet = create_send_command(message.get());
+        const sSenseiDataPacket* packet = handle_command(message.get());
         if (packet)
         {
             int ret = sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
@@ -306,57 +306,53 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
     }
     switch (packet->sub_cmd)
     {
-        case SENSEI_SUB_CMD::GET_ALL_DATA:
+        /*case SENSEI_SUB_CMD::GET_ALL_DATA:
         {
-            // TODO - not supported in sensei_frontend_internal.h
-            break;
-        }
-        /*case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR:
-        {
-            const sImuComponentSensor *data = reinterpret_cast<const sImuComponentSensor*>(assembled_payload);
             break;
         }*/
-        case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR_NORMALIZED:
-        {
-            const sImuNormalizedComponentSensor *data = reinterpret_cast<const sImuNormalizedComponentSensor*>(assembled_payload);
-            break;
-        }
-        case SENSEI_SUB_CMD::GET_DATA_QUATERNION:
+        case SENSEI_SUB_CMD::GET_DATA_QUATERNION: // TODO - "hack" for incomplete fw
+        case SENSEI_SUB_CMD::GET_ALL_DATA:
         {
             const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
             EulerAngles angles = quat_to_euler(data->qw, data->qx, data->qy, data->qz);
-            auto yaw_msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::YAW],
+            if (_virtual_pin_table[ImuIndex::YAW] >= 0)
+            {
+                auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::YAW],
                                                            angles.yaw,
                                                            packet->timestamp);
-            auto pitch_msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::PITCH],
-                                                             angles.pitch,
-                                                             packet->timestamp);
-            auto roll_msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::ROLL],
-                                                            angles.roll,
-                                                            packet->timestamp);
-
-            _out_queue->push(std::move(yaw_msg));
-            _out_queue->push(std::move(pitch_msg));
-            _out_queue->push(std::move(roll_msg));
-            SENSEI_LOG_INFO("pushing imu messages");
-            //_out_queue->push(_message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp));
-
+                _out_queue->push(std::move(msg));
+            }
+            if (_virtual_pin_table[ImuIndex::PITCH] >= 0)
+            {
+                auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::PITCH],
+                                                           angles.pitch,
+                                                           packet->timestamp);
+                _out_queue->push(std::move(msg));
+            }
+            if (_virtual_pin_table[ImuIndex::ROLL] >= 0)
+            {
+                auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::ROLL],
+                                                           angles.roll,
+                                                           packet->timestamp);
+                _out_queue->push(std::move(msg));
+            }
             break;
         }
         case SENSEI_SUB_CMD::GET_DATA_LINEARACCELERATION:
         {
-            const sImuLinearAcceleration *data = reinterpret_cast<const sImuLinearAcceleration*>(assembled_payload);
+            // TODO - unsupported
+            //const sImuLinearAcceleration *data = reinterpret_cast<const sImuLinearAcceleration*>(assembled_payload);
             break;
         }
-        case SENSEI_SUB_CMD::GET_DATA_QUATERNION_LINEARACCELERATION:
+        case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR:
         {
-            // TODO - not supported in sensei_frontend_internal.h
+            // TODO - unsupported
+            //const sImuComponentSensor *data = reinterpret_cast<const sImuComponentSensor*>(assembled_payload);
             break;
         }
         default:
             SENSEI_LOG_WARNING("Unrecognized IMU sub command {}", packet->sub_cmd);
     }
-    //SENSEI_LOG_INFO("IMU data received, data {}", packet->sub_cmd);
 }
 
 void SerialFrontend::process_ack(const sSenseiDataPacket *packet)
@@ -444,10 +440,10 @@ void SerialFrontend::handle_timeouts()
 /*
  * Create teensy command packet from a Command message.
  */
-const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
+const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
 {
     assert(message->base_type() == MessageType::COMMAND);
-    SENSEI_LOG_INFO("Got command {} ", message->representation());
+    SENSEI_LOG_DEBUG("Got command {} ", message->representation());
     switch (message->type())
     {
         case CommandType::SET_VIRTUAL_PIN:
@@ -549,6 +545,12 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
             auto cmd = static_cast<SetImuEnabledCommand*>(message);
             return _packet_factory.make_imu_enable_cmd(cmd->timestamp(),
                                                        cmd->data());
+        }
+        case CommandType::SET_IMU_DATA_MODE:
+        {
+            auto cmd = static_cast<SetImuDataModeCommand*>(message);
+            return _packet_factory.make_imu_set_datamode_cmd(cmd->timestamp(),
+                                                             cmd->data());
         }
         case CommandType::SET_IMU_FILTER_MODE:
         {

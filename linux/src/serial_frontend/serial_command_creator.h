@@ -45,14 +45,13 @@ public:
     const sSenseiDataPacket* make_config_slidermode_cmd(int pin_id, uint32_t timestamp, int mode);
     const sSenseiDataPacket* make_config_slider_threshold_cmd(int pin_id, uint32_t timestamp, int threshold);
     const sSenseiDataPacket* make_imu_enable_cmd(uint32_t timestamp, bool enable);
+    const sSenseiDataPacket* make_imu_set_datamode_cmd(uint32_t timestamp, int mode);
     const sSenseiDataPacket* make_imu_set_filtermode_cmd(uint32_t timestamp, int mode);
     const sSenseiDataPacket* make_imu_set_accelerometer_range_cmd(uint32_t timestamp, int range);
     const sSenseiDataPacket* make_imu_set_gyroscope_range_cmd(uint32_t timestamp, int range);
     const sSenseiDataPacket* make_imu_set_compass_range_cmd(uint32_t timestamp, float range);
     const sSenseiDataPacket* make_imu_set_compass_enable_cmd(uint32_t timestamp, bool enabled);
     const sSenseiDataPacket* make_imu_set_delta_tics_cmd(uint32_t timestamp, int ticks_delay);
-    const sSenseiDataPacket* make_imu_set_type_of_data_cmd(uint32_t timestamp, int type);
-    const sSenseiDataPacket* make_imu_get_quaternion_data(uint32_t timestamp);
 
 
 private:

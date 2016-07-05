@@ -144,7 +144,7 @@ struct EulerAngles
 /*
  * Convert quaternions (from the IMU) to euler angles (pitch, roll, yaw)
  */
-static EulerAngles quat_to_euler(float qw, float qx, float qy, float qz)
+inline EulerAngles quat_to_euler(float qw, float qx, float qy, float qz)
 {
     EulerAngles angles;
     float singularity_limit = qw * qx + qy * qz;
@@ -197,6 +197,7 @@ public:
             _waiting = false;
             return _storage;
         }
+        return nullptr;
     }
 
 private:

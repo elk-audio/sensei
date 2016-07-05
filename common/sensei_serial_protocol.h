@@ -160,6 +160,7 @@ namespace sensei {
         //----------------------------------------------
         STOP_BOARD = 250,
         //----------------------------------------------
+        IMU_VALUE = 253,
         VALUE = 254,
         //----------------------------------------------
         ACK = 255
@@ -189,12 +190,10 @@ namespace sensei {
         //----------------------------------------------
         // IMU_GET_DATA
         //----------------------------------------------
-		GET_ALL_DATA=0,
-		GET_DATA_COMPONENT_SENSOR=1,
-		GET_DATA_COMPONENT_SENSOR_NORMALIZED=2,
-		GET_DATA_QUATERNION=3,
-		GET_DATA_LINEARACCELERATION=4,
-		GET_DATA_QUATERNION_LINEARACCELERATION=5,
+		GET_ALL_DATA= 0,
+		GET_DATA_QUATERNION= 1,
+		GET_DATA_LINEARACCELERATION=2,
+        GET_DATA_COMPONENT_SENSOR = 3,
         //----------------------------------------------
         // SET_VALUE
         //----------------------------------------------

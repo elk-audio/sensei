@@ -446,8 +446,8 @@ CommandErrorCode ImuMapper::apply_command(const Command *cmd)
         {
             // This is set internally and not from the user, so just assert for bugs
             assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::IMU_INPUT);
-        };
             break;
+        }
 
         default:
             status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
@@ -477,7 +477,6 @@ void ImuMapper::put_config_commands_into(CommandIterator out_iterator)
 
 void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
 {
-    SENSEI_LOG_INFO("ImuMapper process called");
     if (! _pin_enabled)
     {
         return;

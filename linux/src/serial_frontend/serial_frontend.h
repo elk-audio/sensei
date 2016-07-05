@@ -94,7 +94,7 @@ private:
     std::unique_ptr<Command> next_message_to_send();
     void handle_timeouts();
 
-    const sSenseiDataPacket* create_send_command(Command* message);
+    const sSenseiDataPacket* handle_command(Command* message);
 
     MessageFactory       _message_factory;
     SerialCommandCreator _packet_factory;

@@ -18,7 +18,7 @@ static uint8_t test_msg[] = { 0x1, 0x2, 0x3, 0xff, 0x0, 0x0, 0x0, 0x0,
                               0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xe8,
                               0xe2, 0xf6, 0x10, 0xc3, 0x4, 0x4, 0x5, 0x6 };
 
-static uint8_t imu_test[] = { 0x1, 0x2, 0x3, 0xce, 0x01, 0x0, 0x0, 0x0,
+static uint8_t imu_test[] = { 0x1, 0x2, 0x3, 0xfd, 0x01, 0x0, 0x0, 0x0,
                               0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
                               0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
                               0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
@@ -59,13 +59,13 @@ TEST_F(SerialFrontendTest, test_create_serial_message)
 {
     MessageFactory factory;
     auto command = factory.make_set_sampling_rate_command(3, 500.0, 100u);
-    const sSenseiDataPacket* packet =_module_under_test.create_send_command(static_cast<Command*>(command.get()));
+    const sSenseiDataPacket* packet = _module_under_test.handle_command(static_cast<Command*>(command.get()));
     EXPECT_EQ(SENSEI_CMD::SET_SAMPLING_RATE, packet->cmd);
     auto payload = reinterpret_cast<const teensy_set_samplerate_cmd*>(packet->payload);
     EXPECT_EQ(2, payload->sample_rate_divisor);
 
     auto lp_command = factory.make_set_lowpass_cutoff_command(4, 1234.0, 100u);
-    packet =_module_under_test.create_send_command(static_cast<Command*>(lp_command.get()));
+    packet = _module_under_test.handle_command(static_cast<Command*>(lp_command.get()));
     EXPECT_EQ(SENSEI_CMD::CONFIGURE_PIN, packet->cmd);
     auto payload_cfg = reinterpret_cast<const sPinConfiguration*>(packet->payload);
     EXPECT_FLOAT_EQ(1234, payload_cfg->lowPassCutOffFilter);
@@ -105,11 +105,17 @@ TEST_F(SerialFrontendTest, test_mute_function)
 
 TEST_F(SerialFrontendTest, test_imu_packet)
 {
-    /* Set ut the virtual ports table, would be done from a config file otherwise */
+    /* First test without setting up any virtual ports
+     * This should not result in any messages */
+    sSenseiDataPacket* packet = reinterpret_cast<sSenseiDataPacket*>(imu_test);
+    _module_under_test.process_serial_packet(packet);
+    ASSERT_TRUE(_out_queue.empty());
+
+    /* Set up the virtual ports table, would be done from a config file otherwise */
     _module_under_test._virtual_pin_table[ImuIndex::YAW] = 0;
     _module_under_test._virtual_pin_table[ImuIndex::PITCH] = 1;
     _module_under_test._virtual_pin_table[ImuIndex::ROLL] = 2;
-    sSenseiDataPacket* packet = reinterpret_cast<sSenseiDataPacket*>(imu_test);
+
     _module_under_test.process_serial_packet(packet);
     /* This should result in 3 imu messages */
     ASSERT_FALSE(_out_queue.empty());
@@ -133,6 +139,4 @@ TEST_F(SerialFrontendTest, test_enable_virtual_pin)
 {
 
     //_module_under_test._virtual_pin_table[ImuIndex::ROLL] = 2;
-
-
 }

@@ -186,9 +186,17 @@ TEST_F(TestSerialCommandCreator, test_make_config_slider_threshold_cmd)
 TEST_F(TestSerialCommandCreator, test_make_imu_enable_cmd)
 {
     const sSenseiDataPacket* packet = _module_under_test.make_imu_enable_cmd(test_tstamp, true);
-    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(SENSEI_CMD::IMU_START, packet->cmd);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_datamode_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_datamode_cmd(test_tstamp, 1);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(SENSEI_SUB_CMD::GET_DATA_QUATERNION, imu_settings->typeOfData);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_imu_set_filtermode_cmd)

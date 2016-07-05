@@ -1,4 +1,5 @@
 #include <json/value.h>
+#include <sensei_serial_protocol.h>
 #include "gtest/gtest.h"
 
 #define private public
@@ -135,19 +136,21 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     /* Now we should be receiving the IMU related commands */
     index = 0;
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_IMU_SENDING_DELTA_TICKS, SetImuSendingDeltaTicksCommand, 0, 5);
+    EXPECT_COMMAND(m, CommandType::SET_IMU_DATA_MODE, SetImuDataModeCommand, index, SENSEI_SUB_CMD::GET_DATA_QUATERNION);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_IMU_FILTER_MODE, SetImuFilterModeCommand, 0, 1);
+    EXPECT_COMMAND(m, CommandType::SET_IMU_SENDING_DELTA_TICKS, SetImuSendingDeltaTicksCommand, index, 5);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_IMU_ACC_RANGE_MAX, SetImuAccelerometerRangeMaxCommand, 0, 4);
+    EXPECT_COMMAND(m, CommandType::SET_IMU_FILTER_MODE, SetImuFilterModeCommand, index, 1);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_IMU_GYRO_RANGE_MAX, SetImuGyroscopeRangeMaxCommand, 0, 500);
+    EXPECT_COMMAND(m, CommandType::SET_IMU_ACC_RANGE_MAX, SetImuAccelerometerRangeMaxCommand, index, 4);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_IMU_COMPASS_RANGE_MAX, SetImuCompassRangeMax, 0, 5);
+    EXPECT_COMMAND(m, CommandType::SET_IMU_GYRO_RANGE_MAX, SetImuGyroscopeRangeMaxCommand, index, 500);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_IMU_COMPASS_ENABLED, SetImuCompassEnabled, 0, (int)true);
+    EXPECT_COMMAND(m, CommandType::SET_IMU_COMPASS_RANGE_MAX, SetImuCompassRangeMax, index, 5);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_IMU_ENABLED, SetImuEnabledCommand, 0, (int)true);
+    EXPECT_COMMAND(m, CommandType::SET_IMU_COMPASS_ENABLED, SetImuCompassEnabled, index, (int)true);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_ENABLED, SetImuEnabledCommand, index, (int)true);
 
 
 /* Lastly we should have an EnableSendingPackets command to turn on all pins */

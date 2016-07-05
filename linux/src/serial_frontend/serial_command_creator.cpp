@@ -147,8 +147,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_i
         case PinType::ANALOG_INPUT:
             cached_cfg.pintype = ePinType::PIN_ANALOG_INPUT;
             break;
-        case PinType::UNDEFINED:
-        case PinType::N_PIN_TYPES:
+        default:
             cached_cfg.pintype = ePinType::PIN_DISABLE;
             break;
     }
@@ -288,23 +287,17 @@ const sSenseiDataPacket* SerialCommandCreator::make_imu_enable_cmd(uint32_t time
 const sSenseiDataPacket* SerialCommandCreator::make_imu_set_filtermode_cmd(uint32_t timestamp, int mode)
 {
     initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
-    switch (mode)
-    {
-        case eImuFilterType::IMU_FILTER_IMU:
-            _cached_imu_cfgs.filterMode = IMU_FILTER_IMU;
-            break;
-        case eImuFilterType::IMU_FILTER_KALMAN:
-            _cached_imu_cfgs.filterMode = IMU_FILTER_KALMAN;
-            break;
-        case eImuFilterType::IMU_FILTER_Q_COMP:
-            _cached_imu_cfgs.filterMode = IMU_FILTER_Q_COMP;
-            break;
-        case eImuFilterType::IMU_FILTER_Q_GRAD:
-            _cached_imu_cfgs.filterMode = IMU_FILTER_Q_GRAD;
-            break;
-        default:
-            _cached_imu_cfgs.filterMode = IMU_FILTER_IMU;
-    }
+    _cached_imu_cfgs.filterMode = mode;
+    sImuSettings *settings = reinterpret_cast<sImuSettings*>(_cmd_buffer.payload);
+    *settings = _cached_imu_cfgs;
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_set_datamode_cmd(uint32_t timestamp, int mode)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
+    _cached_imu_cfgs.typeOfData = mode;
     sImuSettings *settings = reinterpret_cast<sImuSettings*>(_cmd_buffer.payload);
     *settings = _cached_imu_cfgs;
     _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
@@ -410,21 +403,6 @@ const sSenseiDataPacket* SerialCommandCreator::make_imu_set_delta_tics_cmd(uint3
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_imu_set_type_of_data_cmd(uint32_t timestamp, int type)
-{
-    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_SET_SETTINGS);
-    // TODO - Does this really need to be a configurable parameter?
-    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
-    return &_cmd_buffer;
-}
-
-const sSenseiDataPacket* SerialCommandCreator::make_imu_get_quaternion_data(uint32_t timestamp)
-{
-    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_GET_DATA);
-    _cmd_buffer.sub_cmd = SENSEI_SUB_CMD::GET_DATA_QUATERNION;
-    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
-    return &_cmd_buffer;
-}
 /*
  * Helper functions
  */
