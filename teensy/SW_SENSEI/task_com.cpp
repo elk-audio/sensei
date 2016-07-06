@@ -434,7 +434,7 @@ void vTaskCOM(void *pvParameters)
                 SerialDebug.println("QueueRTtoCOM_IMU: xQueueReceive");
             }
             // Send IMU_VALUE
-            manageDataPacket.preparePacket(SENSEI_CMD::VALUE_IMU,SENSEI_SUB_CMD::EMPTY, 0, (uint8_t*)&msgImu.vectorDataImu, msgImu.packetSize);
+            manageDataPacket.preparePacket(SENSEI_CMD::VALUE_IMU,msgImu.typeOfData, 0, (uint8_t*)&msgImu.vectorDataImu, msgImu.packetSize);
             manageDataPacket.send();
         }
 

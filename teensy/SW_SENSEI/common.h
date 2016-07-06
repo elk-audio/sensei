@@ -175,6 +175,7 @@ typedef struct MsgRTtoCOM_IMU
 {
 	uint8_t msgType;
 	int32_t status;
+	uint8_t typeOfData;
 	uint16_t packetSize;
 	VectorDataImu vectorDataImu;
 } __attribute__((packed)) MsgRTtoCOM_IMU;
