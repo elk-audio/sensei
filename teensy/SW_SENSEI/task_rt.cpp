@@ -109,6 +109,7 @@ void vTaskRT(void *pvParameters)
                 {
                     // Send Message Queue
                     //SerialDebug.println("hQueueRTtoCOM_IMU [" + String((float)taskStatus.nCycles) + "]");
+                    msgImu.typeOfData=imuTypeOfData;
                     msgImu.packetSize = imuPacketSize;
                     lastTickImuSentData = taskStatus.nCycles;
 
