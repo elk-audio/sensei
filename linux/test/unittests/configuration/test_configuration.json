@@ -53,12 +53,14 @@
 
 	"imu" : {
 		"enabled" : true,
-		"data_mode" : "quaternions",
-		"delta_ticks" : 5,
 		"filter_mode" : "kalman",
 		"accelerometer_range_max" : 4,
 		"gyroscope_range_max" : 500,
 		"compass_range_max" : 5,
-		"compass_enabled" : true
+		"compass_enabled" : true,
+		"mode" : "on_value_changed",
+		"delta_ticks" : 5,
+		"data" : "quaternions",
+		"acc_norm_threshold" : 1
  	}
 }

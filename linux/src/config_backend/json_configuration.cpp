@@ -360,44 +360,29 @@ ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
     {
         return ConfigStatus::OK; /* Imu config is empty or not present, do nothing */
     }
-    /* Read data mode configuration */
-    const Json::Value& data_mode = imu["data_mode"];
-    if (data_mode.isString())
-    {
-        int mode;
-        if (data_mode.asString() == "all")
-        {
-            mode = 0;
-        }
-        else if (data_mode.asString() == "quaternions")
-        {
-            mode = 1;
-        }
-        else if (data_mode.asString() == "linearacceleration")
-        {
-            mode = 2;
-        }
-        else
-        {
-            SENSEI_LOG_ERROR("{} was not a recognized data mode", data_mode.asString());
-            mode = 0;
-        }
-        auto m = _message_factory.make_imu_set_data_mode_command(mode);
-        _queue->push(std::move(m));
-    }
-    /* Read delta ticks configuration */
-    const Json::Value& ticks = imu["delta_ticks"];
-    if (ticks.isInt())
-    {
-        auto m = _message_factory.make_imu_sending_delta_ticks_command(ticks.asInt());
-        _queue->push(std::move(m));
-    }
     /* Read filter mode configuration */
     const Json::Value& mode = imu["filter_mode"];
     if (mode.isString())
     {
-        // TODO - For now, don't really bother which filter mode we set
-        auto m = _message_factory.make_imu_set_filter_mode_command(1);
+        std::string filter_str = mode.asString();
+        int filter = 0;
+        if (filter_str == "no_orientation")
+        {
+            filter = 0;
+        }
+        else if (filter_str == "kalman")
+        {
+            filter = 1;
+        }
+        else if (filter_str == "q_comp")
+        {
+            filter = 2;
+        }
+        else if (filter_str == "q_grad")
+        {
+            filter = 3;
+        }
+        auto m = _message_factory.make_imu_set_filter_mode_command(filter);
         _queue->push(std::move(m));
     }
     /* Read accelerometer range max value configuration */
@@ -421,11 +406,66 @@ ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
         auto m = _message_factory.make_imu_set_compass_range_max_command(comp_range.asInt());
         _queue->push(std::move(m));
     }
-    /* Read delta ticks configuration */
+    /* Read compass enabled configuration */
     const Json::Value& compass = imu["compass_enabled"];
     if (compass.isBool())
     {
         auto m = _message_factory.make_imu_enable_compass_command(compass.asBool());
+        _queue->push(std::move(m));
+    }
+    /* Read sending mode configuration */
+    const Json::Value& sending_mode = imu["mode"];
+    if (sending_mode.isString())
+    {
+        if (sending_mode.isString())
+        {
+            const std::string& mode_str = sending_mode.asString();
+            if (mode_str == "continuous")
+            {
+                auto m = _message_factory.make_imu_set_sending_mode_command(SendingMode::CONTINUOUS);
+                _queue->push(std::move(m));
+            }
+            else if (mode_str == "on_value_changed")
+            {
+                auto m = _message_factory.make_imu_set_sending_mode_command(SendingMode::ON_VALUE_CHANGED);
+                _queue->push(std::move(m));
+            }
+            else
+            {
+                SENSEI_LOG_WARNING("\"{}\" is not a recognized sending mode", mode_str);
+                return ConfigStatus::PARAMETER_ERROR;
+            }
+        }
+    }
+    /* Read delta ticks configuration */
+    const Json::Value& ticks = imu["delta_ticks"];
+    if (ticks.isInt())
+    {
+        auto m = _message_factory.make_imu_sending_delta_ticks_command(ticks.asInt());
+        _queue->push(std::move(m));
+    }
+    /* Read data mode configuration */
+    const Json::Value& data_mode = imu["data"];
+    if (data_mode.isString())
+    {
+        int mode;
+        if (data_mode.asString() == "quaternions")
+        {
+            mode = 2;
+        }
+        else
+        {
+            SENSEI_LOG_ERROR("{} was not a recognized data mode", data_mode.asString());
+            mode = 0;
+        }
+        auto m = _message_factory.make_imu_set_data_mode_command(mode);
+        _queue->push(std::move(m));
+    }
+    /* Read threshold for sending data configuration */
+    const Json::Value& threshold = imu["acc_norm_threshold"];
+    if (threshold.isNumeric())
+    {
+        auto m = _message_factory.make_imu_acc_threshold_command(threshold.asFloat());
         _queue->push(std::move(m));
     }
     /* Read IMU enabled configuration */

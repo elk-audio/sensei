@@ -123,6 +123,16 @@ inline std::string& translate_teensy_status_code(int code)
             return str ="INCOMPLETE_PARAMETERS";
         case SENSEI_ERROR_CODE::WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS:
             return str ="WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS";
+        case SENSEI_ERROR_CODE::IMU_GENERIC_ERROR:
+            return str ="IMU_GENERIC_ERROR";
+        case SENSEI_ERROR_CODE::IMU_COMMUNICATION_ERROR:
+            return str ="IMU_COMMUNICATION_ERROR";
+        case SENSEI_ERROR_CODE::IMU_NOT_CONNECTED:
+            return str ="IMU_NOT_CONNECTED";
+        case SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED:
+            return str ="IMU_CMD_NOT_EXECUTED";
+        case SENSEI_ERROR_CODE::IMU_DISABLED:
+            return str ="IMU_DISABLED";
         case SENSEI_ERROR_CODE::SERIAL_DEVICE_GENERIC_ERROR:
             return str ="SERIAL_DEVICE_GENERIC_ERROR";
         case SENSEI_ERROR_CODE::SERIAL_DEVICE_PORT_NOT_OPEN:

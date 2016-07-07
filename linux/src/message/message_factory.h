@@ -195,20 +195,6 @@ public:
         return std::unique_ptr<SetImuEnabledCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_imu_set_data_mode_command(const int mode,
-                                                                const uint32_t timestamp = 0)
-    {
-        auto msg = new SetImuDataModeCommand(0, mode, timestamp);
-        return std::unique_ptr<SetImuDataModeCommand>(msg);
-    }
-
-    std::unique_ptr<BaseMessage> make_imu_sending_delta_ticks_command(const int ticks,
-                                                                      const uint32_t timestamp = 0)
-    {
-        auto msg = new SetImuSendingDeltaTicksCommand(0, ticks, timestamp);
-        return std::unique_ptr<SetImuSendingDeltaTicksCommand>(msg);
-    }
-
     std::unique_ptr<BaseMessage> make_imu_set_filter_mode_command(const int mode,
                                                                   const uint32_t timestamp = 0)
     {
@@ -233,15 +219,43 @@ public:
     std::unique_ptr<BaseMessage> make_imu_set_compass_range_max_command(const float range,
                                                                         const uint32_t timestamp = 0)
     {
-        auto msg = new SetImuCompassRangeMax(0, range, timestamp);
-        return std::unique_ptr<SetImuCompassRangeMax>(msg);
+        auto msg = new SetImuCompassRangeMaxCommand(0, range, timestamp);
+        return std::unique_ptr<SetImuCompassRangeMaxCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_imu_enable_compass_command(const bool enabled,
                                                                  const uint32_t timestamp = 0)
     {
-        auto msg = new SetImuCompassEnabled(0, enabled, timestamp);
-        return std::unique_ptr<SetImuCompassEnabled>(msg);
+        auto msg = new SetImuCompassEnabledCommand(0, enabled, timestamp);
+        return std::unique_ptr<SetImuCompassEnabledCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_sending_mode_command(const SendingMode mode,
+                                                                   const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuSendingModeCommand(0, mode, timestamp);
+        return std::unique_ptr<SetImuSendingModeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_sending_delta_ticks_command(const int ticks,
+                                                                      const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuSendingDeltaTicksCommand(0, ticks, timestamp);
+        return std::unique_ptr<SetImuSendingDeltaTicksCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_data_mode_command(const int mode,
+                                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuDataModeCommand(0, mode, timestamp);
+        return std::unique_ptr<SetImuDataModeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_acc_threshold_command(const float threshold,
+                                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuAccThresholdCommand(0, threshold, timestamp);
+        return std::unique_ptr<SetImuAccThresholdCommand>(msg);
     }
 
     // Internal commands

@@ -41,13 +41,15 @@ enum class CommandType
     ENABLE_SENDING_PACKETS,
     // Imu specific commands
     SET_IMU_ENABLED,
-    SET_IMU_DATA_MODE,
-    SET_IMU_SENDING_DELTA_TICKS,
     SET_IMU_FILTER_MODE,
     SET_IMU_ACC_RANGE_MAX,
     SET_IMU_GYRO_RANGE_MAX,
     SET_IMU_COMPASS_RANGE_MAX,
     SET_IMU_COMPASS_ENABLED,
+    SET_IMU_SENDING_MODE,
+    SET_IMU_SENDING_DELTA_TICKS,
+    SET_IMU_DATA_MODE,
+    SET_IMU_ACC_THRESHOLD,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_SCALE_RANGE_LOW,
@@ -220,18 +222,6 @@ SENSEI_DECLARE_COMMAND(SetImuEnabledCommand,
                        "Enable IMU",
                        CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_COMMAND(SetImuDataModeCommand,
-                       CommandType::SET_IMU_DATA_MODE,
-                       int,
-                       "Set IMU type of data sent",
-                       CommandDestination::SERIAL_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuSendingDeltaTicksCommand,
-                       CommandType::SET_IMU_SENDING_DELTA_TICKS,
-                       int,
-                       "Set IMU Sending Delta Ticks",
-                       CommandDestination::SERIAL_FRONTEND);
-
 SENSEI_DECLARE_COMMAND(SetImuFilterModeCommand,
                        CommandType::SET_IMU_FILTER_MODE,
                        int,
@@ -250,18 +240,41 @@ SENSEI_DECLARE_COMMAND(SetImuGyroscopeRangeMaxCommand,
                        "Set IMU Gyroscope max range",
                        CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_COMMAND(SetImuCompassRangeMax,
+SENSEI_DECLARE_COMMAND(SetImuCompassRangeMaxCommand,
                        CommandType::SET_IMU_COMPASS_RANGE_MAX,
                        float,
                        "Set IMU compass max range",
                        CommandDestination::SERIAL_FRONTEND);
 
-SENSEI_DECLARE_COMMAND(SetImuCompassEnabled,
+SENSEI_DECLARE_COMMAND(SetImuCompassEnabledCommand,
                        CommandType::SET_IMU_COMPASS_ENABLED,
                        bool,
                        "Enable IMU compass",
                        CommandDestination::SERIAL_FRONTEND);
 
+SENSEI_DECLARE_COMMAND(SetImuSendingModeCommand,
+                       CommandType::SET_IMU_SENDING_MODE,
+                       SendingMode,
+                       "Set IMU Sending Mode",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetImuSendingDeltaTicksCommand,
+                       CommandType::SET_IMU_SENDING_DELTA_TICKS,
+                       int,
+                       "Set IMU Sending Delta Ticks",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetImuDataModeCommand,
+                       CommandType::SET_IMU_DATA_MODE,
+                       int,
+                       "Set IMU type of data sent",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetImuAccThresholdCommand,
+                       CommandType::SET_IMU_ACC_THRESHOLD,
+                       float,
+                       "Set IMU acceleration threshold for sending data in on_value_changed mode",
+                       CommandDestination::SERIAL_FRONTEND);
 
 // Internal commands
 

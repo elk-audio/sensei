@@ -187,16 +187,7 @@ TEST_F(TestSerialCommandCreator, test_make_imu_enable_cmd)
 {
     const sSenseiDataPacket* packet = _module_under_test.make_imu_enable_cmd(test_tstamp, true);
     EXPECT_EQ(test_tstamp, packet->timestamp);
-    EXPECT_EQ(SENSEI_CMD::IMU_START, packet->cmd);
-}
-
-TEST_F(TestSerialCommandCreator, test_make_imu_set_datamode_cmd)
-{
-    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_datamode_cmd(test_tstamp, 1);
-    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
-    EXPECT_EQ(test_tstamp, packet->timestamp);
-    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
-    EXPECT_EQ(SENSEI_SUB_CMD::GET_DATA_QUATERNION, imu_settings->typeOfData);
+    EXPECT_EQ(SENSEI_CMD::IMU_ENABLE, packet->cmd);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_imu_set_filtermode_cmd)
@@ -244,6 +235,15 @@ TEST_F(TestSerialCommandCreator, test_make_imu_set_compass_enable_cmd)
     EXPECT_EQ(true, imu_settings->compassEnable);
 }
 
+TEST_F(TestSerialCommandCreator, test_make_imu_set_sending_mode_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_sending_mode_cmd(test_tstamp, SendingMode::CONTINUOUS);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(eSendingMode::SENDING_MODE_CONTINUOUS, imu_settings->sendingMode);
+}
+
 TEST_F(TestSerialCommandCreator, test_make_imu_set_delta_tics_cmd)
 {
     const sSenseiDataPacket* packet = _module_under_test.make_imu_set_delta_tics_cmd(test_tstamp, 5);
@@ -251,6 +251,24 @@ TEST_F(TestSerialCommandCreator, test_make_imu_set_delta_tics_cmd)
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
     EXPECT_EQ(5, imu_settings->deltaTicksContinuousMode);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_datamode_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_datamode_cmd(test_tstamp, IMU_GET_QUATERNIONS);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_EQ(IMU_GET_QUATERNIONS, imu_settings->typeOfData);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_set_acc_threshold_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_set_acc_threshold_cmd(test_tstamp, 0.25);
+    const sImuSettings* imu_settings = reinterpret_cast<const sImuSettings*>(&packet->payload);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+    EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
+    EXPECT_FLOAT_EQ(0.25, imu_settings->minLinearAccelerationSquareNorm);
 }
 
 TEST_F(TestSerialCommandCreator, test_cacheing)
