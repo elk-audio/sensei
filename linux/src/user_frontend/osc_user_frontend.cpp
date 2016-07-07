@@ -44,6 +44,15 @@ static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, l
     return 0;
 }
 
+static int osc_imu_calibrate(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
+{
+    OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
+    self->set_imu_calibration();
+    SENSEI_LOG_DEBUG("Sending an IMU calibrate command");
+
+    return 0;
+}
+
 }; // anonymous namespace
 
 OSCUserFrontend::OSCUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue,
@@ -104,6 +113,7 @@ void OSCUserFrontend::_start_server()
     _osc_server = lo_server_thread_new(port_stream.str().c_str(), osc_error);
     lo_server_thread_add_method(_osc_server, "/set_pin_enabled", "ii", osc_set_pin_enabled, this);
     lo_server_thread_add_method(_osc_server, "/set_digital_output", "ii", osc_set_digital_output, this);
+    lo_server_thread_add_method(_osc_server, "/calibrate_imu", "", osc_imu_calibrate, this);
     int ret = lo_server_thread_start(_osc_server);
     if (ret < 0)
     {

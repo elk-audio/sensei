@@ -258,6 +258,12 @@ public:
         return std::unique_ptr<SetImuAccThresholdCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_imu_calibrate_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuCalibrateCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuCalibrateCommand>(msg);
+    }
+
     // Internal commands
 
     std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int pin_index,

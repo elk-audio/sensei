@@ -390,8 +390,6 @@ void SerialFrontend::send_initialize_packet(int ticks, int pins, int digital_pin
 {
     const sSenseiDataPacket* packet = _packet_factory.make_initialize_system_cmd(timestamp, ticks, pins, digital_pins);
     sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
-    packet = _packet_factory.make_calibrate_gyro_cmd(0);
-    sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
 }
 
 /*
@@ -602,6 +600,11 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             auto cmd = static_cast<SetImuAccThresholdCommand*>(message);
             return _packet_factory.make_imu_set_acc_threshold_cmd(cmd->timestamp(),
                                                                   cmd->data());
+        }
+        case CommandType::IMU_CALIBRATE:
+        {
+            auto cmd = static_cast<ImuCalibrateCommand*>(message);
+            return _packet_factory.make_calibrate_gyro_cmd(cmd->timestamp());
         }
         default:
             SENSEI_LOG_WARNING("Unsupported command type {}", static_cast<int>(message->base_type()));

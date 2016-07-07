@@ -62,6 +62,12 @@ TEST_F(TestSerialCommandCreator, test_make_initialize_system_cmd)
     EXPECT_EQ(test_tstamp, packet->timestamp);
 }
 
+TEST_F(TestSerialCommandCreator, test_make_calibrate_gyro_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_calibrate_gyro_cmd(test_tstamp);
+    EXPECT_EQ(IMU_GYROSCOPE_CALIBRATION, packet->cmd);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+}
 
 TEST_F(TestSerialCommandCreator, test_make_set_digital_pin_cmd)
 {
