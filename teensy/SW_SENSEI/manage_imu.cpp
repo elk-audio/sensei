@@ -441,7 +441,8 @@ int32_t ManageIMU::setSettings(sImuSettings* settings)
         return SENSEI_ERROR_CODE::INCORRECT_PARAMETER_TYPE;
     }
 
-    if (settings->typeOfData > 0 && settings->typeOfData <= IMU_MAX_SUB_CMD)
+    //if (settings->typeOfData > 0 && settings->typeOfData <= IMU_MAX_SUB_CMD)
+    if (settings->typeOfData <= IMU_MAX_SUB_CMD)
     {
         _settings.typeOfData = settings->typeOfData;
     }
