@@ -20,8 +20,9 @@ const unsigned int READ_WRITE_TIMEOUT_MS = 1000;
  * To avoid singularities near 90 degrees, this should be set below 0,5
  * 0,499 clamps at around 86 degrees, se
  * http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/jack.htm
+ * The IMU used has good resolution and increasing this doesn't seem to cause any issues.
  */
-const float QUATERNION_SINGULARITY_LIMIT = 0.4995;
+const float QUATERNION_SINGULARITY_LIMIT = 0.4999;
 
 
 /*
