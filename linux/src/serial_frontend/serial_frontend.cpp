@@ -133,6 +133,7 @@ void SerialFrontend::stop()
     {
         _write_thread.join();
     }
+    SENSEI_LOG_INFO("Threads stopped");
 }
 
 
@@ -208,6 +209,8 @@ void SerialFrontend::read_loop()
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _read_thread_state = running_state::STOPPED;
+    /* Notify the write thread in case it is waiting since no more notifications will follow */
+    _ready_to_send_notifier.notify_one();
 }
 
 /*
