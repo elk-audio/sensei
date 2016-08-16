@@ -19,15 +19,6 @@ SerialCommandCreator::SerialCommandCreator(int max_pins) :
         memset(i.base(), 0, sizeof(pin_config));
         i->cfg_data.idxPin = id++;
     }
-    /*_cached_imu_cfgs.typeOfData = 2; // Hardcoding this datatype for now
-    _cached_imu_cfgs.accerelometerRange = 0;
-    _cached_imu_cfgs.compassEnable = 0;
-    _cached_imu_cfgs.compassRange = 0;
-    _cached_imu_cfgs.deltaTicksContinuousMode = 10;
-    _cached_imu_cfgs.filterMode = IMU_FILTER_KALMAN;
-    _cached_imu_cfgs.gyroscopeRange = 0;
-    _cached_imu_cfgs.minLinearAccelerationSquareNorm = 0.1;
-    _cached_imu_cfgs.sendingMode = eSendingMode::SENDING_MODE_ON_VALUE_CHANGED;*/
 }
 
 SerialCommandCreator::~SerialCommandCreator()

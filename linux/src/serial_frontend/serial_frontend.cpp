@@ -90,8 +90,10 @@ SerialFrontend::~SerialFrontend()
 {
     _ready_to_send = true;
     stop();
+    SENSEI_LOG_INFO("Closing serial port");
     sp_close(_port);
     sp_free_port(_port);
+    SENSEI_LOG_INFO("Serial frontend de-initialized");
 }
 
 
@@ -305,12 +307,9 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
     const char* assembled_payload = _message_concatenator.add(packet);
     if (!assembled_payload)
     {
-        SENSEI_LOG_INFO("Message fragment received");
         return;
     }
 
-    //    case SENSEI_SUB_CMD::GET_DATA_QUATERNION: // TODO - "hack" for incomplete fw
-    //    case SENSEI_SUB_CMD::GET_ALL_DATA:
     if (packet->sub_cmd & IMU_GET_QUATERNIONS)
     {
         const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
@@ -339,24 +338,8 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
     }
     else
     {
-        SENSEI_LOG_WARNING("Unrecognized IMU sub command {}", packet->sub_cmd);
+        SENSEI_LOG_WARNING("Unsupported IMU data mode {}", packet->sub_cmd);
     }
-    /*else (if )
-        case SENSEI_SUB_CMD::GET_DATA_LINEARACCELERATION:
-        {
-            // TODO - unsupported
-            //const sImuLinearAcceleration *data = reinterpret_cast<const sImuLinearAcceleration*>(assembled_payload);
-            break;
-        }
-        case SENSEI_SUB_CMD::GET_DATA_COMPONENT_SENSOR:
-        {
-            // TODO - unsupported
-            //const sImuComponentSensor *data = reinterpret_cast<const sImuComponentSensor*>(assembled_payload);
-            break;
-        }
-        default:
-            SENSEI_LOG_WARNING("Unrecognized IMU sub command {}", packet->sub_cmd);
-    }*/
 }
 
 void SerialFrontend::process_ack(const sSenseiDataPacket *packet)
@@ -419,7 +402,7 @@ void SerialFrontend::handle_timeouts()
     {
         case timeout::TIMED_OUT_PERMANENTLY:
         {
-            /* Resending timed out too many times, signal push an error message to main loop.
+            /* Resending timed out too many times, push an error message to main loop.
              * NOTE: No break as we want to signal ready to send to the write thread too.
              * Also note that m is destroyed when this scope exits. */
             auto m = _message_tracker.get_cached_message();
@@ -483,7 +466,7 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             for (int& i : _virtual_pin_table)
             {
                 if (message->index() == i)
-                    break;
+                    return nullptr;
             }
             auto cmd = static_cast<SetEnabledCommand *>(message);
             return _packet_factory.make_config_enabled_cmd(cmd->timestamp(), cmd->data());
