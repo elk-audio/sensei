@@ -2,13 +2,15 @@
 #define DIGITALOUTPUT_H
 
 #include "common.h"
-#include "PIN.h"
+#include "pin.h"
 
-class DigitalOutput : public PIN {
+class DigitalOutput : public PIN
+{
 public:
 	DigitalOutput();
 	~DigitalOutput();
 private:
+	
 };
 
-#endif
+#endif // DIGITALOUTPUT_H

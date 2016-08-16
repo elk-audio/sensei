@@ -1,9 +1,9 @@
-#include "DigitalOutput.h"
+#include "digital_output.h"
 
 DigitalOutput::DigitalOutput() : PIN()
 {
 	//SerialDebug.println("DigitalOutput()");
-	type = ePinType::PIN_DIGITAL_OUTPUT;
+	_type = ePinType::PIN_DIGITAL_OUTPUT;
 }
 
 DigitalOutput::~DigitalOutput()

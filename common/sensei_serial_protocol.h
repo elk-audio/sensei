@@ -180,6 +180,7 @@ namespace sensei {
         //----------------------------------------------
         SET_PIN = 0,
         SET_BANK = 1,
+
         //----------------------------------------------
         // CONFIGURE_PIN
         //----------------------------------------------
@@ -187,11 +188,13 @@ namespace sensei {
         SET_PIN_DIGITAL_INPUT = 1,
         SET_PIN_DIGITAL_OUTPUT = 2,
         SET_PIN_ANALOG_INPUT = 3,
+
         //----------------------------------------------
         // GET_ALL_VALUES
         //----------------------------------------------
 		PINS=0,
 		DIGITAL_PIN=1,
+
         //----------------------------------------------
         // IMU_GET_DATA
         //----------------------------------------------
@@ -206,6 +209,7 @@ namespace sensei {
         // SET_VALUE
         //----------------------------------------------
 		SET_SINGLE_PIN=0,
+
         //----------------------------------------------
         // GET_VALUE
         //----------------------------------------------
@@ -342,8 +346,6 @@ namespace sensei {
     /*typedef enum eImuGetData
     {
         IMU_GET_ALL_DATA,
-        IMU_GET_DATA_COMPONENT_SENSOR,
-        IMU_GET_DATA_COMPONENT_SENSOR_NORMALIZED,
         IMU_GET_DATA_QUATERNION,
         IMU_GET_DATA_LINEARACCELERATION,
         IMU_GET_DATA_COMPONENT_SENSOR,
