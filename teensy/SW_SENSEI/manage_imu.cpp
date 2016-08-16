@@ -536,8 +536,8 @@ void ManageIMU::printDebugImuSettings()
     SerialDebug.println("   compassRange = " + String(_settings.compassRange));
     SerialDebug.println("   compassEnable = " + String(_settings.compassEnable));
     SerialDebug.println("   sendingMode = " + String(_settings.sendingMode));
-    SerialDebug.println("   deltaTicksContinuousMode = " + String(_settings.deltaTicksContinuousMode));
-    SerialDebug.println("   typeOfData = " + String(_settings.typeOfData));
-    SerialDebug.println("   minLinearAccelerationNorm = " + String(sqrt(_settings.minLinearAccelerationSquareNorm)));
+    //SerialDebug.println("   deltaTicksContinuousMode = " + String(_settings.deltaTicksContinuousMode));
+    //SerialDebug.println("   typeOfData = " + String(_settings.typeOfData));
+    //SerialDebug.println("   minLinearAccelerationNorm = " + String(sqrt(_settings.minLinearAccelerationSquareNorm)));
     SerialDebug.println("");
 }

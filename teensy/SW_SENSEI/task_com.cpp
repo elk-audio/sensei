@@ -248,9 +248,9 @@ void vTaskCOM(void *pvParameters)
                         SerialDebug.println("   compassRange = " + String(msgData.data.imuSettings.compassRange));
                         SerialDebug.println("   compassEnable = " + String(msgData.data.imuSettings.compassEnable));
                         SerialDebug.println("   sendingMode = " + String(msgData.data.imuSettings.sendingMode));
-                        SerialDebug.println("   deltaTicksContinuousMode = " + String(msgData.data.imuSettings.deltaTicksContinuousMode));
-                        SerialDebug.println("   typeOfData = " + String(msgData.data.imuSettings.typeOfData));
-                        SerialDebug.println("   minLinearAccelerationNorm = " + String(sqrt(msgData.data.imuSettings.minLinearAccelerationSquareNorm)));
+                        //SerialDebug.println("   deltaTicksContinuousMode = " + String(msgData.data.imuSettings.deltaTicksContinuousMode));
+                        //SerialDebug.println("   typeOfData = " + String(msgData.data.imuSettings.typeOfData));
+                        //SerialDebug.println("   minLinearAccelerationNorm = " + String(sqrt(msgData.data.imuSettings.minLinearAccelerationSquareNorm)));
                         SerialDebug.println("");
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
