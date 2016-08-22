@@ -27,7 +27,7 @@ private:
 
 	uint8_t _sliderState;
 	uint16_t _sliderValue;
-	uint16_t _precSliderValue;
+	uint16_t _jumpedSliderValue;
 };
 
 #endif // ANALOGINPUT_H

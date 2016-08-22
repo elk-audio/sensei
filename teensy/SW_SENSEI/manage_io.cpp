@@ -35,11 +35,11 @@ void ManageIO::hardwareAcquisition()
 					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
 				   break;
 
-				   case ePinType::PIN_DIGITAL_INPUT:
-					   delayMicroseconds(1); //to define
-					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
-					   setPinValue(idxPin, digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
-				   break;
+					case ePinType::PIN_DIGITAL_INPUT:
+						pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLUP);
+						delayMicroseconds(5); //to define
+						setPinValue(idxPin, digitalRead(Z1 + VERSOR_Z_PINS * idxMul));
+					break;
 
 				   case ePinType::PIN_DIGITAL_OUTPUT:
 					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, OUTPUT);
@@ -50,11 +50,11 @@ void ManageIO::hardwareAcquisition()
 					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT_PULLDOWN);
 				   break;
 
-				   case ePinType::PIN_ANALOG_INPUT:
-					   pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
-					   delayMicroseconds(1);
-					   setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
-				   break;
+					case ePinType::PIN_ANALOG_INPUT:
+						pinMode(Z1 + VERSOR_Z_PINS * idxMul, INPUT);
+						delayMicroseconds(3);
+						setPinValue(idxPin,analogRead(Z1 + VERSOR_Z_PINS * idxMul));
+					break;
 				}
 			} //Mul
 		} //Ch
