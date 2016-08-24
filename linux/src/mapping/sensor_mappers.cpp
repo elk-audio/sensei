@@ -6,6 +6,7 @@
  */
 
 #include <cassert>
+#include <cmath>
 
 #include "mapping/sensor_mappers.h"
 #include "message/message_factory.h"
@@ -256,14 +257,14 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_INPUT_SCALE_RANGE_LOW:
         {
             const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
-            status = _set_input_scale_range_low(typed_cmd->data());
+            status = _set_input_scale_range_low(static_cast<int>(std::round(typed_cmd->data())));
         };
         break;
 
     case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
         {
             const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
-            status = _set_input_scale_range_high(typed_cmd->data());
+            status = _set_input_scale_range_high(static_cast<int>(std::round(typed_cmd->data())));
         };
         break;
 

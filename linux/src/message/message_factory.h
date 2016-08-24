@@ -275,7 +275,7 @@ public:
     }
 
     std::unique_ptr<BaseMessage> make_set_input_scale_range_low_command(const int pin_index,
-                                                                        const int value,
+                                                                        const float value,
                                                                         const uint32_t timestamp = 0)
     {
         auto msg = new SetInputScaleRangeLow(pin_index, value, timestamp);
@@ -283,7 +283,7 @@ public:
     }
 
     std::unique_ptr<BaseMessage> make_set_input_scale_range_high_command(const int pin_index,
-                                                                         const int value,
+                                                                         const float value,
                                                                          const uint32_t timestamp = 0)
     {
         auto msg = new SetInputScaleRangeHigh(pin_index, value, timestamp);

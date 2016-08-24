@@ -293,13 +293,13 @@ SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
 
 SENSEI_DECLARE_COMMAND(SetInputScaleRangeLow,
                        CommandType::SET_INPUT_SCALE_RANGE_LOW,
-                       int,
+                       float,
                        "Set Input Scale Range Low",
                        CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
                        CommandType::SET_INPUT_SCALE_RANGE_HIGH,
-                       int,
+                       float,
                        "Set Input Scale Range Low",
                        CommandDestination::INTERNAL);
 
