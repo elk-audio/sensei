@@ -26,7 +26,8 @@
 			"enabled": true,
 			"name" : "pitch",
 			"pin_type" : "imu_input",
-			"parameter" : "pitch"
+			"parameter" : "pitch",
+			"range" : [0, 1.57]
 		},
 		{
 			"id" : 63,

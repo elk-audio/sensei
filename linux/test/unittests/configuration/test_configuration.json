@@ -46,7 +46,8 @@
 			"id" : 61,
 			"name" : "yaw",
 			"pin_type" : "imu_input",
-			"parameter" : "yaw"
+			"parameter" : "yaw",
+			"range" : [0 , 3.14]
 		}
 
 	],

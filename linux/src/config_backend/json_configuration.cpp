@@ -259,11 +259,10 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
     const Json::Value& range = pin["range"];
     if (range.isArray() && range.size() >= 2)
     {
-        auto low = _message_factory.make_set_input_scale_range_low_command(pin_id, range[0].asInt());
-        auto high = _message_factory.make_set_input_scale_range_high_command(pin_id, range[1].asInt());
+        auto low = _message_factory.make_set_input_scale_range_low_command(pin_id, range[0].asFloat());
+        auto high = _message_factory.make_set_input_scale_range_high_command(pin_id, range[1].asFloat());
         _queue->push(std::move(low));
         _queue->push(std::move(high));
-
     }
     return ConfigStatus::OK ;
 }

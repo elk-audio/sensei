@@ -150,7 +150,15 @@ public:
     void process(Value *value, output_backend::OutputBackend *backend) override;
 
 private:
+    CommandErrorCode _set_input_scale_range_low(const float value);
+    CommandErrorCode _set_input_scale_range_high(const float value);
 
+    // Mapping parameters
+    float _input_scale_range_low;
+    float _input_scale_range_high;
+
+    // Internal helper attributes
+    int _max_allowed_input;
 };
 
 }; // namespace mapping

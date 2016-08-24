@@ -427,9 +427,11 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(const int value
 ////////////////////////////////////////////////////////////////////////////////
 
 ImuMapper::ImuMapper(const int pin_index) :
-        BaseSensorMapper(PinType::IMU_INPUT, pin_index)
+        BaseSensorMapper(PinType::IMU_INPUT, pin_index),
+        _input_scale_range_low(-M_PI),
+        _input_scale_range_high(M_PI),
+        _max_allowed_input(M_PI * 2)
 {
-    SENSEI_LOG_INFO("ImuMapper constructor called");
 }
 
 ImuMapper::~ImuMapper()
@@ -449,7 +451,18 @@ CommandErrorCode ImuMapper::apply_command(const Command *cmd)
             assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::IMU_INPUT);
             break;
         }
-
+        case CommandType::SET_INPUT_SCALE_RANGE_LOW:
+        {
+            const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
+            status = _set_input_scale_range_low(typed_cmd->data());
+            break;
+        }
+        case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
+        {
+            const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
+            status = _set_input_scale_range_high(typed_cmd->data());
+            break;
+        }
         default:
             status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
             break;
@@ -474,6 +487,8 @@ void ImuMapper::put_config_commands_into(CommandIterator out_iterator)
 
     MessageFactory factory;
     *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::IMU_INPUT);
+    *out_iterator = factory.make_set_input_scale_range_low_command(_pin_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high_command(_pin_index, _input_scale_range_high);
 }
 
 void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
@@ -485,7 +500,9 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
     assert(value->type() == ValueType::IMU);
 
     auto imu_val = static_cast<ImuValue*>(value);
-    float out_val = imu_val->value();
+    float clipped_val = clip<float>(imu_val->value(), _input_scale_range_low, _input_scale_range_high);
+    float out_val = (clipped_val - _input_scale_range_low) / (_input_scale_range_high - _input_scale_range_low);
+
     if (_invert_value)
     {
         out_val = 1.0f - out_val;
@@ -499,4 +516,38 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
                                               value->timestamp());
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
+}
+
+CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)
+{
+    if ( (value < 0) || (value > _max_allowed_input) )
+    {
+        return CommandErrorCode::INVALID_RANGE;
+    }
+
+    if (value >= _input_scale_range_high)
+    {
+        _input_scale_range_low = _input_scale_range_high - 1;
+        return CommandErrorCode::CLIP_WARNING;
+    }
+
+    _input_scale_range_low = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode ImuMapper::_set_input_scale_range_high(const float value)
+{
+    if ( (value < 0) || (value > _max_allowed_input) )
+    {
+        return CommandErrorCode::INVALID_RANGE;
+    }
+
+    if (value <= _input_scale_range_low)
+    {
+        _input_scale_range_high = _input_scale_range_low + 1;
+        return CommandErrorCode::CLIP_WARNING;
+    }
+
+    _input_scale_range_high = value;
+    return CommandErrorCode::OK;
 }

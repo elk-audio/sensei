@@ -3,7 +3,7 @@
 ManageIMU::ManageIMU()
 {
     _internalSettings.decompositionOrder = DECOMPOSITION_ZYX;
-    _internalSettings.axisDirection = AXIS_DIRECTION_RIGHT_FORWARD_UP_RHANDED;
+    _internalSettings.axisDirection = AXIS_DIRECTION_RIGHT_UP_FORWARD_LHANDED;
     _internalSettings.calibrationMode = IMU_CALIBRATION_MODE_BIAS;
     _internalSettings.referenceVectorMode = IMU_REFERENCE_VECTOR_SINGLE_AUTO_CONTINUOUS_MODE;
 

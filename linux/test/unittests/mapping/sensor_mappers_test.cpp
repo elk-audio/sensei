@@ -412,3 +412,165 @@ TEST_F(TestAnalogSensorMapper, test_raw_input_send)
     _mapper.process(input_val, &_backend);
     ASSERT_EQ(sensor_value, _backend._last_raw_analogue_input);
 }
+
+class TestImuMapper : public ::testing::Test
+{
+protected:
+
+    TestImuMapper()
+    {
+    }
+
+    ~TestImuMapper()
+    {
+    }
+
+    void SetUp()
+    {
+        MessageFactory factory;
+        std::vector<std::unique_ptr<Command>> config_cmds;
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
+                                                                                                _input_scale_low))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
+                                                                                                 _input_scale_high))));
+
+        for (auto const& cmd : config_cmds)
+        {
+            auto status = _mapper.apply_command(cmd.get());
+            EXPECT_EQ(CommandErrorCode::OK, status);
+        }
+
+    }
+
+    void TearDown()
+    {
+    }
+
+protected:
+    int _sensor_idx{2};
+    bool _enabled{true};
+    SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
+    bool _inverted{true};
+
+    float _input_scale_low{1};
+    float _input_scale_high{3.14};
+
+    OutputBackendMockup _backend;
+    ImuMapper _mapper{_sensor_idx};
+};
+
+TEST_F(TestImuMapper, test_config)
+{
+    // Get the config back inside a local container and check values in a LIFO manner
+    std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
+
+    _mapper.put_config_commands_into(std::back_inserter(stored_cmds));
+    auto cmd_scale_high = extract_cmd_from<SetInputScaleRangeHigh>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_HIGH, cmd_scale_high->type());
+    EXPECT_FLOAT_EQ(_input_scale_high, cmd_scale_high->data());
+
+    auto cmd_scale_low = extract_cmd_from<SetInputScaleRangeLow>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_LOW, cmd_scale_low->type());
+    EXPECT_FLOAT_EQ(_input_scale_low, cmd_scale_low->data());
+
+    auto cmd_pintype = extract_cmd_from<SetPinTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_PIN_TYPE, cmd_pintype->type());
+    EXPECT_EQ(PinType::IMU_INPUT, cmd_pintype->data());
+
+    auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
+    EXPECT_EQ(_inverted, cmd_invert->data());
+
+    auto cmd_send_mode = extract_cmd_from<SetSendingModeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENDING_MODE, cmd_send_mode->type());
+    EXPECT_EQ(_sending_mode, cmd_send_mode->data());
+
+    auto cmd_enabled = extract_cmd_from<SetEnabledCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ENABLED, cmd_enabled->type());
+    EXPECT_EQ(_enabled, cmd_enabled->data());
+}
+
+
+TEST_F(TestImuMapper, test_process)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    // Middle value should return 0.5
+    auto input_msg = factory.make_imu_value(_sensor_idx, (_input_scale_low + _input_scale_high) / 2);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    EXPECT_FLOAT_EQ(0.5f, _backend._last_output_value);
+
+    // 1/4 of the range should return 0.25
+    input_msg = factory.make_imu_value(_sensor_idx, ((_input_scale_high - _input_scale_low) / 4 + _input_scale_low));
+    input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    EXPECT_FLOAT_EQ(0.25f, _backend._last_output_value);
+}
+
+
+TEST_F(TestImuMapper, test_invert)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    int sensor_input = 1;
+    auto input_msg = factory.make_imu_value(_sensor_idx, sensor_input);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    float out_val = _backend._last_output_value;
+
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, true)));
+    EXPECT_EQ(CommandErrorCode::OK, ret);
+    _mapper.process(input_val, &_backend);
+    float inverted_val = _backend._last_output_value;
+    EXPECT_FLOAT_EQ(inverted_val, 1.0f - out_val);
+
+}
+
+TEST_F(TestImuMapper, test_clip)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    // Under low range
+    float sensor_input = -3.14f;
+    auto input_msg = factory.make_imu_value(_sensor_idx, sensor_input);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    EXPECT_FLOAT_EQ(0.0f, _backend._last_output_value);
+
+    // Above high range
+    sensor_input = 5;
+    input_msg = factory.make_imu_value(_sensor_idx, sensor_input);
+    input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    EXPECT_FLOAT_EQ(1.0f, _backend._last_output_value);
+}
+
+TEST_F(TestImuMapper, test_disabled_process_dont_send_values)
+{
+    // Reset relevant configuration
+    MessageFactory factory;
+    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+    auto input_msg = factory.make_analog_value(_sensor_idx, 100);
+    auto input_val = static_cast<Value*>(input_msg.get());
+
+    // Put some weird value out-of-range and verify that is not touched by process
+    float fake_reference_value = -123456.789f;
+    _backend._last_output_value = fake_reference_value;
+
+    _mapper.process(input_val, &_backend);
+    EXPECT_FLOAT_EQ(fake_reference_value, _backend._last_output_value);
+}
