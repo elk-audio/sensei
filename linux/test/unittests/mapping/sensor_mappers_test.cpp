@@ -403,6 +403,22 @@ TEST_F(TestAnalogSensorMapper, test_output_timestamp_preserved)
     ASSERT_EQ(ref_time, _backend._last_timestamp);
 }
 
+TEST_F(TestAnalogSensorMapper, test_same_value_not_sent_twice)
+{
+    MessageFactory factory;
+    uint32_t first_message_time = 100;
+    auto input_msg = factory.make_analog_value(_sensor_idx, 100, first_message_time);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+
+    uint32_t second_message_time = 999;
+    input_msg = factory.make_analog_value(_sensor_idx, 100, second_message_time);
+    input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+
+    ASSERT_EQ(first_message_time, _backend._last_timestamp);
+}
+
 TEST_F(TestAnalogSensorMapper, test_raw_input_send)
 {
     MessageFactory factory;
