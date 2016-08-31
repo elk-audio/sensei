@@ -20,6 +20,7 @@ static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
+static const float PREVIOUS_VALUE_THRESHOLD = 1.0e-4f;
 
 }; // Anonymous namespace
 
@@ -38,6 +39,7 @@ BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int pin_index) 
     _pin_index(pin_index),
     _pin_enabled(false),
     _sending_mode(SendingMode::OFF),
+    _previous_value(0.0f),
     _invert_value(false)
 {
 }
@@ -162,6 +164,8 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
         out_val = 1.0f - out_val;
     }
 
+    // Don't check for previous value changed on digital pins
+
     MessageFactory factory;
     // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
     // it gets optimized away by the compiler in release mode
@@ -170,6 +174,7 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
                                               value->timestamp());
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,15 +323,19 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
     {
         out_val = 1.0f - out_val;
     }
+    if ((_sending_mode == SendingMode::ON_VALUE_CHANGED) && (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD))
+    {
+        MessageFactory factory;
+        // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
+        // it gets optimized away by the compiler in release mode
+        auto temp_msg = factory.make_output_value(_pin_index,
+                                                  out_val,
+                                                  value->timestamp());
+        auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+        backend->send(transformed_value, value);
+        _previous_value = out_val;
+    }
 
-    MessageFactory factory;
-    // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
-    // it gets optimized away by the compiler in release mode
-    auto temp_msg = factory.make_output_value(_pin_index,
-                                              out_val,
-                                              value->timestamp());
-    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
-    backend->send(transformed_value, value);
 }
 
 CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolution)
@@ -508,14 +517,19 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
         out_val = 1.0f - out_val;
     }
 
-    MessageFactory factory;
-    // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
-    // it gets optimized away by the compiler in release mode
-    auto temp_msg = factory.make_output_value(_pin_index,
-                                              out_val,
-                                              value->timestamp());
-    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
-    backend->send(transformed_value, value);
+    if ((_sending_mode == SendingMode::ON_VALUE_CHANGED) && (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD))
+    {
+        MessageFactory factory;
+        // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
+        // it gets optimized away by the compiler in release mode
+        auto temp_msg = factory.make_output_value(_pin_index,
+                                                  out_val,
+                                                  value->timestamp());
+        auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+        backend->send(transformed_value, value);
+        _previous_value = out_val;
+    }
+
 }
 
 CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)

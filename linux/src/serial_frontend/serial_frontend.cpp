@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstring>
 #include <cassert>
+#include <unistd.h>
 
 #include "serial_frontend.h"
 #include "serial_frontend_internal.h"

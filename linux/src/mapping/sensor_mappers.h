@@ -70,6 +70,7 @@ protected:
     bool _pin_enabled;
     SendingMode _sending_mode;
 
+    float _previous_value;
     bool _invert_value;
 };
 
