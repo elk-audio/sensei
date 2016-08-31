@@ -520,7 +520,7 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
 
 CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)
 {
-    if ( (value < 0) || (value > _max_allowed_input) )
+    if ( std::abs(value) > _max_allowed_input )
     {
         return CommandErrorCode::INVALID_RANGE;
     }
@@ -537,7 +537,7 @@ CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)
 
 CommandErrorCode ImuMapper::_set_input_scale_range_high(const float value)
 {
-    if ( (value < 0) || (value > _max_allowed_input) )
+    if ( std::abs(value) > _max_allowed_input )
     {
         return CommandErrorCode::INVALID_RANGE;
     }
