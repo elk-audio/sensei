@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstring>
 #include <cassert>
+#include <unistd.h>
 
 #include "serial_frontend.h"
 #include "serial_frontend_internal.h"
@@ -61,11 +62,15 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
         _muted(false),
         _verify_acks(true)
 {
-#ifndef NDEBUG
+#ifndef DEBUG
     /* Set the debug handler to NULL, this removes useless calls to getenv
      * and speeds up the program   */
     sp_set_debug_handler(nullptr);
 #endif
+    for (int& port : _virtual_pin_table)
+    {
+        port = -1;
+    }
     if (setup_port(port_name) == SP_OK)
     {
         SENSEI_LOG_INFO("Serial port opened ok, sending initialize packet");
@@ -86,8 +91,10 @@ SerialFrontend::~SerialFrontend()
 {
     _ready_to_send = true;
     stop();
+    SENSEI_LOG_INFO("Closing serial port");
     sp_close(_port);
     sp_free_port(_port);
+    SENSEI_LOG_INFO("Serial frontend de-initialized");
 }
 
 
@@ -129,6 +136,7 @@ void SerialFrontend::stop()
     {
         _write_thread.join();
     }
+    SENSEI_LOG_INFO("Threads stopped");
 }
 
 
@@ -190,11 +198,7 @@ void SerialFrontend::read_loop()
             {
                 SENSEI_LOG_WARNING("Serial packet failed verification");
             }
-            std::unique_ptr<BaseMessage> m = process_serial_packet(packet);
-            if (m)
-            {
-                _out_queue->push(std::move(m));
-            }
+            process_serial_packet(packet);
         }
         if (!_ready_to_send)
         {
@@ -208,6 +212,8 @@ void SerialFrontend::read_loop()
     }
     std::lock_guard<std::mutex> lock(_state_mutex);
     _read_thread_state = running_state::STOPPED;
+    /* Notify the write thread in case it is waiting since no more notifications will follow */
+    _ready_to_send_notifier.notify_one();
 }
 
 /*
@@ -229,7 +235,7 @@ void SerialFrontend::write_loop()
             _ready_to_send_notifier.wait(lock);
         }
         std::unique_ptr<Command> message = next_message_to_send();
-        const sSenseiDataPacket* packet = create_send_command(message.get());
+        const sSenseiDataPacket* packet = handle_command(message.get());
         if (packet)
         {
             int ret = sp_nonblocking_write(_port, packet, sizeof(sSenseiDataPacket));
@@ -257,38 +263,87 @@ void SerialFrontend::write_loop()
 /*
  * Create internal message representation from received teensy packet
  */
-std::unique_ptr<BaseMessage> SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
+void SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
 {
     switch (packet->cmd)
     {
         case SENSEI_CMD::VALUE:
-        {
-            const teensy_value_msg *m = reinterpret_cast<const teensy_value_msg *>(&packet->payload);
-            switch (m->pin_type)
-            {
-                case PIN_DIGITAL_INPUT:
-                    return _message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp);
+            process_value(packet);
+            break;
 
-                case PIN_ANALOG_INPUT:
-                    return _message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp);
+        case SENSEI_CMD::VALUE_IMU:
+            process_imu_data(packet);
+            break;
 
-                default:
-                    SENSEI_LOG_WARNING("Unhandled pin type: {}", packet->cmd);
-                    return nullptr;
-            }
-        }
         case SENSEI_CMD::ACK:
-        {
-            return process_ack(packet);
-        }
+            process_ack(packet);
+            break;
+
         default:
             SENSEI_LOG_WARNING("Unhandled command type: {}", packet->cmd);
-            return nullptr;
     }
 }
 
+void SerialFrontend::process_value(const sSenseiDataPacket *packet)
+{
+    const teensy_value_msg *m = reinterpret_cast<const teensy_value_msg *>(&packet->payload);
+    switch (m->pin_type)
+    {
+        case PIN_DIGITAL_INPUT:
+            _out_queue->push(_message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp));
+            break;
 
-std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket *packet)
+        case PIN_ANALOG_INPUT:
+            _out_queue->push(_message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp));
+            break;
+
+        default:
+            SENSEI_LOG_WARNING("Unhandled pin type: {} from pin {}", m->pin_type, m->pin_id);
+    }
+
+}
+
+void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
+{
+    const char* assembled_payload = _message_concatenator.add(packet);
+    if (!assembled_payload)
+    {
+        return;
+    }
+
+    if (packet->sub_cmd & IMU_GET_QUATERNIONS)
+    {
+        const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
+        EulerAngles angles = quat_to_euler(data->qw, data->qx, data->qy, data->qz);
+        if (_virtual_pin_table[ImuIndex::YAW] >= 0)
+        {
+            auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::YAW],
+                                                       angles.yaw,
+                                                       packet->timestamp);
+            _out_queue->push(std::move(msg));
+        }
+        if (_virtual_pin_table[ImuIndex::PITCH] >= 0)
+        {
+            auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::PITCH],
+                                                       angles.pitch,
+                                                       packet->timestamp);
+            _out_queue->push(std::move(msg));
+        }
+        if (_virtual_pin_table[ImuIndex::ROLL] >= 0)
+        {
+            auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::ROLL],
+                                                       angles.roll,
+                                                       packet->timestamp);
+            _out_queue->push(std::move(msg));
+        }
+    }
+    else
+    {
+        SENSEI_LOG_WARNING("Unsupported IMU data mode {}", packet->sub_cmd);
+    }
+}
+
+void SerialFrontend::process_ack(const sSenseiDataPacket *packet)
 {
     const sSenseiACKPacket *ack = reinterpret_cast<const sSenseiACKPacket *>(packet->payload);
     uint64_t uuid = extract_uuid(ack);
@@ -304,15 +359,14 @@ std::unique_ptr<BaseMessage> SerialFrontend::process_ack(const sSenseiDataPacket
     }
     if (ack->status != SENSEI_ERROR_CODE::OK)
     {
-        SENSEI_LOG_WARNING("Received bad ack, status: {}", translate_teensy_status_code(ack->status));
+        SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}, {}", ack->cmd, translate_teensy_status_code(ack->status), ack->status);
         switch (ack->status)
         {
             case SENSEI_ERROR_CODE::CRC_NOT_CORRECT:
                 // TODO - count the number of crc errors and only report error when they are too many
-                return _message_factory.make_bad_crc_error(0, ack->timestamp);
+                _out_queue->push(_message_factory.make_bad_crc_error(0, ack->timestamp));
         }
     }
-    return nullptr;
 }
 
 /*
@@ -349,7 +403,7 @@ void SerialFrontend::handle_timeouts()
     {
         case timeout::TIMED_OUT_PERMANENTLY:
         {
-            /* Resending timed out too many times, signal push an error message to main loop.
+            /* Resending timed out too many times, push an error message to main loop.
              * NOTE: No break as we want to signal ready to send to the write thread too.
              * Also note that m is destroyed when this scope exits. */
             auto m = _message_tracker.get_cached_message();
@@ -374,11 +428,19 @@ void SerialFrontend::handle_timeouts()
 /*
  * Create teensy command packet from a Command message.
  */
-const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
+const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
 {
     assert(message->base_type() == MessageType::COMMAND);
+    SENSEI_LOG_DEBUG("Got command {} ", message->representation());
     switch (message->type())
     {
+        case CommandType::SET_VIRTUAL_PIN:
+        {
+            /* This command is internal to the SerialFrontend and is not passed on the the Teensy */
+            auto cmd = static_cast<SetVirtualPinCommand *>(message);
+            _virtual_pin_table[cmd->data()] = cmd->index();
+            return nullptr;
+        }
         case CommandType::ENABLE_SENDING_PACKETS:
         {
             auto cmd = static_cast<EnableSendingPacketsCommand *>(message);
@@ -400,6 +462,13 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
         }
         case CommandType::SET_ENABLED:
         {
+            /* If the pin index is used for a virtual pin to map to imu data
+             * then don't send anything to the teensy */
+            for (int& i : _virtual_pin_table)
+            {
+                if (message->index() == i)
+                    return nullptr;
+            }
             auto cmd = static_cast<SetEnabledCommand *>(message);
             return _packet_factory.make_config_enabled_cmd(cmd->timestamp(), cmd->data());
         }
@@ -458,6 +527,71 @@ const sSenseiDataPacket* SerialFrontend::create_send_command(Command* message)
             return _packet_factory.make_set_digital_pin_cmd(cmd->index(),
                                                             cmd->timestamp(),
                                                             cmd->data());
+        }
+        case CommandType::SET_IMU_ENABLED:
+        {
+            auto cmd = static_cast<SetImuEnabledCommand*>(message);
+            return _packet_factory.make_imu_enable_cmd(cmd->timestamp(),
+                                                       cmd->data());
+        }
+        case CommandType::SET_IMU_FILTER_MODE:
+        {
+            auto cmd = static_cast<SetImuFilterModeCommand*>(message);
+            return _packet_factory.make_imu_set_filtermode_cmd(cmd->timestamp(),
+                                                               cmd->data());
+        }
+        case CommandType::SET_IMU_ACC_RANGE_MAX:
+        {
+            auto cmd = static_cast<SetImuAccelerometerRangeMaxCommand*>(message);
+            return _packet_factory.make_imu_set_accelerometer_range_cmd(cmd->timestamp(),
+                                                                        cmd->data());
+        }
+        case CommandType::SET_IMU_GYRO_RANGE_MAX:
+        {
+            auto cmd = static_cast<SetImuGyroscopeRangeMaxCommand*>(message);
+            return _packet_factory.make_imu_set_gyroscope_range_cmd(cmd->timestamp(),
+                                                                    cmd->data());
+        }
+        case CommandType::SET_IMU_COMPASS_RANGE_MAX:
+        {
+            auto cmd = static_cast<SetImuCompassRangeMaxCommand*>(message);
+            return _packet_factory.make_imu_set_compass_range_cmd(cmd->timestamp(),
+                                                                  cmd->data());
+        }
+        case CommandType::SET_IMU_COMPASS_ENABLED:
+        {
+            auto cmd = static_cast<SetImuCompassEnabledCommand*>(message);
+            return _packet_factory.make_imu_set_compass_enable_cmd(cmd->timestamp(),
+                                                                   cmd->data());
+        }
+        case CommandType::SET_IMU_SENDING_MODE:
+        {
+            auto cmd = static_cast<SetImuSendingModeCommand*>(message);
+            return _packet_factory.make_imu_set_sending_mode_cmd(cmd->timestamp(),
+                                                                 cmd->data());
+        }
+        case CommandType::SET_IMU_SENDING_DELTA_TICKS:
+        {
+            auto cmd = static_cast<SetImuSendingDeltaTicksCommand*>(message);
+            return _packet_factory.make_imu_set_delta_tics_cmd(cmd->timestamp(),
+                                                               cmd->data());
+        }
+        case CommandType::SET_IMU_DATA_MODE:
+        {
+            auto cmd = static_cast<SetImuDataModeCommand*>(message);
+            return _packet_factory.make_imu_set_datamode_cmd(cmd->timestamp(),
+                                                             cmd->data());
+        }
+        case CommandType::SET_IMU_ACC_THRESHOLD:
+        {
+            auto cmd = static_cast<SetImuAccThresholdCommand*>(message);
+            return _packet_factory.make_imu_set_acc_threshold_cmd(cmd->timestamp(),
+                                                                  cmd->data());
+        }
+        case CommandType::IMU_CALIBRATE:
+        {
+            auto cmd = static_cast<ImuCalibrateCommand*>(message);
+            return _packet_factory.make_calibrate_gyro_cmd(cmd->timestamp());
         }
         default:
             SENSEI_LOG_WARNING("Unsupported command type {}", static_cast<int>(message->base_type()));

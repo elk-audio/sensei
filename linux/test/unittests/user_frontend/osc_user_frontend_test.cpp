@@ -73,3 +73,16 @@ TEST_F(TestOSCUserFrontend, test_set_digital_output)
     ASSERT_FALSE(cmd->data());
 }
 
+TEST_F(TestOSCUserFrontend, test_imu_calibrate)
+{
+    lo_send(_address, "/calibrate_imu", "");
+    _event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_event_queue.empty());
+    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    ASSERT_EQ(MessageType::COMMAND, event->base_type());
+    auto cmd = static_unique_ptr_cast<ImuCalibrateCommand, BaseMessage>(std::move(event));
+
+    ASSERT_EQ(CommandType::IMU_CALIBRATE, cmd->type());
+}
+
+

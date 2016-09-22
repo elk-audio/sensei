@@ -1,4 +1,5 @@
 #include <json/value.h>
+#include <sensei_serial_protocol.h>
 #include "gtest/gtest.h"
 
 #define private public
@@ -14,6 +15,12 @@ static const std::string test_file = "../../../test/unittests/configuration/test
     Command* c = static_cast<Command *>(message.get()); \
     ASSERT_EQ(commandtype, c->type()); \
     EXPECT_EQ(id, c->index());  \
+    EXPECT_EQ(expected_value, static_cast<commandclass *>(c)->data()); }
+
+#define EXPECT_COMMAND_FLOAT(message, commandtype, commandclass, id, expected_value) { \
+    Command* c = static_cast<Command *>(message.get()); \
+    ASSERT_EQ(commandtype, c->type()); \
+    EXPECT_FLOAT_EQ(id, c->index());  \
     EXPECT_EQ(expected_value, static_cast<commandclass *>(c)->data()); }
 
 
@@ -93,7 +100,7 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_ADC_BIT_RESOLUTION, SetADCBitResolutionCommand, index, 8);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_LOWPASS_CUTOFF, SetLowpassCutoffCommand, index, 300);
+    EXPECT_COMMAND_FLOAT(m, CommandType::SET_LOWPASS_CUTOFF, SetLowpassCutoffCommand, index, 300.0f);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_LOWPASS_FILTER_ORDER, SetLowpassFilterOrderCommand, index, 4);
     m = std::move(_queue.pop());
@@ -105,9 +112,9 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_INVERT_ENABLED, SetInvertEnabledCommand, index, (int)false);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_INPUT_SCALE_RANGE_LOW, SetInputScaleRangeLow, index, 10);
+    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_LOW, SetInputScaleRangeLow, index, 10.0f);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_INPUT_SCALE_RANGE_HIGH, SetInputScaleRangeHigh, index, 240);
+    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_HIGH, SetInputScaleRangeHigh, index, 240.0f);
     m = std::move(_queue.pop());
 
     /* Then a pin configured as a digital input */
@@ -123,7 +130,46 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
 
-    /* Lastly we should have an EnableSendingPackets command to turn on all pins */
+    /* The a virtual pin to use for IMU data */
+    index = 61;
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_PIN_NAME, SetPinNameCommand, index, "yaw");
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_PIN_TYPE, SetPinTypeCommand, index, PinType::IMU_INPUT);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_VIRTUAL_PIN, SetVirtualPinCommand, index, ImuIndex::YAW);
+    /* And it's related mapping configuration */
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_LOW, SetInputScaleRangeLow, index, 0.0f);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_HIGH, SetInputScaleRangeHigh, index, 3.14f);
+
+    /* Now we should be receiving the IMU related commands */
+    index = 0;
+     m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_FILTER_MODE, SetImuFilterModeCommand, index, 1);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_ACC_RANGE_MAX, SetImuAccelerometerRangeMaxCommand, index, 4);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_GYRO_RANGE_MAX, SetImuGyroscopeRangeMaxCommand, index, 500);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND_FLOAT(m, CommandType::SET_IMU_COMPASS_RANGE_MAX, SetImuCompassRangeMaxCommand, index, 5.0f);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_COMPASS_ENABLED, SetImuCompassEnabledCommand, index, (int)true);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_SENDING_MODE, SetImuSendingModeCommand, index, SendingMode::ON_VALUE_CHANGED);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_SENDING_DELTA_TICKS, SetImuSendingDeltaTicksCommand, index, 5);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_DATA_MODE, SetImuDataModeCommand, index, IMU_GET_QUATERNIONS);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND_FLOAT(m, CommandType::SET_IMU_ACC_THRESHOLD, SetImuAccThresholdCommand, index, 1.0f);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_IMU_ENABLED, SetImuEnabledCommand, index, (int)true);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::IMU_CALIBRATE, ImuCalibrateCommand, index, 0);
+
+/* Lastly we should have an EnableSendingPackets command to turn on all pins */
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::ENABLE_SENDING_PACKETS, EnableSendingPacketsCommand, index, (int)true);
 }

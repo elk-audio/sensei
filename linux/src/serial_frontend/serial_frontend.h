@@ -86,18 +86,20 @@ private:
     void read_loop();
     void write_loop();
 
-    std::unique_ptr<BaseMessage> process_serial_packet(const sSenseiDataPacket *packet);
-    std::unique_ptr<BaseMessage> process_value(const sSenseiDataPacket *packet);
-    std::unique_ptr<BaseMessage> process_ack(const sSenseiDataPacket *packet);
+    void process_serial_packet(const sSenseiDataPacket *packet);
+    void process_value(const sSenseiDataPacket *packet);
+    void process_imu_data(const sSenseiDataPacket *packet);
+    void process_ack(const sSenseiDataPacket *packet);
     void send_initialize_packet(int ticks, int pins, int digital_pins, uint32_t timestamp);
     std::unique_ptr<Command> next_message_to_send();
     void handle_timeouts();
 
-    const sSenseiDataPacket* create_send_command(Command* message);
+    const sSenseiDataPacket* handle_command(Command* message);
 
     MessageFactory       _message_factory;
     SerialCommandCreator _packet_factory;
     MessageTracker       _message_tracker;
+    MessageConcatenator  _message_concatenator;
 
     sp_port *_port;
     SynchronizedQueue<std::unique_ptr<Command>>* _in_queue;
@@ -112,6 +114,7 @@ private:
     std::mutex      _send_mutex;
     std::condition_variable _ready_to_send_notifier;
 
+    int  _virtual_pin_table[ImuIndex::N_IMU_INDEXES];
     bool _ready_to_send;
     bool _connected;
     bool _muted;

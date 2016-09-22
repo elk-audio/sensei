@@ -62,6 +62,14 @@ public:
         return std::unique_ptr<DigitalValue>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_imu_value(const int pin_index,
+                                                const float value,
+                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuValue(pin_index, value, timestamp);
+        return std::unique_ptr<ImuValue>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_output_value(const int pin_index,
                                                    const float value,
                                                    const uint32_t timestamp = 0)
@@ -96,6 +104,14 @@ public:
     {
         auto msg = new SetPinTypeCommand(pin_index, pin_type, timestamp);
         return std::unique_ptr<SetPinTypeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_virtual_pin_command(const int pin_index,
+                                                              const ImuIndex parameter,
+                                                              const uint32_t timestamp = 0)
+    {
+        auto msg = new SetVirtualPinCommand(pin_index, parameter, timestamp);
+        return std::unique_ptr<SetVirtualPinCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_set_sending_mode_command(const int pin_index,
@@ -170,6 +186,84 @@ public:
         return std::unique_ptr<EnableSendingPacketsCommand>(msg);
     }
 
+    // IMU commands
+
+    std::unique_ptr<BaseMessage> make_enable_imu_command(const bool enabled,
+                                                         const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuEnabledCommand(0, enabled, timestamp);
+        return std::unique_ptr<SetImuEnabledCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_filter_mode_command(const int mode,
+                                                                  const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuFilterModeCommand(0, mode, timestamp);
+        return std::unique_ptr<SetImuFilterModeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_acc_range_max_command(const int range,
+                                                                    const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuAccelerometerRangeMaxCommand(0, range, timestamp);
+        return std::unique_ptr<SetImuAccelerometerRangeMaxCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_gyro_range_max_command(const int range,
+                                                                     const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuGyroscopeRangeMaxCommand(0, range, timestamp);
+        return std::unique_ptr<SetImuGyroscopeRangeMaxCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_compass_range_max_command(const float range,
+                                                                        const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuCompassRangeMaxCommand(0, range, timestamp);
+        return std::unique_ptr<SetImuCompassRangeMaxCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_enable_compass_command(const bool enabled,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuCompassEnabledCommand(0, enabled, timestamp);
+        return std::unique_ptr<SetImuCompassEnabledCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_sending_mode_command(const SendingMode mode,
+                                                                   const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuSendingModeCommand(0, mode, timestamp);
+        return std::unique_ptr<SetImuSendingModeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_sending_delta_ticks_command(const int ticks,
+                                                                      const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuSendingDeltaTicksCommand(0, ticks, timestamp);
+        return std::unique_ptr<SetImuSendingDeltaTicksCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_set_data_mode_command(const int mode,
+                                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuDataModeCommand(0, mode, timestamp);
+        return std::unique_ptr<SetImuDataModeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_acc_threshold_command(const float threshold,
+                                                                const uint32_t timestamp = 0)
+    {
+        auto msg = new SetImuAccThresholdCommand(0, threshold, timestamp);
+        return std::unique_ptr<SetImuAccThresholdCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_calibrate_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuCalibrateCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuCalibrateCommand>(msg);
+    }
+
     // Internal commands
 
     std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int pin_index,
@@ -181,7 +275,7 @@ public:
     }
 
     std::unique_ptr<BaseMessage> make_set_input_scale_range_low_command(const int pin_index,
-                                                                        const int value,
+                                                                        const float value,
                                                                         const uint32_t timestamp = 0)
     {
         auto msg = new SetInputScaleRangeLow(pin_index, value, timestamp);
@@ -189,7 +283,7 @@ public:
     }
 
     std::unique_ptr<BaseMessage> make_set_input_scale_range_high_command(const int pin_index,
-                                                                         const int value,
+                                                                         const float value,
                                                                          const uint32_t timestamp = 0)
     {
         auto msg = new SetInputScaleRangeHigh(pin_index, value, timestamp);

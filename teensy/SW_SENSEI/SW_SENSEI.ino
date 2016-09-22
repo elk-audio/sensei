@@ -1,20 +1,22 @@
+/**
+ * @file SW_SENSEI.ino
+ * @brief Main SW_SENSEI
+ * @author Simone Minto (simone.minto@prorob.it)
+ * @copyright MIND Music Labs AB, Stockholm
+ * @date 2016-03-10
+ */
+
 // TODO
-// - max filter order
-// - INPUT - OUTPUT classes
-// - filterCoeff, Butterworth class
-// -
-// -
+// - filterCoeff
 
 //#pragma GCC optimize ("-Ofast")
 //teensy31.menu.speed.96.build.flags.optimize = -Ofast
 //teensy31.build.flags.cpu=-mthumb -mcpu=cortex-m4 -mfpu=neon -fsingle-precision-constant
 
-#include <Arduino.h>
 #include "common.h"
-
-#include "taskRT.h"
-#include "taskCOM.h"
-#include "taskLED.h"
+#include "task_rt.h"
+#include "task_com.h"
+#include "task_led.h"
 
 namespace std {
     void __throw_bad_alloc() {
@@ -28,21 +30,20 @@ namespace std {
     }
 }
 
-// handles for tasks
+// Handles for tasks
 TaskHandle_t hTaskRT = 0;
 TaskHandle_t hTaskCOM = 0;
 TaskHandle_t hTaskLED = 0;
 
-// handles for queue
+// Handles for queues
 QueueHandle_t hQueueRTtoCOM_DATA = 0;
 QueueHandle_t hQueueCOMtoRT_DATA = 0;
 QueueHandle_t hQueueRTtoCOM_PIN = 0;
 QueueHandle_t hQueueRTtoCOM_IMU = 0;
 
-
 void setup()
 {
-    //Hardware
+    //Hardware setup
     pinMode(DS, OUTPUT);
     pinMode(ST, OUTPUT);
     pinMode(SH, OUTPUT);
@@ -59,21 +60,21 @@ void setup()
     pinMode(INT_FILTER, INPUT);
 
     //Disable Shift Register
-    digitalWrite(DS, 0);
-    digitalWrite(SH, 0);
-    digitalWrite(ST, 1);
+    digitalWrite(DS, LOW);
+    digitalWrite(SH, LOW);
+    digitalWrite(ST, HIGH);
     digitalWrite(SPI_SS, LOW);
 
     //Disable SPI Chip Select
     digitalWrite(SPI_SS, HIGH);
 
     // Reset Shift register
-    digitalWrite(ST, 0);
+    digitalWrite(ST, LOW);
     for (uint8_t i=0;i<16;i++)
     {
         shiftOut(DS, SH, LSBFIRST, 0x00);
     }
-    digitalWrite(ST, 1);
+    digitalWrite(ST, HIGH);
 
     //Serial communication
     Serial.begin(115200);
@@ -82,6 +83,7 @@ void setup()
     SerialDebug.begin(115200);
     SerialDebug.setTimeout(250);
 
+    //SPI Communication
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
     SPI.setClockDivider(SPI_CLOCK_DIV2);
@@ -92,10 +94,9 @@ void setup()
     analogReadResolution(12);
     analogReadAveraging(1);
     analogReference(EXTERNAL);
-    digitalWrite(SPI_SS, HIGH);
 
     // Startup
-    for (uint8_t idx = 0; idx < 10; idx++)
+    for (uint8_t idx = 0; idx < 5; idx++)
     {
         digitalWrite(STATUS_LED, 1);
         delay(100);
@@ -103,23 +104,25 @@ void setup()
         delay(50);
     }
 
-    //TODO [!]
-    xTaskCreate(vTaskRT,"task_RT",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskRT); //-1
     xTaskCreate(vTaskCOM,"task_COM",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskCOM);
+    xTaskCreate(vTaskRT,"task_RT",STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskRT); //-1
     xTaskCreate(vTaskLED,"task_LED",configMINIMAL_STACK_SIZE,NULL,configMAX_PRIORITIES-2,&hTaskLED);
 
+    //Print
     SerialDebug.println(" -----------------------------");
     SerialDebug.println("|         SW_SENSEI           |");
     SerialDebug.println(" -----------------------------");
     SerialDebug.println("CPU frequency: " + String(F_CPU / 1000000) + " MHz");
+    SerialDebug.println("BUS frequency: " + String(F_BUS / 1000000) + " MHz");
+    SerialDebug.println("MEM frequency: " + String(F_MEM / 1000000) + " MHz");
     SerialDebug.print(__DATE__);
     SerialDebug.print(" ");
     SerialDebug.println(__TIME__);
-    SerialDebug.println("!!! FREERTOS:checkPriority !!!");
     SerialDebug.println(" -----------------------------");
 
     delay(100);
 
+    //Start FreeRTOS scheduler
     vTaskStartScheduler();
 
     while (1);

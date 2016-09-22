@@ -6,10 +6,12 @@
  */
 
 #include <cassert>
+#include <cmath>
 
 #include "mapping/sensor_mappers.h"
 #include "message/message_factory.h"
 #include "utils.h"
+#include "logging.h"
 
 namespace {
 
@@ -18,11 +20,15 @@ static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
 static const int MAX_LOWPASS_FILTER_ORDER = 8;
 
+static const float PREVIOUS_VALUE_THRESHOLD = 1.0e-4f;
 
 }; // Anonymous namespace
 
+SENSEI_GET_LOGGER;
+
 using namespace sensei;
 using namespace sensei::mapping;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // BaseSensorMapper
@@ -33,6 +39,7 @@ BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int pin_index) 
     _pin_index(pin_index),
     _pin_enabled(false),
     _sending_mode(SendingMode::OFF),
+    _previous_value(0.0f),
     _invert_value(false)
 {
 }
@@ -157,6 +164,8 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
         out_val = 1.0f - out_val;
     }
 
+    // Don't check for previous value changed on digital pins
+
     MessageFactory factory;
     // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
     // it gets optimized away by the compiler in release mode
@@ -165,6 +174,7 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
                                               value->timestamp());
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,14 +262,14 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_INPUT_SCALE_RANGE_LOW:
         {
             const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
-            status = _set_input_scale_range_low(typed_cmd->data());
+            status = _set_input_scale_range_low(static_cast<int>(std::round(typed_cmd->data())));
         };
         break;
 
     case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
         {
             const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
-            status = _set_input_scale_range_high(typed_cmd->data());
+            status = _set_input_scale_range_high(static_cast<int>(std::round(typed_cmd->data())));
         };
         break;
 
@@ -313,15 +323,19 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
     {
         out_val = 1.0f - out_val;
     }
+    if ((_sending_mode == SendingMode::ON_VALUE_CHANGED) && (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD))
+    {
+        MessageFactory factory;
+        // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
+        // it gets optimized away by the compiler in release mode
+        auto temp_msg = factory.make_output_value(_pin_index,
+                                                  out_val,
+                                                  value->timestamp());
+        auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+        backend->send(transformed_value, value);
+        _previous_value = out_val;
+    }
 
-    MessageFactory factory;
-    // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
-    // it gets optimized away by the compiler in release mode
-    auto temp_msg = factory.make_output_value(_pin_index,
-                                              out_val,
-                                              value->timestamp());
-    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
-    backend->send(transformed_value, value);
 }
 
 CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolution)
@@ -417,3 +431,137 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(const int value
     return CommandErrorCode::OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ImuMapper
+////////////////////////////////////////////////////////////////////////////////
+
+ImuMapper::ImuMapper(const int pin_index) :
+        BaseSensorMapper(PinType::IMU_INPUT, pin_index),
+        _input_scale_range_low(-M_PI),
+        _input_scale_range_high(M_PI),
+        _max_allowed_input(M_PI * 2)
+{
+}
+
+ImuMapper::~ImuMapper()
+{
+}
+
+CommandErrorCode ImuMapper::apply_command(const Command *cmd)
+{
+    // Handle digital-specific configurations
+    CommandErrorCode status = CommandErrorCode::OK;
+    SENSEI_LOG_INFO("ImuMapper: Got a set pintype command {}!", (int)cmd->type());
+    switch(cmd->type())
+    {
+        case CommandType::SET_PIN_TYPE:
+        {
+            // This is set internally and not from the user, so just assert for bugs
+            assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::IMU_INPUT);
+            break;
+        }
+        case CommandType::SET_INPUT_SCALE_RANGE_LOW:
+        {
+            const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
+            status = _set_input_scale_range_low(typed_cmd->data());
+            break;
+        }
+        case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
+        {
+            const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
+            status = _set_input_scale_range_high(typed_cmd->data());
+            break;
+        }
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
+
+    }
+
+    // If command was not handled, try to handle it in parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
+
+}
+
+void ImuMapper::put_config_commands_into(CommandIterator out_iterator)
+{
+    BaseSensorMapper::put_config_commands_into(out_iterator);
+
+    MessageFactory factory;
+    *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::IMU_INPUT);
+    *out_iterator = factory.make_set_input_scale_range_low_command(_pin_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high_command(_pin_index, _input_scale_range_high);
+}
+
+void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
+{
+    if (! _pin_enabled)
+    {
+        return;
+    }
+    assert(value->type() == ValueType::IMU);
+
+    auto imu_val = static_cast<ImuValue*>(value);
+    float clipped_val = clip<float>(imu_val->value(), _input_scale_range_low, _input_scale_range_high);
+    float out_val = (clipped_val - _input_scale_range_low) / (_input_scale_range_high - _input_scale_range_low);
+
+    if (_invert_value)
+    {
+        out_val = 1.0f - out_val;
+    }
+
+    if ((_sending_mode == SendingMode::ON_VALUE_CHANGED) && (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD))
+    {
+        MessageFactory factory;
+        // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
+        // it gets optimized away by the compiler in release mode
+        auto temp_msg = factory.make_output_value(_pin_index,
+                                                  out_val,
+                                                  value->timestamp());
+        auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+        backend->send(transformed_value, value);
+        _previous_value = out_val;
+    }
+
+}
+
+CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)
+{
+    if ( std::abs(value) > _max_allowed_input )
+    {
+        return CommandErrorCode::INVALID_RANGE;
+    }
+
+    if (value >= _input_scale_range_high)
+    {
+        _input_scale_range_low = _input_scale_range_high - 1;
+        return CommandErrorCode::CLIP_WARNING;
+    }
+
+    _input_scale_range_low = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode ImuMapper::_set_input_scale_range_high(const float value)
+{
+    if ( std::abs(value) > _max_allowed_input )
+    {
+        return CommandErrorCode::INVALID_RANGE;
+    }
+
+    if (value <= _input_scale_range_low)
+    {
+        _input_scale_range_high = _input_scale_range_low + 1;
+        return CommandErrorCode::CLIP_WARNING;
+    }
+
+    _input_scale_range_high = value;
+    return CommandErrorCode::OK;
+}

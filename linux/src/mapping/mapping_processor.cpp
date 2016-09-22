@@ -48,6 +48,10 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
             _mappers[sensor_index].reset(new AnalogSensorMapper(sensor_index));
             break;
 
+        case PinType::IMU_INPUT:
+            _mappers[sensor_index].reset(new ImuMapper(sensor_index));
+            break;
+
         default:
             status = CommandErrorCode::INVALID_VALUE;
 

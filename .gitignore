@@ -115,3 +115,5 @@ linux/build/
 
 # Odroid bin folder
 bin/
+doc/~$DATA_PROTOCOL_SENSUS.xlsx
+

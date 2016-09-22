@@ -45,6 +45,15 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
             }
             break;
 
+        case ValueType::IMU:
+            {
+                auto  typed_val = static_cast<const ImuValue*>(raw_input_value);
+                fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %f\n", sensor_index,
+                                                                                _pin_names[sensor_index].c_str(),
+                                                                                typed_val->value());
+            }
+            break;
+
         default:
             break;
         }

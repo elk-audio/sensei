@@ -7,6 +7,8 @@
 #define SERIAL_FRONTEND_INTERNAL_H
 
 #include <string>
+#include <cstring>
+#include <cmath>
 
 #include "../../../common/sensei_serial_protocol.h"
 
@@ -14,6 +16,13 @@ namespace sensei {
 namespace serial_frontend {
 
 const unsigned int READ_WRITE_TIMEOUT_MS = 1000;
+/*
+ * To avoid singularities near 90 degrees, this should be set below 0,5
+ * 0,499 clamps at around 86 degrees, se
+ * http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/jack.htm
+ * The IMU used has good resolution and increasing this doesn't seem to cause any issues.
+ */
+const float QUATERNION_SINGULARITY_LIMIT = 0.4999;
 
 
 /*
@@ -115,6 +124,16 @@ inline std::string& translate_teensy_status_code(int code)
             return str ="INCOMPLETE_PARAMETERS";
         case SENSEI_ERROR_CODE::WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS:
             return str ="WRONG_NUMBER_EXPECTED_RESPONSE_PACKETS";
+        case SENSEI_ERROR_CODE::IMU_GENERIC_ERROR:
+            return str ="IMU_GENERIC_ERROR";
+        case SENSEI_ERROR_CODE::IMU_COMMUNICATION_ERROR:
+            return str ="IMU_COMMUNICATION_ERROR";
+        case SENSEI_ERROR_CODE::IMU_NOT_CONNECTED:
+            return str ="IMU_NOT_CONNECTED";
+        case SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED:
+            return str ="IMU_CMD_NOT_EXECUTED";
+        case SENSEI_ERROR_CODE::IMU_DISABLED:
+            return str ="IMU_DISABLED";
         case SENSEI_ERROR_CODE::SERIAL_DEVICE_GENERIC_ERROR:
             return str ="SERIAL_DEVICE_GENERIC_ERROR";
         case SENSEI_ERROR_CODE::SERIAL_DEVICE_PORT_NOT_OPEN:
@@ -126,6 +145,76 @@ inline std::string& translate_teensy_status_code(int code)
     }
 
 }
+struct EulerAngles
+{
+    float yaw;
+    float pitch;
+    float roll;
+};
+
+/*
+ * Convert quaternions (from the IMU) to euler angles (pitch, roll, yaw)
+ */
+inline EulerAngles quat_to_euler(float qw, float qx, float qy, float qz)
+{
+    EulerAngles angles;
+    float singularity_limit = qw * qx + qy * qz;
+    if (singularity_limit > QUATERNION_SINGULARITY_LIMIT)
+    {
+        angles.yaw   = 2 * atan2(qx, qw);
+        angles.pitch = M_PI / 2;
+        angles.roll  = 0;
+    }
+    else if (singularity_limit < -QUATERNION_SINGULARITY_LIMIT)
+    {
+        angles.yaw   = -2 * atan2(qx, qw);
+        angles.pitch = -M_PI / 2;
+        angles.roll  = 0;
+    }
+    else
+    {
+        angles.yaw   = atan2(2 * qy * qw - 2 * qx * qz, 1 - 2 * qy * qy - 2 * qz *qz);
+        angles.pitch = asin(2 * qx * qy + 2 * qz * qw);
+        angles.roll  = atan2(2 * qx * qw -2 * qy * qz, 1 - 2 * qx * qx - 2 * qz * qz);
+    }
+    return angles;
+}
+
+/*
+ * Simple convenience class for assembling serial packets sent as several parts.
+ * Returns a pointer to a complete assembled payload if possible.
+ * Incomplete messages will return a nullptr.
+ */
+class MessageConcatenator
+{
+public:
+    MessageConcatenator() : _waiting{false} {}
+    ~MessageConcatenator() {}
+    const char* add(const sSenseiDataPacket *packet)
+    {
+        if (!_waiting && !packet->continuation)
+        {
+            return packet->payload;
+        }
+        if (packet->continuation)
+        {
+            memcpy(_storage, packet->payload, SENSEI_PAYLOAD_LENGTH);
+            _waiting = true;
+            return nullptr;
+        }
+        if (_waiting && !packet->continuation)
+        {
+            memcpy(_storage + SENSEI_PAYLOAD_LENGTH, packet->payload, SENSEI_PAYLOAD_LENGTH);
+            _waiting = false;
+            return _storage;
+        }
+        return nullptr;
+    }
+
+private:
+    bool _waiting;
+    char _storage[SENSEI_PAYLOAD_LENGTH * 2];
+};
 
 // set 1 byte boundary for matching
 #pragma pack(push, 1)

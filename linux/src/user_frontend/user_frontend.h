@@ -61,6 +61,13 @@ public:
      */
     void set_digital_output(const int out_pin_index, const bool value);
 
+    /**
+     * @brief Triggera an automatic self calibration of the IMU gyro
+     *
+     * The IMU should be still when this command is sent.
+     */
+    void set_imu_calibration();
+
 private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
     int _max_n_input_pins;

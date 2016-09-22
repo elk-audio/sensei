@@ -18,7 +18,6 @@
         }
 	],
 
-
 	"sensors" : [
 		{
 			"id" : 1,
@@ -42,6 +41,27 @@
 			"enabled": true,
 			"mode" : "on_value_changed",
 			"delta_ticks" : 4
-        }
-	]
+        },
+		{
+			"id" : 61,
+			"name" : "yaw",
+			"pin_type" : "imu_input",
+			"parameter" : "yaw",
+			"range" : [0 , 3.14]
+		}
+
+	],
+
+	"imu" : {
+		"enabled" : true,
+		"filter_mode" : "kalman",
+		"accelerometer_range_max" : 4,
+		"gyroscope_range_max" : 500,
+		"compass_range_max" : 5,
+		"compass_enabled" : true,
+		"mode" : "on_value_changed",
+		"delta_ticks" : 5,
+		"data" : "quaternions",
+		"acc_norm_threshold" : 1
+ 	}
 }
