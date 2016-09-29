@@ -63,7 +63,7 @@ void vTaskRT(void *pvParameters)
         if (taskStatus.nCycles%deltaTicksPrintDebugImu == 0)
         {
           imuTemp=-273.5;
-          manageIO.imu.getValue(GET_TEMPERATURE, &imuTemp);
+          manageIO.imu.getTemperature(&imuTemp);
           SerialDebug.println("IMU t = " + String(imuTemp) + "°C");
         }
         #endif
@@ -410,6 +410,11 @@ void vTaskRT(void *pvParameters)
                     }
                 break;
 
+                //--------------------------------------------------------------------- [CMD CMD_IMU_GET_TEMPERATURE]
+                case SENSEI_CMD::IMU_GET_TEMPERATURE:
+                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    msgData.status = manageIO.imu.getTemperature(&msgData.data.fValue);
+                break;
 
                 //---------------------------------------------------------------------
                 // END COMMANDS

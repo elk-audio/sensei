@@ -298,6 +298,11 @@ void vTaskCOM(void *pvParameters)
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
+                    //--------------------------------------------------------------------- [CMD IMU_GET_TEMPERATURE]
+                    case SENSEI_CMD::IMU_GET_TEMPERATURE:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
                     //---------------------------------------------------------------------
                     // STOP COMMANDS
                     //---------------------------------------------------------------------
@@ -394,6 +399,11 @@ void vTaskCOM(void *pvParameters)
                             //SerialDebug.println("msgData.packetSize=" + String(msgData.packetSize));
                             payloadSize=msgData.packetSize;
                             pAddress=(uint8_t*)&msgData.data.vectorDataImu;
+                        break;
+
+                        case SENSEI_CMD::IMU_GET_TEMPERATURE:
+                            payloadSize=sizeof(float);
+                            pAddress=(uint8_t*)&msgData.data.fValue;
                         break;
 
                         default:

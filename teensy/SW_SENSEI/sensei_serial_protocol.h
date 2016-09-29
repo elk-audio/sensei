@@ -71,7 +71,7 @@ namespace sensei {
         //------------------------------------------
         SERIAL_DEVICE_GENERIC_ERROR = -4000,
         SERIAL_DEVICE_PORT_NOT_OPEN = -4001,
-		SERIAL_DEVICE_ERROR_ON_WRITING = -4002,
+		    SERIAL_DEVICE_ERROR_ON_WRITING = -4002,
         //------------------------------------------
         PINS_CONFIGURATION_PARSING_ERROR = -10000,
         //------------------------------------------
@@ -170,6 +170,7 @@ namespace sensei {
         IMU_TARE_WITH_CURRENT_ORIENTATION = 206,
         IMU_RESET_TO_FACTORY_SETTINGS = 207,
         IMU_REBOOT = 208,
+        IMU_GET_TEMPERATURE = 209,
         //----------------------------------------------
         STOP_BOARD = 250,
         //----------------------------------------------

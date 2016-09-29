@@ -163,6 +163,7 @@ typedef union Data
 	SetupPin setupPin;
 	GetSetPin pin;
 	uint8_t value;
+	float fValue;
 } Data;
 
 
