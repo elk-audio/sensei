@@ -132,11 +132,6 @@ int32_t ManageIMU::sendCommand(uint8_t cmd, uint8_t value)
     return sendCommand(cmd, &value, 1);
 }
 
-int32_t ManageIMU::getValue(uint8_t cmd, float* data)
-{
-    return getData(cmd,data,4);
-}
-
 int32_t ManageIMU::getValue(uint8_t cmd, void* data)
 {
     return getData(cmd,data,1);

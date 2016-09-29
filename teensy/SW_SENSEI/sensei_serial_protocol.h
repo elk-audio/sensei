@@ -9,8 +9,6 @@
 #ifndef SENSEI_SERIAL_PROTOCOL_H_
 #define SENSEI_SERIAL_PROTOCOL_H_
 
-#define PRINT_IMU_DEBUG
-
 #include <cstdint>
 
 namespace sensei {
@@ -18,8 +16,6 @@ namespace sensei {
     typedef float FilterType;
 
     const FilterType DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
-
-    const float FREQUENCY_DEBUG_IMU = 0.5; //[Hz]
 
     const uint8_t MAX_FILTER_ORDER = 12;
 

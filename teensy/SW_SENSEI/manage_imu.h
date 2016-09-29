@@ -79,9 +79,6 @@ typedef enum CMD_IMU
     SET_REFERENCE_VECTOR_MODE = 105,
     GET_CALIBRATION_MODE = 170,
     GET_REFERENCE_VECTOR_MODE = 135,
-
-    GET_TEMPERATURE = 43,
-
     RESTORE_DEFAULT_SETTINGS = 224,
     SOFTWARE_RESET = 226
 } CMD_IMU;
@@ -118,7 +115,6 @@ public:
     int32_t sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
 
     int32_t getValue(uint8_t cmd, void* data);
-    int32_t getValue(uint8_t cmd, float* data);
     int32_t getData(uint8_t cmd, void* data, uint16_t nByte);
 
     bool getInterruptStatus();
