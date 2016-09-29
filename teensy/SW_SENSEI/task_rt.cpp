@@ -47,12 +47,26 @@ void vTaskRT(void *pvParameters)
     hQueueRTtoCOM_PIN = xQueueCreate(MSG_QUEUE_ITEM_SIZE, sizeof(MsgRTtoCOM_PIN));
     hQueueRTtoCOM_DATA = xQueueCreate(MSG_QUEUE_ITEM_SIZE, sizeof(Msg_DATA));
 
+    #ifdef PRINT_IMU_DEBUG
+    int deltaTicksPrintDebugImu = round(DEFAULT_RT_FREQUENCY/FREQUENCY_DEBUG_IMU);
+    float imuTemp;
+    SerialDebug.print("PRINT_IMU_DEBUG\n");
+    #endif
 
     for (;;)
     {
         // Wait for the next cycle
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
         startTaskTimestamp = micros();
+
+        #ifdef PRINT_IMU_DEBUG
+        if (taskStatus.nCycles%deltaTicksPrintDebugImu == 0)
+        {
+          imuTemp=-273.5;
+          manageIO.imu.getValue(GET_TEMPERATURE, &imuTemp);
+          SerialDebug.print("IMU t = " + String(imuTemp) + "°C\n");
+        }
+        #endif
 
         //------------------------------------------------------------------------------------------- [IMU]
         if (systemSettings.enabledSendingPackets && systemSettings.enabledImu)
