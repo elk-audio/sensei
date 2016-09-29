@@ -37,6 +37,7 @@ void vTaskRT(void *pvParameters)
 
     //Manage IO
     ManageIO manageIO;
+    uint16_t imuPacketSize = 0;
 
     // Message Queue Structs
     MsgRTtoCOM_IMU msgImu;
@@ -50,7 +51,7 @@ void vTaskRT(void *pvParameters)
     #ifdef PRINT_IMU_DEBUG
     int deltaTicksPrintDebugImu = round(DEFAULT_RT_FREQUENCY/FREQUENCY_DEBUG_IMU);
     float imuTemp;
-    SerialDebug.print("PRINT_IMU_DEBUG\n");
+    SerialDebug.println("PRINT_IMU_DEBUG\n");
     #endif
 
     for (;;)
@@ -62,7 +63,7 @@ void vTaskRT(void *pvParameters)
         #ifdef PRINT_IMU_DEBUG
         if (taskStatus.nCycles%deltaTicksPrintDebugImu == 0)
         {
-          imuTemp=-273.5;
+          imuTemp=-273.15;
           manageIO.imu.getTemperature(&imuTemp);
           SerialDebug.println("IMU t = " + String(imuTemp) + "°C");
         }
@@ -336,78 +337,36 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD CMD_IMU_GYROSCOPE_CALIBRATION]
                 case SENSEI_CMD::IMU_GYROSCOPE_CALIBRATION:
-                    if (systemSettings.enabledImu)
-                    {
-                        msgData.status = manageIO.imu.gyroscopeCalibration();
-                    }
-                    else
-                    {
-                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
-                    }
+                    msgData.status = manageIO.imu.gyroscopeCalibration();
                 break;
 
                 //--------------------------------------------------------------------- [CMD CMD_IMU_RESET_FILTER]
                 case SENSEI_CMD::IMU_RESET_FILTER:
-                    if (systemSettings.enabledImu)
-                    {
-                        msgData.status = manageIO.imu.resetFilter();
-                    }
-                    else
-                    {
-                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
-                    }
+                    msgData.status = manageIO.imu.resetFilter();
                 break;
 
                 //--------------------------------------------------------------------- [CMD CMD_IMU_GET_DATA]
                 case SENSEI_CMD::IMU_GET_DATA:
                     msgData.msgType = RT_MSG_TYPE::DATA;
-                    if (systemSettings.enabledImu)
-                    {
-                        uint16_t imuPacketSize = 0;
-                        msgData.status = manageIO.imu.getSensorComponents(msgData.sub_cmd,(uint8_t*)&msgData.data.vectorDataImu,imuPacketSize);
-                        msgData.packetSize = imuPacketSize;
-                    }
-                    else
-                    {
-                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
-                    }
+                    imuPacketSize = 0;
+                    msgData.status = manageIO.imu.getSensorComponents(msgData.sub_cmd,(uint8_t*)&msgData.data.vectorDataImu,imuPacketSize);
+                    msgData.packetSize = imuPacketSize;
                 break;
 
                 //--------------------------------------------------------------------- [CMD IMU_TARE_WITH_CURRENT_ORIENTATION]
                 case SENSEI_CMD::IMU_TARE_WITH_CURRENT_ORIENTATION:
-                    if (systemSettings.enabledImu)
-                    {
                         msgData.status = manageIO.imu.tareWithCurrentOrientation();
-                    }
-                    else
-                    {
-                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
-                    }
                 break;
 
 
                 //--------------------------------------------------------------------- [CMD IMU_RESET_TO_FACTORY_SETTINGS]
                 case SENSEI_CMD::IMU_RESET_TO_FACTORY_SETTINGS:
-                    if (systemSettings.enabledImu)
-                    {
                         msgData.status = manageIO.imu.resetToFactorySettings();
-                    }
-                    else
-                    {
-                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
-                    }
                 break;
 
                 //--------------------------------------------------------------------- [CMD IMU_REBOOT]
                 case SENSEI_CMD::IMU_REBOOT:
-                    if (systemSettings.enabledImu)
-                    {
                         msgData.status = manageIO.imu.reboot();
-                    }
-                    else
-                    {
-                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
-                    }
                 break;
 
                 //--------------------------------------------------------------------- [CMD CMD_IMU_GET_TEMPERATURE]
