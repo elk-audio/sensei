@@ -19,7 +19,9 @@ namespace sensei {
 
     const FilterType DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
 
+    #ifdef PRINT_IMU_DEBUG
     const float FREQUENCY_DEBUG_IMU = 0.5; //[Hz]
+    #endif
 
     const uint8_t MAX_FILTER_ORDER = 12;
 
