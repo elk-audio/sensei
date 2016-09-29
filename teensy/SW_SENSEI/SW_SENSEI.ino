@@ -86,7 +86,7 @@ void setup()
     //SPI Communication
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
-    SPI.setClockDivider(SPI_CLOCK_DIV2);
+    SPI.setClockDivider(SPI_CLOCK_DIV4);
     SPI.setSCK(SPI_SCK);
     SPI.begin();
 
