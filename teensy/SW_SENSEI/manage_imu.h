@@ -74,6 +74,7 @@ typedef enum CMD_IMU
     BEGIN_GYROSCOPE_AUTOCALIBRATION = 165,
     SET_CALIBRATION_MODE = 169,
     RESPONSE_HEADER_BITFIELD = 221,
+    SET_SLEEP_MODE = 227,
     SET_UART_BAUD_RATE = 231,
     GET_UART_BAUD_RATE = 232,
     SET_REFERENCE_VECTOR_MODE = 105,
@@ -114,6 +115,11 @@ public:
     ~ManageIMU();
 
     bool getInterruptStatus();
+    bool isInitialized();
+
+    int32_t initialize();
+    int32_t stop();
+
     int32_t setInterruptMode();
 
     int32_t getSensorComponents(uint8_t components, uint8_t* data_vector, uint16_t& packetSize);

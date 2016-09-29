@@ -15,7 +15,6 @@ void vTaskRT(void *pvParameters)
     systemSettings.debugMode=COND_DEBUG_MODE;
     systemSettings.enabledMultiplePackets=COND_MULTIPLE_PACKETS;
     systemSettings.enabledSendingPackets=COND_SENDING_PACKETS;
-    systemSettings.enabledImu=COND_IMU_ENABLED;
 
     uint32_t startTaskTimestamp, endTaskTimestamp;
     uint32_t precStartTaskTimestamp=micros();
@@ -70,7 +69,7 @@ void vTaskRT(void *pvParameters)
         #endif
 
         //------------------------------------------------------------------------------------------- [IMU]
-        if (systemSettings.enabledSendingPackets && systemSettings.enabledImu)
+        if (systemSettings.enabledSendingPackets && manageIO.imu.isInitialized())
         {
             uint8_t imuTypeOfData = manageIO.imu.getTypeOfData();
             uint16_t imuPacketSize = 0;
@@ -78,7 +77,7 @@ void vTaskRT(void *pvParameters)
             uint16_t imuTicksContinuousMode = manageIO.imu.getDeltaTicksContinuousMode();
             uint32_t retImu = SENSEI_ERROR_CODE::IMU_GENERIC_ERROR;
 
-            if (manageIO.imu.getInterruptStatus())
+            if (manageIO.imu.isInitialized() && manageIO.imu.getInterruptStatus())
             {
                 //SENDING_MODE_CONTINUOUS
                 if (
@@ -319,8 +318,15 @@ void vTaskRT(void *pvParameters)
                 //-----------------
                 //--------------------------------------------------------------------- [CMD IMU_ENABLE]
                 case SENSEI_CMD::IMU_ENABLE:
-                    systemSettings.enabledImu = static_cast<bool>(msgData.data.value);
-                    msgData.status = SENSEI_ERROR_CODE::OK;
+                    if (static_cast<bool>(msgData.data.value))
+                    {
+                        msgData.status = manageIO.imu.initialize();
+                    }
+                    else
+                    {
+                      manageIO.imu.stop();
+                      msgData.status= SENSEI_ERROR_CODE::OK;
+                    }
                 break;
 
                 //--------------------------------------------------------------------- [CMD IMU_SET_SETTINGS]

@@ -122,7 +122,6 @@ typedef struct SystemSettings
 	bool debugMode;
 	bool enabledMultiplePackets;
 	bool enabledSendingPackets;
-	bool enabledImu;
 }   __attribute__((packed)) SystemSettings;
 
 typedef struct TaskRtStatus

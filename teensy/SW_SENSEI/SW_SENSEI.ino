@@ -43,6 +43,8 @@ QueueHandle_t hQueueRTtoCOM_IMU = 0;
 
 void setup()
 {
+    delay(750);
+
     //Hardware setup
     pinMode(DS, OUTPUT);
     pinMode(ST, OUTPUT);

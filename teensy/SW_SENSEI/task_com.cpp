@@ -18,8 +18,6 @@ void vTaskCOM(void *pvParameters)
     SystemSettings systemSettings;
     systemSettings.debugMode=COND_DEBUG_MODE;
     systemSettings.enabledMultiplePackets=COND_MULTIPLE_PACKETS;
-    systemSettings.enabledSendingPackets=COND_SENDING_PACKETS;
-    systemSettings.enabledImu=COND_IMU_ENABLED;
 
     TaskComStatus taskStatus;
     memset(&taskStatus,0,sizeof(TaskComStatus));
@@ -232,8 +230,7 @@ void vTaskCOM(void *pvParameters)
                     //--------------------------------------------------------------------- [CMD IMU_ENABLE]
                     case SENSEI_CMD::IMU_ENABLE:
                         manageDataPacket.setPayloadToVariable(&msgData.data.value, sizeof(uint8_t));
-                        systemSettings.enabledImu = msgData.data.value;
-                        SerialDebug.println("enabledImu = " + String(systemSettings.enabledImu));
+                        SerialDebug.println("enabledImu = " + String(msgData.data.value));
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
