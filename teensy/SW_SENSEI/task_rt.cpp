@@ -64,7 +64,7 @@ void vTaskRT(void *pvParameters)
         {
           imuTemp=-273.5;
           manageIO.imu.getValue(GET_TEMPERATURE, &imuTemp);
-          SerialDebug.print("IMU t = " + String(imuTemp) + "°C\n");
+          SerialDebug.println("IMU t = " + String(imuTemp) + "°C");
         }
         #endif
 
