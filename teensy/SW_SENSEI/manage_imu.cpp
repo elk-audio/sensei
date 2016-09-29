@@ -22,7 +22,7 @@ ManageIMU::ManageIMU()
     if (_initialize() == SENSEI_ERROR_CODE::OK)
     {
         _isInitialized = true;
-        SerialDebug.println("-> IMU: OK - MAX_SUB_CMD = " + String(IMU_MAX_SUB_CMD));
+        SerialDebug.println("-> IMU: Connected");
 
         #ifdef RESET_IMU_FACTORY_SETTINGS_ON_STARTUP
           SerialDebug.println("-> IMU: RESET_IMU_FACTORY_SETTINGS_ON_STARTUP");
@@ -32,7 +32,7 @@ ManageIMU::ManageIMU()
     else
     {
         _isInitialized = false;
-        SerialDebug.println("-> IMU: KO");
+        SerialDebug.println("-> IMU: Connection error");
     }
 }
 
@@ -73,6 +73,7 @@ void ManageIMU::_writeByte(uint8_t value)
     _retSpi = SPI.transfer(value);
     digitalWrite(SPI_SS,HIGH);
     delayMicroseconds(DELAY_SPI_YEI);
+
 }
 
 int32_t ManageIMU::_waitStatus(uint8_t status)
@@ -124,7 +125,7 @@ int32_t ManageIMU::_sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
     _startCommunication();
     _sendCmd(cmd);
 
-    if (_retSpi == DATA_BYTE)
+    if (_retSpi == IDLE_STATE)
     {
         return SENSEI_ERROR_CODE::IMU_NOT_CONNECTED;
     }
@@ -169,6 +170,11 @@ int32_t ManageIMU::_getData(uint8_t cmd, void* data, uint16_t nByte)
 
     _startCommunication();
     _sendCmd(cmd);
+
+    if (_retSpi == IDLE_STATE)
+    {
+        return SENSEI_ERROR_CODE::IMU_NOT_CONNECTED;
+    }
 
     if (_waitStatus(ACC_STATE) != OK)
     {
