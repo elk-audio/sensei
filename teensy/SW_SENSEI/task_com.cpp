@@ -288,6 +288,16 @@ void vTaskCOM(void *pvParameters)
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
+                    //--------------------------------------------------------------------- [CMD IMU_RESET_TO_FACTORY_SETTINGS]
+                    case SENSEI_CMD::IMU_RESET_TO_FACTORY_SETTINGS:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD IMU_REBOOT]
+                    case SENSEI_CMD::IMU_REBOOT:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
                     //---------------------------------------------------------------------
                     // STOP COMMANDS
                     //---------------------------------------------------------------------

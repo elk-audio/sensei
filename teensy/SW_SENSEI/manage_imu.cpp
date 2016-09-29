@@ -77,7 +77,7 @@ void ManageIMU::_writeByte(uint8_t value)
 
 int32_t ManageIMU::_waitStatus(uint8_t status)
 {
-    uint16_t iter = 0;
+    uint32_t iter = 0;
     while ( (_retSpi != status) && (_retSpi != IDLE_STATE) && (iter < SPI_MAX_ITER_WAIT_CMD) )
     {
         _writeByte(DATA_BYTE);
@@ -101,6 +101,22 @@ void ManageIMU::_sendCmd(uint8_t cmd)
     _writeByte(cmd);
     //SerialDebug.println("-> _sendCmd: " + String(_retSpi) ); //TODO
 }
+
+int32_t ManageIMU::sendCommandWithoutChecks(uint8_t cmd)
+// For reboot
+{
+
+    _startCommunication();
+    _sendCmd(cmd);
+
+    if (_retSpi == DATA_BYTE)
+    {
+        return SENSEI_ERROR_CODE::IMU_NOT_CONNECTED;
+    }
+
+    return SENSEI_ERROR_CODE::OK;
+}
+
 
 int32_t ManageIMU::sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
 {
@@ -200,9 +216,23 @@ int32_t ManageIMU::resetToFactorySettings()
         return IMU_CMD_NOT_EXECUTED;
     }
 
+    SerialDebug.println("-> IMU: resetToFactorySettings()");
     return SENSEI_ERROR_CODE::OK;
 }
 
+int32_t ManageIMU::reboot()
+{
+    int32_t ret;
+
+    ret = sendCommandWithoutChecks(CMD_IMU::SOFTWARE_RESET);
+    if (ret != SENSEI_ERROR_CODE::OK)
+    {
+        return IMU_CMD_NOT_EXECUTED;
+    }
+
+    SerialDebug.println("-> IMU: reboot()");
+    return SENSEI_ERROR_CODE::OK;
+}
 
 int32_t ManageIMU::resetFilter()
 {
@@ -231,7 +261,7 @@ int32_t ManageIMU::_initialize()
 
     // Restore default settings
     #ifdef RESET_IMU_FACTORY_SETTINGS_ON_STARTUP
-      ret = sendCommand(CMD_IMU::RESTORE_DEFAULT_SETTINGS);
+      ret = resetToFactorySettings();
       if (ret != SENSEI_ERROR_CODE::OK)
       {
           return IMU_CMD_NOT_EXECUTED;

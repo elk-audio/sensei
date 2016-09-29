@@ -398,6 +398,18 @@ void vTaskRT(void *pvParameters)
                     }
                 break;
 
+                //--------------------------------------------------------------------- [CMD IMU_REBOOT]
+                case SENSEI_CMD::IMU_REBOOT:
+                    if (systemSettings.enabledImu)
+                    {
+                        msgData.status = manageIO.imu.reboot();
+                    }
+                    else
+                    {
+                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
+                    }
+                break;
+
 
                 //---------------------------------------------------------------------
                 // END COMMANDS

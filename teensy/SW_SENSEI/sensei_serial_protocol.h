@@ -21,7 +21,7 @@ namespace sensei {
     const FilterType DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
 
     #ifdef PRINT_IMU_DEBUG
-    const float FREQUENCY_DEBUG_IMU = 0.5; //[Hz]
+    const float FREQUENCY_DEBUG_IMU = 2; //[Hz]
     #endif
 
     const uint8_t MAX_FILTER_ORDER = 12;
@@ -150,8 +150,8 @@ namespace sensei {
         HELLO = 1,
         SERIAL_DEBUG = 2,
         GET_SYSTEM_STATUS=3,
-		//----------------------------------------------
-		ENABLE_SENDING_PACKETS=10,
+		    //----------------------------------------------
+		    ENABLE_SENDING_PACKETS=10,
         ENABLE_MULTIPLE_PACKETS=11,
         //----------------------------------------------
         CONFIGURE_PIN = 100,
@@ -169,6 +169,7 @@ namespace sensei {
         IMU_GET_DATA = 205,
         IMU_TARE_WITH_CURRENT_ORIENTATION = 206,
         IMU_RESET_TO_FACTORY_SETTINGS = 207,
+        IMU_REBOOT = 208,
         //----------------------------------------------
         STOP_BOARD = 250,
         //----------------------------------------------

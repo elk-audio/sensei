@@ -116,6 +116,7 @@ public:
     int32_t sendCommand(uint8_t cmd);
     int32_t sendCommand(uint8_t cmd, uint8_t value);
     int32_t sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
+    int32_t sendCommandWithoutChecks(uint8_t cmd);
 
     int32_t getValue(uint8_t cmd, void* data);
     int32_t getValue(uint8_t cmd, float* data);
@@ -142,6 +143,7 @@ public:
     uint8_t getSendingMode();
 
     int32_t resetToFactorySettings();
+    int32_t reboot();
     void printDebugImuSettings();
 
     //int32_t resetTare();
