@@ -23,6 +23,11 @@ ManageIMU::ManageIMU()
     {
         _isInitialized = true;
         SerialDebug.println("-> IMU: OK - MAX_SUB_CMD = " + String(IMU_MAX_SUB_CMD));
+
+        #ifdef RESET_IMU_FACTORY_SETTINGS_ON_STARTUP
+          SerialDebug.println("-> IMU: RESET_IMU_FACTORY_SETTINGS_ON_STARTUP");
+        #endif
+
     }
     else
     {
@@ -185,6 +190,20 @@ bool ManageIMU::getInterruptStatus()
     return static_cast<bool>(imuInterruptStatus);
 }
 
+int32_t ManageIMU::resetToFactorySettings()
+{
+    int32_t ret;
+
+    ret = sendCommand(CMD_IMU::RESTORE_DEFAULT_SETTINGS);
+    if (ret != SENSEI_ERROR_CODE::OK)
+    {
+        return IMU_CMD_NOT_EXECUTED;
+    }
+
+    return SENSEI_ERROR_CODE::OK;
+}
+
+
 int32_t ManageIMU::resetFilter()
 {
     int32_t ret;
@@ -210,11 +229,14 @@ int32_t ManageIMU::_initialize()
 
     _clearBuffer();
 
-    ret = sendCommand(CMD_IMU::RESTORE_DEFAULT_SETTINGS);
-    if (ret != SENSEI_ERROR_CODE::OK)
-    {
-        return IMU_CMD_NOT_EXECUTED;
-    }
+    // Restore default settings
+    #ifdef RESET_IMU_FACTORY_SETTINGS_ON_STARTUP
+      ret = sendCommand(CMD_IMU::RESTORE_DEFAULT_SETTINGS);
+      if (ret != SENSEI_ERROR_CODE::OK)
+      {
+          return IMU_CMD_NOT_EXECUTED;
+      }
+    #endif
 
     ret = sendCommand(CMD_IMU::SET_DECOMPOSITION_ORDER, _internalSettings.decompositionOrder);
     if (ret != SENSEI_ERROR_CODE::OK)

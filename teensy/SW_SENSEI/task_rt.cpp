@@ -385,6 +385,20 @@ void vTaskRT(void *pvParameters)
                     }
                 break;
 
+
+                //--------------------------------------------------------------------- [CMD IMU_RESET_TO_FACTORY_SETTINGS]
+                case SENSEI_CMD::IMU_RESET_TO_FACTORY_SETTINGS:
+                    if (systemSettings.enabledImu)
+                    {
+                        msgData.status = manageIO.imu.resetToFactorySettings();
+                    }
+                    else
+                    {
+                        msgData.status = SENSEI_ERROR_CODE::IMU_DISABLED;
+                    }
+                break;
+
+
                 //---------------------------------------------------------------------
                 // END COMMANDS
                 //---------------------------------------------------------------------

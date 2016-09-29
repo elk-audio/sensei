@@ -10,6 +10,7 @@
 #define SENSEI_SERIAL_PROTOCOL_H_
 
 #define PRINT_IMU_DEBUG
+//#define RESET_IMU_FACTORY_SETTINGS_ON_STARTUP
 
 #include <cstdint>
 
@@ -160,13 +161,14 @@ namespace sensei {
         SET_VALUE = 104,
         SET_DIGITAL_PINS = 105,
         //----------------------------------------------
-		IMU_ENABLE=200,
+		    IMU_ENABLE=200,
         IMU_SET_SETTINGS = 201,
         IMU_GET_SETTINGS = 202,
         IMU_GYROSCOPE_CALIBRATION = 203,
         IMU_RESET_FILTER = 204,
         IMU_GET_DATA = 205,
         IMU_TARE_WITH_CURRENT_ORIENTATION = 206,
+        IMU_RESET_TO_FACTORY_SETTINGS = 207,
         //----------------------------------------------
         STOP_BOARD = 250,
         //----------------------------------------------

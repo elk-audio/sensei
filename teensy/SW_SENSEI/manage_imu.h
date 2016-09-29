@@ -141,7 +141,7 @@ public:
     uint8_t getTypeOfData();
     uint8_t getSendingMode();
 
-
+    int32_t resetToFactorySettings();
     void printDebugImuSettings();
 
     //int32_t resetTare();
