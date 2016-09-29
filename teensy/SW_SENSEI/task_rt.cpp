@@ -49,9 +49,9 @@ void vTaskRT(void *pvParameters)
     hQueueRTtoCOM_DATA = xQueueCreate(MSG_QUEUE_ITEM_SIZE, sizeof(Msg_DATA));
 
     #ifdef PRINT_IMU_DEBUG
-    int deltaTicksPrintDebugImu = round(DEFAULT_RT_FREQUENCY/FREQUENCY_DEBUG_IMU);
-    float imuTemp;
-    SerialDebug.println("PRINT_IMU_DEBUG\n");
+      int deltaTicksPrintDebugImu = round(DEFAULT_RT_FREQUENCY/FREQUENCY_DEBUG_IMU);
+      float imuTemp;
+      SerialDebug.println("PRINT_IMU_DEBUG\n");
     #endif
 
     for (;;)
@@ -61,12 +61,12 @@ void vTaskRT(void *pvParameters)
         startTaskTimestamp = micros();
 
         #ifdef PRINT_IMU_DEBUG
-        if (taskStatus.nCycles%deltaTicksPrintDebugImu == 0)
-        {
-          imuTemp=-273.15;
-          manageIO.imu.getTemperature(&imuTemp);
-          SerialDebug.println("IMU t = " + String(imuTemp) + "°C");
-        }
+          if (taskStatus.nCycles%deltaTicksPrintDebugImu == 0)
+          {
+            imuTemp=-273.15;
+            manageIO.imu.getTemperature(&imuTemp);
+            SerialDebug.println("IMU t = " + String(imuTemp) + "°C");
+          }
         #endif
 
         //------------------------------------------------------------------------------------------- [IMU]

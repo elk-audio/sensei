@@ -83,7 +83,6 @@ int32_t ManageIMU::_waitStatus(uint8_t status)
     {
         _writeByte(DATA_BYTE);
         iter++;
-        //SerialDebug.println("-> _waitStatus: " + String(_retSpi) ); //TODO
     }
 
     if (iter == SPI_MAX_ITER_WAIT_CMD)
@@ -100,7 +99,6 @@ int32_t ManageIMU::_waitStatus(uint8_t status)
 void ManageIMU::_sendCmd(uint8_t cmd)
 {
     _writeByte(cmd);
-    //SerialDebug.println("-> _sendCmd: " + String(_retSpi) ); //TODO
 }
 
 int32_t ManageIMU::_sendCommandWithoutChecks(uint8_t cmd)
