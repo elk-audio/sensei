@@ -4,8 +4,8 @@
 #include "common.h"
 
 #define SPI_MAX_ITER_WAIT_CMD 4000
-#define DELAY_SPI_YEI 2 //[us]
-#define DELAY_SPI_YEI_CLEAR_BUFFER 75 //[us]
+#define DELAY_SPI_YEI 1 //[us]
+#define DELAY_SPI_YEI_CLEAR_BUFFER 50 //[us]
 
 // Default settings
 #define AXIS_DIRECTION_RIGHT_UP_FORWARD_LHANDED 0
