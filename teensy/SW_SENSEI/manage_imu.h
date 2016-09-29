@@ -113,15 +113,6 @@ public:
     ManageIMU();
     ~ManageIMU();
 
-    int32_t sendCommand(uint8_t cmd);
-    int32_t sendCommand(uint8_t cmd, uint8_t value);
-    int32_t sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
-    int32_t sendCommandWithoutChecks(uint8_t cmd);
-
-    int32_t getValue(uint8_t cmd, void* data);
-    int32_t getValue(uint8_t cmd, float* data);
-    int32_t getData(uint8_t cmd, void* data, uint16_t nByte);
-
     bool getInterruptStatus();
     int32_t setInterruptMode();
 
@@ -144,6 +135,7 @@ public:
 
     int32_t resetToFactorySettings();
     int32_t reboot();
+    int32_t getTemperature(float* temp);
     void printDebugImuSettings();
 
     //int32_t resetTare();
@@ -162,6 +154,15 @@ private:
     uint8_t _retSpi;
     sImuSettings _settings;
     sImuInternalSettings _internalSettings;
+
+    int32_t _sendCommand(uint8_t cmd);
+    int32_t _sendCommand(uint8_t cmd, uint8_t value);
+    int32_t _sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
+    int32_t _sendCommandWithoutChecks(uint8_t cmd);
+
+    int32_t _getValue(uint8_t cmd, void* data);
+    int32_t _getValue(uint8_t cmd, float* data);
+    int32_t _getData(uint8_t cmd, void* data, uint16_t nByte);
 };
 
 #endif // MANAGE_IMU_H

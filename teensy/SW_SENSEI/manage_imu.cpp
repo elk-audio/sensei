@@ -102,7 +102,7 @@ void ManageIMU::_sendCmd(uint8_t cmd)
     //SerialDebug.println("-> _sendCmd: " + String(_retSpi) ); //TODO
 }
 
-int32_t ManageIMU::sendCommandWithoutChecks(uint8_t cmd)
+int32_t ManageIMU::_sendCommandWithoutChecks(uint8_t cmd)
 // For reboot
 {
 
@@ -118,7 +118,7 @@ int32_t ManageIMU::sendCommandWithoutChecks(uint8_t cmd)
 }
 
 
-int32_t ManageIMU::sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
+int32_t ManageIMU::_sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
 {
 
     _startCommunication();
@@ -143,27 +143,27 @@ int32_t ManageIMU::sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
     return _waitStatus(IDLE_STATE);
 }
 
-int32_t ManageIMU::sendCommand(uint8_t cmd)
+int32_t ManageIMU::_sendCommand(uint8_t cmd)
 {
-    return sendCommand(cmd, 0, 0);
+    return _sendCommand(cmd, 0, 0);
 }
 
-int32_t ManageIMU::sendCommand(uint8_t cmd, uint8_t value)
+int32_t ManageIMU::_sendCommand(uint8_t cmd, uint8_t value)
 {
-    return sendCommand(cmd, &value, 1);
+    return _sendCommand(cmd, &value, sizeof(uint8_t));
 }
 
-int32_t ManageIMU::getValue(uint8_t cmd, float* data)
+int32_t ManageIMU::_getValue(uint8_t cmd, float* data)
 {
-    return getData(cmd,data,4);
+    return _getData(cmd,data,sizeof(float));
 }
 
-int32_t ManageIMU::getValue(uint8_t cmd, void* data)
+int32_t ManageIMU::_getValue(uint8_t cmd, void* data)
 {
-    return getData(cmd,data,1);
+    return _getData(cmd,data,sizeof(uint8_t));
 }
 
-int32_t ManageIMU::getData(uint8_t cmd, void* data, uint16_t nByte)
+int32_t ManageIMU::_getData(uint8_t cmd, void* data, uint16_t nByte)
 {
     uint8_t* pointer = (uint8_t*)data;
 
@@ -202,7 +202,7 @@ uint8_t ManageIMU::getTypeOfData()
 bool ManageIMU::getInterruptStatus()
 {
     uint8_t imuInterruptStatus=0;
-    getValue(CMD_IMU::GET_INTERRUPT_STATUS, &imuInterruptStatus);
+    _getValue(CMD_IMU::GET_INTERRUPT_STATUS, &imuInterruptStatus);
     return static_cast<bool>(imuInterruptStatus);
 }
 
@@ -210,7 +210,7 @@ int32_t ManageIMU::resetToFactorySettings()
 {
     int32_t ret;
 
-    ret = sendCommand(CMD_IMU::RESTORE_DEFAULT_SETTINGS);
+    ret = _sendCommand(CMD_IMU::RESTORE_DEFAULT_SETTINGS);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
@@ -224,7 +224,7 @@ int32_t ManageIMU::reboot()
 {
     int32_t ret;
 
-    ret = sendCommandWithoutChecks(CMD_IMU::SOFTWARE_RESET);
+    ret = _sendCommandWithoutChecks(CMD_IMU::SOFTWARE_RESET);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
@@ -238,7 +238,7 @@ int32_t ManageIMU::resetFilter()
 {
     int32_t ret;
 
-    ret = sendCommand(CMD_IMU::RESET_FILTER);
+    ret = _sendCommand(CMD_IMU::RESET_FILTER);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
@@ -250,7 +250,7 @@ int32_t ManageIMU::resetFilter()
 int32_t ManageIMU::setInterruptMode()
 {
     uint8_t data[] = { 2, 0 };
-    return sendCommand(CMD_IMU::SET_PIN_MODE, data, sizeof(data));
+    return _sendCommand(CMD_IMU::SET_PIN_MODE, data, sizeof(data));
 }
 
 int32_t ManageIMU::_initialize()
@@ -268,25 +268,25 @@ int32_t ManageIMU::_initialize()
       }
     #endif
 
-    ret = sendCommand(CMD_IMU::SET_DECOMPOSITION_ORDER, _internalSettings.decompositionOrder);
+    ret = _sendCommand(CMD_IMU::SET_DECOMPOSITION_ORDER, _internalSettings.decompositionOrder);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
     }
 
-    ret = sendCommand(CMD_IMU::SET_AXIS_DIRECTION, _internalSettings.axisDirection);
+    ret = _sendCommand(CMD_IMU::SET_AXIS_DIRECTION, _internalSettings.axisDirection);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
     }
 
-    ret = sendCommand(CMD_IMU::SET_CALIBRATION_MODE, _internalSettings.calibrationMode);
+    ret = _sendCommand(CMD_IMU::SET_CALIBRATION_MODE, _internalSettings.calibrationMode);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
     }
 
-    ret = sendCommand(CMD_IMU::SET_REFERENCE_VECTOR_MODE, _internalSettings.referenceVectorMode);
+    ret = _sendCommand(CMD_IMU::SET_REFERENCE_VECTOR_MODE, _internalSettings.referenceVectorMode);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
@@ -311,7 +311,7 @@ int32_t ManageIMU::getSettings(sImuSettings* settings)
 {
     uint8_t value;
 
-    if (getValue(CMD_IMU::GET_FILTER_MODE, &value) == SENSEI_ERROR_CODE::OK)
+    if (_getValue(CMD_IMU::GET_FILTER_MODE, &value) == SENSEI_ERROR_CODE::OK)
     {
         settings->filterMode = value;
     }
@@ -320,7 +320,7 @@ int32_t ManageIMU::getSettings(sImuSettings* settings)
         return SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED;
     }
 
-    if (getValue(CMD_IMU::GET_ACCELEROMETER_RANGE, &value) == SENSEI_ERROR_CODE::OK)
+    if (_getValue(CMD_IMU::GET_ACCELEROMETER_RANGE, &value) == SENSEI_ERROR_CODE::OK)
     {
          settings->accerelometerRange = value;
     }
@@ -329,7 +329,7 @@ int32_t ManageIMU::getSettings(sImuSettings* settings)
          return SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED;
     }
 
-    if (getValue(CMD_IMU::GET_GYROSCOPE_RANGE, &value) == SENSEI_ERROR_CODE::OK)
+    if (_getValue(CMD_IMU::GET_GYROSCOPE_RANGE, &value) == SENSEI_ERROR_CODE::OK)
     {
         settings->gyroscopeRange = value;
     }
@@ -338,7 +338,7 @@ int32_t ManageIMU::getSettings(sImuSettings* settings)
         return SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED;
     }
 
-    if (getValue(CMD_IMU::GET_COMPASS_RANGE, &value) == SENSEI_ERROR_CODE::OK)
+    if (_getValue(CMD_IMU::GET_COMPASS_RANGE, &value) == SENSEI_ERROR_CODE::OK)
     {
         settings->compassRange = value;
     }
@@ -347,7 +347,7 @@ int32_t ManageIMU::getSettings(sImuSettings* settings)
         return SENSEI_ERROR_CODE::IMU_CMD_NOT_EXECUTED;
     }
 
-    if (getValue(CMD_IMU::GET_COMPASS_ENABLED_STATE, &value) == SENSEI_ERROR_CODE::OK)
+    if (_getValue(CMD_IMU::GET_COMPASS_ENABLED_STATE, &value) == SENSEI_ERROR_CODE::OK)
     {
         settings->compassEnable = value;
     }
@@ -411,7 +411,7 @@ int32_t ManageIMU::getSensorComponents(uint8_t components,uint8_t* data_vector,u
 
             if (comp_size > 0)
             {
-                if (getData(comp_cmd,
+                if (_getData(comp_cmd,
                             ptr + packetSize,
                             comp_size)
                             != SENSEI_ERROR_CODE::OK)
@@ -521,31 +521,42 @@ int32_t ManageIMU::setSettings()
 {
     int32_t ret = 0;
 
-    ret = sendCommand(CMD_IMU::SET_FILTER_MODE, _settings.filterMode);
+    ret = _sendCommand(CMD_IMU::SET_FILTER_MODE, _settings.filterMode);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
     }
 
-    ret = sendCommand(CMD_IMU::SET_ACCELEROMETER_RANGE, _settings.accerelometerRange);
+    ret = _sendCommand(CMD_IMU::SET_ACCELEROMETER_RANGE, _settings.accerelometerRange);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
     }
 
-    ret = sendCommand(CMD_IMU::SET_GYROSCOPE_RANGE, _settings.gyroscopeRange);
+    ret = _sendCommand(CMD_IMU::SET_GYROSCOPE_RANGE, _settings.gyroscopeRange);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
     }
 
-    ret = sendCommand(CMD_IMU::SET_COMPASS_RANGE, _settings.compassRange);
+    ret = _sendCommand(CMD_IMU::SET_COMPASS_RANGE, _settings.compassRange);
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
     }
 
-    ret = sendCommand(CMD_IMU::SET_COMPASS_ENABLE, _settings.compassEnable);
+    ret = _sendCommand(CMD_IMU::SET_COMPASS_ENABLE, _settings.compassEnable);
+    if (ret != SENSEI_ERROR_CODE::OK)
+    {
+        return IMU_CMD_NOT_EXECUTED;
+    }
+
+    return SENSEI_ERROR_CODE::OK;
+}
+
+int32_t ManageIMU::getTemperature(float* temp)
+{
+    int32_t ret =  _getValue(CMD_IMU::GET_TEMPERATURE,*(&temp));
     if (ret != SENSEI_ERROR_CODE::OK)
     {
         return IMU_CMD_NOT_EXECUTED;
@@ -556,12 +567,25 @@ int32_t ManageIMU::setSettings()
 
 int32_t ManageIMU::gyroscopeCalibration()
 {
-    return sendCommand(BEGIN_GYROSCOPE_AUTOCALIBRATION);
+    int32_t ret =  _sendCommand(BEGIN_GYROSCOPE_AUTOCALIBRATION);
+    if (ret != SENSEI_ERROR_CODE::OK)
+    {
+        return IMU_CMD_NOT_EXECUTED;
+    }
+
+    return SENSEI_ERROR_CODE::OK;
 }
 
 int32_t ManageIMU::tareWithCurrentOrientation()
 {
-    return sendCommand(TARE_WITH_CURRENT_ORIENTATION);
+    int32_t ret = _sendCommand(TARE_WITH_CURRENT_ORIENTATION);
+
+    if (ret != SENSEI_ERROR_CODE::OK)
+    {
+        return IMU_CMD_NOT_EXECUTED;
+    }
+
+    return SENSEI_ERROR_CODE::OK;
 }
 
 //int32_t ManageIMU::resetTare()
