@@ -26,7 +26,6 @@ namespace sensei {
 enum class CommandType
 {
     // External Commands
-    SET_SAMPLING_RATE,
     SET_PIN_TYPE,
     SET_VIRTUAL_PIN,
     SET_ENABLED,
@@ -134,12 +133,6 @@ enum class CommandErrorCode
 ////////////////////////////////////////////////////////////////////////////////
 
 // External commands
-
-SENSEI_DECLARE_COMMAND(SetSamplingRateCommand,
-                       CommandType::SET_SAMPLING_RATE,
-                       float,
-                       "Set Sampling Rate",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetEnabledCommand,
                        CommandType::SET_ENABLED,

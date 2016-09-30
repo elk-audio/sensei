@@ -82,14 +82,6 @@ public:
     // Commands
     ////////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<BaseMessage> make_set_sampling_rate_command(const int pin_index,
-                                                                const float sampling_rate,
-                                                                const uint32_t timestamp = 0)
-    {
-        auto msg = new SetSamplingRateCommand(pin_index, sampling_rate, timestamp);
-        return std::unique_ptr<SetSamplingRateCommand>(msg);
-    }
-
     std::unique_ptr<BaseMessage> make_set_enabled_command(const int pin_index,
                                                           const bool enabled,
                                                           const uint32_t timestamp = 0)

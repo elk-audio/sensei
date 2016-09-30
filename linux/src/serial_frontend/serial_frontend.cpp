@@ -447,12 +447,6 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             return _packet_factory.make_enable_sending_packets_cmd(cmd->timestamp(),
                                                                    cmd->data());
         }
-        case CommandType::SET_SAMPLING_RATE:
-        {
-            auto cmd = static_cast<SetSamplingRateCommand *>(message);
-            return _packet_factory.make_set_sampling_rate_cmd(cmd->timestamp(),
-                                                              cmd->data());
-        }
         case CommandType::SET_PIN_TYPE:
         {
             auto cmd = static_cast<SetPinTypeCommand *>(message);

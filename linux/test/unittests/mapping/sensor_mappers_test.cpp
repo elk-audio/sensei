@@ -274,10 +274,7 @@ TEST_F(TestAnalogSensorMapper, test_config_fail)
     // Verify that wrong commands return appropriate errors
     MessageFactory factory;
 
-    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_sampling_rate_command(_sensor_idx, 1000.0f)));
-    ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
-
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, -10)));
+    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, -10)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, 100)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);

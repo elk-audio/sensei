@@ -58,11 +58,11 @@ protected:
 TEST_F(SerialFrontendTest, test_create_serial_message)
 {
     MessageFactory factory;
-    auto command = factory.make_set_sampling_rate_command(3, 500.0, 100u);
+    auto command = factory.make_set_sending_delta_ticks_command(3, 5, 100u);
     const sSenseiDataPacket* packet = _module_under_test.handle_command(static_cast<Command*>(command.get()));
-    EXPECT_EQ(SENSEI_CMD::SET_SAMPLING_RATE, packet->cmd);
-    auto payload = reinterpret_cast<const teensy_set_samplerate_cmd*>(packet->payload);
-    EXPECT_EQ(2, payload->sample_rate_divisor);
+    EXPECT_EQ(SENSEI_CMD::CONFIGURE_PIN, packet->cmd);
+    auto payload = reinterpret_cast<const sPinConfiguration*>(packet->payload);
+    EXPECT_EQ(5, payload->deltaTicksContinuousMode);
 
     auto lp_command = factory.make_set_lowpass_cutoff_command(4, 1234.0, 100u);
     packet = _module_under_test.handle_command(static_cast<Command*>(lp_command.get()));

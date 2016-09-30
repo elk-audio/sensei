@@ -48,7 +48,6 @@ TEST(MessagesTest, test_external_command_creation)
     std::vector<std::unique_ptr<BaseMessage>> msg_queue;
 
     // Fill message queue with all types of commands
-    msg_queue.push_back(factory.make_set_sampling_rate_command(1, 1000.0f));
     msg_queue.push_back(factory.make_set_enabled_command(2, false));
     msg_queue.push_back(factory.make_set_pin_type_command(3, PinType::ANALOG_INPUT));
     msg_queue.push_back(factory.make_set_sending_mode_command(4, SendingMode::ON_VALUE_CHANGED));
@@ -71,14 +70,6 @@ TEST(MessagesTest, test_external_command_creation)
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
         {
-
-        case CommandType::SET_SAMPLING_RATE:
-            {
-                auto typed_cmd = static_cast<SetSamplingRateCommand *>(cmd_msg);
-                ASSERT_EQ(1000.0f, typed_cmd->data());
-            };
-            break;
-
         case CommandType::SET_ENABLED:
             {
                 auto typed_cmd = static_cast<SetEnabledCommand *>(cmd_msg);

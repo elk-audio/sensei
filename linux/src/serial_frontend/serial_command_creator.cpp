@@ -87,27 +87,6 @@ const sSenseiDataPacket* SerialCommandCreator::make_set_bank_cmd(int pin_id, uin
     return &_cmd_buffer;
 }
 
-const sSenseiDataPacket* SerialCommandCreator::make_set_sampling_rate_cmd(uint32_t timestamp, float sampling_rate)
-{
-    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::SET_SAMPLING_RATE);
-    _cmd_buffer.sub_cmd = EMPTY;
-    teensy_set_samplerate_cmd* cmd = reinterpret_cast<teensy_set_samplerate_cmd*>(&_cmd_buffer.payload);
-    if (sampling_rate < 3.9)   // this is the lowest possible samplerate to set, lower values will be treated as 0
-    {
-        cmd->sample_rate_divisor = 0;
-    }
-    else if (sampling_rate > 1000)
-    {
-        cmd->sample_rate_divisor = 1;
-    }
-    else
-    {
-        cmd->sample_rate_divisor = static_cast<uint8_t>(1000 / sampling_rate);
-    }
-    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
-    return &_cmd_buffer;
-}
-
 const sSenseiDataPacket* SerialCommandCreator::make_get_value_cmd(int pin_id, uint32_t timestamp)
 {
     if (pin_id >= _max_pins)
