@@ -75,7 +75,7 @@ TEST_F(TestOSCUserFrontend, test_set_digital_output)
 
 TEST_F(TestOSCUserFrontend, test_imu_calibrate)
 {
-    lo_send(_address, "/calibrate_imu", "");
+    lo_send(_address, "/imu_calibrate", "");
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
     ASSERT_FALSE(_event_queue.empty());
     std::unique_ptr<BaseMessage> event = _event_queue.pop();
@@ -83,6 +83,30 @@ TEST_F(TestOSCUserFrontend, test_imu_calibrate)
     auto cmd = static_unique_ptr_cast<ImuCalibrateCommand, BaseMessage>(std::move(event));
 
     ASSERT_EQ(CommandType::IMU_CALIBRATE, cmd->type());
+}
+
+TEST_F(TestOSCUserFrontend, test_imu_factory_reset)
+{
+    lo_send(_address, "/imu_reset", "");
+    _event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_event_queue.empty());
+    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    ASSERT_EQ(MessageType::COMMAND, event->base_type());
+    auto cmd = static_unique_ptr_cast<ImuFactoryResetCommand, BaseMessage>(std::move(event));
+
+    ASSERT_EQ(CommandType::IMU_FACTORY_RESET, cmd->type());
+}
+
+TEST_F(TestOSCUserFrontend, test_imu_reboot)
+{
+    lo_send(_address, "/imu_reboot", "");
+    _event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_event_queue.empty());
+    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    ASSERT_EQ(MessageType::COMMAND, event->base_type());
+    auto cmd = static_unique_ptr_cast<ImuRebootCommand, BaseMessage>(std::move(event));
+
+    ASSERT_EQ(CommandType::IMU_REBOOT, cmd->type());
 }
 
 

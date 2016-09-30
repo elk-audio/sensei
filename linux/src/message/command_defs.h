@@ -50,6 +50,9 @@ enum class CommandType
     SET_IMU_DATA_MODE,
     SET_IMU_ACC_THRESHOLD,
     IMU_CALIBRATE,
+    IMU_FACTORY_RESET,
+    IMU_REBOOT,
+    IMU_GET_TEMPERATURE,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_SCALE_RANGE_LOW,
@@ -274,6 +277,24 @@ SENSEI_DECLARE_COMMAND(ImuCalibrateCommand,
                        CommandType::IMU_CALIBRATE,
                        int,
                        "Initiate self calibration of IMU gyroscope",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuFactoryResetCommand,
+                       CommandType::IMU_FACTORY_RESET,
+                       int,
+                       "Reset the IMU to it's factory settings",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuRebootCommand,
+                       CommandType::IMU_REBOOT,
+                       int,
+                       "Initiate a reboot of the IMU",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuGetTemperatureCommand,
+                       CommandType::IMU_GET_TEMPERATURE,
+                       int,
+                       "Get the IMU temperature",
                        CommandDestination::SERIAL_FRONTEND);
 
 // Internal commands

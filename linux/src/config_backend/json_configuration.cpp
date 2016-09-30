@@ -473,12 +473,6 @@ ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
     {
         auto m = _message_factory.make_enable_imu_command(enabled.asBool());
         _queue->push(std::move(m));
-        if (enabled.asBool())
-        {
-            /* If IMU is turning on, trigger an automatic calibration */
-            auto c = _message_factory.make_imu_calibrate_command();
-            _queue->push(std::move(c));
-        }
     }
 
     return ConfigStatus::OK;

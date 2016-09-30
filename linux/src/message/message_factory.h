@@ -256,6 +256,24 @@ public:
         return std::unique_ptr<ImuCalibrateCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_imu_factory_reset_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuFactoryResetCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuFactoryResetCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_reboot_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuRebootCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuRebootCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_get_temperature_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuGetTemperatureCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuGetTemperatureCommand>(msg);
+    }
+
     // Internal commands
 
     std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int pin_index,

@@ -166,8 +166,6 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     EXPECT_COMMAND_FLOAT(m, CommandType::SET_IMU_ACC_THRESHOLD, SetImuAccThresholdCommand, index, 1.0f);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_IMU_ENABLED, SetImuEnabledCommand, index, (int)true);
-    m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::IMU_CALIBRATE, ImuCalibrateCommand, index, 0);
 
 /* Lastly we should have an EnableSendingPackets command to turn on all pins */
     m = std::move(_queue.pop());
