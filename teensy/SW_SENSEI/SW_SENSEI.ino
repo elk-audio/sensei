@@ -18,42 +18,6 @@
 #include "task_com.h"
 #include "task_led.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    //*******************low power micros @ 2 MHZ*************************
-    uint32_t micros_lp(void) {
-        uint32_t count, current, istatus;
-
-        __disable_irq();
-        current = SYST_CVR;
-        count = systick_millis_count;
-        istatus = SCB_ICSR; // bit 26 indicates if systick exception pending
-        __enable_irq();
-
-        if ((istatus & SCB_ICSR_PENDSTSET) && current > 50) count++;
-        current = ((TWO_MHZ / 1000) - 1) - current;
-        return count * 1000 + current / (TWO_MHZ / 1000000);
-    }
-
-    //*******************low power delay_lp @ 2 MHZ************************
-    void delay_lp(uint32_t ms) {
-        uint32_t start = micros_lp();
-
-        if (ms > 0) {
-            while (1) {
-                if ((micros_lp() - start) >= 1000) {
-                    ms--;
-                    if (ms == 0) return;
-                    start += 1000;
-                }
-                yield();
-            }
-        }
-    }
-#ifdef __cplusplus
-}
-#endif
 
 namespace std {
     void __throw_bad_alloc() {
@@ -82,11 +46,7 @@ void setup()
 {
     //When Teensy is used with a power supply that features a "soft start", you may need wait for the voltage to reach 5 volts
     // https://www.pjrc.com/teensy/prescaler.html
-
-    // code inside this macro will run at 2 MHz.
-    REDUCED_CPU_BLOCK() {
-         delay_lp(1000);
-    }
+    delay(1000);
 
     //Hardware setup
     pinMode(DS, OUTPUT);
