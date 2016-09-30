@@ -3,6 +3,7 @@
 
 #include "Arduino.h"
 #include "FreeRTOS_ARM.h"
+#include <Snooze.h>
 #include "macro_print.h"
 #include "sensei_serial_protocol.h"
 #include "SPI.h"
@@ -12,6 +13,7 @@
 
 using namespace sensei;
 using namespace std;
+
 
 const uint8_t DEBUG=0;
 const uint16_t DELAY_START_TASK_COM = 100; // [ms]
