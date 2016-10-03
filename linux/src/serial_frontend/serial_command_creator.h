@@ -54,6 +54,9 @@ public:
     const sSenseiDataPacket* make_imu_set_delta_tics_cmd(uint32_t timestamp, int ticks_delay);
     const sSenseiDataPacket* make_imu_set_datamode_cmd(uint32_t timestamp, int mode);
     const sSenseiDataPacket* make_imu_set_acc_threshold_cmd(uint32_t timestamp, float threshold);
+    const sSenseiDataPacket* make_imu_factory_reset_cmd(uint32_t timestamp);
+    const sSenseiDataPacket* make_imu_reboot_cmd(uint32_t timestamp);
+
 
 
 private:

@@ -421,6 +421,21 @@ const sSenseiDataPacket* SerialCommandCreator::make_imu_set_acc_threshold_cmd(ui
     _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
     return &_cmd_buffer;
 }
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_factory_reset_cmd(uint32_t timestamp)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_RESET_TO_FACTORY_SETTINGS);
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
+    return &_cmd_buffer;
+}
+
+const sSenseiDataPacket* SerialCommandCreator::make_imu_reboot_cmd(uint32_t timestamp)
+{
+    initialize_common_data(_cmd_buffer, timestamp, SENSEI_CMD::IMU_REBOOT);
+    _cmd_buffer.crc = calculate_crc(&_cmd_buffer);
+    return &_cmd_buffer;
+}
+
 /*
  * Helper functions
  */

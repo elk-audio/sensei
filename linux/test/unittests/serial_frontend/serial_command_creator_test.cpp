@@ -259,6 +259,21 @@ TEST_F(TestSerialCommandCreator, test_make_imu_set_acc_threshold_cmd)
     EXPECT_FLOAT_EQ(0.25, imu_settings->minLinearAccelerationSquareNorm);
 }
 
+TEST_F(TestSerialCommandCreator, test_make_imu_factory_reset_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_factory_reset_cmd(test_tstamp);
+    EXPECT_EQ(IMU_RESET_TO_FACTORY_SETTINGS, packet->cmd);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_reboot_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_reboot_cmd(test_tstamp);
+    EXPECT_EQ(IMU_REBOOT, packet->cmd);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+}
+
+
 TEST_F(TestSerialCommandCreator, test_cacheing)
 {
     const sSenseiDataPacket* packet = _module_under_test.make_config_adc_bitres_cmd(10, test_tstamp, 10);
