@@ -22,7 +22,7 @@ void vTaskRT(void *pvParameters)
     sImuSettings imuSettings;
     memset(&imuSettings,0,sizeof(sImuSettings));
 
-    sImuLinearAcceleration* linearAcceleration;
+    sImuComponentSensor* sensorComponents;
     uint32_t lastTickImuSentData=0;
 
     TaskRtStatus taskStatus;
@@ -96,21 +96,21 @@ void vTaskRT(void *pvParameters)
                         )
                 {
                     //SerialDebug.println("!!");
-                    if (manageIO.imu.getSensorComponents(IMU_GET_LINEAR_ACCELERATION,(uint8_t*)&msgImu.vectorDataImu,imuPacketSize) == SENSEI_ERROR_CODE::OK)
+                    if (manageIO.imu.getSensorComponents(IMU_GET_SENSOR_COMPONENTS,(uint8_t*)&msgImu.vectorDataImu,imuPacketSize) == SENSEI_ERROR_CODE::OK)
                     {
-                        linearAcceleration = (sImuLinearAcceleration*)msgImu.vectorDataImu;
-                        float squareAccelerationNorm = linearAcceleration->lax * linearAcceleration->lax +
-                                                       linearAcceleration->lay * linearAcceleration->lay +
-                                                       linearAcceleration->laz * linearAcceleration->laz;
+                        sensorComponents = (sImuComponentSensor*)msgImu.vectorDataImu;
+                        float squareVelNorm = sensorComponents->gx * sensorComponents->gx +
+                                              sensorComponents->gy * sensorComponents->gy +
+                                              sensorComponents->gz * sensorComponents->gz;
 
-                        if (squareAccelerationNorm > manageIO.imu.getMinLinearAccelerationSquareNorm())
+                        if (squareVelNorm > manageIO.imu.getMinLinearAccelerationSquareNorm())
                         {
-                            if ((imuTypeOfData & IMU_GET_LINEAR_ACCELERATION) == 0x00)
+                            if ((imuTypeOfData & IMU_GET_SENSOR_COMPONENTS) == 0x00)
                             {
                                 imuPacketSize = 0;
                             }
 
-                            retImu = manageIO.imu.getSensorComponents(imuTypeOfData & IMU_CLEAR_BIT_LINEAR_ACCELERATION,
+                            retImu = manageIO.imu.getSensorComponents(imuTypeOfData & 0xFB,// clear component flag
                                                                       (uint8_t*)msgImu.vectorDataImu,
                                                                       imuPacketSize);
                             //SerialDebug.println("ax=" + String(linearAcceleration->lax) + " ay=" + String(linearAcceleration->lay) + " az=" + String(linearAcceleration->laz));
