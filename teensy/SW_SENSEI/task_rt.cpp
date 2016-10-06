@@ -381,6 +381,11 @@ void vTaskRT(void *pvParameters)
                     msgData.status = manageIO.imu.getTemperature(&msgData.data.fValue);
                 break;
 
+                //--------------------------------------------------------------------- [CMD IMU_COMMIT_SETTINGS]
+                case SENSEI_CMD::IMU_COMMIT_SETTINGS:
+                    msgData.status = manageIO.imu.commitSettings();
+                break;
+
                 //---------------------------------------------------------------------
                 // END COMMANDS
                 //---------------------------------------------------------------------

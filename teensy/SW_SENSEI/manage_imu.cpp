@@ -133,9 +133,8 @@ int32_t ManageIMU::_sendCommandWithoutChecks(uint8_t cmd)
 }
 
 
-int32_t ManageIMU::_sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
+int32_t ManageIMU::_sendCommand(uint8_t cmd, uint8_t* data, uint8_t nByte)
 {
-
     _startCommunication();
     _sendCmd(cmd);
 
@@ -152,7 +151,7 @@ int32_t ManageIMU::_sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte)
     for (int i = 0; i<nByte; i++)
     {
         //SerialDebug.println("DATA=" + String(value[i]));
-        _writeByte(value[i]);
+        _writeByte(data[i]);
     }
 
     return _waitStatus(IDLE_STATE);
@@ -607,6 +606,25 @@ int32_t ManageIMU::getTemperature(float* temp)
     }
 
     return SENSEI_ERROR_CODE::OK;
+}
+
+int32_t ManageIMU::commitSettings()
+{
+
+  if (isInitialized())
+  {
+    int32_t ret =  _sendCommand(COMMIT_SETTINGS);
+    if (ret != SENSEI_ERROR_CODE::OK)
+    {
+        return IMU_CMD_NOT_EXECUTED;
+    }
+
+    return SENSEI_ERROR_CODE::OK;
+  }
+  else
+  {
+    return SENSEI_ERROR_CODE::IMU_DISABLED;
+  }
 }
 
 int32_t ManageIMU::gyroscopeCalibration()
