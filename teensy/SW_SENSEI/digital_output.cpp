@@ -1,5 +1,7 @@
 #include "digital_output.h"
 
+using namespace sensei;
+
 DigitalOutput::DigitalOutput() : PIN()
 {
 	//SerialDebug.println("DigitalOutput()");

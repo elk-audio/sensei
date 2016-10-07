@@ -1,5 +1,7 @@
 #include "digital_input.h"
 
+using namespace sensei;
+
 DigitalInput::DigitalInput(SetupPin* setupPin) : PIN(setupPin)
 {
     //SerialDebug.println("DigitalInput");

@@ -3,6 +3,9 @@
 
 #include "common.h"
 
+#define PRINT_IMU_DEBUG
+#undef RESET_IMU_FACTORY_SETTINGS_ON_INITIALIZATION
+
 #define SPI_MAX_ITER_WAIT_CMD 4000
 #define DELAY_SPI_YEI 2 //[us]
 #define DELAY_SPI_YEI_CLEAR_BUFFER 75 //[us]
@@ -131,9 +134,9 @@ public:
     int32_t resetFilter();
 
     int32_t setSettings();
-    int32_t setSettings(sImuSettings* _settings);
+    int32_t setSettings(sensei::sImuSettings* _settings);
 
-    int32_t getSettings(sImuSettings* _settings);
+    int32_t getSettings(sensei::sImuSettings* _settings);
 
     int32_t gyroscopeCalibration();
     int32_t tareWithCurrentOrientation();
@@ -163,7 +166,7 @@ private:
 
     bool _isInitialized;
     uint8_t _retSpi;
-    sImuSettings _settings;
+    sensei::sImuSettings _settings;
     sImuInternalSettings _internalSettings;
 
     int32_t _sendCommand(uint8_t cmd);

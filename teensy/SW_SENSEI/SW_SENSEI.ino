@@ -6,8 +6,6 @@
  * @date 2016-03-10
  */
 
-// TODO
-// - filterCoeff
 
 //#pragma GCC optimize ("-Ofast")
 //teensy31.menu.speed.96.build.flags.optimize = -Ofast
@@ -18,6 +16,7 @@
 #include "task_com.h"
 #include "task_led.h"
 
+using namespace sensei;
 
 namespace std {
     void __throw_bad_alloc() {

@@ -1,5 +1,7 @@
 #include "manage_imu.h"
 
+using namespace sensei;
+
 ManageIMU::ManageIMU()
 {
     _isInitialized = false;
@@ -25,7 +27,7 @@ ManageIMU::ManageIMU()
 
 ManageIMU::~ManageIMU()
 {
-  _isInitialized = false;
+
 }
 
 bool ManageIMU::isInitialized()

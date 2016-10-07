@@ -1,5 +1,7 @@
 #include "butterworth.h"
 
+using namespace sensei;
+
 void Butterworth::createFilterCoefficients(int order, FilterType Fs, FilterType Fcut, FilterType* a, FilterType* b)
 {
 	_p_poles = new Complex[order + 1];

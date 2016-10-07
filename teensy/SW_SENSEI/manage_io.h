@@ -13,7 +13,7 @@ class ManageIO{
   public:
 
     ManageIO();
-	~ManageIO();
+    ~ManageIO();
 
     ManageIMU imu;
 
@@ -23,15 +23,15 @@ class ManageIO{
     int32_t getPinValue(uint16_t idxPin, uint16_t& value);
 
     uint16_t getPinValue(uint16_t idxPin);
-	int32_t configurePin(ePinType type, SetupPin* setupPin);
-	uint8_t getPinType(uint16_t idxPin);
+    int32_t configurePin(sensei::ePinType type, sensei::SetupPin* setupPin);
+    uint8_t getPinType(uint16_t idxPin);
     bool isPinValueChanged(uint16_t idxPin);
-	bool isPinInitialized(uint16_t idxPin);
-	int32_t setDigitalBank(uint16_t idxBank, uint8_t value);
-	int32_t setDigitalPin(uint16_t idxPin, bool value);
+    bool isPinInitialized(uint16_t idxPin);
+    int32_t setDigitalBank(uint16_t idxBank, uint8_t value);
+    int32_t setDigitalPin(uint16_t idxPin, bool value);
     uint8_t getNmultiplexer();
-	uint16_t getNumberOfPins();
-	uint16_t getNumberOfDigitalPins();
+    uint16_t getNumberOfPins();
+    uint16_t getNumberOfDigitalPins();
     void hardwareAcquisition();
     bool isSystemInitialized();
     bool isMomentToSendValue(uint16_t idxPin);
@@ -39,16 +39,16 @@ class ManageIO{
     uint16_t getDeltaTicksContinuousMode(uint16_t idxPin);
 
   private:
-     std::vector<PIN*> _vPin;
-     uint8_t _nMul;
-	 uint16_t _nPin;
-	 uint16_t _nDigitalPin;
-	 uint16_t _nDigitalBank;
+    std::vector<PIN*> _vPin;
+    uint8_t _nMul;
+    uint16_t _nPin;
+    uint16_t _nDigitalPin;
+    uint16_t _nDigitalBank;
 
-     std::vector<uint8_t> _vBankDigitalPin;
-     bool _systemInitialized;
+    std::vector<uint8_t> _vBankDigitalPin;
+    bool _systemInitialized;
 
-     void setDigitalPin();
+    void setDigitalPin();
 
 };
 
