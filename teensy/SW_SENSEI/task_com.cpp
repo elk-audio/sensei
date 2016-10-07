@@ -1,5 +1,7 @@
 #include "task_com.h"
 
+using namespace sensei;
+
 // Handles for queues
 extern QueueHandle_t hQueueRTtoCOM_DATA;
 extern QueueHandle_t hQueueRTtoCOM_PIN;
@@ -373,7 +375,7 @@ void vTaskCOM(void *pvParameters)
 
             switch (msgData.msgType)
             {
-                case RT_MSG_TYPE::DATA:
+                case RT_MSG_TYPE::MSG_DATA:
 
                   if (msgData.status == SENSEI_ERROR_CODE::OK)
                   {
@@ -431,7 +433,7 @@ void vTaskCOM(void *pvParameters)
                   } // if (msgData.status == SENSEI_ERROR_CODE::OK)
                 break;
 
-                case RT_MSG_TYPE::ACK:
+                case RT_MSG_TYPE::MSG_ACK:
                     // Nothing
                 break;
 

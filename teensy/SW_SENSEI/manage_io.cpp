@@ -1,5 +1,7 @@
 #include "manage_io.h"
 
+using namespace sensei;
+
 ManageIO::ManageIO()
 {
 	_nPin = 0;

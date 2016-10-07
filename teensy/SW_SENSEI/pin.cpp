@@ -1,5 +1,7 @@
 #include "pin.h"
 
+using namespace sensei;
+
 PIN::PIN()
 {
 	_type = ePinType::PIN_DISABLE;

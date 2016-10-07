@@ -1,5 +1,7 @@
 #include "task_rt.h"
 
+using namespace sensei;
+
 // Handles for queues
 extern QueueHandle_t hQueueRTtoCOM_DATA;
 extern QueueHandle_t hQueueRTtoCOM_PIN;
@@ -172,7 +174,7 @@ void vTaskRT(void *pvParameters)
             taskStatus.msgQueueReceived++;
 
             msgData.status = SENSEI_ERROR_CODE::CMD_NOT_VALID;
-            msgData.msgType = RT_MSG_TYPE::ACK;
+            msgData.msgType = RT_MSG_TYPE::MSG_ACK;
 
             if (systemSettings.debugMode)
             {
@@ -287,7 +289,7 @@ void vTaskRT(void *pvParameters)
                     switch (msgData.sub_cmd)
                     {
                         case SENSEI_SUB_CMD::GET_SINGLE_PIN:
-                            msgData.msgType = RT_MSG_TYPE::DATA;
+                            msgData.msgType = RT_MSG_TYPE::MSG_DATA;
                             msgData.data.pin.type = manageIO.getPinType(msgData.data.pin.idx);
                             uint16_t value;
                             msgData.status = manageIO.getPinValue(msgData.data.pin.idx,value);
@@ -302,7 +304,7 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD GET_SYSTEM_STATUS]
                 case SENSEI_CMD::GET_SYSTEM_STATUS:
-                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    msgData.msgType = RT_MSG_TYPE::MSG_DATA;
                     msgData.data.systemStatus.taskRtStatus.nCycles = taskStatus.nCycles;
                     msgData.data.systemStatus.taskRtStatus.msgQueueReceived = taskStatus.msgQueueReceived;
                     msgData.data.systemStatus.taskRtStatus.msgQueueSendErrors = taskStatus.msgQueueSendErrors;
@@ -336,7 +338,7 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD CMD_IMU_GET_SETTINGS]
                 case SENSEI_CMD::IMU_GET_SETTINGS:
-                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    msgData.msgType = RT_MSG_TYPE::MSG_DATA;
                     msgData.status = manageIO.imu.getSettings(&msgData.data.imuSettings);
                     manageIO.imu.printDebugImuSettings();
                 break;
@@ -353,7 +355,7 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD CMD_IMU_GET_DATA]
                 case SENSEI_CMD::IMU_GET_DATA:
-                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    msgData.msgType = RT_MSG_TYPE::MSG_DATA;
                     imuPacketSize = 0;
                     msgData.status = manageIO.imu.getSensorComponents(msgData.sub_cmd,(uint8_t*)&msgData.data.vectorDataImu,imuPacketSize);
                     msgData.packetSize = imuPacketSize;
@@ -377,7 +379,7 @@ void vTaskRT(void *pvParameters)
 
                 //--------------------------------------------------------------------- [CMD CMD_IMU_GET_TEMPERATURE]
                 case SENSEI_CMD::IMU_GET_TEMPERATURE:
-                    msgData.msgType = RT_MSG_TYPE::DATA;
+                    msgData.msgType = RT_MSG_TYPE::MSG_DATA;
                     msgData.status = manageIO.imu.getTemperature(&msgData.data.fValue);
                 break;
 

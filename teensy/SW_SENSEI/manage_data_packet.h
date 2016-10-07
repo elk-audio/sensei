@@ -5,8 +5,8 @@
 
 typedef union uDataPacket
 {
-	sSenseiDataPacket data;
-	uint8_t vectorData[SENSEI_LENGTH_DATA_PACKET];
+	sensei::sSenseiDataPacket data;
+	uint8_t vectorData[sensei::SENSEI_LENGTH_DATA_PACKET];
 } uDataPacket;
 
 class ManageDataPacket {
@@ -21,7 +21,7 @@ public:
 	uint8_t getSubCmd();
 	uint32_t getTimestamp();
 	int32_t checkPacket();
-    uint32_t getNpacketReceived();
+  uint32_t getNpacketReceived();
 	void setPayloadToVariable(void* dataOutput, uint16_t nByte);
 	void send();
 
@@ -31,7 +31,7 @@ private:
 	bool checkCRC();
 	uint32_t _nPacketReceived;
 	uDataPacket _dataPacket;
-	sSenseiACKPacket* _ACKPacket;
+	sensei::sSenseiACKPacket* _ACKPacket;
 };
 
 #endif // MANAGEDATAPACKET_H
