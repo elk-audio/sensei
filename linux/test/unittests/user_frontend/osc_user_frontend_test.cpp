@@ -58,6 +58,7 @@ TEST_F(TestOSCUserFrontend, test_set_pin_enabled)
 
     ASSERT_EQ(5, cmd->index());
     ASSERT_EQ(true, cmd->data());
+    ASSERT_TRUE(_event_queue.empty());
 }
 
 TEST_F(TestOSCUserFrontend, test_set_digital_output)
@@ -71,6 +72,7 @@ TEST_F(TestOSCUserFrontend, test_set_digital_output)
 
     ASSERT_EQ(3, cmd->index());
     ASSERT_FALSE(cmd->data());
+    ASSERT_TRUE(_event_queue.empty());
 }
 
 TEST_F(TestOSCUserFrontend, test_imu_calibrate)
@@ -78,11 +80,19 @@ TEST_F(TestOSCUserFrontend, test_imu_calibrate)
     lo_send(_address, "/imu_calibrate", "");
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
     ASSERT_FALSE(_event_queue.empty());
-    std::unique_ptr<BaseMessage> event = _event_queue.pop();
-    ASSERT_EQ(MessageType::COMMAND, event->base_type());
-    auto cmd = static_unique_ptr_cast<ImuCalibrateCommand, BaseMessage>(std::move(event));
+    std::unique_ptr<BaseMessage> cal_event = _event_queue.pop();
+    ASSERT_EQ(MessageType::COMMAND, cal_event->base_type());
+    auto cal_cmd = static_unique_ptr_cast<ImuCalibrateCommand, BaseMessage>(std::move(cal_event));
 
-    ASSERT_EQ(CommandType::IMU_CALIBRATE, cmd->type());
+    ASSERT_EQ(CommandType::IMU_CALIBRATE, cal_cmd->type());
+
+    ASSERT_FALSE(_event_queue.empty());
+    std::unique_ptr<BaseMessage> save_event = _event_queue.pop();
+    ASSERT_EQ(MessageType::COMMAND, save_event->base_type());
+    auto save_cmd = static_unique_ptr_cast<ImuCommitSettingsCommand, BaseMessage>(std::move(save_event));
+
+    ASSERT_EQ(CommandType::IMU_COMMIT_SETTINGS, save_cmd->type());
+    ASSERT_TRUE(_event_queue.empty());
 }
 
 TEST_F(TestOSCUserFrontend, test_imu_factory_reset)
@@ -95,6 +105,7 @@ TEST_F(TestOSCUserFrontend, test_imu_factory_reset)
     auto cmd = static_unique_ptr_cast<ImuFactoryResetCommand, BaseMessage>(std::move(event));
 
     ASSERT_EQ(CommandType::IMU_FACTORY_RESET, cmd->type());
+    ASSERT_TRUE(_event_queue.empty());
 }
 
 TEST_F(TestOSCUserFrontend, test_imu_reboot)
@@ -107,6 +118,7 @@ TEST_F(TestOSCUserFrontend, test_imu_reboot)
     auto cmd = static_unique_ptr_cast<ImuRebootCommand, BaseMessage>(std::move(event));
 
     ASSERT_EQ(CommandType::IMU_REBOOT, cmd->type());
+    ASSERT_TRUE(_event_queue.empty());
 }
 
 

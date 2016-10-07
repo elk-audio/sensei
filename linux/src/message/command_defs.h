@@ -53,6 +53,7 @@ enum class CommandType
     IMU_FACTORY_RESET,
     IMU_REBOOT,
     IMU_GET_TEMPERATURE,
+    IMU_COMMIT_SETTINGS,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_SCALE_RANGE_LOW,
@@ -295,6 +296,12 @@ SENSEI_DECLARE_COMMAND(ImuGetTemperatureCommand,
                        CommandType::IMU_GET_TEMPERATURE,
                        int,
                        "Get the IMU temperature",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuCommitSettingsCommand,
+                       CommandType::IMU_COMMIT_SETTINGS,
+                       int,
+                       "Save settings and calilbration to the IMU EPROM",
                        CommandDestination::SERIAL_FRONTEND);
 
 // Internal commands

@@ -273,6 +273,13 @@ TEST_F(TestSerialCommandCreator, test_make_imu_reboot_cmd)
     EXPECT_EQ(test_tstamp, packet->timestamp);
 }
 
+TEST_F(TestSerialCommandCreator, test_make_imu_commit_settings_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_commit_settings_cmd(test_tstamp);
+    EXPECT_EQ(IMU_COMMIT_SETTINGS, packet->cmd);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+}
+
 
 TEST_F(TestSerialCommandCreator, test_cacheing)
 {

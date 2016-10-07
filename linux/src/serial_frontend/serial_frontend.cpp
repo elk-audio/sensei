@@ -597,6 +597,11 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             auto cmd = static_cast<ImuRebootCommand*>(message);
             return _packet_factory.make_imu_reboot_cmd(cmd->timestamp());
         }
+        case CommandType::IMU_COMMIT_SETTINGS:
+        {
+            auto cmd = static_cast<ImuRebootCommand*>(message);
+            return _packet_factory.make_imu_reboot_cmd(cmd->timestamp());
+        }
         default:
             SENSEI_LOG_WARNING("Unsupported command type {}", static_cast<int>(message->base_type()));
             return nullptr;

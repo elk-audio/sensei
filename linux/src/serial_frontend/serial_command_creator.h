@@ -56,6 +56,9 @@ public:
     const sSenseiDataPacket* make_imu_set_acc_threshold_cmd(uint32_t timestamp, float threshold);
     const sSenseiDataPacket* make_imu_factory_reset_cmd(uint32_t timestamp);
     const sSenseiDataPacket* make_imu_reboot_cmd(uint32_t timestamp);
+    const sSenseiDataPacket* make_imu_get_temperature_cmd(uint32_t timestamp);
+    const sSenseiDataPacket* make_imu_commit_settings_cmd(uint32_t timestamp);
+
 
 
 

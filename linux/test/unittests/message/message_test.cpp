@@ -227,6 +227,7 @@ TEST(MessagesTest, test_imu_specific_command_creation)
     msg_queue.push_back(factory.make_imu_factory_reset_command());
     msg_queue.push_back(factory.make_imu_reboot_command());
     msg_queue.push_back(factory.make_imu_get_temperature_command());
+    msg_queue.push_back(factory.make_imu_commit_settings_command());
 
 
     // Parse messages in queue
@@ -331,6 +332,13 @@ TEST(MessagesTest, test_imu_specific_command_creation)
         case CommandType::IMU_GET_TEMPERATURE:
             {
                 auto typed_cmd = static_cast<ImuGetTemperatureCommand*>(cmd_msg);
+                ASSERT_FALSE(typed_cmd->data());
+            };
+            break;
+
+        case CommandType::IMU_COMMIT_SETTINGS:
+            {
+                auto typed_cmd = static_cast<ImuCommitSettingsCommand*>(cmd_msg);
                 ASSERT_FALSE(typed_cmd->data());
             };
             break;

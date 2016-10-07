@@ -274,6 +274,12 @@ public:
         return std::unique_ptr<ImuGetTemperatureCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_imu_commit_settings_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuCommitSettingsCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuCommitSettingsCommand>(msg);
+    }
+
     // Internal commands
 
     std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int pin_index,
