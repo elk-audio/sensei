@@ -74,6 +74,9 @@ typedef enum CMD_IMU
     BEGIN_GYROSCOPE_AUTOCALIBRATION = 165,
     SET_CALIBRATION_MODE = 169,
     RESPONSE_HEADER_BITFIELD = 221,
+
+    COMMIT_SETTINGS = 225,
+
     SET_SLEEP_MODE = 227,
     SET_UART_BAUD_RATE = 231,
     GET_UART_BAUD_RATE = 232,
@@ -82,7 +85,8 @@ typedef enum CMD_IMU
     GET_REFERENCE_VECTOR_MODE = 135,
 
     GET_TEMPERATURE = 43,
-
+    SET_LED_COLOR = 238,
+    GET_LED_COLOR = 239,
     RESTORE_DEFAULT_SETTINGS = 224,
     SOFTWARE_RESET = 226
 } CMD_IMU;
@@ -133,6 +137,7 @@ public:
 
     int32_t gyroscopeCalibration();
     int32_t tareWithCurrentOrientation();
+    int32_t commitSettings();
 
     float getMinLinearAccelerationSquareNorm();
     uint16_t getDeltaTicksContinuousMode();
@@ -163,7 +168,7 @@ private:
 
     int32_t _sendCommand(uint8_t cmd);
     int32_t _sendCommand(uint8_t cmd, uint8_t value);
-    int32_t _sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
+    int32_t _sendCommand(uint8_t cmd, uint8_t* data, uint8_t nByte);
     int32_t _sendCommandWithoutChecks(uint8_t cmd);
 
     int32_t _getValue(uint8_t cmd, void* data);

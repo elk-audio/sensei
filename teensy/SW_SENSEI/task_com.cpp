@@ -300,6 +300,11 @@ void vTaskCOM(void *pvParameters)
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
+                    //--------------------------------------------------------------------- [CMD IMU_COMMIT_SETTINGS]
+                    case SENSEI_CMD::IMU_COMMIT_SETTINGS:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
                     //---------------------------------------------------------------------
                     // STOP COMMANDS
                     //---------------------------------------------------------------------
