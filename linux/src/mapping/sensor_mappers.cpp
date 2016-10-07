@@ -516,8 +516,6 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
     {
         out_val = 1.0f - out_val;
     }
-    // The On value changed setting/continuous mode is not applicable to imu mappers since it is set
-    // for the imu as one unit and not on individual outputs/parameters.
     if (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD)
     {
         MessageFactory factory;
