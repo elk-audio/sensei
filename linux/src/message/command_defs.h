@@ -26,7 +26,6 @@ namespace sensei {
 enum class CommandType
 {
     // External Commands
-    SET_SAMPLING_RATE,
     SET_PIN_TYPE,
     SET_VIRTUAL_PIN,
     SET_ENABLED,
@@ -51,6 +50,10 @@ enum class CommandType
     SET_IMU_DATA_MODE,
     SET_IMU_ACC_THRESHOLD,
     IMU_CALIBRATE,
+    IMU_FACTORY_RESET,
+    IMU_REBOOT,
+    IMU_GET_TEMPERATURE,
+    IMU_COMMIT_SETTINGS,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_SCALE_RANGE_LOW,
@@ -134,12 +137,6 @@ enum class CommandErrorCode
 ////////////////////////////////////////////////////////////////////////////////
 
 // External commands
-
-SENSEI_DECLARE_COMMAND(SetSamplingRateCommand,
-                       CommandType::SET_SAMPLING_RATE,
-                       float,
-                       "Set Sampling Rate",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetEnabledCommand,
                        CommandType::SET_ENABLED,
@@ -281,6 +278,30 @@ SENSEI_DECLARE_COMMAND(ImuCalibrateCommand,
                        CommandType::IMU_CALIBRATE,
                        int,
                        "Initiate self calibration of IMU gyroscope",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuFactoryResetCommand,
+                       CommandType::IMU_FACTORY_RESET,
+                       int,
+                       "Reset the IMU to it's factory settings",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuRebootCommand,
+                       CommandType::IMU_REBOOT,
+                       int,
+                       "Initiate a reboot of the IMU",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuGetTemperatureCommand,
+                       CommandType::IMU_GET_TEMPERATURE,
+                       int,
+                       "Get the IMU temperature",
+                       CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(ImuCommitSettingsCommand,
+                       CommandType::IMU_COMMIT_SETTINGS,
+                       int,
+                       "Save settings and calilbration to the IMU EPROM",
                        CommandDestination::SERIAL_FRONTEND);
 
 // Internal commands

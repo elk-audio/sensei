@@ -1,5 +1,7 @@
 #include "task_com.h"
 
+using namespace sensei;
+
 // Handles for queues
 extern QueueHandle_t hQueueRTtoCOM_DATA;
 extern QueueHandle_t hQueueRTtoCOM_PIN;
@@ -18,8 +20,6 @@ void vTaskCOM(void *pvParameters)
     SystemSettings systemSettings;
     systemSettings.debugMode=COND_DEBUG_MODE;
     systemSettings.enabledMultiplePackets=COND_MULTIPLE_PACKETS;
-    systemSettings.enabledSendingPackets=COND_SENDING_PACKETS;
-    systemSettings.enabledImu=COND_IMU_ENABLED;
 
     TaskComStatus taskStatus;
     memset(&taskStatus,0,sizeof(TaskComStatus));
@@ -232,8 +232,7 @@ void vTaskCOM(void *pvParameters)
                     //--------------------------------------------------------------------- [CMD IMU_ENABLE]
                     case SENSEI_CMD::IMU_ENABLE:
                         manageDataPacket.setPayloadToVariable(&msgData.data.value, sizeof(uint8_t));
-                        systemSettings.enabledImu = msgData.data.value;
-                        SerialDebug.println("enabledImu = " + String(systemSettings.enabledImu));
+                        SerialDebug.println("enabledImu = " + String(msgData.data.value));
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
@@ -285,6 +284,26 @@ void vTaskCOM(void *pvParameters)
 
                     //--------------------------------------------------------------------- [CMD IMU_TARE_WITH_CURRENT_ORIENTATION]
                     case SENSEI_CMD::IMU_TARE_WITH_CURRENT_ORIENTATION:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD IMU_RESET_TO_FACTORY_SETTINGS]
+                    case SENSEI_CMD::IMU_RESET_TO_FACTORY_SETTINGS:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD IMU_REBOOT]
+                    case SENSEI_CMD::IMU_REBOOT:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD IMU_GET_TEMPERATURE]
+                    case SENSEI_CMD::IMU_GET_TEMPERATURE:
+                        retCode = SENSEI_ERROR_CODE::OK;
+                    break;
+
+                    //--------------------------------------------------------------------- [CMD IMU_COMMIT_SETTINGS]
+                    case SENSEI_CMD::IMU_COMMIT_SETTINGS:
                         retCode = SENSEI_ERROR_CODE::OK;
                     break;
 
@@ -356,56 +375,65 @@ void vTaskCOM(void *pvParameters)
 
             switch (msgData.msgType)
             {
-                case RT_MSG_TYPE::DATA:
-                    uint16_t idxStart;
-                    uint16_t idxStop;
-                    uint16_t payloadSize;
-                    uint16_t nPackets;
-                    uint8_t* pAddress;
+                case RT_MSG_TYPE::MSG_DATA:
 
-                    switch(msgData.cmd)
-                    {
-                        case SENSEI_CMD::GET_VALUE:
-                            payloadSize=sizeof(GetSetPin);
-                            pAddress=(uint8_t*)&msgData.data.pin;
-                        break;
+                  if (msgData.status == SENSEI_ERROR_CODE::OK)
+                  {
+                      uint16_t idxStart;
+                      uint16_t idxStop;
+                      uint16_t payloadSize;
+                      uint16_t nPackets;
+                      uint8_t* pAddress;
 
-                        case SENSEI_CMD::GET_SYSTEM_STATUS:
-                            payloadSize=sizeof(SystemStatus);
-                            pAddress=(uint8_t*)&msgData.data.systemStatus;
-                        break;
+                      switch(msgData.cmd)
+                      {
+                          case SENSEI_CMD::GET_VALUE:
+                              payloadSize=sizeof(GetSetPin);
+                              pAddress=(uint8_t*)&msgData.data.pin;
+                          break;
 
-                        case SENSEI_CMD::IMU_GET_SETTINGS:
-                            payloadSize=sizeof(sImuSettings);
-                            pAddress=(uint8_t*)&msgData.data.imuSettings;
-                        break;
+                          case SENSEI_CMD::GET_SYSTEM_STATUS:
+                              payloadSize=sizeof(SystemStatus);
+                              pAddress=(uint8_t*)&msgData.data.systemStatus;
+                          break;
 
-                        case SENSEI_CMD::IMU_GET_DATA:
-                            //SerialDebug.println("msgData.packetSize=" + String(msgData.packetSize));
-                            payloadSize=msgData.packetSize;
-                            pAddress=(uint8_t*)&msgData.data.vectorDataImu;
-                        break;
+                          case SENSEI_CMD::IMU_GET_SETTINGS:
+                              payloadSize=sizeof(sImuSettings);
+                              pAddress=(uint8_t*)&msgData.data.imuSettings;
+                          break;
 
-                        default:
-                            payloadSize=0;
-                    }
+                          case SENSEI_CMD::IMU_GET_DATA:
+                              //SerialDebug.println("msgData.packetSize=" + String(msgData.packetSize));
+                              payloadSize=msgData.packetSize;
+                              pAddress=(uint8_t*)&msgData.data.vectorDataImu;
+                          break;
 
-                    // Send Packets
-                    nPackets = static_cast<uint16_t>(ceilf(static_cast<float>(payloadSize) / static_cast<float>(SENSEI_PAYLOAD_LENGTH)));
-                    for (uint16_t idxPacket = 0; idxPacket < nPackets; idxPacket++)
-                    {
-                        idxStart = idxPacket*SENSEI_PAYLOAD_LENGTH;
-                        idxStop = (idxPacket + 1)*SENSEI_PAYLOAD_LENGTH - 1;
+                          case SENSEI_CMD::IMU_GET_TEMPERATURE:
+                              payloadSize=sizeof(float);
+                              pAddress=(uint8_t*)&msgData.data.fValue;
+                          break;
 
-                        if (idxStop > payloadSize - 1)
-                            idxStop = payloadSize - 1;
+                          default:
+                              payloadSize=0;
+                      }
 
-                        manageDataPacket.preparePacket(msgData.cmd, msgData.sub_cmd, nPackets - idxPacket - 1, pAddress + idxStart, idxStop - idxStart + 1);
-                        manageDataPacket.send();
-                    }
+                      // Send Packets
+                      nPackets = static_cast<uint16_t>(ceilf(static_cast<float>(payloadSize) / static_cast<float>(SENSEI_PAYLOAD_LENGTH)));
+                      for (uint16_t idxPacket = 0; idxPacket < nPackets; idxPacket++)
+                      {
+                          idxStart = idxPacket*SENSEI_PAYLOAD_LENGTH;
+                          idxStop = (idxPacket + 1)*SENSEI_PAYLOAD_LENGTH - 1;
+
+                          if (idxStop > payloadSize - 1)
+                              idxStop = payloadSize - 1;
+
+                          manageDataPacket.preparePacket(msgData.cmd, msgData.sub_cmd, nPackets - idxPacket - 1, pAddress + idxStart, idxStop - idxStart + 1);
+                          manageDataPacket.send();
+                      }
+                  } // if (msgData.status == SENSEI_ERROR_CODE::OK)
                 break;
 
-                case RT_MSG_TYPE::ACK:
+                case RT_MSG_TYPE::MSG_ACK:
                     // Nothing
                 break;
 

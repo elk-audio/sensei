@@ -1,5 +1,7 @@
 #include "manage_data_packet.h"
 
+using namespace sensei;
+
 ManageDataPacket::ManageDataPacket()
 {
 	_nPacketReceived = 0;

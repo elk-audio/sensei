@@ -3,9 +3,12 @@
 
 #include "common.h"
 
+#define PRINT_IMU_DEBUG
+#undef RESET_IMU_FACTORY_SETTINGS_ON_INITIALIZATION
+
 #define SPI_MAX_ITER_WAIT_CMD 4000
-#define DELAY_SPI_YEI 1 //[us]
-#define DELAY_SPI_YEI_CLEAR_BUFFER 50 //[us]
+#define DELAY_SPI_YEI 2 //[us]
+#define DELAY_SPI_YEI_CLEAR_BUFFER 75 //[us]
 
 // Default settings
 #define AXIS_DIRECTION_RIGHT_UP_FORWARD_LHANDED 0
@@ -74,11 +77,19 @@ typedef enum CMD_IMU
     BEGIN_GYROSCOPE_AUTOCALIBRATION = 165,
     SET_CALIBRATION_MODE = 169,
     RESPONSE_HEADER_BITFIELD = 221,
+
+    COMMIT_SETTINGS = 225,
+
+    SET_SLEEP_MODE = 227,
     SET_UART_BAUD_RATE = 231,
     GET_UART_BAUD_RATE = 232,
     SET_REFERENCE_VECTOR_MODE = 105,
     GET_CALIBRATION_MODE = 170,
     GET_REFERENCE_VECTOR_MODE = 135,
+
+    GET_TEMPERATURE = 43,
+    SET_LED_COLOR = 238,
+    GET_LED_COLOR = 239,
     RESTORE_DEFAULT_SETTINGS = 224,
     SOFTWARE_RESET = 226
 } CMD_IMU;
@@ -110,14 +121,12 @@ public:
     ManageIMU();
     ~ManageIMU();
 
-    int32_t sendCommand(uint8_t cmd);
-    int32_t sendCommand(uint8_t cmd, uint8_t value);
-    int32_t sendCommand(uint8_t cmd, uint8_t* value, uint8_t nByte);
-
-    int32_t getValue(uint8_t cmd, void* data);
-    int32_t getData(uint8_t cmd, void* data, uint16_t nByte);
-
     bool getInterruptStatus();
+    bool isInitialized();
+
+    int32_t initialize();
+    int32_t stop();
+
     int32_t setInterruptMode();
 
     int32_t getSensorComponents(uint8_t components, uint8_t* data_vector, uint16_t& packetSize);
@@ -125,19 +134,22 @@ public:
     int32_t resetFilter();
 
     int32_t setSettings();
-    int32_t setSettings(sImuSettings* _settings);
+    int32_t setSettings(sensei::sImuSettings* _settings);
 
-    int32_t getSettings(sImuSettings* _settings);
+    int32_t getSettings(sensei::sImuSettings* _settings);
 
     int32_t gyroscopeCalibration();
     int32_t tareWithCurrentOrientation();
+    int32_t commitSettings();
 
     float getMinLinearAccelerationSquareNorm();
     uint16_t getDeltaTicksContinuousMode();
     uint8_t getTypeOfData();
     uint8_t getSendingMode();
 
-
+    int32_t resetToFactorySettings();
+    int32_t reboot();
+    int32_t getTemperature(float* temp);
     void printDebugImuSettings();
 
     //int32_t resetTare();
@@ -154,8 +166,17 @@ private:
 
     bool _isInitialized;
     uint8_t _retSpi;
-    sImuSettings _settings;
+    sensei::sImuSettings _settings;
     sImuInternalSettings _internalSettings;
+
+    int32_t _sendCommand(uint8_t cmd);
+    int32_t _sendCommand(uint8_t cmd, uint8_t value);
+    int32_t _sendCommand(uint8_t cmd, uint8_t* data, uint8_t nByte);
+    int32_t _sendCommandWithoutChecks(uint8_t cmd);
+
+    int32_t _getValue(uint8_t cmd, void* data);
+    int32_t _getValue(uint8_t cmd, float* data);
+    int32_t _getData(uint8_t cmd, void* data, uint16_t nByte);
 };
 
 #endif // MANAGE_IMU_H

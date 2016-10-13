@@ -6,8 +6,6 @@
  * @date 2016-03-10
  */
 
-// TODO
-// - filterCoeff
 
 //#pragma GCC optimize ("-Ofast")
 //teensy31.menu.speed.96.build.flags.optimize = -Ofast
@@ -17,6 +15,8 @@
 #include "task_rt.h"
 #include "task_com.h"
 #include "task_led.h"
+
+using namespace sensei;
 
 namespace std {
     void __throw_bad_alloc() {
@@ -43,6 +43,10 @@ QueueHandle_t hQueueRTtoCOM_IMU = 0;
 
 void setup()
 {
+    //When Teensy is used with a power supply that features a "soft start", you may need wait for the voltage to reach 5 volts
+    // https://www.pjrc.com/teensy/prescaler.html
+    delay(1000);
+
     //Hardware setup
     pinMode(DS, OUTPUT);
     pinMode(ST, OUTPUT);
@@ -86,7 +90,7 @@ void setup()
     //SPI Communication
     SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(SPI_MODE0);
-    SPI.setClockDivider(SPI_CLOCK_DIV2);
+    SPI.setClockDivider(SPI_CLOCK_DIV4);
     SPI.setSCK(SPI_SCK);
     SPI.begin();
 

@@ -1,5 +1,7 @@
 #include "task_led.h"
 
+using namespace sensei;
+
 void vTaskLED(void *pvParameters)
 {
     pinMode(STATUS_LED, OUTPUT);

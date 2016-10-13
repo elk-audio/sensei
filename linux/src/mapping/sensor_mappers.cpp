@@ -516,8 +516,7 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
     {
         out_val = 1.0f - out_val;
     }
-
-    if ((_sending_mode == SendingMode::ON_VALUE_CHANGED) && (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD))
+    if (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD)
     {
         MessageFactory factory;
         // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
@@ -529,7 +528,6 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
         backend->send(transformed_value, value);
         _previous_value = out_val;
     }
-
 }
 
 CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)

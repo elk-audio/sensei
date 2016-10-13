@@ -34,7 +34,6 @@ public:
     const sSenseiDataPacket* make_enable_sending_packets_cmd(uint32_t timestamp, bool enabled);
     const sSenseiDataPacket* make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value);
     const sSenseiDataPacket* make_set_bank_cmd(int pin_id, uint32_t timestamp, int value);
-    const sSenseiDataPacket* make_set_sampling_rate_cmd(uint32_t timestamp, float sampling_rate);
     const sSenseiDataPacket* make_get_value_cmd(int pin_id, uint32_t timestamp);
     const sSenseiDataPacket* make_config_pintype_cmd(int pin_id, uint32_t timestamp, PinType type);
     const sSenseiDataPacket* make_config_enabled_cmd(uint32_t timestamp, bool enabled);
@@ -55,6 +54,12 @@ public:
     const sSenseiDataPacket* make_imu_set_delta_tics_cmd(uint32_t timestamp, int ticks_delay);
     const sSenseiDataPacket* make_imu_set_datamode_cmd(uint32_t timestamp, int mode);
     const sSenseiDataPacket* make_imu_set_acc_threshold_cmd(uint32_t timestamp, float threshold);
+    const sSenseiDataPacket* make_imu_factory_reset_cmd(uint32_t timestamp);
+    const sSenseiDataPacket* make_imu_reboot_cmd(uint32_t timestamp);
+    const sSenseiDataPacket* make_imu_get_temperature_cmd(uint32_t timestamp);
+    const sSenseiDataPacket* make_imu_commit_settings_cmd(uint32_t timestamp);
+
+
 
 
 private:

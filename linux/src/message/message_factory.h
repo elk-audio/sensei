@@ -82,14 +82,6 @@ public:
     // Commands
     ////////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<BaseMessage> make_set_sampling_rate_command(const int pin_index,
-                                                                const float sampling_rate,
-                                                                const uint32_t timestamp = 0)
-    {
-        auto msg = new SetSamplingRateCommand(pin_index, sampling_rate, timestamp);
-        return std::unique_ptr<SetSamplingRateCommand>(msg);
-    }
-
     std::unique_ptr<BaseMessage> make_set_enabled_command(const int pin_index,
                                                           const bool enabled,
                                                           const uint32_t timestamp = 0)
@@ -262,6 +254,30 @@ public:
     {
         auto msg = new ImuCalibrateCommand(0, 0, timestamp);
         return std::unique_ptr<ImuCalibrateCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_factory_reset_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuFactoryResetCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuFactoryResetCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_reboot_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuRebootCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuRebootCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_get_temperature_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuGetTemperatureCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuGetTemperatureCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_imu_commit_settings_command(const uint32_t timestamp = 0)
+    {
+        auto msg = new ImuCommitSettingsCommand(0, 0, timestamp);
+        return std::unique_ptr<ImuCommitSettingsCommand>(msg);
     }
 
     // Internal commands

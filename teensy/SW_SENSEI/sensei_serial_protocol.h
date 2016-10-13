@@ -9,6 +9,9 @@
 #ifndef SENSEI_SERIAL_PROTOCOL_H_
 #define SENSEI_SERIAL_PROTOCOL_H_
 
+#define PRINT_IMU_DEBUG
+//#define RESET_IMU_FACTORY_SETTINGS_ON_INITIALIZATION
+
 #include <cstdint>
 
 namespace sensei {
@@ -16,6 +19,10 @@ namespace sensei {
     typedef float FilterType;
 
     const FilterType DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
+
+    #ifdef PRINT_IMU_DEBUG
+    const float FREQUENCY_DEBUG_IMU = 0.5; //[Hz]
+    #endif
 
     const uint8_t MAX_FILTER_ORDER = 12;
 
@@ -64,7 +71,7 @@ namespace sensei {
         //------------------------------------------
         SERIAL_DEVICE_GENERIC_ERROR = -4000,
         SERIAL_DEVICE_PORT_NOT_OPEN = -4001,
-		SERIAL_DEVICE_ERROR_ON_WRITING = -4002,
+		    SERIAL_DEVICE_ERROR_ON_WRITING = -4002,
         //------------------------------------------
         PINS_CONFIGURATION_PARSING_ERROR = -10000,
         //------------------------------------------
@@ -143,8 +150,8 @@ namespace sensei {
         HELLO = 1,
         SERIAL_DEBUG = 2,
         GET_SYSTEM_STATUS=3,
-		//----------------------------------------------
-		ENABLE_SENDING_PACKETS=10,
+		    //----------------------------------------------
+		    ENABLE_SENDING_PACKETS=10,
         ENABLE_MULTIPLE_PACKETS=11,
         //----------------------------------------------
         CONFIGURE_PIN = 100,
@@ -154,13 +161,17 @@ namespace sensei {
         SET_VALUE = 104,
         SET_DIGITAL_PINS = 105,
         //----------------------------------------------
-		IMU_ENABLE=200,
+		    IMU_ENABLE=200,
         IMU_SET_SETTINGS = 201,
         IMU_GET_SETTINGS = 202,
         IMU_GYROSCOPE_CALIBRATION = 203,
         IMU_RESET_FILTER = 204,
         IMU_GET_DATA = 205,
         IMU_TARE_WITH_CURRENT_ORIENTATION = 206,
+        IMU_RESET_TO_FACTORY_SETTINGS = 207,
+        IMU_REBOOT = 208,
+        IMU_GET_TEMPERATURE = 209,
+        IMU_COMMIT_SETTINGS = 210,
         //----------------------------------------------
         STOP_BOARD = 250,
         //----------------------------------------------

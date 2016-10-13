@@ -91,24 +91,6 @@ TEST_F(TestSerialCommandCreator, test_make_set_bank_cmd)
     EXPECT_EQ(test_tstamp, packet->timestamp);
 }
 
-TEST_F(TestSerialCommandCreator, test_make_set_sampling_rate_cmd)
-{
-    const sSenseiDataPacket* packet = _module_under_test.make_set_sampling_rate_cmd(test_tstamp, 500);
-    const teensy_set_samplerate_cmd* data = reinterpret_cast<const teensy_set_samplerate_cmd*>(&packet->payload);
-    EXPECT_EQ(EMPTY, packet->sub_cmd);
-    EXPECT_EQ(SET_SAMPLING_RATE, packet->cmd);
-    EXPECT_EQ(test_tstamp, packet->timestamp);
-    EXPECT_EQ(2, data->sample_rate_divisor);
-
-    packet = _module_under_test.make_set_sampling_rate_cmd(test_tstamp, 2);
-    data = reinterpret_cast<const teensy_set_samplerate_cmd*>(&packet->payload);
-    EXPECT_EQ(0, data->sample_rate_divisor);
-
-    packet = _module_under_test.make_set_sampling_rate_cmd(test_tstamp, 333);
-    data = reinterpret_cast<const teensy_set_samplerate_cmd*>(&packet->payload);
-    EXPECT_EQ(3, data->sample_rate_divisor);
-}
-
 TEST_F(TestSerialCommandCreator, test_make_get_value_cmd)
 {
     const sSenseiDataPacket *packet = _module_under_test.make_get_value_cmd(12, test_tstamp);
@@ -276,6 +258,28 @@ TEST_F(TestSerialCommandCreator, test_make_imu_set_acc_threshold_cmd)
     EXPECT_EQ(SENSEI_CMD::IMU_SET_SETTINGS, packet->cmd);
     EXPECT_FLOAT_EQ(0.25, imu_settings->minLinearAccelerationSquareNorm);
 }
+
+TEST_F(TestSerialCommandCreator, test_make_imu_factory_reset_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_factory_reset_cmd(test_tstamp);
+    EXPECT_EQ(IMU_RESET_TO_FACTORY_SETTINGS, packet->cmd);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_reboot_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_reboot_cmd(test_tstamp);
+    EXPECT_EQ(IMU_REBOOT, packet->cmd);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+}
+
+TEST_F(TestSerialCommandCreator, test_make_imu_commit_settings_cmd)
+{
+    const sSenseiDataPacket* packet = _module_under_test.make_imu_commit_settings_cmd(test_tstamp);
+    EXPECT_EQ(IMU_COMMIT_SETTINGS, packet->cmd);
+    EXPECT_EQ(test_tstamp, packet->timestamp);
+}
+
 
 TEST_F(TestSerialCommandCreator, test_cacheing)
 {

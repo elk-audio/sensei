@@ -14,7 +14,7 @@ typedef enum SliderState
 
 class AnalogInput : public PIN  {
 public:
-	AnalogInput(SetupPin* setupPin);
+	AnalogInput(sensei::SetupPin* setupPin);
 	~AnalogInput();
 	void setPinValue(uint16_t value);
 

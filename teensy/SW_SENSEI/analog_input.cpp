@@ -1,6 +1,8 @@
 #include "analog_input.h"
 #include <cmath>
 
+using namespace sensei;
+
 AnalogInput::AnalogInput(SetupPin* setupPin) : PIN(setupPin)
 {
 	//SerialDebug.println("AnalogInput");
@@ -10,7 +12,7 @@ AnalogInput::AnalogInput(SetupPin* setupPin) : PIN(setupPin)
 	_sliderMode = setupPin->sliderMode;
 	_sliderThreshold = setupPin->sliderThreshold;
 	_sliderState = WAITING;
-    _jumpedSliderValue = _maxValue;
+  _jumpedSliderValue = _maxValue;
 	_maxValue = USHRT_MAX >> (_ADCBitResolution + 4);
 }
 
@@ -23,13 +25,13 @@ void AnalogInput::setPinValue(uint16_t value)
         // values when the sensor is pressed or released
         //
         // FSM states are:
-        //      WAITING : 
+        //      WAITING :
         //          no activity on the sensor, wait for jumping and discard values under threshold
-        //      JUMPING : 
+        //      JUMPING :
         //          a jump has detected from WAITING state. Send the unfiltered value and discard
         //          further values if their distance from the first one is less than threshold.
         //          If it is greater, go to READING mode
-        //      READING : 
+        //      READING :
         //          normal operating mode. Send out filtered values unless they are below the
         //          dead zone threshold, in which case send directly the maximum value and go
         //          to WAITING state
@@ -60,7 +62,7 @@ void AnalogInput::setPinValue(uint16_t value)
                     _setPinValue(_jumpedSliderValue);
                 }
                 else if ((_maxValue - _sliderValue) < _sliderThreshold)
-				{	
+				{
 					_sliderState = WAITING;
                     _setPinValue(_maxValue);
 				}
@@ -75,7 +77,7 @@ void AnalogInput::setPinValue(uint16_t value)
                 // If value is in the dead zone range, the finger has been released:
                 // send maximum value and go to WAITING state
 				if ((_maxValue - _sliderValue) < _sliderThreshold)
-				{	
+				{
 					_sliderState = WAITING;
                     _setPinValue(_maxValue);
 				}

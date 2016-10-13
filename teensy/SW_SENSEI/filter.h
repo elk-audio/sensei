@@ -6,16 +6,16 @@
 class Filter {
 public:
     Filter();
-    void setFilter(uint8_t filter_order, FilterType* filter_coeff_a, FilterType* filter_coeff_b);
+    void setFilter(uint8_t filter_order, sensei::FilterType* filter_coeff_a, sensei::FilterType* filter_coeff_b);
     ~Filter();
-    FilterType processFilter(FilterType x);
+    sensei::FilterType processFilter(sensei::FilterType x);
 
 private:
     bool _enable;
     uint8_t _filter_order;
-    vector<FilterType> _filter_coeff_a;
-    vector<FilterType> _filter_coeff_b;
-    vector<FilterType> _buffer;
+    std::vector<  sensei::FilterType> _filter_coeff_a;
+    std::vector<  sensei::FilterType> _filter_coeff_b;
+    std::vector<  sensei::FilterType> _buffer;
 };
 
 #endif // FILTER_H

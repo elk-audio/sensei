@@ -31,6 +31,20 @@ void UserFrontend::set_digital_output(const int out_pin_index, const bool value)
 
 void UserFrontend::set_imu_calibration()
 {
-    auto msg = _factory.make_imu_calibrate_command();
+    auto cal_msg = _factory.make_imu_calibrate_command();
+    auto save_msg = _factory.make_imu_commit_settings_command();
+    _queue->push(std::move(cal_msg));
+    _queue->push(std::move(save_msg));
+}
+
+void UserFrontend::set_imu_factory_reset()
+{
+    auto msg = _factory.make_imu_factory_reset_command();
+    _queue->push(std::move(msg));
+}
+
+void UserFrontend::set_imu_reboot()
+{
+    auto msg = _factory.make_imu_reboot_command();
     _queue->push(std::move(msg));
 }

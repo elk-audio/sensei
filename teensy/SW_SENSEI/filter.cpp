@@ -1,6 +1,8 @@
 #include "filter.h"
 #include "common.h"
 
+using namespace sensei;
+
 Filter::Filter()
 {
     _enable=false;

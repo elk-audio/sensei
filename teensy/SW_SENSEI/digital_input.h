@@ -3,10 +3,10 @@
 
 #include "digital_output.h"
 
-class DigitalInput : public PIN 
+class DigitalInput : public PIN
 {
 public:
-	DigitalInput(SetupPin* setupPin);
+	DigitalInput(sensei::SetupPin* setupPin);
 	~DigitalInput();
 
 private:

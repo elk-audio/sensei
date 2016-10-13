@@ -447,12 +447,6 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             return _packet_factory.make_enable_sending_packets_cmd(cmd->timestamp(),
                                                                    cmd->data());
         }
-        case CommandType::SET_SAMPLING_RATE:
-        {
-            auto cmd = static_cast<SetSamplingRateCommand *>(message);
-            return _packet_factory.make_set_sampling_rate_cmd(cmd->timestamp(),
-                                                              cmd->data());
-        }
         case CommandType::SET_PIN_TYPE:
         {
             auto cmd = static_cast<SetPinTypeCommand *>(message);
@@ -592,6 +586,21 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
         {
             auto cmd = static_cast<ImuCalibrateCommand*>(message);
             return _packet_factory.make_calibrate_gyro_cmd(cmd->timestamp());
+        }
+        case CommandType::IMU_FACTORY_RESET:
+        {
+            auto cmd = static_cast<ImuFactoryResetCommand*>(message);
+            return _packet_factory.make_imu_factory_reset_cmd(cmd->timestamp());
+        }
+        case CommandType::IMU_REBOOT:
+        {
+            auto cmd = static_cast<ImuRebootCommand*>(message);
+            return _packet_factory.make_imu_reboot_cmd(cmd->timestamp());
+        }
+        case CommandType::IMU_COMMIT_SETTINGS:
+        {
+            auto cmd = static_cast<ImuRebootCommand*>(message);
+            return _packet_factory.make_imu_reboot_cmd(cmd->timestamp());
         }
         default:
             SENSEI_LOG_WARNING("Unsupported command type {}", static_cast<int>(message->base_type()));
