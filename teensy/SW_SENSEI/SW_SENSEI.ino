@@ -43,9 +43,7 @@ QueueHandle_t hQueueRTtoCOM_IMU = 0;
 
 void setup()
 {
-    //When Teensy is used with a power supply that features a "soft start", you may need wait for the voltage to reach 5 volts
-    // https://www.pjrc.com/teensy/prescaler.html
-    delay(1000);
+
 
     //Hardware setup
     pinMode(DS, OUTPUT);
@@ -79,6 +77,11 @@ void setup()
         shiftOut(DS, SH, LSBFIRST, 0x00);
     }
     digitalWrite(ST, HIGH);
+
+
+    //When Teensy is used with a power supply that features a "soft start", you may need wait for the voltage to reach 5 volts
+    // https://www.pjrc.com/teensy/prescaler.html
+    delay(500);
 
     //Serial communication
     Serial.begin(115200);
