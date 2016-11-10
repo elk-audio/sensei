@@ -124,6 +124,7 @@ void setup()
     SerialDebug.println(__TIME__);
     SerialDebug.println(" -----------------------------");
 
+
     delay(100);
 
     //Start FreeRTOS scheduler
