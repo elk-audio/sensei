@@ -104,6 +104,10 @@ int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 
 	_systemInitialized=true;
 
+	#ifdef POWER_ON_IMU_WITH_DIGITAL_PIN
+	  setDigitalPin(PIN_POWER_IMU,true);
+	#endif
+	
 	return SENSEI_ERROR_CODE::OK;
 }
 

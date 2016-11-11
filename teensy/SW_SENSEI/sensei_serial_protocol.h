@@ -9,9 +9,6 @@
 #ifndef SENSEI_SERIAL_PROTOCOL_H_
 #define SENSEI_SERIAL_PROTOCOL_H_
 
-#define PRINT_IMU_DEBUG
-//#define RESET_IMU_FACTORY_SETTINGS_ON_INITIALIZATION
-
 #include <cstdint>
 
 namespace sensei {
@@ -20,8 +17,15 @@ namespace sensei {
 
     const FilterType DEFAULT_RT_FREQUENCY = 1000.0; //[Hz]
 
+    #undef PRINT_IMU_DEBUG
+    #undef RESET_IMU_FACTORY_SETTINGS_ON_INITIALIZATION
+    #define POWER_ON_IMU_WITH_DIGITAL_PIN
+
     #ifdef PRINT_IMU_DEBUG
     const float FREQUENCY_DEBUG_IMU = 0.5; //[Hz]
+    #endif
+    #ifdef POWER_ON_IMU_WITH_DIGITAL_PIN
+      const uint16_t PIN_POWER_IMU = 0;
     #endif
 
     const uint8_t MAX_FILTER_ORDER = 12;
