@@ -81,7 +81,7 @@ void setup()
 
     //When Teensy is used with a power supply that features a "soft start", you may need wait for the voltage to reach 5 volts
     // https://www.pjrc.com/teensy/prescaler.html
-    delay(500);
+    delay(1000);
 
     //Serial communication
     Serial.begin(115200);
@@ -103,7 +103,7 @@ void setup()
     analogReference(EXTERNAL);
 
     // Startup
-    for (uint8_t idx = 0; idx < 5; idx++)
+    for (uint8_t idx = 0; idx < 10; idx++)
     {
         digitalWrite(STATUS_LED, 1);
         delay(100);
@@ -129,6 +129,12 @@ void setup()
 
 
     delay(100);
+
+    #ifdef POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_BOOT
+        digitalWrite(ST, LOW);
+        shiftOut(DS, SH, LSBFIRST, 0x01);
+        digitalWrite(ST, HIGH);
+    #endif
 
     //Start FreeRTOS scheduler
     vTaskStartScheduler();

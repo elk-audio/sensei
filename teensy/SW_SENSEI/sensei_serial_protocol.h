@@ -19,14 +19,25 @@ namespace sensei {
 
     #undef PRINT_IMU_DEBUG
     #undef RESET_IMU_FACTORY_SETTINGS_ON_INITIALIZATION
+
     #define POWER_ON_IMU_WITH_DIGITAL_PIN
+    #ifdef POWER_ON_IMU_WITH_DIGITAL_PIN
+      #undef POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_HW_INIT
+
+      #ifndef POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_HW_INIT
+        #define POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_BOOT //PIN=0
+      #endif
+
+    #endif
+
+    #ifdef POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_HW_INIT
+      const uint16_t PIN_POWER_IMU = 0;
+    #endif
 
     #ifdef PRINT_IMU_DEBUG
     const float FREQUENCY_DEBUG_IMU = 0.5; //[Hz]
     #endif
-    #ifdef POWER_ON_IMU_WITH_DIGITAL_PIN
-      const uint16_t PIN_POWER_IMU = 0;
-    #endif
+
 
     const uint8_t MAX_FILTER_ORDER = 12;
 
