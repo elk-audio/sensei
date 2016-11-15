@@ -103,11 +103,11 @@ int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 
 	_systemInitialized=true;
 
-	#if defined(POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_HW_INIT) || defined(POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_BOOT)
+	#ifdef POWER_ON_IMU_WITH_DIGITAL_PIN
 		#ifdef POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_BOOT
-			setDigitalPin(0x01,true);
+			setDigitalPin(0x00,true);
 		#else
-	  	setDigitalPin(PIN_POWER_IMU,true);
+			setDigitalPin(PIN_POWER_IMU,true);
 		#endif
 	#else
 		setDigitalPin();
