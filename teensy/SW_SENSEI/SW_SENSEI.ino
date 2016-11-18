@@ -1,4 +1,4 @@
-/**
+ /**
  * @file SW_SENSEI.ino
  * @brief Main SW_SENSEI
  * @author Simone Minto (simone.minto@prorob.it)

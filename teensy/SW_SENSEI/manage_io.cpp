@@ -107,7 +107,11 @@ int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 		#ifdef POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_BOOT
 			setDigitalPin(0x00,true);
 		#else
-			setDigitalPin(PIN_POWER_IMU,true);
+        // Toggle IMU pin off and on, then allow time to boot 
+        setDigitalPin(PIN_POWER_IMU,false);
+        delay(200);
+        setDigitalPin(PIN_POWER_IMU,true);
+        delay(800);
 		#endif
 	#else
 		setDigitalPin();
