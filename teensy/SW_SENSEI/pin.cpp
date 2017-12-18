@@ -8,7 +8,7 @@ PIN::PIN()
 	_value = 0;
 	_precValue = 0;
 	_sendingMode = eSendingMode::SENDING_MODE_ON_REQUEST;
-    _deltaTicksContinuousMode = 0;
+  _deltaTicksContinuousMode = 0;
 	_pinValueChanged=false;
 	_pinValueChangedInsideInterval=false;
 }
@@ -17,7 +17,7 @@ PIN::PIN(SetupPin* setupPin)
 {
 	PIN();
 	_sendingMode = setupPin->sendingMode;
-    _deltaTicksContinuousMode = setupPin->deltaTicksContinuousMode;
+  _deltaTicksContinuousMode = setupPin->deltaTicksContinuousMode;
 	_ticksForSending = _deltaTicksContinuousMode;
 }
 
@@ -82,7 +82,7 @@ uint8_t PIN::getPinType()
 
 void PIN::_setPinValue(uint16_t value)
 {
-    _value = value;
+  _value = value;
 	_checkPinChange();
 	_precValue = _value;
 }

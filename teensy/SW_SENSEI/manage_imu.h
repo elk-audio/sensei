@@ -3,9 +3,6 @@
 
 #include "common.h"
 
-#define PRINT_IMU_DEBUG
-#undef RESET_IMU_FACTORY_SETTINGS_ON_INITIALIZATION
-
 #define SPI_MAX_ITER_WAIT_CMD 4000
 #define DELAY_SPI_YEI 2 //[us]
 #define DELAY_SPI_YEI_CLEAR_BUFFER 75 //[us]

@@ -100,9 +100,22 @@ int32_t ManageIO::setSystem(uint16_t nPin, uint16_t nDigitalPin)
 		_vBankDigitalPin.push_back(0);
 	}
 
-	setDigitalPin();
 
 	_systemInitialized=true;
+
+	#ifdef POWER_ON_IMU_WITH_DIGITAL_PIN
+		#ifdef POWER_ON_IMU_WITH_DIGITAL_PIN_AFTER_BOOT
+			setDigitalPin(0x00,true);
+		#else
+        // Toggle IMU pin off and on, then allow time to boot 
+        setDigitalPin(PIN_POWER_IMU,false);
+        delay(200);
+        setDigitalPin(PIN_POWER_IMU,true);
+        delay(800);
+		#endif
+	#else
+		setDigitalPin();
+	#endif
 
 	return SENSEI_ERROR_CODE::OK;
 }
