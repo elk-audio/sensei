@@ -2,11 +2,11 @@
 #include "gtest/gtest.h"
 
 #define private public
-#include "serial_frontend/serial_command_creator.cpp"
+#include "hardware_frontend/serial_command_creator.cpp"
 
 
 using namespace sensei;
-using namespace serial_frontend;
+using namespace hw_frontend;
 
 static const uint32_t test_tstamp = test_tstamp;
 static const int MAX_NUMBER_OFF_PINS = 64;

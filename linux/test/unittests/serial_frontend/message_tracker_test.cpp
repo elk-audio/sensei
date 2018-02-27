@@ -1,16 +1,12 @@
-//
-// Created by gustav on 3/17/16.
-//
-
 #include "gtest/gtest.h"
 #define private public
 
-#include "serial_frontend/message_tracker.cpp"
+#include "hardware_frontend/message_tracker.cpp"
 #include "message/message_factory.h"
-#include "serial_frontend/serial_frontend_internal.h"
+#include "hardware_frontend/serial_frontend_internal.h"
 
 using namespace sensei;
-using namespace serial_frontend;
+using namespace hw_frontend;
 
 const int MAX_TIMEOUT = 1000;
 const int MAX_RESENDS = 2;

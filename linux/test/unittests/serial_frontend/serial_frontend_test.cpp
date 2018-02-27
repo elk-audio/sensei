@@ -1,13 +1,9 @@
-//
-// Created by gustav on 3/17/16.
-//
-
 #include "gtest/gtest.h"
 #define private public
-#include "serial_frontend/serial_frontend.cpp"
+#include "hardware_frontend/serial_frontend.cpp"
 
 using namespace sensei;
-using namespace serial_frontend;
+using namespace hw_frontend;
 
 static uint8_t test_msg[] = { 0x1, 0x2, 0x3, 0xff, 0x0, 0x0, 0x0, 0x0,
                               0x0, 0x8c, 0x3, 0x0, 0x0, 0x64, 0x1, 0x0,

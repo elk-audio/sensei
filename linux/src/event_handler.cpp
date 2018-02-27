@@ -5,6 +5,7 @@
 #include "output_backend/osc_backend.h"
 #include "config_backend/json_configuration.h"
 #include "user_frontend/osc_user_frontend.h"
+#include "hardware_frontend/serial_frontend.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -20,7 +21,7 @@ void EventHandler::init(const std::string port_name,
 {
     _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
     _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
-    _serial_frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
+    _hw_frontend.reset(new hw_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
     _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
     _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_input_pins, max_n_digital_out_pins));
 
@@ -45,18 +46,18 @@ void EventHandler::init(const std::string port_name,
         }
     }
 
-    if (!_serial_frontend->connected())
+    if (!_hw_frontend->connected())
     {
         SENSEI_LOG_ERROR("Serial connection failed.");
     }
-    _serial_frontend->verify_acks(true);
-    _serial_frontend->run();
+    _hw_frontend->verify_acks(true);
+    _hw_frontend->run();
 
 }
 
 void EventHandler::deinit()
 {
-    _serial_frontend.reset(nullptr);
+    _hw_frontend.reset(nullptr);
     _processor.reset(nullptr);
     _output_backend.reset(nullptr);
     _config_backend.reset(nullptr);
