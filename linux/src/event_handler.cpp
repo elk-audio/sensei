@@ -6,6 +6,7 @@
 #include "config_backend/json_configuration.h"
 #include "user_frontend/osc_user_frontend.h"
 #include "hardware_frontend/serial_frontend.h"
+#include "hardware_frontend/raspa_frontend.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -21,7 +22,7 @@ void EventHandler::init(const std::string port_name,
 {
     _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
     _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
-    _hw_frontend.reset(new hw_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
+    _hw_frontend.reset(new hw_frontend::RaspaFrontend(&_to_frontend_queue, &_event_queue));
     _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
     _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_input_pins, max_n_digital_out_pins));
 
