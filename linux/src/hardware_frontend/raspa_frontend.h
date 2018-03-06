@@ -80,6 +80,8 @@ private:
     void read_loop();
     void write_loop();
 
+    bool _connect_to_raspa();
+
     std::atomic<ThreadState> _state;
     std::thread     _read_thread;
     std::thread     _write_thread;

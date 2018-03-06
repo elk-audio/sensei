@@ -17,7 +17,7 @@ namespace hw_frontend {
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
-constexpr int  SOCKET_TIMEOUT_US = 250'000;
+constexpr int  SOCKET_TIMEOUT_US = 500'000;
 constexpr auto READ_WRITE_TIMEOUT = std::chrono::seconds(1);
 SENSEI_GET_LOGGER;
 
@@ -35,11 +35,13 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
     _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (_in_socket >= 0 && _out_socket >= 0)
     {
-        /* Sensei tries to bind one socket to SENSEI_SOCKET, then connects
-         * the other one to RASPA_SOCKET, which should be present since
-         * Raspalib should already be running.
-         * Raspalib then does the opposite but waits with connecting until
-         * Sensei reports that it is up and running */
+        /* Sensei binds one socket to SENSEI_SOCKET, then tries to connect
+         * the other one to RASPA_SOCKET, if this fails, Sensei will retry
+         * the connection to RASPA_SOCKET when it receives something on
+         * SENSEI_SOCKET.
+         * Raspalib does the opposite when it starts up, binds to its own
+         * port and waits for a message. This way the processes can be
+         * started in any order and synchronise  */
 
         sockaddr_un address;
         address.sun_family = AF_UNIX;
@@ -51,16 +53,8 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
         {
             SENSEI_LOG_ERROR("Failed to bind to socket: {}", strerror(errno));
         }
-        strcpy(address.sun_path, RASPA_SOCKET);
-        res = connect(_out_socket, reinterpret_cast<sockaddr*>(&address), sizeof(sockaddr_un));
-        if (res != 0)
-        {
-            SENSEI_LOG_ERROR("Failed to connect to Raspa socket: {}", strerror(errno));
-        }
         else
         {
-            // TODO - Send a hello to raspa
-            _connected = true;
             timeval time;
             time.tv_sec = 0;
             time.tv_usec = SOCKET_TIMEOUT_US;
@@ -69,11 +63,11 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
             {
                 SENSEI_LOG_ERROR("Failed to set incoming socket timeout: {}", strerror(errno));
             }
-            res = setsockopt(_out_socket, SOL_SOCKET, SO_SNDTIMEO, &time, sizeof(time));
-            if (res != 0 )
-            {
-                SENSEI_LOG_ERROR("Failed to set outgoing socket timeout: {}", strerror(errno));
-            }
+        }
+        _connected = _connect_to_raspa();
+        if (!_connected)
+        {
+            SENSEI_LOG_INFO("Could not connect to raspa");
         }
     }
     else
@@ -144,9 +138,13 @@ void RaspaFrontend::read_loop()
     {
         memset(&buffer, 0, sizeof(buffer));
         auto bytes = recv(_in_socket, &buffer, sizeof(buffer), 0);
-        SENSEI_LOG_INFO("Received: {}", buffer.data);
         if (_muted == false && bytes >= static_cast<ssize_t>(sizeof(RaspaPacket)))
         {
+            if (!_connected)
+            {
+                _connected = _connect_to_raspa();
+            }
+            // TODO - unpack and process packet here.
             SENSEI_LOG_INFO("Received from raspa: {}", buffer.data);
         }
         if (bytes < 0)
@@ -176,6 +174,31 @@ void RaspaFrontend::write_loop()
             SENSEI_LOG_WARNING("Sending packet on socket failed {}", ret);
         }
     }
+}
+
+bool RaspaFrontend::_connect_to_raspa()
+{
+    sockaddr_un address;
+    address.sun_family = AF_UNIX;
+    strcpy(address.sun_path, RASPA_SOCKET);
+
+    auto res = connect(_out_socket, reinterpret_cast<sockaddr*>(&address), sizeof(sockaddr_un));
+    if (res != 0)
+    {
+        SENSEI_LOG_ERROR("Failed to connect to Raspa socket: {}", strerror(errno));
+        return false;
+    }
+    timeval time;
+    time.tv_sec = 0;
+    time.tv_usec = SOCKET_TIMEOUT_US;
+    res = setsockopt(_out_socket, SOL_SOCKET, SO_SNDTIMEO, &time, sizeof(time));
+    if (res != 0 )
+    {
+        SENSEI_LOG_ERROR("Failed to set outgoing socket timeout: {}", strerror(errno));
+        return false;
+    }
+    SENSEI_LOG_INFO("Connected to Raspa!");
+    return true;
 }
 
 
