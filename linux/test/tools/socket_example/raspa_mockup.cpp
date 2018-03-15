@@ -11,11 +11,12 @@
 #include <unistd.h>
 #include <csignal>
 
+#include "../../../xmos_protocol/xmos_control_protocol.h"
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
 constexpr int  SOCKET_TIMEOUT_S = 2;
-constexpr auto PING_INTERVAL = std::chrono::seconds(2);
+constexpr auto PING_INTERVAL = std::chrono::milliseconds(250);
 
 /* Dummy task that can act as a stand in for raspalib
  * It claims a socket, prints what it receives on it
@@ -27,10 +28,6 @@ constexpr auto PING_INTERVAL = std::chrono::seconds(2);
 
 
 
-struct RaspaPacket
-{
-    char data[20];
-};
 
 class RaspaMockup
 {
@@ -86,14 +83,14 @@ public:
 private:
     void read_loop()
     {
-        RaspaPacket buffer;
+        XmosControlPacket buffer;
         while (_running)
         {
             memset(&buffer, 0, sizeof(buffer));
             auto bytes = recv(_in_socket, &buffer, sizeof(buffer), 0);
-            if (bytes >= sizeof(RaspaPacket))
+            if (bytes >= sizeof(buffer))
             {
-                std::cout << "Received: " << buffer.data << std::endl;
+                std::cout << "Received command: " << (int)buffer.command << ", " << (int)buffer.sub_command << std::endl;
                 if (!_connected)
                 {
                     /* Try to connect to sensei, it should be up and running now */
@@ -112,6 +109,7 @@ private:
                         _connected = true;
                     }
                 }
+                handle_incoming_packet(buffer);
             }
             if (bytes < 0)
             {
@@ -122,13 +120,45 @@ private:
 
     void write_loop()
     {
-        RaspaPacket buffer;
+        XmosControlPacket buffer;
         while (_running)
         {
             if (_connected)
             {
-                /* Periodically send data to the socket */
-                snprintf(buffer.data, sizeof(buffer), "Raspa, pkt: %x", _msg_count++);
+                /* If we have a queued ack, send it  */
+                if (_send_ack)
+                {
+                    auto ret = send(_out_socket, &_ack, sizeof(_ack), 0);
+                    if (ret < sizeof(_ack))
+                    {
+                        std::cout << "Failed to send ack with error: " << ret << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Sent ack to msg: " << _ack.sequence_no << std::endl;
+                    }
+                    _send_ack = false;
+                }
+                else
+                {
+                    /* Send a random value on controller 5 */
+                    XmosControlPacket packet;
+                    packet.command = XMOS_CMD_GET_VALUE;
+                    packet.payload[0] = 5;
+                    auto data = reinterpret_cast<uint32_t*>(&packet.payload[4]);
+                    *data = rand() % 128;
+                    auto ret = send(_out_socket, &packet, sizeof(packet), 0);
+                    if (ret < sizeof(_ack))
+                    {
+                        std::cout << "Failed to send random value: " << ret << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Sent value msg: "  << std::endl;
+                    }
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                }
+                /*snprintf(buffer.data, sizeof(buffer), "Raspa, pkt: %x", _msg_count++);
                 buffer.data[19] = 0;
                 auto ret = send(_out_socket, &buffer, sizeof(RaspaPacket), 0);
                 if (ret < sizeof(RaspaPacket))
@@ -138,14 +168,32 @@ private:
                 else
                 {
                     std::cout << "Sent " << ret << " bytes, pkt: " << _msg_count << std::endl;
-                }
+                }*/
             }
             std::this_thread::sleep_for(PING_INTERVAL);
         }
     }
+
+    void handle_incoming_packet(const XmosControlPacket& packet)
+    {
+        /* Just reply every packet with an ok ack */
+        XmosControlPacket ack{0};
+        ack.command = XMOS_ACK;
+        ack.sequence_no = packet.sequence_no;
+        ack.payload[0] = packet.command;
+        ack.payload[1] = packet.sub_command;
+        ack.payload[2] = 0;
+        /* Signal ok to send it */
+        _ack = ack;
+        _send_ack = true;
+    }
+
     
     bool            _running{false};
     bool            _connected{false};
+    bool            _send_ack{false};
+    XmosControlPacket _ack;
+
     std::thread     _read_thread;
     std::thread     _write_thread;
 

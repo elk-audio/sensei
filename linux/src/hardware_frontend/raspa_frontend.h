@@ -11,19 +11,21 @@
 #include <condition_variable>
 #include <mutex>
 #include <atomic>
+#include <cassert>
+#include <xmos_control_protocol.h>
 
 #include "hw_frontend.h"
+#include "message_tracker.h"
 #include "message/base_message.h"
 #include "message/base_command.h"
+#include "message/message_factory.h"
+#include "xmos_command_creator.h"
+#include "xmos_control_protocol.h"
 
 namespace sensei {
 namespace hw_frontend {
 
-
-struct RaspaPacket
-{
-    char data[20];
-};
+struct ControlPacket;
 
 class RaspaFrontend : public HwFrontend
 {
@@ -80,7 +82,16 @@ private:
     void read_loop();
     void write_loop();
 
+    //void _handle_timeouts();
     bool _connect_to_raspa();
+    void _handle_raspa_packet(const XmosControlPacket& packet);
+    void _handle_ack(const XmosControlPacket& ack);
+    void _handle_value(const XmosControlPacket& packet);
+    void _process_sensei_command(const Command*message);
+
+    MessageFactory   _message_factory;
+    XmosCommandCreator _packet_factory;
+    std::deque<XmosControlPacket>  _send_list;
 
     std::atomic<ThreadState> _state;
     std::thread     _read_thread;
@@ -89,6 +100,11 @@ private:
     int             _in_socket;
     int             _out_socket;
 
+    std::mutex      _send_mutex;
+    std::condition_variable _ready_to_send_notifier;
+
+    uint32_t        _pending_sequence_number;
+    bool            _ready_to_send;
     bool            _connected;
     bool            _muted;
     bool            _verify_acks;

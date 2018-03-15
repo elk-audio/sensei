@@ -35,6 +35,7 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/hardware_frontend/serial_command_creator.cpp
                       src/hardware_frontend/raspa_frontend.cpp
                       src/hardware_frontend/message_tracker.cpp
+                      src/hardware_frontend/xmos_command_creator.cpp
                       src/main.cpp
                       src/logging.cpp
                       src/user_frontend/user_frontend.cpp src/user_frontend/osc_user_frontend.cpp)
@@ -63,6 +64,7 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/hardware_frontend/serial_command_creator.h
                         src/hardware_frontend/message_tracker.h
                         src/hardware_frontend/raspa_frontend.h
+                        src/hardware_frontend/xmos_command_creator.h
                         src/locked_queue.h
                         src/synchronized_queue.h
                         src/event_handler.h
