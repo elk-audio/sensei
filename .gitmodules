@@ -1,0 +1,7 @@
+[submodule "xmos_control_protocol"]
+	path = linux/xmos_protocol
+	url = git@bitbucket.org:mindswteam/xmos-control-protocol.git
+
+[submodule "linux/xmos_protocol"]
+	path = linux/xmos_protocol
+	url = git@bitbucket.org:mindswteam/xmos-control-protocol.git
