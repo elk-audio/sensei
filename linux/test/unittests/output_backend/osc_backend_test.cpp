@@ -54,11 +54,11 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_osc_output_port_command(0, _port))));
 
         // Some per-pin configs
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(0, PinType::DIGITAL_INPUT))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_name_command(0, "alice"))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_type_command(0, SensorType::DIGITAL_INPUT))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_name_command(0, "alice"))));
 
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(1, PinType::ANALOG_INPUT))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_name_command(1, "bob"))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_type_command(1, SensorType::ANALOG_INPUT))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_name_command(1, "bob"))));
 
         for (auto const& cmd : config_cmds)
         {
@@ -141,9 +141,9 @@ TEST_F(TestOscBackend, test_config)
     ASSERT_EQ(_base_raw_path, _backend._base_raw_path);
     ASSERT_EQ(_host, _backend._host);
     ASSERT_EQ(_port, _backend._port);
-    ASSERT_EQ(PinType::DIGITAL_INPUT, _backend._pin_types[0]);
+    ASSERT_EQ(SensorType::DIGITAL_INPUT, _backend._pin_types[0]);
     ASSERT_EQ("alice", _backend._pin_names[0]);
-    ASSERT_EQ(PinType::ANALOG_INPUT, _backend._pin_types[1]);
+    ASSERT_EQ(SensorType::ANALOG_INPUT, _backend._pin_types[1]);
     ASSERT_EQ("bob", _backend._pin_names[1]);
 }
 

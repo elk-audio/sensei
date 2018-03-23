@@ -23,7 +23,7 @@ public:
     {
         _pin_names.resize(static_cast<size_t>(_max_n_pins));
         _pin_types.resize(static_cast<size_t>(_max_n_pins));
-        std::fill(_pin_types.begin(), _pin_types.end(), PinType::UNDEFINED);
+        std::fill(_pin_types.begin(), _pin_types.end(), SensorType::UNDEFINED);
     }
 
     virtual ~OutputBackend()
@@ -36,16 +36,16 @@ public:
 
         switch(cmd->type())
         {
-        case CommandType::SET_PIN_NAME:
+        case CommandType::SET_SENSOR_NAME:
             {
                 const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
                 _pin_names[pin_idx] = typed_cmd->data();
             };
             break;
 
-        case CommandType::SET_PIN_TYPE:
+        case CommandType::SET_SENSOR_TYPE:
             {
-                const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd);
+                const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
                 _pin_types[pin_idx] = typed_cmd->data();
             };
             break;
@@ -79,7 +79,7 @@ protected:
     bool _send_output_active;
     bool _send_raw_input_active;
     std::vector<std::string> _pin_names;
-    std::vector<PinType> _pin_types;
+    std::vector<SensorType> _pin_types;
 };
 
 }; // namespace output_backend

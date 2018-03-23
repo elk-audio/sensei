@@ -26,7 +26,9 @@ namespace sensei {
 enum class CommandType
 {
     // External Commands
-    SET_PIN_TYPE,
+    SET_SENSOR_TYPE,
+    SET_SENSOR_HW_TYPE,
+    SET_HW_PIN,
     SET_VIRTUAL_PIN,
     SET_ENABLED,
     SET_SENDING_MODE,
@@ -34,7 +36,6 @@ enum class CommandType
     SET_ADC_BIT_RESOLUTION,
     SET_LOWPASS_FILTER_ORDER,
     SET_LOWPASS_CUTOFF,
-    SET_SLIDER_MODE_ENABLED,
     SET_SLIDER_THRESHOLD,
     SEND_DIGITAL_PIN_VALUE,
     ENABLE_SENDING_PACKETS,
@@ -60,7 +61,7 @@ enum class CommandType
     SET_INPUT_SCALE_RANGE_HIGH,
     // Output Backend Commands
     SET_BACKEND_TYPE,
-    SET_PIN_NAME,
+    SET_SENSOR_NAME,
     SET_SEND_OUTPUT_ENABLED,
     SET_SEND_RAW_INPUT_ENABLED,
     SET_OSC_OUTPUT_BASE_PATH,
@@ -72,16 +73,29 @@ enum class CommandType
 };
 
 /**
- * @brief Pin type configuration
+ * @brief Sensor type configuration
  */
-enum class PinType
+enum class SensorType
 {
     DIGITAL_INPUT,
     DIGITAL_OUTPUT,
     ANALOG_INPUT,
-    IMU_INPUT,
+    CONTINUOUS_INPUT,
+    RANGE_INPUT,
     UNDEFINED,
     N_PIN_TYPES
+};
+
+enum class SensorHwType
+{
+    DIGITAL_INPUT_PIN,
+    DIGITAL_OUTPUT_PIN,
+    ANALOG_INPUT_PIN,
+    RIBBON,
+    BUTTON,
+    IMU_PITCH,
+    IMU_ROLL,
+    IMU_YAW
 };
 
 /**
@@ -115,6 +129,9 @@ enum class SendingMode
     CONTINUOUS,
     ON_VALUE_CHANGED,
     ON_REQUEST,
+    TOGGLED,
+    ON_PRESS,
+    ON_RELEASE,
     N_SENDING_MODES
 };
 
@@ -144,19 +161,31 @@ SENSEI_DECLARE_COMMAND(SetEnabledCommand,
                        "Set Enabled",
                        CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
-SENSEI_DECLARE_COMMAND(SetPinTypeCommand,
-                       CommandType::SET_PIN_TYPE,
-                       PinType,
-                       "Set Pin Type",
+SENSEI_DECLARE_COMMAND(SetSensorTypeCommand,
+                       CommandType::SET_SENSOR_TYPE,
+                       SensorType,
+                       "Set Sensor Type",
                        CommandDestination::SERIAL_FRONTEND
                            | CommandDestination::INTERNAL
                            | CommandDestination::OUTPUT_BACKEND);
+
+SENSEI_DECLARE_COMMAND(SetSensorHwTypeCommand,
+                       CommandType::SET_SENSOR_HW_TYPE,
+                       SensorHwType,
+                       "Set Sensor Hardware Type",
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetVirtualPinCommand,
                        CommandType::SET_VIRTUAL_PIN,
                        ImuIndex,
                        "Set virtual pin",
                        CommandDestination::SERIAL_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetSingleHwPinCommand,
+                       CommandType::SET_HW_PIN,
+                       int,
+                       "Set hardware pin",
+                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetSendingModeCommand,
                        CommandType::SET_SENDING_MODE,
@@ -186,12 +215,6 @@ SENSEI_DECLARE_COMMAND(SetLowpassCutoffCommand,
                        CommandType::SET_LOWPASS_CUTOFF,
                        float,
                        "Set Lowpass Cutoff",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
-
-SENSEI_DECLARE_COMMAND(SetSliderModeEnabledCommand,
-                       CommandType::SET_SLIDER_MODE_ENABLED,
-                       bool,
-                       "Set Slider Mode Enabled",
                        CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
@@ -301,7 +324,7 @@ SENSEI_DECLARE_COMMAND(ImuGetTemperatureCommand,
 SENSEI_DECLARE_COMMAND(ImuCommitSettingsCommand,
                        CommandType::IMU_COMMIT_SETTINGS,
                        int,
-                       "Save settings and calilbration to the IMU EPROM",
+                       "Save settings and calibration to the IMU EPROM",
                        CommandDestination::SERIAL_FRONTEND);
 
 // Internal commands
@@ -333,7 +356,7 @@ SENSEI_DECLARE_COMMAND(SetBackendTypeCommand,
                        CommandDestination::OUTPUT_BACKEND);
 
 SENSEI_DECLARE_COMMAND(SetPinNameCommand,
-                       CommandType::SET_PIN_NAME,
+                       CommandType::SET_SENSOR_NAME,
                        std::string,
                        "Set Pin Name",
                        CommandDestination::OUTPUT_BACKEND);

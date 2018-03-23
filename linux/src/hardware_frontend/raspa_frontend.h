@@ -111,7 +111,7 @@ private:
 };
 
 
-} // end namespace hardware_frontend
+} // end namespace hw_frontend
 } // end namespace sensei
 
 #endif //SENSEI_RASPA_FRONTEND_H
