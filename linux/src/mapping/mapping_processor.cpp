@@ -24,7 +24,7 @@ MappingProcessor::MappingProcessor(const int max_n_input_pins) :
 
 CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
 {
-    // TODO: find a better way to manage changes of PinType,
+    // TODO: find a better way to manage changes of SensorType,
     //       possibly without requiring SetPinType to be the 1st command received
 
     int sensor_index = cmd->index();
@@ -33,22 +33,22 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
         return CommandErrorCode::INVALID_PIN_INDEX;
     }
 
-    if (cmd->type() == CommandType::SET_PIN_TYPE)
+    if (cmd->type() == CommandType::SET_SENSOR_TYPE)
     {
         CommandErrorCode status = CommandErrorCode::OK;
-        const auto typed_cmd = static_cast<const SetPinTypeCommand*>(cmd);
+        const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
         auto pin_type = typed_cmd->data();
         switch(pin_type)
         {
-        case PinType::DIGITAL_INPUT:
+        case SensorType::DIGITAL_INPUT:
             _mappers[sensor_index].reset(new DigitalSensorMapper(sensor_index));
             break;
 
-        case PinType::ANALOG_INPUT:
+        case SensorType::ANALOG_INPUT:
             _mappers[sensor_index].reset(new AnalogSensorMapper(sensor_index));
             break;
 
-        case PinType::IMU_INPUT:
+        case SensorType::CONTINUOUS_INPUT:
             _mappers[sensor_index].reset(new ImuMapper(sensor_index));
             break;
 

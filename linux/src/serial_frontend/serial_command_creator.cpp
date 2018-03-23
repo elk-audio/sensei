@@ -116,7 +116,7 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_enabled_cmd(uint32_t 
  * Settings for commands below are cached for every pin.
  */
 
-const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_id, uint32_t timestamp, PinType type)
+const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_id, uint32_t timestamp, SensorHwType type)
 {
     if (pin_id >= _max_pins)
     {
@@ -125,14 +125,21 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_pintype_cmd(int pin_i
     pin_config &cached_cfg = _cached_cfgs[pin_id];
     switch (type)
     {
-        case PinType::DIGITAL_INPUT:
+        case SensorHwType::DIGITAL_INPUT_PIN:
             cached_cfg.pintype = ePinType::PIN_DIGITAL_INPUT;
             break;
-        case PinType::DIGITAL_OUTPUT:
+        case SensorHwType::DIGITAL_OUTPUT_PIN:
             cached_cfg.pintype = ePinType::PIN_DIGITAL_OUTPUT;
             break;
-        case PinType::ANALOG_INPUT:
+        case SensorHwType::ANALOG_INPUT_PIN:
             cached_cfg.pintype = ePinType::PIN_ANALOG_INPUT;
+            break;
+        case SensorHwType::RIBBON:
+            cached_cfg.pintype = ePinType::PIN_ANALOG_INPUT;
+            cached_cfg.cfg_data.sliderMode = 1;
+            break;
+        case SensorHwType::BUTTON:
+            cached_cfg.pintype = ePinType::PIN_DIGITAL_INPUT;
             break;
         default:
             cached_cfg.pintype = ePinType::PIN_DISABLE;
@@ -233,18 +240,6 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_lowpass_cutoff_cmd(in
     }
     pin_config &cached_cfg = _cached_cfgs[pin_id];
     cached_cfg.cfg_data.lowPassCutOffFilter = cutoff;
-    fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
-    return &_cmd_buffer;
-}
-
-const sSenseiDataPacket* SerialCommandCreator::make_config_slidermode_cmd(int pin_id, uint32_t timestamp, int mode)
-{
-    if (pin_id >= _max_pins)
-    {
-        return nullptr;
-    }
-    pin_config &cached_cfg = _cached_cfgs[pin_id];
-    cached_cfg.cfg_data.sliderMode = static_cast<uint8_t>(mode);
     fill_data(cached_cfg, _cmd_buffer, timestamp, SENSEI_CMD::CONFIGURE_PIN);
     return &_cmd_buffer;
 }

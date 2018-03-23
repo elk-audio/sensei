@@ -49,12 +49,11 @@ TEST(MessagesTest, test_external_command_creation)
 
     // Fill message queue with all types of commands
     msg_queue.push_back(factory.make_set_enabled_command(2, false));
-    msg_queue.push_back(factory.make_set_pin_type_command(3, PinType::ANALOG_INPUT));
+    msg_queue.push_back(factory.make_set_sensor_type_command(3, SensorType::ANALOG_INPUT));
     msg_queue.push_back(factory.make_set_sending_mode_command(4, SendingMode::ON_VALUE_CHANGED));
     msg_queue.push_back(factory.make_set_sending_delta_ticks_command(5, 10));
     msg_queue.push_back(factory.make_set_adc_bit_resolution_command(6, 12));
     msg_queue.push_back(factory.make_set_lowpass_cutoff_command(7, 125.0f));
-    msg_queue.push_back(factory.make_set_slider_mode_enabled_command(8, true));
     msg_queue.push_back(factory.make_set_slider_threshold_command(9, 9));
     msg_queue.push_back(factory.make_send_digital_value_command(10, true));
     msg_queue.push_back(factory.make_enable_sending_packets_command(0, true));
@@ -77,10 +76,10 @@ TEST(MessagesTest, test_external_command_creation)
             };
             break;
 
-        case CommandType::SET_PIN_TYPE:
+        case CommandType::SET_SENSOR_TYPE:
             {
-                auto typed_cmd = static_cast<SetPinTypeCommand *>(cmd_msg);
-                ASSERT_EQ(PinType::ANALOG_INPUT, typed_cmd->data());
+                auto typed_cmd = static_cast<SetSensorTypeCommand *>(cmd_msg);
+                ASSERT_EQ(SensorType::ANALOG_INPUT, typed_cmd->data());
             };
             break;
 
@@ -109,13 +108,6 @@ TEST(MessagesTest, test_external_command_creation)
             {
                 auto typed_cmd = static_cast<SetLowpassCutoffCommand *>(cmd_msg);
                 ASSERT_EQ(125.0f, typed_cmd->data());
-            };
-            break;
-
-        case CommandType::SET_SLIDER_MODE_ENABLED:
-            {
-                auto typed_cmd = static_cast<SetSliderModeEnabledCommand *>(cmd_msg);
-                ASSERT_TRUE(typed_cmd->data());
             };
             break;
 
@@ -357,7 +349,7 @@ TEST(MessagesTest, test_output_backend_command_creation)
     std::vector<std::unique_ptr<BaseMessage>> msg_queue;
 
     msg_queue.push_back(factory.make_set_backend_type_command(0, BackendType::OSC));
-    msg_queue.push_back(factory.make_set_pin_name_command(0, std::string("pippo")));
+    msg_queue.push_back(factory.make_set_sensor_name_command(0, std::string("pippo")));
     msg_queue.push_back(factory.make_set_send_output_enabled_command(0, false));
     msg_queue.push_back(factory.make_set_send_raw_input_enabled_command(0, true));
     msg_queue.push_back(factory.make_set_osc_output_base_path_command(0, "/sensors"));
@@ -384,7 +376,7 @@ TEST(MessagesTest, test_output_backend_command_creation)
             };
             break;
 
-        case CommandType::SET_PIN_NAME:
+        case CommandType::SET_SENSOR_NAME:
             {
                 auto typed_cmd = static_cast<SetPinNameCommand *>(cmd_msg);
                 ASSERT_EQ(std::string("pippo"), typed_cmd->data());

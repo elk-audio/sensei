@@ -46,35 +46,35 @@ public:
     // Values
     ////////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<BaseMessage> make_analog_value(const int pin_index,
+    std::unique_ptr<BaseMessage> make_analog_value(const int sensor_id,
                                                    const int value,
                                                    const uint32_t timestamp = 0)
     {
-        auto msg = new AnalogValue(pin_index, value, timestamp);
+        auto msg = new AnalogValue(sensor_id, value, timestamp);
         return std::unique_ptr<AnalogValue>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_digital_value(const int pin_index,
+    std::unique_ptr<BaseMessage> make_digital_value(const int sensor_id,
                                                     const bool value,
                                                     const uint32_t timestamp = 0)
     {
-        auto msg = new DigitalValue(pin_index, value, timestamp);
+        auto msg = new DigitalValue(sensor_id, value, timestamp);
         return std::unique_ptr<DigitalValue>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_imu_value(const int pin_index,
+    std::unique_ptr<BaseMessage> make_imu_value(const int sensor_id,
                                                 const float value,
                                                 const uint32_t timestamp = 0)
     {
-        auto msg = new ImuValue(pin_index, value, timestamp);
+        auto msg = new ImuValue(sensor_id, value, timestamp);
         return std::unique_ptr<ImuValue>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_output_value(const int pin_index,
+    std::unique_ptr<BaseMessage> make_output_value(const int sensor_id,
                                                    const float value,
                                                    const uint32_t timestamp = 0)
     {
-        auto msg = new OutputValue(pin_index, value, timestamp);
+        auto msg = new OutputValue(sensor_id, value, timestamp);
         return std::unique_ptr<OutputValue>(msg);
     }
 
@@ -82,91 +82,99 @@ public:
     // Commands
     ////////////////////////////////////////////////////////////////////////////////
 
-    std::unique_ptr<BaseMessage> make_set_enabled_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_enabled_command(const int sensor_id,
                                                           const bool enabled,
                                                           const uint32_t timestamp = 0)
     {
-        auto msg = new SetEnabledCommand(pin_index, enabled, timestamp);
+        auto msg = new SetEnabledCommand(sensor_id, enabled, timestamp);
         return std::unique_ptr<SetEnabledCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_pin_type_command(const int pin_index,
-                                                           const PinType pin_type,
-                                                           const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_sensor_type_command(const int sensor_id,
+                                                              const SensorType pin_type,
+                                                              const uint32_t timestamp = 0)
     {
-        auto msg = new SetPinTypeCommand(pin_index, pin_type, timestamp);
-        return std::unique_ptr<SetPinTypeCommand>(msg);
+        auto msg = new SetSensorTypeCommand(sensor_id, pin_type, timestamp);
+        return std::unique_ptr<SetSensorTypeCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_virtual_pin_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_sensor_hw_type_command(const int sensor_id,
+                                                                 const SensorHwType hw_type,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSensorHwTypeCommand(sensor_id, hw_type, timestamp);
+        return std::unique_ptr<SetSensorHwTypeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_virtual_pin_command(const int sensor_id,
                                                               const ImuIndex parameter,
                                                               const uint32_t timestamp = 0)
     {
-        auto msg = new SetVirtualPinCommand(pin_index, parameter, timestamp);
+        auto msg = new SetVirtualPinCommand(sensor_id, parameter, timestamp);
         return std::unique_ptr<SetVirtualPinCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_sending_mode_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_hw_pin_command(const int sensor_id,
+                                                         const int pin_id,
+                                                         const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSingleHwPinCommand(sensor_id, pin_id, timestamp);
+        return std::unique_ptr<SetSingleHwPinCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_sending_mode_command(const int sensor_id,
                                                                const SendingMode mode,
                                                                const uint32_t timestamp = 0)
     {
-        auto msg = new SetSendingModeCommand(pin_index, mode, timestamp);
+        auto msg = new SetSendingModeCommand(sensor_id, mode, timestamp);
         return std::unique_ptr<SetSendingModeCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_sending_delta_ticks_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_sending_delta_ticks_command(const int sensor_id,
                                                                       const int delta_ticks,
                                                                       const uint32_t timestamp = 0)
     {
-        auto msg = new SetSendingDeltaTicksCommand(pin_index, delta_ticks, timestamp);
+        auto msg = new SetSendingDeltaTicksCommand(sensor_id, delta_ticks, timestamp);
         return std::unique_ptr<SetSendingDeltaTicksCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_adc_bit_resolution_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_adc_bit_resolution_command(const int sensor_id,
                                                                      const int bit_resolution,
                                                                      const uint32_t timestamp = 0)
     {
-        auto msg = new SetADCBitResolutionCommand(pin_index, bit_resolution, timestamp);
+        auto msg = new SetADCBitResolutionCommand(sensor_id, bit_resolution, timestamp);
         return std::unique_ptr<SetADCBitResolutionCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_lowpass_filter_order_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_lowpass_filter_order_command(const int sensor_id,
                                                                        const int order,
                                                                        const uint32_t timestamp = 0)
     {
-        auto msg = new SetLowpassFilterOrderCommand(pin_index, order, timestamp);
+        auto msg = new SetLowpassFilterOrderCommand(sensor_id, order, timestamp);
         return std::unique_ptr<SetLowpassFilterOrderCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_lowpass_cutoff_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_lowpass_cutoff_command(const int sensor_id,
                                                                  const float cutoff,
                                                                  const uint32_t timestamp = 0)
     {
-        auto msg = new SetLowpassCutoffCommand(pin_index, cutoff, timestamp);
+        auto msg = new SetLowpassCutoffCommand(sensor_id, cutoff, timestamp);
         return std::unique_ptr<SetLowpassCutoffCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_slider_mode_enabled_command(const int pin_index,
-                                                                      const bool enabled,
-                                                                      const uint32_t timestamp = 0)
-    {
-        auto msg = new SetSliderModeEnabledCommand(pin_index, enabled, timestamp);
-        return std::unique_ptr<SetSliderModeEnabledCommand>(msg);
-    }
-
-    std::unique_ptr<BaseMessage> make_set_slider_threshold_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_slider_threshold_command(const int sensor_id,
                                                                    const int threshold,
                                                                    const uint32_t timestamp = 0)
     {
-        auto msg = new SetSliderThresholdCommand(pin_index, threshold, timestamp);
+        auto msg = new SetSliderThresholdCommand(sensor_id, threshold, timestamp);
         return std::unique_ptr<SetSliderThresholdCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_send_digital_value_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_send_digital_value_command(const int sensor_id,
                                                                  const bool value,
                                                                  const uint32_t timestamp = 0)
     {
-        auto msg = new SendDigitalPinValueCommand(pin_index, value, timestamp);
+        auto msg = new SendDigitalPinValueCommand(sensor_id, value, timestamp);
         return std::unique_ptr<SendDigitalPinValueCommand>(msg);
     }
 
@@ -282,27 +290,27 @@ public:
 
     // Internal commands
 
-    std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int sensor_id,
                                                                  const bool enabled,
                                                                  const uint32_t timestamp = 0)
     {
-        auto msg = new SetInvertEnabledCommand(pin_index, enabled, timestamp);
+        auto msg = new SetInvertEnabledCommand(sensor_id, enabled, timestamp);
         return std::unique_ptr<SetInvertEnabledCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_low_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_input_scale_range_low_command(const int sensor_id,
                                                                         const float value,
                                                                         const uint32_t timestamp = 0)
     {
-        auto msg = new SetInputScaleRangeLow(pin_index, value, timestamp);
+        auto msg = new SetInputScaleRangeLow(sensor_id, value, timestamp);
         return std::unique_ptr<SetInputScaleRangeLow>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_high_command(const int pin_index,
+    std::unique_ptr<BaseMessage> make_set_input_scale_range_high_command(const int sensor_id,
                                                                          const float value,
                                                                          const uint32_t timestamp = 0)
     {
-        auto msg = new SetInputScaleRangeHigh(pin_index, value, timestamp);
+        auto msg = new SetInputScaleRangeHigh(sensor_id, value, timestamp);
         return std::unique_ptr<SetInputScaleRangeHigh>(msg);
     }
 
@@ -316,11 +324,11 @@ public:
         return std::unique_ptr<SetBackendTypeCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_pin_name_command(const int pin_index,
-                                                           const std::string name,
-                                                           const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_sensor_name_command(const int sensor_id,
+                                                              const std::string name,
+                                                              const uint32_t timestamp = 0)
     {
-        auto msg = new SetPinNameCommand(pin_index, name, timestamp);
+        auto msg = new SetPinNameCommand(sensor_id, name, timestamp);
         return std::unique_ptr<SetPinNameCommand>(msg);
     }
 

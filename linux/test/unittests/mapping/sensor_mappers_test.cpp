@@ -33,6 +33,8 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pin_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
         {
@@ -49,6 +51,8 @@ protected:
 protected:
     int _sensor_idx{2};
     bool _enabled{true};
+    int _hw_pin{5};
+    SensorHwType _hw_type{SensorHwType::DIGITAL_INPUT_PIN};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
 
@@ -61,10 +65,6 @@ TEST_F(TestDigitalSensorMapper, test_config)
     // Get the config back inside a local container and check values in a LIFO manner
     std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
     _mapper.put_config_commands_into(std::back_inserter(stored_cmds));
-
-    auto cmd_pintype = extract_cmd_from<SetPinTypeCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_PIN_TYPE, cmd_pintype->type());
-    ASSERT_EQ(PinType::DIGITAL_INPUT, cmd_pintype->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
@@ -86,9 +86,6 @@ TEST_F(TestDigitalSensorMapper, test_config_fail)
     MessageFactory factory;
 
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, 12)));
-    ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
-
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_slider_mode_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
 
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, 1000.0f)));
@@ -176,12 +173,13 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, _lowpass_filter_order))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_slider_mode_enabled_command(_sensor_idx, _slider_mode_enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
                                                                                                 _input_scale_low))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
                                                                                                  _input_scale_high))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pin_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
         {
@@ -198,13 +196,14 @@ protected:
 protected:
     int _sensor_idx{2};
     bool _enabled{true};
+    SensorHwType _hw_type{SensorHwType::ANALOG_INPUT_PIN};
+    int _hw_pin{3};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
     int _delta_ticks{5};
     int _lowpass_filter_order{4};
     float _lowpass_cutoff{199.123f};
     int _adc_bit_resolution{12};
-    bool _slider_mode_enabled{true};
     int _slider_threshold{9};
     int _input_scale_low{22};
     int _input_scale_high{2322};
@@ -231,10 +230,6 @@ TEST_F(TestAnalogSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_SLIDER_THRESHOLD, cmd_slider_thr->type());
     ASSERT_EQ(_slider_threshold, cmd_slider_thr->data());
 
-    auto cmd_slider_mode = extract_cmd_from<SetSliderModeEnabledCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_SLIDER_MODE_ENABLED, cmd_slider_mode->type());
-    ASSERT_EQ(_slider_mode_enabled, cmd_slider_mode->data());
-
     auto cmd_cutoff = extract_cmd_from<SetLowpassCutoffCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_LOWPASS_CUTOFF, cmd_cutoff->type());
     ASSERT_EQ(_lowpass_cutoff, cmd_cutoff->data());
@@ -251,10 +246,6 @@ TEST_F(TestAnalogSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
     ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
 
-    auto cmd_pintype = extract_cmd_from<SetPinTypeCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_PIN_TYPE, cmd_pintype->type());
-    ASSERT_EQ(PinType::ANALOG_INPUT, cmd_pintype->data());
-
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
     ASSERT_EQ(_inverted, cmd_invert->data());
@@ -266,6 +257,18 @@ TEST_F(TestAnalogSensorMapper, test_config)
     auto cmd_enabled = extract_cmd_from<SetEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_ENABLED, cmd_enabled->type());
     ASSERT_EQ(_enabled, cmd_enabled->data());
+
+    auto cmd_hw_pin = extract_cmd_from<SetSingleHwPinCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_HW_PIN, cmd_hw_pin->type());
+    ASSERT_EQ(_hw_pin, cmd_hw_pin->data());
+
+    auto _cmd_hw_type = extract_cmd_from<SetSensorHwTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENSOR_HW_TYPE, _cmd_hw_type->type());
+    ASSERT_EQ(_hw_type, _cmd_hw_type->data());
+
+    auto cmd_pintype = extract_cmd_from<SetSensorTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENSOR_TYPE, cmd_pintype->type());
+    ASSERT_EQ(SensorType::ANALOG_INPUT, cmd_pintype->data());
 
 }
 
@@ -285,11 +288,6 @@ TEST_F(TestAnalogSensorMapper, test_config_fail)
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, 0)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, 100)));
-    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
-
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_slider_threshold_command(_sensor_idx, -20)));
-    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_slider_threshold_command(_sensor_idx, 123456)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
 
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx, -20)));
@@ -449,6 +447,8 @@ protected:
                                                                                                 _input_scale_low))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
                                                                                                  _input_scale_high))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pin_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
         {
@@ -467,6 +467,8 @@ protected:
     bool _enabled{true};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
+    SensorHwType _hw_type{SensorHwType::IMU_YAW};
+    int _hw_pin{0};
 
     float _input_scale_low{1};
     float _input_scale_high{3.14};
@@ -489,10 +491,6 @@ TEST_F(TestImuMapper, test_config)
     ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_LOW, cmd_scale_low->type());
     EXPECT_FLOAT_EQ(_input_scale_low, cmd_scale_low->data());
 
-    auto cmd_pintype = extract_cmd_from<SetPinTypeCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_PIN_TYPE, cmd_pintype->type());
-    EXPECT_EQ(PinType::IMU_INPUT, cmd_pintype->data());
-
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
     EXPECT_EQ(_inverted, cmd_invert->data());
@@ -504,6 +502,18 @@ TEST_F(TestImuMapper, test_config)
     auto cmd_enabled = extract_cmd_from<SetEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_ENABLED, cmd_enabled->type());
     EXPECT_EQ(_enabled, cmd_enabled->data());
+
+    auto cmd_hw_pin = extract_cmd_from<SetSingleHwPinCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_HW_PIN, cmd_hw_pin->type());
+    ASSERT_EQ(_hw_pin, cmd_hw_pin->data());
+
+    auto _cmd_hw_type = extract_cmd_from<SetSensorHwTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENSOR_HW_TYPE, _cmd_hw_type->type());
+    ASSERT_EQ(_hw_type, _cmd_hw_type->data());
+
+    auto cmd_sensortype = extract_cmd_from<SetSensorTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENSOR_TYPE, cmd_sensortype->type());
+    ASSERT_EQ(SensorType::CONTINUOUS_INPUT, cmd_sensortype->data());
 }
 
 

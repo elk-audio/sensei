@@ -27,8 +27,8 @@ protected:
         MessageFactory factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
 
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(0, PinType::DIGITAL_INPUT))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_pin_type_command(1, PinType::ANALOG_INPUT))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_type_command(0, SensorType::DIGITAL_INPUT))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_type_command(1, SensorType::ANALOG_INPUT))));
 
         for (auto const& c : config_cmds)
         {
@@ -41,14 +41,14 @@ protected:
     {
     }
 
-    PinType stored_pin_config(int sensor_index)
+    SensorType stored_pin_config(int sensor_index)
     {
         std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
 
         // Test that digital pin has been created and configured
         _processor.put_config_commands_into(std::back_inserter(stored_cmds));
 
-        PinType pin_type = PinType::UNDEFINED;
+        SensorType pin_type = SensorType::UNDEFINED;
         for (auto const& msg : stored_cmds)
         {
             if (msg->index() != sensor_index)
@@ -60,9 +60,9 @@ protected:
             CommandType cmd_type = cmd_msg->type();
             switch (cmd_type)
             {
-            case CommandType::SET_PIN_TYPE:
+            case CommandType::SET_SENSOR_TYPE:
             {
-                auto typed_cmd = static_cast<SetPinTypeCommand*>(cmd_msg);
+                auto typed_cmd = static_cast<SetSensorTypeCommand*>(cmd_msg);
                 pin_type = typed_cmd->data();
             };
                 break;
@@ -83,9 +83,9 @@ protected:
 
 TEST_F(TestMappingProcessor, test_get_config)
 {
-    ASSERT_EQ(PinType::DIGITAL_INPUT, stored_pin_config(0));
-    ASSERT_EQ(PinType::ANALOG_INPUT, stored_pin_config(1));
-    ASSERT_EQ(PinType::UNDEFINED, stored_pin_config(2));
+    ASSERT_EQ(SensorType::DIGITAL_INPUT, stored_pin_config(0));
+    ASSERT_EQ(SensorType::ANALOG_INPUT, stored_pin_config(1));
+    ASSERT_EQ(SensorType::UNDEFINED, stored_pin_config(2));
 }
 
 TEST_F(TestMappingProcessor, undefined_mappers_return_empty_process)

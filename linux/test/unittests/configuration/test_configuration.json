@@ -22,32 +22,43 @@
 		{
 			"id" : 1,
 			"name": "ribbon_1",
-			"pin_type" : "analog_input",
+			"sensor_type" : "analog_input",
 			"enabled": true,
 			"mode" : "continuous",
-			"delta_ticks" : 4,
-			"adc_resolution" : 8,
-			"lowpass_cutoff" : 300,
-			"lowpass_order" : 4,
-			"slider_mode" : false,
-			"slider_threshold" : 10,
 			"inverted" : false,
-			"range" : [10 , 240]
+			"range" : [10 , 240],
+			"hardware" :
+			{
+				"hardware_type" : "analog_input_pin",
+				"pin_index" : 1,
+				"delta_ticks" : 4,
+				"adc_resolution" : 8,
+				"lowpass_cutoff" : 300,
+				"lowpass_order" : 4
+			}
 		},
 		{
 			"id" : 0,
 			"name": "button_0",
-			"pin_type" : "digital_input",
+			"sensor_type" : "digital_input",
 			"enabled": true,
 			"mode" : "on_value_changed",
-			"delta_ticks" : 4
+			"hardware" :
+			{
+				"hardware_type" : "digital_input_pin",
+				"pin_index" : 0,
+				"delta_ticks" : 4
+			}
         },
 		{
 			"id" : 61,
 			"name" : "yaw",
-			"pin_type" : "imu_input",
-			"parameter" : "yaw",
-			"range" : [0 , 3.14]
+			"sensor_type" : "continuous_input",
+			"range" : [0 , 3.14],
+			"hardware" :
+			{
+				"hardware_type" : "imu_yaw"
+			}
 		}
 
 	],

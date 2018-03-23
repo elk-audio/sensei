@@ -447,9 +447,9 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             return _packet_factory.make_enable_sending_packets_cmd(cmd->timestamp(),
                                                                    cmd->data());
         }
-        case CommandType::SET_PIN_TYPE:
+        case CommandType::SET_SENSOR_HW_TYPE:
         {
-            auto cmd = static_cast<SetPinTypeCommand *>(message);
+            auto cmd = static_cast<SetSensorHwTypeCommand *>(message);
             return _packet_factory.make_config_pintype_cmd(cmd->index(),
                                                            cmd->timestamp(),
                                                            cmd->data());
@@ -500,13 +500,6 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             return _packet_factory.make_config_lowpass_cutoff_cmd(cmd->index(),
                                                                   cmd->timestamp(),
                                                                   cmd->data());
-        }
-        case CommandType::SET_SLIDER_MODE_ENABLED:
-        {
-            auto cmd = static_cast<SetSliderModeEnabledCommand *>(message);
-            return _packet_factory.make_config_slidermode_cmd(cmd->index(),
-                                                              cmd->timestamp(),
-                                                              cmd->data());
         }
         case CommandType::SET_SLIDER_THRESHOLD:
         {

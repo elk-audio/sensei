@@ -27,7 +27,8 @@ public:
     ConfigStatus read() override;
 
 private:
-    ConfigStatus handle_pin(const Json::Value &pin);
+    ConfigStatus handle_sensor(const Json::Value& sensor);
+    ConfigStatus handle_sensor_hw(const Json::Value& hardware, int sensor_id);
     ConfigStatus handle_backend(const Json::Value& backend);
     ConfigStatus handle_osc_backend(const Json::Value& backend, int id);
     ConfigStatus handle_imu(const Json::Value& imu);
