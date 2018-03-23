@@ -5,9 +5,9 @@
 #include "gtest/gtest.h"
 #define private public
 
-#include "serial_frontend/message_tracker.cpp"
+#include "hardware_frontend/message_tracker.cpp"
 #include "message/message_factory.h"
-#include "serial_frontend/serial_frontend_internal.h"
+#include "hardware_frontend/serial_frontend_internal.h"
 
 using namespace sensei;
 using namespace serial_frontend;

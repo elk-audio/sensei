@@ -42,7 +42,6 @@ public:
     const sSenseiDataPacket* make_config_adc_bitres_cmd(int pin_id, uint32_t timestamp, int bits);
     const sSenseiDataPacket* make_config_filter_order_cmd(int pin_id, uint32_t timestamp, int order);
     const sSenseiDataPacket* make_config_lowpass_cutoff_cmd(int pin_id, uint32_t timestamp, float cutoff);
-    const sSenseiDataPacket* make_config_slidermode_cmd(int pin_id, uint32_t timestamp, int mode);
     const sSenseiDataPacket* make_config_slider_threshold_cmd(int pin_id, uint32_t timestamp, int threshold);
     const sSenseiDataPacket* make_imu_enable_cmd(uint32_t timestamp, bool enable);
     const sSenseiDataPacket* make_imu_set_filtermode_cmd(uint32_t timestamp, int mode);

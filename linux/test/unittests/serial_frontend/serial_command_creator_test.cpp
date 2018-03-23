@@ -2,7 +2,7 @@
 #include "gtest/gtest.h"
 
 #define private public
-#include "serial_frontend/serial_command_creator.cpp"
+#include "hardware_frontend/serial_command_creator.cpp"
 
 
 using namespace sensei;
