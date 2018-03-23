@@ -273,7 +273,6 @@ bool RaspaFrontend::_connect_to_raspa()
 
 void RaspaFrontend::_process_sensei_command(const Command*message)
 {
-    XmosControlPacket packet;
     switch (message->type())
     {
         case CommandType::ENABLE_SENDING_PACKETS:
