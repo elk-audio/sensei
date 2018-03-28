@@ -122,6 +122,14 @@ public:
         return std::unique_ptr<SetSingleHwPinCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_hw_pins_command(const int sensor_id,
+                                                          std::vector<int> pins,
+                                                          const uint32_t timestamp = 0)
+    {
+        auto msg = new SetHwPinsCommand(sensor_id, pins, timestamp);
+        return std::unique_ptr<SetHwPinsCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_set_sending_mode_command(const int sensor_id,
                                                                const SendingMode mode,
                                                                const uint32_t timestamp = 0)

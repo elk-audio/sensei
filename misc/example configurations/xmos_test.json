@@ -30,5 +30,21 @@
         "adc_resolution" : 8
       }
     }
+    {
+      "id" : 10,
+      "enabled": true,
+      "name" : "encoder",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "adc_resolution" : 8,
+      "range" : [0,127],
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pin_index" : 5,
+        "delta_ticks" : 1,
+        "adc_resolution" : 8
+      }
+    }
   ]
 }

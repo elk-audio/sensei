@@ -306,6 +306,15 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type));
             break;
         }
+        case CommandType::SET_HW_PIN:
+        {
+            auto cmd = static_cast<const SetSingleHwPinCommand*>(message);
+            Pinlist list;
+            list.pincount = 1;
+            list.pins[0] = cmd->data();
+            _send_list.push_back(_packet_factory.make_add_pins_to_controller_command(cmd->index(), list));
+            break;
+        }
         case CommandType::SET_HW_PINS:
         {
             auto cmd = static_cast<const SetHwPinsCommand*>(message);

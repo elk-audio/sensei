@@ -94,6 +94,8 @@ enum class SensorHwType
     ANALOG_INPUT_PIN,
     RIBBON,
     BUTTON,
+    ENCODER,
+    N_WAY_SWITCH,
     IMU_PITCH,
     IMU_ROLL,
     IMU_YAW

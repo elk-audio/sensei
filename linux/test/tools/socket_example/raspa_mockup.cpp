@@ -97,9 +97,9 @@ private:
         {
             memset(&buffer, 0, sizeof(buffer));
             auto bytes = recv(_in_socket, &buffer, sizeof(buffer), 0);
-            if (bytes >= sizeof(buffer))
+            if (bytes >= (int)sizeof(buffer))
             {
-                std::cout << "Received command: " << (int)buffer.command << ", " << (int)buffer.sub_command << std::endl;
+                std::cout << "Received command: " << (int)buffer.command << ":" << (int)buffer.sub_command << ", " << (int)buffer.sub_command << std::endl;
                 if (!_connected)
                 {
                     /* Try to connect to sensei, it should be up and running now */
@@ -144,7 +144,7 @@ private:
                     }
                     else
                     {
-                        std::cout << "Sent ack to msg: " << _ack.sequence_no << std::endl;
+                        std::cout << "Sent ack to msg: " << from_xmos_byteord(_ack.sequence_no) << std::endl;
                     }
                     _send_ack = false;
                 }
