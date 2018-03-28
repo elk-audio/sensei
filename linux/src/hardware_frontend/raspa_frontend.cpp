@@ -2,13 +2,14 @@
 
 #include <iostream>
 #include <cstring>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
 
 #include "raspa_frontend.h"
-#include "xmos_control_protocol.h"
+#include "xmos_gpio_protocol.h"
 #include "logging.h"
 
 namespace sensei {
@@ -140,12 +141,12 @@ void RaspaFrontend::verify_acks(bool enabled)
 
 void RaspaFrontend::read_loop()
 {
-    XmosControlPacket buffer = {0};
+    XmosGpioPacket buffer = {0};
     while (_state.load() == ThreadState::RUNNING)
     {
         memset(&buffer, 0, sizeof(buffer));
         auto bytes = recv(_in_socket, &buffer, sizeof(buffer), 0);
-        if (_muted == false && bytes >= static_cast<ssize_t>(sizeof(XmosControlPacket)))
+        if (_muted == false && bytes >= static_cast<ssize_t>(sizeof(XmosGpioPacket)))
         {
             if (!_connected)
             {
@@ -189,17 +190,18 @@ void RaspaFrontend::write_loop()
                 SENSEI_LOG_INFO("Waiting for ack");
                 _ready_to_send_notifier.wait(lock);
             }
-            auto ret = send(_out_socket, &packet, sizeof(XmosControlPacket), 0);
+            auto ret = send(_out_socket, &packet, sizeof(XmosGpioPacket), 0);
             if (_verify_acks && ret > 0)
             {
-                SENSEI_LOG_INFO("Sent raspa packet, cmd {}, id {}", static_cast<int>(packet.command), static_cast<int>(packet.sequence_no));
-                _pending_sequence_number = packet.sequence_no;
+                SENSEI_LOG_INFO("Sent raspa packet, cmd {}, id {}", static_cast<int>(packet.command),
+                                                                    static_cast<int>(from_xmos_byteord(packet.sequence_no)));
+                _pending_sequence_number = from_xmos_byteord(packet.sequence_no);
                 _ready_to_send = false;
             } else
             {
                 _send_list.pop_front();
             }
-            if (ret < static_cast<ssize_t>(sizeof(XmosControlPacket)))
+            if (ret < static_cast<ssize_t>(sizeof(XmosGpioPacket)))
             {
                 SENSEI_LOG_WARNING("Sending packet on socket failed {}", ret);
             }
@@ -275,31 +277,116 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
 {
     switch (message->type())
     {
+        case CommandType::SET_SENSOR_HW_TYPE:
+        {
+            auto cmd = static_cast<const SetSensorHwTypeCommand*>(message);
+            uint8_t hw_type;
+            switch (cmd->data())
+            {
+                case SensorHwType::DIGITAL_INPUT_PIN:
+                    hw_type = HwType::BINARY_INPUT;
+                    break;
+
+                case SensorHwType::DIGITAL_OUTPUT_PIN:
+                    hw_type = HwType::BINARY_OUTPUT;
+                    break;
+
+                case SensorHwType::ANALOG_INPUT_PIN:
+                    hw_type = HwType::ANALOG_INPUT;
+                    break;
+
+                case SensorHwType::BUTTON:
+                    hw_type = HwType::BINARY_INPUT;
+                    break;
+
+                default:
+                    SENSEI_LOG_WARNING("Unsupported Sensor HW type: {}", static_cast<int>(cmd->data()));
+                    return;
+            }
+            _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type));
+            break;
+        }
+        case CommandType::SET_HW_PINS:
+        {
+            auto cmd = static_cast<const SetHwPinsCommand*>(message);
+            Pinlist list;
+            auto setpins = cmd->data();
+            int i = 0;
+            int i_mod = 0;
+            /* Split into more than 1 xmos packet if neccesary */
+            while (i < setpins.size())
+            {
+                list.pins[i_mod++] = static_cast<uint8_t>(setpins[i++]);
+                if (i_mod >= sizeof(list.pins) || i >= setpins.size())
+                {
+                    list.pincount = static_cast<uint8_t>(i_mod);
+                    _send_list.push_back(_packet_factory.make_add_pins_to_controller_command(cmd->index(), list));
+                    i_mod = 0;
+                }
+            }
+            break;
+        }
+        case CommandType::SET_ENABLED:
+        {
+            auto cmd = static_cast<const SetEnabledCommand*>(message);
+            uint8_t muted = cmd->data()? CNTRLR_UNMUTED : CNTRLR_MUTED;
+            _send_list.push_back(_packet_factory.make_mute_controller_command(cmd->index(), muted));
+            break;
+        }
+        case CommandType::SET_SENDING_MODE:
+        {
+            auto cmd = static_cast<const SetSendingModeCommand*>(message);
+            uint8_t mode;
+            switch (cmd->data())
+            {
+                case SendingMode::OFF:
+                    // TODO - Maybe send a mute command here
+                    return;
+
+                case SendingMode::CONTINUOUS:
+                    mode = NotificationMode::EVERY_CNTRLR_TICK;
+                    break;
+
+                case SendingMode::ON_VALUE_CHANGED:
+                    mode = NotificationMode::ON_VALUE_CHANGE;
+                    break;
+
+                case SendingMode::TOGGLED:
+                case SendingMode::ON_PRESS:
+                case SendingMode::ON_RELEASE:
+                    // TODO - currently handling these in the mapper
+                    mode = NotificationMode::ON_VALUE_CHANGE;
+                    break;
+
+                default:
+                SENSEI_LOG_WARNING("Unsupported Sending Mode: {}", static_cast<int>(cmd->data()));
+            }
+            break;
+        }
+        case CommandType::SET_SENDING_DELTA_TICKS:
+        {
+            auto cmd = static_cast<const SetSendingDeltaTicksCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_controller_tick_rate_command(cmd->index(), cmd->data()));
+            break;
+        }
+        case CommandType::SEND_DIGITAL_PIN_VALUE:
+        {
+            auto cmd = static_cast<const SendDigitalPinValueCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), cmd->data()? 1 : 0));
+            break;
+        }
         case CommandType::ENABLE_SENDING_PACKETS:
         {
-            auto cmd = static_cast<const EnableSendingPacketsCommand *>(message);
-            _send_list.push_back(_packet_factory.make_set_tick_rate_command(0));
-            Pinlist list;
-            list.pincount = 5;
-            list.pins =  {24,25,26,27,28};
-            _send_list.push_back(_packet_factory.make_add_digital_output_command(0,3, NOT_MUXED_ACTIVE_HIGH, 0,0,1,list));
-            list.pincount = 13;
-            list.pins = {8,9,10,11,12,13,14,15,16,17,18,19,20};
-            _send_list.push_back(_packet_factory.make_add_digital_output_command(1,1, MUXED_ACTIVE_HIGH, 0,24, 1, list));
-            list.pincount = 2;
-            list.pins = {21,22};
-            _send_list.push_back(_packet_factory.make_add_pins_to_controller_command(1, list));
-            _send_list.push_back(_packet_factory.make_start_system_command());
-            break;
+            auto cmd = static_cast<const EnableSendingPacketsCommand*>(message);
         }
 
         default:
             SENSEI_LOG_WARNING("Unsupported command: {}", message->representation());
     }
-
+    return;
 }
 
-void RaspaFrontend::_handle_raspa_packet(const XmosControlPacket& packet)
+void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 {
     switch (packet.command)
     {
@@ -316,15 +403,15 @@ void RaspaFrontend::_handle_raspa_packet(const XmosControlPacket& packet)
     }
 }
 
-void RaspaFrontend::_handle_ack(const XmosControlPacket& ack)
+void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 {
-
-    SENSEI_LOG_INFO("Got ack for packet: {}, {}", ack.command, ack.sequence_no);
+    uint32_t seq_no = from_xmos_byteord(ack.sequence_no);
+    SENSEI_LOG_INFO("Got ack for packet: {}, {}", ack.command, seq_no);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);
         //if (_message_tracker.ack(ack.sequence_no))
-        if (ack.sequence_no == _pending_sequence_number)
+        if (seq_no == _pending_sequence_number)
         {
             if (_send_list.size() > 0)
                 _send_list.pop_front();
@@ -333,20 +420,20 @@ void RaspaFrontend::_handle_ack(const XmosControlPacket& ack)
         }
         else
         {
-            SENSEI_LOG_WARNING("Got unrecognised ack for packet: {}", ack.sequence_no);
+            SENSEI_LOG_WARNING("Got unrecognised ack for packet: {}, waiting for {}", seq_no, _pending_sequence_number);
         }
     }
-    char status = ack.payload[2];
+    char status = ack.payload.raw_data[2]; // TODO - we need an ack in the union
     if (status != 0)
     {
         SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", ack.sequence_no, static_cast<int>(status));
     }
 }
 
-void RaspaFrontend::_handle_value(const XmosControlPacket& packet)
+void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
 {
-    auto m = reinterpret_cast<const ValueData*>(packet.payload);
-    _out_queue->push(_message_factory.make_analog_value(m->controller_id, m->value, 0));
+    auto& m = packet.payload.value_send_data;
+    _out_queue->push(_message_factory.make_analog_value(m.controller_id, from_xmos_byteord(m.controller_val), 0));
     SENSEI_LOG_INFO("Got a value packet!");
 }
 

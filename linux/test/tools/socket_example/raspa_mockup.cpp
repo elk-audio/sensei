@@ -4,14 +4,15 @@
 #include <cstring>
 #include <thread>
 #include <cassert>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <cerrno>
 #include <unistd.h>
 #include <csignal>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <arpa/inet.h>
 
-#include "../../../xmos_protocol/xmos_control_protocol.h"
+#include "../../../xmos_protocol/xmos_gpio_protocol.h"
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
@@ -26,7 +27,15 @@ constexpr auto PING_INTERVAL = std::chrono::milliseconds(250);
  * g++ raspa_mockup.cpp -g -o mockup -lpthread
  */
 
+inline uint32_t to_xmos_byteord(uint32_t word)
+{
+    return htonl(word);
+}
 
+inline uint32_t from_xmos_byteord(uint32_t word)
+{
+    return ntohl(word);
+}
 
 
 class RaspaMockup
@@ -83,7 +92,7 @@ public:
 private:
     void read_loop()
     {
-        XmosControlPacket buffer;
+        XmosGpioPacket buffer;
         while (_running)
         {
             memset(&buffer, 0, sizeof(buffer));
@@ -120,7 +129,7 @@ private:
 
     void write_loop()
     {
-        XmosControlPacket buffer;
+        XmosGpioPacket buffer;
         while (_running)
         {
             if (_connected)
@@ -142,11 +151,10 @@ private:
                 else
                 {
                     /* Send a random value on controller 5 */
-                    XmosControlPacket packet;
+                    XmosGpioPacket packet;
                     packet.command = XMOS_CMD_GET_VALUE;
-                    packet.payload[0] = 5;
-                    auto data = reinterpret_cast<uint32_t*>(&packet.payload[4]);
-                    *data = rand() % 128;
+                    packet.payload.value_send_data.controller_id = 5;
+                    packet.payload.value_send_data.controller_val = to_xmos_byteord(rand() % 128);
                     auto ret = send(_out_socket, &packet, sizeof(packet), 0);
                     if (ret < sizeof(_ack))
                     {
@@ -174,15 +182,13 @@ private:
         }
     }
 
-    void handle_incoming_packet(const XmosControlPacket& packet)
+    void handle_incoming_packet(const XmosGpioPacket& packet)
     {
         /* Just reply every packet with an ok ack */
-        XmosControlPacket ack{0};
+        XmosGpioPacket ack{0};
         ack.command = XMOS_ACK;
+        /* We received the sequence no in big endian so it's already in the correct format */
         ack.sequence_no = packet.sequence_no;
-        ack.payload[0] = packet.command;
-        ack.payload[1] = packet.sub_command;
-        ack.payload[2] = 0;
         /* Signal ok to send it */
         _ack = ack;
         _send_ack = true;
@@ -192,7 +198,7 @@ private:
     bool            _running{false};
     bool            _connected{false};
     bool            _send_ack{false};
-    XmosControlPacket _ack;
+    XmosGpioPacket  _ack;
 
     std::thread     _read_thread;
     std::thread     _write_thread;

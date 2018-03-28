@@ -1,206 +1,192 @@
 #include <cassert>
 #include <cstring>
 
-#include "xmos_control_protocol.h"
 #include "xmos_command_creator.h"
 
 namespace sensei {
 namespace hw_frontend {
 
 
-XmosControlPacket XmosCommandCreator::make_reset_system_command()
+XmosGpioPacket XmosCommandCreator::make_reset_system_command()
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
     packet.sub_command = XMOS_SUB_CMD_STOP_RESET_SYSTEM;
-    packet.sequence_no = _sequence_number();
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_start_system_command()
+XmosGpioPacket XmosCommandCreator::make_start_system_command()
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
     packet.sub_command = XMOS_SUB_CMD_START_SYSTEM;
-    packet.sequence_no = _sequence_number();
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_stop_system_command()
+XmosGpioPacket XmosCommandCreator::make_stop_system_command()
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
     packet.sub_command = XMOS_SUB_CMD_STOP_SYSTEM;
-    packet.sequence_no = _sequence_number();
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_set_tick_rate_command(int tick_rate)
+XmosGpioPacket XmosCommandCreator::make_set_tick_rate_command(uint8_t tick_rate)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
     packet.sub_command = XMOS_SUB_CMD_SET_TICK_RATE;
-    packet.payload[0] = tick_rate;
-    packet.sequence_no = _sequence_number();
+    packet.payload.tick_rate_data.system_tick_rate = tick_rate;
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_get_board_info_command()
+XmosGpioPacket XmosCommandCreator::make_get_board_info_command()
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
-    packet.sub_command = XMOS_SUB_CMD_STOP_RESET_SYSTEM;
-    packet.sequence_no = _sequence_number();
+    packet.sub_command = XMOS_SUB_CMD_GET_BOARD_INFO;
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_reset_all_controllers_command()
+XmosGpioPacket XmosCommandCreator::make_reset_all_controllers_command()
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
     packet.sub_command = XMOS_SUB_CMD_RESET_ALL_CNTRLRS;
-    packet.sequence_no = _sequence_number();
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_reset_controller_command(int controller_id)
+XmosGpioPacket XmosCommandCreator::make_reset_controller_command(uint8_t controller_id)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
     packet.sub_command = XMOS_SUB_CMD_RESET_CNTRLR;
-    packet.payload[0] = controller_id;
-    packet.sequence_no = _sequence_number();
+    packet.payload.reset_cntrlr_data.controller_id = controller_id;
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_add_digital_output_command(int controller_id, uint8_t hw_type,
-                                                                         uint8_t mux_inv, uint8_t mux_ctrl_id,
-                                                                         uint8_t mux_ctrl_pin, uint8_t tickrate,
-                                                                         const Pinlist& pins)
+XmosGpioPacket XmosCommandCreator::make_add_controller_command(uint8_t controller_id, uint8_t hw_type)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
-    packet.sub_command = XMOS_SUB_CMD_ADD_DIGITAL_OUTPUT;
-    auto data = reinterpret_cast<DigitalOutputData*>(packet.payload);
-    data->controller_id = controller_id;
-    data->output_hw_type = hw_type;
-    data->mux_inverted = mux_inv;
-    data->mux_controller_id = mux_ctrl_id;
-    data->mux_controller_pin = mux_ctrl_pin;
-    data->delta_tick_rate = tickrate;
-    data->num_pins = pins.pincount;
-    assert(pins.pincount <= sizeof(data->pins));
-    for (int i = 0; i < pins.pincount; ++i)
-    {
-        data->pins[i] = pins.pins[i];
-    }
-    packet.sequence_no = _sequence_number();
+    packet.sub_command = XMOS_SUB_CMD_ADD_CNTRLR;
+    packet.payload.cntrlr_data.controller_id = controller_id;
+    packet.payload.cntrlr_data.hw_type = hw_type;
     return packet;
 }
 
-XmosControlPacket
-XmosCommandCreator::make_add_digital_input_command(int controller_id, uint8_t hw_type,
-                                                   uint8_t mux_inv, uint8_t mux_ctrl_id,
-                                                   uint8_t mux_ctrl_pin, uint8_t tickrate,
-                                                   uint8_t not_mode, const Pinlist& pins)
+XmosGpioPacket XmosCommandCreator::make_add_controller_to_mux_command(uint8_t controller_id, uint8_t mux_id, uint8_t mux_pin)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
-    packet.sub_command = XMOS_SUB_CMD_ADD_DIGITAL_INPUT;
-    auto data = reinterpret_cast<DigitalInputData*>(packet.payload);
-    data->controller_id = controller_id;
-    data->input_hw_type = hw_type;
-    data->mux_inverted = mux_inv;
-    data->mux_controller_id = mux_ctrl_id;
-    data->mux_controller_pin = mux_ctrl_pin;
-    data->delta_tick_rate = tickrate;
-    data->notification_mode = not_mode;
-    data->num_pins = pins.pincount;
-    assert(pins.pincount <= sizeof(data->pins));
-    for (int i = 0; i < pins.pincount; ++i)
-    {
-        data->pins[i] = pins.pins[i];
-    }
-    packet.sequence_no = _sequence_number();
+    packet.sub_command = XMOS_SUB_CMD_ADD_CNTRLR_TO_MUX;
+    packet.payload.cntrlr_to_mux_data.controller_id = controller_id;
+    packet.payload.cntrlr_to_mux_data.mux_controller_id = mux_id;
+    packet.payload.cntrlr_to_mux_data.mux_controller_pin = mux_pin;
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_add_analog_input_command(int controller_id, int pin)
+XmosGpioPacket XmosCommandCreator::make_set_polarity_command(uint8_t controller_id, uint8_t polarity)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
-    packet.sub_command = XMOS_SUB_CMD_ADD_ANALOG_INPUT;
-    auto data = reinterpret_cast<AnalogInputData*>(packet.payload);
-    data->controller_id = controller_id;
-    data->pin_number = pin;
-    packet.sequence_no = _sequence_number();
+    packet.sub_command = XMOS_SUB_CMD_SET_CNTRLR_POLARITY;
+    packet.payload.cntrlr_polarity_data.controller_id = controller_id;
+    packet.payload.cntrlr_polarity_data.polarity = polarity;
     return packet;
 }
 
-XmosControlPacket
-XmosCommandCreator::make_add_pins_to_controller_command(int controller_id, Pinlist& pins)
+XmosGpioPacket XmosCommandCreator::make_set_controller_tick_rate_command(uint8_t controller_id,
+                                                                         uint8_t tick_rate_divisor)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
+    packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
+    packet.sub_command = XMOS_SUB_CMD_SET_INPUT_CNTRLR_TICK_RATE;
+    packet.payload.cntrlr_tick_rate.controller_id = controller_id;
+    packet.payload.cntrlr_tick_rate.delta_tick_rate = tick_rate_divisor;
+    return packet;
+}
+
+XmosGpioPacket XmosCommandCreator::make_set_notification_mode(uint8_t controller_id, uint8_t notif_mode)
+{
+    XmosGpioPacket packet = _prepare_packet();
+    packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
+    packet.sub_command = XMOS_SUB_CMD_SET_INPUT_CNTRLR_NOTIF_MODE;
+    packet.payload.notif_mode_data.controller_id = controller_id;
+    packet.payload.notif_mode_data.notif_mode = notif_mode;
+    return packet;
+}
+
+XmosGpioPacket XmosCommandCreator::make_add_pins_to_controller_command(uint8_t controller_id, Pinlist& pins)
+{
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
     packet.sub_command = XMOS_SUB_CMD_ADD_PINS_TO_CNTRLR;
-    auto data = reinterpret_cast<PinData*>(packet.payload);
-    data->controller_id = controller_id;
-    data->num_pins = pins.pincount;
-    assert(pins.pincount <= sizeof(data->pins));
+    auto& data = packet.payload.pin_data;
+    data.controller_id = controller_id;
+    data.num_pins = pins.pincount;
+    assert(pins.pincount <= sizeof(data.pins));
     for (int i = 0; i < pins.pincount; ++i)
     {
-        data->pins[i] = pins.pins[i];
+        data.pins[i] = pins.pins[i];
     }
-    packet.sequence_no = _sequence_number();
     return packet;}
 
-XmosControlPacket XmosCommandCreator::make_mute_controller_command(int controller_id)
+XmosGpioPacket XmosCommandCreator::make_mute_controller_command(uint8_t controller_id, uint8_t mute_status)
 {
-    return XmosControlPacket();
+    XmosGpioPacket packet = _prepare_packet();
+    packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
+    packet.sub_command = XMOS_SUB_CMD_MUTE_UNMUTE_CNTRLR;
+    packet.payload.mute_cmnd_data.controller_id = controller_id;
+    packet.payload.mute_cmnd_data.mute_status = mute_status;
+    return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_remove_controller_command(int controller_id)
+XmosGpioPacket XmosCommandCreator::make_remove_controller_command(uint8_t controller_id)
 {
-    return XmosControlPacket();
+    XmosGpioPacket packet = _prepare_packet();
+    packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
+    packet.sub_command = XMOS_SUB_CMD_REMOVE_CNTRLR;
+    packet.payload.remove_cntrlr_data.controller_id = controller_id;
+    return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_set_controller_range_command()
+XmosGpioPacket XmosCommandCreator::make_set_controller_range_command(uint8_t controller_id, uint32_t min_value, uint32_t max_value)
 {
-    return XmosControlPacket();
+    XmosGpioPacket packet = _prepare_packet();
+    packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
+    packet.sub_command = XMOS_SUB_CMD_SET_CNTRLR_RANGE;
+    packet.payload.set_cntrlr_range_data.controller_id = controller_id;
+    packet.payload.set_cntrlr_range_data.min_value = to_xmos_byteord(min_value);
+    packet.payload.set_cntrlr_range_data.max_value = to_xmos_byteord(max_value);
+    return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_get_value_command(int controller_id)
+XmosGpioPacket XmosCommandCreator::make_get_value_command(uint8_t controller_id)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_GET_VALUE;
-    auto data = reinterpret_cast<ValueData*>(packet.payload);
-    data->controller_id = controller_id;
-    packet.sequence_no = _sequence_number();
+    packet.payload.value_request_data.controller_id = controller_id;
     return packet;
 }
 
-XmosControlPacket XmosCommandCreator::make_set_value_command(int controller_id, uint32_t value)
+XmosGpioPacket XmosCommandCreator::make_set_value_command(uint8_t controller_id, uint32_t value)
 {
-    XmosControlPacket packet;
-    memset(&packet, sizeof(packet), 0);
+    XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SET_VALUE;
-    auto data = reinterpret_cast<ValueData*>(packet.payload);
-    data->controller_id = controller_id;
-    data->value = value;
-    packet.sequence_no = _sequence_number();
+    packet.payload.value_request_data.controller_id = controller_id;
+    packet.payload.value_send_data.controller_val = to_xmos_byteord(value);
     return packet;
 }
+
+XmosGpioPacket XmosCommandCreator::_prepare_packet()
+{
+    XmosGpioPacket packet;
+    memset(&packet, 0, sizeof(packet));
+    packet.sequence_no = to_xmos_byteord(_sequence_number());
+    return packet;
+}
+
+
 }
 }

@@ -12,7 +12,6 @@
 #include <mutex>
 #include <atomic>
 #include <cassert>
-#include <xmos_control_protocol.h>
 
 #include "hw_frontend.h"
 #include "message_tracker.h"
@@ -20,7 +19,6 @@
 #include "message/base_command.h"
 #include "message/message_factory.h"
 #include "xmos_command_creator.h"
-#include "xmos_control_protocol.h"
 
 namespace sensei {
 namespace hw_frontend {
@@ -84,14 +82,14 @@ private:
 
     //void _handle_timeouts();
     bool _connect_to_raspa();
-    void _handle_raspa_packet(const XmosControlPacket& packet);
-    void _handle_ack(const XmosControlPacket& ack);
-    void _handle_value(const XmosControlPacket& packet);
+    void _handle_raspa_packet(const XmosGpioPacket& packet);
+    void _handle_ack(const XmosGpioPacket& ack);
+    void _handle_value(const XmosGpioPacket& packet);
     void _process_sensei_command(const Command*message);
 
     MessageFactory   _message_factory;
     XmosCommandCreator _packet_factory;
-    std::deque<XmosControlPacket>  _send_list;
+    std::deque<XmosGpioPacket>  _send_list;
 
     std::atomic<ThreadState> _state;
     std::thread     _read_thread;

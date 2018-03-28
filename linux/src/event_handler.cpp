@@ -135,6 +135,9 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
             default:
                 break;
             }
+        } else
+        {
+            SENSEI_LOG_WARNING("Handled mapper command ok");
         }
     }
 
@@ -188,7 +191,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
     // At last, pass the message to serial receiver queue
     // which is a owning sink
-    if (address & CommandDestination::SERIAL_FRONTEND)
+    if (address & CommandDestination::HARDWARE_FRONTEND)
     {
         _to_frontend_queue.push(std::move(cmd));
     }

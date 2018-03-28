@@ -64,7 +64,7 @@ TEST(MessagesTest, test_external_command_creation)
     {
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::SERIAL_FRONTEND);
+        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::HARDWARE_FRONTEND);
 
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
@@ -227,7 +227,7 @@ TEST(MessagesTest, test_imu_specific_command_creation)
     {
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_TRUE(cmd_msg->destination()& CommandDestination::SERIAL_FRONTEND);
+        ASSERT_TRUE(cmd_msg->destination()& CommandDestination::HARDWARE_FRONTEND);
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
         {
