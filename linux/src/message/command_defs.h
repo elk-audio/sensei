@@ -96,6 +96,8 @@ enum class SensorHwType
     BUTTON,
     ENCODER,
     N_WAY_SWITCH,
+    STEPPED_OUTPUT,
+    MULTIPLEXER,
     IMU_PITCH,
     IMU_ROLL,
     IMU_YAW

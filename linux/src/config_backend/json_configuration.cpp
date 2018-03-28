@@ -243,6 +243,17 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         _queue->push(_message_factory.make_set_hw_pin_command(sensor_id, pin_id));
     }
 
+    const Json::Value& pin_list = hardware["pins"];
+    if (pin_list.isArray())
+    {
+        std::vector<int> pins;
+        for (const Json::Value& p : pin_list)
+        {
+            pins.push_back(p.asInt());
+        }
+        _queue->push(_message_factory.make_set_hw_pins_command(sensor_id, pins));
+    }
+
     /* read sensor type configuration */
     const Json::Value& sensor_type = hardware["hardware_type"];
     if (sensor_type.isString())
@@ -268,6 +279,22 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         else if (hw_type_str == "button")
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::BUTTON);
+        }
+        else if (hw_type_str == "encoder")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::ENCODER);
+        }
+        else if (hw_type_str == "n_way_switch")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::N_WAY_SWITCH);
+        }
+        else if (hw_type_str == "stepped_output")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::STEPPED_OUTPUT);
+        }
+        else if (hw_type_str == "multiplexer")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::MULTIPLEXER);
         }
         else if (hw_type_str == "imu_pitch")
         {
