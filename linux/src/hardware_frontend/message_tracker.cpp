@@ -42,13 +42,14 @@ bool MessageTracker::ack(uint64_t identifier)
         return false;
     }
     _message_in_transit = nullptr;
+    _identifier = 0;
     return true;
 }
 
 timeout MessageTracker::timed_out()
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    if (_message_in_transit == nullptr)
+    if (_identifier == 0 &&  _message_in_transit == nullptr)
     {
         return timeout::NO_MESSAGE;
     }

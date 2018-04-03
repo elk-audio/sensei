@@ -80,16 +80,18 @@ private:
     void read_loop();
     void write_loop();
 
-    //void _handle_timeouts();
+    void _handle_timeouts();
+    void _log_packet(uint32_t seq_no);
     bool _connect_to_raspa();
-    void _handle_raspa_packet(const XmosGpioPacket& packet);
-    void _handle_ack(const XmosGpioPacket& ack);
-    void _handle_value(const XmosGpioPacket& packet);
+    void _handle_raspa_packet(const xmos::XmosGpioPacket& packet);
+    void _handle_ack(const xmos::XmosGpioPacket& ack);
+    void _handle_value(const xmos::XmosGpioPacket& packet);
     void _process_sensei_command(const Command*message);
 
     MessageFactory   _message_factory;
     XmosCommandCreator _packet_factory;
-    std::deque<XmosGpioPacket>  _send_list;
+    MessageTracker     _message_tracker;
+    std::deque<xmos::XmosGpioPacket>  _send_list;
 
     std::atomic<ThreadState> _state;
     std::thread     _read_thread;

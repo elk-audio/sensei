@@ -15,6 +15,7 @@
 namespace sensei {
 namespace hw_frontend {
 
+using namespace xmos;
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
@@ -28,7 +29,7 @@ SENSEI_GET_LOGGER;
 RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_queue,
                              SynchronizedQueue <std::unique_ptr<sensei::BaseMessage>>*out_queue)
               : HwFrontend(in_queue, out_queue),
-                //_message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
+                _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
                 _state(ThreadState::STOPPED),
                 _in_socket(-1),
                 _out_socket(-1),
@@ -157,12 +158,7 @@ void RaspaFrontend::read_loop()
         }
         if (!_ready_to_send)
         {
-            // TODO - will wait forever if ack is lost - fix!
-            //_handle_timeouts(); /* It's more efficient to not check this every time */
-        }
-        if (bytes < 0)
-        {
-            SENSEI_LOG_WARNING("Returned {} on recv", strerror(errno));
+            _handle_timeouts(); /* It's more efficient to not check this every time */
         }
     }
     /* Notify the write thread in case it is waiting since no more notifications will follow */
@@ -182,20 +178,21 @@ void RaspaFrontend::write_loop()
 
         while(!_send_list.empty())
         {
-            SENSEI_LOG_INFO("Going through sendlist: {} packets", _send_list.size());
-            auto packet = _send_list.front();
             std::unique_lock<std::mutex> lock(_send_mutex);
+            SENSEI_LOG_INFO("Going through sendlist: {} packets", _send_list.size());
             if (_verify_acks && !_ready_to_send )
             {
                 SENSEI_LOG_INFO("Waiting for ack");
                 _ready_to_send_notifier.wait(lock);
+                continue;
             }
+            auto& packet = _send_list.front();
             auto ret = send(_out_socket, &packet, sizeof(XmosGpioPacket), 0);
             if (_verify_acks && ret > 0)
             {
                 SENSEI_LOG_INFO("Sent raspa packet, cmd {}, id {}", static_cast<int>(packet.command),
                                                                     static_cast<int>(from_xmos_byteord(packet.sequence_no)));
-                _pending_sequence_number = from_xmos_byteord(packet.sequence_no);
+                _message_tracker.store(nullptr, from_xmos_byteord(packet.sequence_no));
                 _ready_to_send = false;
             } else
             {
@@ -209,51 +206,42 @@ void RaspaFrontend::write_loop()
     }
 }
 
-//void RaspaFrontend::_handle_timeouts()
-//{
-//    std::lock_guard<std::mutex> lock(_send_mutex);
-//    switch (_message_tracker.timed_out())
-//    {
-//        case timeout::TIMED_OUT_PERMANENTLY:
-//        {
-//            /* Resending timed out too many times, push an error message to main loop.
-//             * NOTE: No break as we want to signal ready to send to the write thread too.
-//             * Also note that m is destroyed when this scope exits. */
-//            auto m = _message_tracker.get_cached_message();
-//            auto error_message = _message_factory.make_too_many_timeouts_error(m->index(), 0);
-//            SENSEI_LOG_WARNING("Message {} timed out, sending next message.", m->representation());
-//            _out_queue->push(std::move(error_message));
-//        }
-//        case timeout::TIMED_OUT:
-//        {
-//            /* Resend logic is handled when next_message_to_send() is called. */
-//            _ready_to_send = true;
-//            _ready_to_send_notifier.notify_one();
-//            break;
-//        }
-//        case timeout::NO_MESSAGE:
-//        case timeout::WAITING:
-//            /* Keep waiting */
-//            break;
-//    }
-//}
-//
-//std::unique_ptr<Command> RaspaFrontend::_next_message_to_send()
-//{
-//    auto message = _message_tracker.get_cached_message();
-//    if (message)
-//    {
-//        return std::move(message);
-//    }
-//    return _in_queue->pop();
-//}
+void RaspaFrontend::_handle_timeouts()
+{
+    std::lock_guard<std::mutex> lock(_send_mutex);
+    switch (_message_tracker.timed_out())
+    {
+        case timeout::TIMED_OUT_PERMANENTLY:
+        {
+            /* Resending timed out too many times, push an error message to main loop.
+             * NOTE: Intentional fall through as we want to signal ready to send to the
+             * write thread too. */
+            SENSEI_LOG_WARNING("Message timed out too many times, sending next message.");
+            if (_send_list.size() > 0)
+            {
+                _send_list.pop_front();
+            }
+        }
+        case timeout::TIMED_OUT:
+        {
+            /* Resend logic is handled when next_message_to_send() is called. */
+            SENSEI_LOG_WARNING("Message timed out, retrying.");
+            _ready_to_send = true;
+            _ready_to_send_notifier.notify_one();
+            break;
+        }
+        case timeout::NO_MESSAGE:
+        case timeout::WAITING:
+            /* Keep waiting */
+            break;
+    }
+}
 
 bool RaspaFrontend::_connect_to_raspa()
 {
     sockaddr_un address;
     address.sun_family = AF_UNIX;
     strcpy(address.sun_path, RASPA_SOCKET);
-
     auto res = connect(_out_socket, reinterpret_cast<sockaddr*>(&address), sizeof(sockaddr_un));
     if (res != 0)
     {
@@ -387,6 +375,8 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::ENABLE_SENDING_PACKETS:
         {
             auto cmd = static_cast<const EnableSendingPacketsCommand*>(message);
+            _send_list.push_back(_packet_factory.make_start_system_command());
+            break;
         }
 
         default:
@@ -414,28 +404,30 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 
 void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 {
-    uint32_t seq_no = from_xmos_byteord(ack.sequence_no);
+    uint32_t seq_no = from_xmos_byteord(ack.payload.ack_data.returned_seq_no);
     SENSEI_LOG_INFO("Got ack for packet: {}, {}", ack.command, seq_no);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);
-        //if (_message_tracker.ack(ack.sequence_no))
-        if (seq_no == _pending_sequence_number)
+        if (_message_tracker.ack(seq_no))
         {
             if (_send_list.size() > 0)
+            {
                 _send_list.pop_front();
+            }
             _ready_to_send = true;
             _ready_to_send_notifier.notify_one();
         }
         else
         {
-            SENSEI_LOG_WARNING("Got unrecognised ack for packet: {}, waiting for {}", seq_no, _pending_sequence_number);
+            SENSEI_LOG_WARNING("Got unrecognised ack for packet: {}", seq_no);
         }
     }
-    char status = ack.payload.raw_data[2]; // TODO - we need an ack in the union
+    char status = ack.payload.ack_data.status;
     if (status != 0)
     {
-        SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", ack.sequence_no, static_cast<int>(status));
+        SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_xmos_byteord(ack.payload.ack_data.returned_seq_no),
+                                                                       static_cast<int>(status));
     }
 }
 
@@ -444,6 +436,11 @@ void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
     auto& m = packet.payload.value_send_data;
     _out_queue->push(_message_factory.make_analog_value(m.controller_id, from_xmos_byteord(m.controller_val), 0));
     SENSEI_LOG_INFO("Got a value packet!");
+}
+
+void RaspaFrontend::_log_packet(uint32_t seq_no)
+{
+
 }
 
 }

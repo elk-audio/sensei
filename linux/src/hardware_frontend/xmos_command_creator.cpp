@@ -6,8 +6,9 @@
 namespace sensei {
 namespace hw_frontend {
 
+using namespace xmos;
 
-XmosGpioPacket XmosCommandCreator::make_reset_system_command()
+xmos::XmosGpioPacket XmosCommandCreator::make_reset_system_command()
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
@@ -15,7 +16,7 @@ XmosGpioPacket XmosCommandCreator::make_reset_system_command()
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_start_system_command()
+xmos::XmosGpioPacket XmosCommandCreator::make_start_system_command()
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
@@ -23,7 +24,7 @@ XmosGpioPacket XmosCommandCreator::make_start_system_command()
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_stop_system_command()
+xmos::XmosGpioPacket XmosCommandCreator::make_stop_system_command()
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
@@ -31,7 +32,7 @@ XmosGpioPacket XmosCommandCreator::make_stop_system_command()
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_set_tick_rate_command(uint8_t tick_rate)
+xmos::XmosGpioPacket XmosCommandCreator::make_set_tick_rate_command(uint8_t tick_rate)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
@@ -40,15 +41,15 @@ XmosGpioPacket XmosCommandCreator::make_set_tick_rate_command(uint8_t tick_rate)
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_get_board_info_command()
+xmos::XmosGpioPacket XmosCommandCreator::make_get_board_info_command()
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
-    packet.sub_command = XMOS_SUB_CMD_GET_BOARD_INFO;
+    packet.sub_command = 0; //XMOS_SUB_CMD_GET_BOARD_INFO;
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_reset_all_controllers_command()
+xmos::XmosGpioPacket XmosCommandCreator::make_reset_all_controllers_command()
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -56,7 +57,7 @@ XmosGpioPacket XmosCommandCreator::make_reset_all_controllers_command()
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_reset_controller_command(uint8_t controller_id)
+xmos::XmosGpioPacket XmosCommandCreator::make_reset_controller_command(uint8_t controller_id)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -65,7 +66,7 @@ XmosGpioPacket XmosCommandCreator::make_reset_controller_command(uint8_t control
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_add_controller_command(uint8_t controller_id, uint8_t hw_type)
+xmos::XmosGpioPacket XmosCommandCreator::make_add_controller_command(uint8_t controller_id, uint8_t hw_type)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -75,7 +76,7 @@ XmosGpioPacket XmosCommandCreator::make_add_controller_command(uint8_t controlle
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_add_controller_to_mux_command(uint8_t controller_id, uint8_t mux_id, uint8_t mux_pin)
+xmos::XmosGpioPacket XmosCommandCreator::make_add_controller_to_mux_command(uint8_t controller_id, uint8_t mux_id, uint8_t mux_pin)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -86,7 +87,7 @@ XmosGpioPacket XmosCommandCreator::make_add_controller_to_mux_command(uint8_t co
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_set_polarity_command(uint8_t controller_id, uint8_t polarity)
+xmos::XmosGpioPacket XmosCommandCreator::make_set_polarity_command(uint8_t controller_id, uint8_t polarity)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -96,7 +97,7 @@ XmosGpioPacket XmosCommandCreator::make_set_polarity_command(uint8_t controller_
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_set_controller_tick_rate_command(uint8_t controller_id,
+xmos::XmosGpioPacket XmosCommandCreator::make_set_controller_tick_rate_command(uint8_t controller_id,
                                                                          uint8_t tick_rate_divisor)
 {
     XmosGpioPacket packet = _prepare_packet();
@@ -107,7 +108,7 @@ XmosGpioPacket XmosCommandCreator::make_set_controller_tick_rate_command(uint8_t
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_set_notification_mode(uint8_t controller_id, uint8_t notif_mode)
+xmos::XmosGpioPacket XmosCommandCreator::make_set_notification_mode(uint8_t controller_id, uint8_t notif_mode)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -117,7 +118,7 @@ XmosGpioPacket XmosCommandCreator::make_set_notification_mode(uint8_t controller
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_add_pins_to_controller_command(uint8_t controller_id, Pinlist& pins)
+xmos::XmosGpioPacket XmosCommandCreator::make_add_pins_to_controller_command(uint8_t controller_id, Pinlist& pins)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -132,7 +133,7 @@ XmosGpioPacket XmosCommandCreator::make_add_pins_to_controller_command(uint8_t c
     }
     return packet;}
 
-XmosGpioPacket XmosCommandCreator::make_mute_controller_command(uint8_t controller_id, uint8_t mute_status)
+xmos::XmosGpioPacket XmosCommandCreator::make_mute_controller_command(uint8_t controller_id, uint8_t mute_status)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -142,7 +143,7 @@ XmosGpioPacket XmosCommandCreator::make_mute_controller_command(uint8_t controll
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_remove_controller_command(uint8_t controller_id)
+xmos::XmosGpioPacket XmosCommandCreator::make_remove_controller_command(uint8_t controller_id)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -151,7 +152,7 @@ XmosGpioPacket XmosCommandCreator::make_remove_controller_command(uint8_t contro
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_set_controller_range_command(uint8_t controller_id, uint32_t min_value, uint32_t max_value)
+xmos::XmosGpioPacket XmosCommandCreator::make_set_controller_range_command(uint8_t controller_id, uint32_t min_value, uint32_t max_value)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
@@ -162,7 +163,7 @@ XmosGpioPacket XmosCommandCreator::make_set_controller_range_command(uint8_t con
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_get_value_command(uint8_t controller_id)
+xmos::XmosGpioPacket XmosCommandCreator::make_get_value_command(uint8_t controller_id)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_GET_VALUE;
@@ -170,16 +171,16 @@ XmosGpioPacket XmosCommandCreator::make_get_value_command(uint8_t controller_id)
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::make_set_value_command(uint8_t controller_id, uint32_t value)
+xmos::XmosGpioPacket XmosCommandCreator::make_set_value_command(uint8_t controller_id, uint32_t value)
 {
     XmosGpioPacket packet = _prepare_packet();
-    packet.command = XMOS_CMD_SET_VALUE;
+    packet.command = xmos::XMOS_CMD_SET_VALUE;
     packet.payload.value_request_data.controller_id = controller_id;
     packet.payload.value_send_data.controller_val = to_xmos_byteord(value);
     return packet;
 }
 
-XmosGpioPacket XmosCommandCreator::_prepare_packet()
+xmos::XmosGpioPacket XmosCommandCreator::_prepare_packet()
 {
     XmosGpioPacket packet;
     memset(&packet, 0, sizeof(packet));

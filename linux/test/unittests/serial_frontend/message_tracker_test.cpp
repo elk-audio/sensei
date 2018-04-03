@@ -51,7 +51,7 @@ TEST_F (TestMessageTracker, test_simple_tracking)
     EXPECT_EQ(timeout::WAITING, _module_under_test.timed_out());
 
     /* First, test acking with an incorrect uuid */
-    EXPECT_TRUE(_module_under_test.ack(1234));
+    EXPECT_FALSE(_module_under_test.ack(1235));
 
     /* Test that an ack will correctly remove this msg */
     EXPECT_TRUE(_module_under_test.ack(1234));
