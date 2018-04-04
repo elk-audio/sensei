@@ -178,6 +178,23 @@ public:
         return std::unique_ptr<SetSliderThresholdCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_multiplexed_sensor_command(const int sensor_id,
+                                                                     const int multiplexer_id,
+                                                                     const int multiplexer_pin,
+                                                                     const uint32_t timestamp = 0)
+    {
+        auto msg = new SetMultiplexedSensorCommand(sensor_id, {multiplexer_id, multiplexer_pin}, timestamp);
+        return std::unique_ptr<SetMultiplexedSensorCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_sensor_hw_polarity_command(const int sensor_id,
+                                                                     HwPolarity polarity,
+                                                                     const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSensorHwPolarityCommand(sensor_id, polarity, timestamp);
+        return std::unique_ptr<SetSensorHwPolarityCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_send_digital_value_command(const int sensor_id,
                                                                  const bool value,
                                                                  const uint32_t timestamp = 0)

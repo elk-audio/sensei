@@ -106,10 +106,10 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     packet = _module_under_test.make_add_pins_to_controller_command(12, list);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
     EXPECT_EQ(XMOS_SUB_CMD_ADD_PINS_TO_CNTRLR, packet.sub_command);
-    EXPECT_EQ(12, packet.payload.pin_data.controller_id);
-    EXPECT_EQ(2, packet.payload.pin_data.num_pins);
-    EXPECT_EQ(5, packet.payload.pin_data.pins[0]);
-    EXPECT_EQ(6, packet.payload.pin_data.pins[1]);
+    EXPECT_EQ(12, packet.payload.pins_data.controller_id);
+    EXPECT_EQ(2, packet.payload.pins_data.num_pins);
+    EXPECT_EQ(5, packet.payload.pins_data.pins[0]);
+    EXPECT_EQ(6, packet.payload.pins_data.pins[1]);
 
     packet = _module_under_test.make_mute_controller_command(13, MuteStatus::CNTRLR_UNMUTED);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
@@ -122,12 +122,11 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(XMOS_SUB_CMD_REMOVE_CNTRLR, packet.sub_command);
     EXPECT_EQ(14, packet.payload.remove_cntrlr_data.controller_id);
 
-    packet = _module_under_test.make_set_controller_range_command(15, 1, 1045);
+    packet = _module_under_test.make_set_analog_resolution_command(15, 8);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
-    EXPECT_EQ(XMOS_SUB_CMD_SET_CNTRLR_RANGE, packet.sub_command);
-    EXPECT_EQ(15, packet.payload.set_cntrlr_range_data.controller_id);
-    EXPECT_EQ(1, from_xmos_byteord(packet.payload.set_cntrlr_range_data.min_value));
-    EXPECT_EQ(1045, from_xmos_byteord(packet.payload.set_cntrlr_range_data.max_value));
+    EXPECT_EQ(XMOS_SUB_CMD_SET_ANALOG_CNTRLR_RES, packet.sub_command);
+    EXPECT_EQ(15, packet.payload.analog_cntrlr_res_data.controller_id);
+    EXPECT_EQ(8, from_xmos_byteord(packet.payload.analog_cntrlr_res_data.resolution_in_bits));
 
     packet = _module_under_test.make_get_value_command(16);
     EXPECT_EQ(XMOS_CMD_GET_VALUE, packet.command);

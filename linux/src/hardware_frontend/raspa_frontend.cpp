@@ -41,7 +41,6 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
     _in_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     _send_list.push_back(_packet_factory.make_reset_system_command());
-    _send_list.push_back(_packet_factory.make_get_board_info_command());
     if (_in_socket >= 0 && _out_socket >= 0)
     {
         /* Sensei binds one socket to SENSEI_SOCKET, then tries to connect
@@ -224,7 +223,6 @@ void RaspaFrontend::_handle_timeouts()
         }
         case timeout::TIMED_OUT:
         {
-            /* Resend logic is handled when next_message_to_send() is called. */
             SENSEI_LOG_WARNING("Message timed out, retrying.");
             _ready_to_send = true;
             _ready_to_send_notifier.notify_one();
@@ -263,6 +261,7 @@ bool RaspaFrontend::_connect_to_raspa()
 
 void RaspaFrontend::_process_sensei_command(const Command*message)
 {
+    SENSEI_LOG_INFO("Raspafrontend: got command: {}", message->representation());
     switch (message->type())
     {
         case CommandType::SET_SENSOR_HW_TYPE:
@@ -281,6 +280,22 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
 
                 case SensorHwType::ANALOG_INPUT_PIN:
                     hw_type = HwType::ANALOG_INPUT;
+                    break;
+
+                case SensorHwType::STEPPED_OUTPUT:
+                    hw_type = HwType::STEPPED_OUTPUT;
+                    break;
+
+                case SensorHwType::MULTIPLEXER:
+                    hw_type = HwType::MUX_OUTPUT;
+                    break;
+
+                case SensorHwType::N_WAY_SWITCH:
+                    hw_type = HwType::N_WAY_SWITCH;
+                    break;
+
+                case SensorHwType::ENCODER:
+                    hw_type = HwType::ROTARY_ENCODER;
                     break;
 
                 case SensorHwType::BUTTON:
@@ -366,6 +381,12 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             _send_list.push_back(_packet_factory.make_set_controller_tick_rate_command(cmd->index(), cmd->data()));
             break;
         }
+        case CommandType::SET_ADC_BIT_RESOLUTION:
+        {
+            auto cmd = static_cast<const SetADCBitResolutionCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_analog_resolution_command(cmd->index(), cmd->data()));
+            break;
+        }
         case CommandType::SEND_DIGITAL_PIN_VALUE:
         {
             auto cmd = static_cast<const SendDigitalPinValueCommand*>(message);
@@ -375,7 +396,14 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::ENABLE_SENDING_PACKETS:
         {
             auto cmd = static_cast<const EnableSendingPacketsCommand*>(message);
-            _send_list.push_back(_packet_factory.make_start_system_command());
+            if (cmd->data() == true)
+            {
+                _send_list.push_back(_packet_factory.make_start_system_command());
+            }
+            else
+            {
+                _send_list.push_back(_packet_factory.make_stop_system_command());
+            }
             break;
         }
 
@@ -427,7 +455,7 @@ void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
     if (status != 0)
     {
         SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_xmos_byteord(ack.payload.ack_data.returned_seq_no),
-                                                                       static_cast<int>(status));
+                                                                       xmos_status_to_string(status));
     }
 }
 

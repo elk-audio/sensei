@@ -38,6 +38,8 @@ enum class CommandType
     SET_LOWPASS_FILTER_ORDER,
     SET_LOWPASS_CUTOFF,
     SET_SLIDER_THRESHOLD,
+    SET_MULTIPLEXED,
+    SET_HW_POLARITY,
     SEND_DIGITAL_PIN_VALUE,
     ENABLE_SENDING_PACKETS,
     // Imu specific commands
@@ -83,7 +85,9 @@ enum class SensorType
     ANALOG_INPUT,
     CONTINUOUS_INPUT,
     RANGE_INPUT,
+    RANGE_OUTPUT,
     UNDEFINED,
+    NO_OUTPUT,
     N_PIN_TYPES
 };
 
@@ -140,6 +144,32 @@ enum class SendingMode
     N_SENDING_MODES
 };
 
+/**
+ * @brief For customising certain hw
+ */
+enum class HwPolarity
+{
+    ACTIVE_HIGH,
+    ACTIVE_LOW,
+};
+
+/**
+ * @brief Encapsulates a controller range definition
+ */
+struct Range
+{
+    float min;
+    float max;
+};
+
+/**
+ * @brief Control information for multiplexed sensors
+ */
+struct MultiplexerData
+{
+    int  id;
+    int  pin;
+};
 
 enum class CommandErrorCode
 {
@@ -233,6 +263,18 @@ SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
                        CommandType::SET_SLIDER_THRESHOLD,
                        int,
                        "Set Slider Threshold",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+
+SENSEI_DECLARE_COMMAND(SetMultiplexedSensorCommand,
+                       CommandType::SET_MULTIPLEXED,
+                       MultiplexerData,
+                       "Set multiplexed sensor",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+
+SENSEI_DECLARE_COMMAND(SetSensorHwPolarityCommand,
+                       CommandType::SET_HW_POLARITY,
+                       HwPolarity,
+                       "Set polarity of hw sensor",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
 
 SENSEI_DECLARE_COMMAND(SendDigitalPinValueCommand,

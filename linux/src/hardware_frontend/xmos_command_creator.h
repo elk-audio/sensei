@@ -2,6 +2,7 @@
 #define SENSEI_XMOS_COMMAND_CREATOR_H
 
 #include <array>
+#include <string>
 
 #include <sys/param.h>
 #include <arpa/inet.h>
@@ -30,6 +31,7 @@ inline uint32_t from_xmos_byteord(uint32_t word)
 #endif
 }
 
+std::string xmos_status_to_string(uint8_t);
 
 struct Pinlist
 {
@@ -55,7 +57,7 @@ public:
     xmos::XmosGpioPacket make_add_pins_to_controller_command(uint8_t controller_id, Pinlist& pins);
     xmos::XmosGpioPacket make_mute_controller_command(uint8_t controller_id, uint8_t mute_status);
     xmos::XmosGpioPacket make_remove_controller_command(uint8_t controller_id);
-    xmos::XmosGpioPacket make_set_controller_range_command(uint8_t controller_id, uint32_t low_range, uint32_t high_range);
+    xmos::XmosGpioPacket make_set_analog_resolution_command(uint8_t controller_id, uint8_t adc_bits);
     xmos::XmosGpioPacket make_get_value_command(uint8_t controller_id);
     xmos::XmosGpioPacket make_set_value_command(uint8_t controller_id, uint32_t value);
 

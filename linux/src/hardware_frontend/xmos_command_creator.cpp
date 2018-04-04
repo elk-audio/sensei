@@ -123,7 +123,7 @@ xmos::XmosGpioPacket XmosCommandCreator::make_add_pins_to_controller_command(uin
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
     packet.sub_command = XMOS_SUB_CMD_ADD_PINS_TO_CNTRLR;
-    auto& data = packet.payload.pin_data;
+    auto& data = packet.payload.pins_data;
     data.controller_id = controller_id;
     data.num_pins = pins.pincount;
     assert(pins.pincount <= sizeof(data.pins));
@@ -152,14 +152,13 @@ xmos::XmosGpioPacket XmosCommandCreator::make_remove_controller_command(uint8_t 
     return packet;
 }
 
-xmos::XmosGpioPacket XmosCommandCreator::make_set_controller_range_command(uint8_t controller_id, uint32_t min_value, uint32_t max_value)
+xmos::XmosGpioPacket XmosCommandCreator::make_set_analog_resolution_command(uint8_t controller_id, uint8_t adc_bits)
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
-    packet.sub_command = XMOS_SUB_CMD_SET_CNTRLR_RANGE;
-    packet.payload.set_cntrlr_range_data.controller_id = controller_id;
-    packet.payload.set_cntrlr_range_data.min_value = to_xmos_byteord(min_value);
-    packet.payload.set_cntrlr_range_data.max_value = to_xmos_byteord(max_value);
+    packet.sub_command = XMOS_SUB_CMD_SET_ANALOG_CNTRLR_RES;
+    packet.payload.analog_cntrlr_res_data.controller_id = controller_id;
+    packet.payload.analog_cntrlr_res_data.resolution_in_bits = adc_bits;
     return packet;
 }
 
@@ -189,5 +188,44 @@ xmos::XmosGpioPacket XmosCommandCreator::_prepare_packet()
 }
 
 
+std::string xmos_status_to_string(uint8_t status)
+{
+    switch(status)
+    {
+        case XmosReturnStatus::OK:
+            return "OK";
+        case XmosReturnStatus::ERROR:
+            return "ERROR";
+        case XmosReturnStatus::INVALID_GPIO_CMD:
+            return "INVALID_GPIO_CMD";
+        case XmosReturnStatus::INVALID_GPIO_SUB_CMD:
+            return "INVALID_GPIO_SUB_CMD";
+        case XmosReturnStatus::NO_CNTRLRS_ADDED:
+            return "NO_CNTRLRS_ADDED";
+        case XmosReturnStatus::UNITIALIZED_CNTRLRS:
+            return "UNITIALIZED_CNTRLRS";
+        case XmosReturnStatus::INVALID_TICK_RATE:
+            return "INVALID_TICK_RATE";
+        case XmosReturnStatus::INVALID_CNTRLR_ID:
+            return "INVALID_CNTRLR_ID";
+        case XmosReturnStatus::INVALID_HW_TYPE:
+            return "INVALID_HW_TYPE";
+        case XmosReturnStatus::INVALID_MUX_CNTRLR:
+            return "INVALID_MUX_CNTRLR";
+        case XmosReturnStatus::INVALID_CNTRLR_POLARITY:
+            return "INVALID_CNTRLR_POLARITY";
+        case XmosReturnStatus::NO_PINS_AVAILABLE:
+            return "NO_PINS_AVAILABLE";
+        case XmosReturnStatus::INVALID_SHARING_OF_PINS:
+            return "INVALID_SHARING_OF_PINS";
+        case XmosReturnStatus::RES_OUT_OF_RANGE:
+            return "RES_OUT_OF_RANGE";
+        case XmosReturnStatus::PARAMETER_ERROR:
+            return "PARAMETER_ERROR";
+        case XmosReturnStatus::INVALID_COMMAND_FOR_CNTRLR:
+            return "INVALID_COMMAND_FOR_CNTRLR";
+
+    }
+}
 }
 }
