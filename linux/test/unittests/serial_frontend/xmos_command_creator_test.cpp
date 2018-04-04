@@ -126,7 +126,7 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
     EXPECT_EQ(XMOS_SUB_CMD_SET_ANALOG_CNTRLR_RES, packet.sub_command);
     EXPECT_EQ(15, packet.payload.analog_cntrlr_res_data.controller_id);
-    EXPECT_EQ(8, from_xmos_byteord(packet.payload.analog_cntrlr_res_data.resolution_in_bits));
+    EXPECT_EQ(8u, from_xmos_byteord(packet.payload.analog_cntrlr_res_data.resolution_in_bits));
 
     packet = _module_under_test.make_get_value_command(16);
     EXPECT_EQ(XMOS_CMD_GET_VALUE, packet.command);
@@ -137,6 +137,6 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(XMOS_CMD_SET_VALUE, packet.command);
     EXPECT_EQ(0, packet.sub_command);
     EXPECT_EQ(17, packet.payload.value_send_data.controller_id);
-    EXPECT_EQ(2048, from_xmos_byteord(packet.payload.value_send_data.controller_val));
+    EXPECT_EQ(2048u, from_xmos_byteord(packet.payload.value_send_data.controller_val));
 }
 

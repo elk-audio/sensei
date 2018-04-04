@@ -33,8 +33,8 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
                 _state(ThreadState::STOPPED),
                 _in_socket(-1),
                 _out_socket(-1),
-                _connected(false),
                 _ready_to_send{true},
+                _connected(false),
                 _muted(false),
                 _verify_acks(true)
 {
@@ -141,7 +141,7 @@ void RaspaFrontend::verify_acks(bool enabled)
 
 void RaspaFrontend::read_loop()
 {
-    XmosGpioPacket buffer = {0};
+    XmosGpioPacket buffer;
     while (_state.load() == ThreadState::RUNNING)
     {
         memset(&buffer, 0, sizeof(buffer));
@@ -268,45 +268,12 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         {
             auto cmd = static_cast<const SetSensorHwTypeCommand*>(message);
             uint8_t hw_type;
-            switch (cmd->data())
+            bool    valid;
+            std::tie(hw_type, valid) = to_xmos_hw_type(cmd->data());
+            if (valid)
             {
-                case SensorHwType::DIGITAL_INPUT_PIN:
-                    hw_type = HwType::BINARY_INPUT;
-                    break;
-
-                case SensorHwType::DIGITAL_OUTPUT_PIN:
-                    hw_type = HwType::BINARY_OUTPUT;
-                    break;
-
-                case SensorHwType::ANALOG_INPUT_PIN:
-                    hw_type = HwType::ANALOG_INPUT;
-                    break;
-
-                case SensorHwType::STEPPED_OUTPUT:
-                    hw_type = HwType::STEPPED_OUTPUT;
-                    break;
-
-                case SensorHwType::MULTIPLEXER:
-                    hw_type = HwType::MUX_OUTPUT;
-                    break;
-
-                case SensorHwType::N_WAY_SWITCH:
-                    hw_type = HwType::N_WAY_SWITCH;
-                    break;
-
-                case SensorHwType::ENCODER:
-                    hw_type = HwType::ROTARY_ENCODER;
-                    break;
-
-                case SensorHwType::BUTTON:
-                    hw_type = HwType::BINARY_INPUT;
-                    break;
-
-                default:
-                    SENSEI_LOG_WARNING("Unsupported Sensor HW type: {}", static_cast<int>(cmd->data()));
-                    return;
+                _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type));
             }
-            _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type));
             break;
         }
         case CommandType::SET_HW_PIN:
@@ -323,8 +290,8 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             auto cmd = static_cast<const SetHwPinsCommand*>(message);
             Pinlist list;
             auto setpins = cmd->data();
-            int i = 0;
-            int i_mod = 0;
+            unsigned int i = 0;
+            unsigned int i_mod = 0;
             /* Split into more than 1 xmos packet if neccesary */
             while (i < setpins.size())
             {
@@ -349,29 +316,11 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         {
             auto cmd = static_cast<const SetSendingModeCommand*>(message);
             uint8_t mode;
-            switch (cmd->data())
+            bool valid;
+            std::tie(mode, valid) = to_xmos_sending_mode(cmd->data());
+            if (valid)
             {
-                case SendingMode::OFF:
-                    // TODO - Maybe send a mute command here
-                    return;
-
-                case SendingMode::CONTINUOUS:
-                    mode = NotificationMode::EVERY_CNTRLR_TICK;
-                    break;
-
-                case SendingMode::ON_VALUE_CHANGED:
-                    mode = NotificationMode::ON_VALUE_CHANGE;
-                    break;
-
-                case SendingMode::TOGGLED:
-                case SendingMode::ON_PRESS:
-                case SendingMode::ON_RELEASE:
-                    // TODO - currently handling these in the mapper
-                    mode = NotificationMode::ON_VALUE_CHANGE;
-                    break;
-
-                default:
-                SENSEI_LOG_WARNING("Unsupported Sending Mode: {}", static_cast<int>(cmd->data()));
+                _send_list.push_back(_packet_factory.make_set_notification_mode(cmd->index(), mode));
             }
             break;
         }
@@ -466,11 +415,79 @@ void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
     SENSEI_LOG_INFO("Got a value packet!");
 }
 
-void RaspaFrontend::_log_packet(uint32_t seq_no)
+std::pair<uint8_t, bool> to_xmos_hw_type(SensorHwType type)
 {
+    uint8_t hw_type;
+    switch (type)
+    {
+        case SensorHwType::DIGITAL_INPUT_PIN:
+            hw_type = HwType::BINARY_INPUT;
+            break;
 
+        case SensorHwType::DIGITAL_OUTPUT_PIN:
+            hw_type = HwType::BINARY_OUTPUT;
+            break;
+
+        case SensorHwType::ANALOG_INPUT_PIN:
+            hw_type = HwType::ANALOG_INPUT;
+            break;
+
+        case SensorHwType::STEPPED_OUTPUT:
+            hw_type = HwType::STEPPED_OUTPUT;
+            break;
+
+        case SensorHwType::MULTIPLEXER:
+            hw_type = HwType::MUX_OUTPUT;
+            break;
+
+        case SensorHwType::N_WAY_SWITCH:
+            hw_type = HwType::N_WAY_SWITCH;
+            break;
+
+        case SensorHwType::ENCODER:
+            hw_type = HwType::ROTARY_ENCODER;
+            break;
+
+        case SensorHwType::BUTTON:
+            hw_type = HwType::BINARY_INPUT;
+            break;
+
+        default:
+            SENSEI_LOG_WARNING("Unsupported Sensor HW type: {}", static_cast<int>(type));
+            return {0, false};
+    }
+    return {hw_type, true};
 }
 
+std::pair<uint8_t, bool> to_xmos_sending_mode(SendingMode mode)
+{
+    uint8_t xmos_mode;
+    switch (mode)
+    {
+        case SendingMode::OFF:
+            // TODO - Maybe send a mute command here
+            return {0, false};
+
+        case SendingMode::CONTINUOUS:
+            xmos_mode = NotificationMode::EVERY_CNTRLR_TICK;
+            break;
+
+        case SendingMode::ON_VALUE_CHANGED:
+            xmos_mode = NotificationMode::ON_VALUE_CHANGE;
+            break;
+
+        case SendingMode::TOGGLED:
+        case SendingMode::ON_PRESS:
+        case SendingMode::ON_RELEASE:
+            // TODO - currently handling these in the mapper
+            xmos_mode = NotificationMode::ON_VALUE_CHANGE;
+            break;
+
+        default:
+            SENSEI_LOG_WARNING("Unsupported Sending Mode: {}", static_cast<int>(mode));
+    }
+    return {xmos_mode, true};
+}
 }
 }
 

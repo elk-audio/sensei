@@ -125,7 +125,7 @@ xmos::XmosGpioPacket XmosCommandCreator::make_add_pins_to_controller_command(uin
     packet.sub_command = XMOS_SUB_CMD_ADD_PINS_TO_CNTRLR;
     auto& data = packet.payload.pins_data;
     data.controller_id = controller_id;
-    data.num_pins = pins.pincount;
+    data.num_pins = static_cast<uint8_t>(pins.pincount);
     assert(pins.pincount <= sizeof(data.pins));
     for (int i = 0; i < pins.pincount; ++i)
     {
@@ -224,7 +224,8 @@ std::string xmos_status_to_string(uint8_t status)
             return "PARAMETER_ERROR";
         case XmosReturnStatus::INVALID_COMMAND_FOR_CNTRLR:
             return "INVALID_COMMAND_FOR_CNTRLR";
-
+        default:
+            return "";
     }
 }
 }

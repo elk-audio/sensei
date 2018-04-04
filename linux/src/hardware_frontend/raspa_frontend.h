@@ -12,6 +12,7 @@
 #include <mutex>
 #include <atomic>
 #include <cassert>
+#include <utility>
 
 #include "hw_frontend.h"
 #include "message_tracker.h"
@@ -81,7 +82,6 @@ private:
     void write_loop();
 
     void _handle_timeouts();
-    void _log_packet(uint32_t seq_no);
     bool _connect_to_raspa();
     void _handle_raspa_packet(const xmos::XmosGpioPacket& packet);
     void _handle_ack(const xmos::XmosGpioPacket& ack);
@@ -103,12 +103,16 @@ private:
     std::mutex      _send_mutex;
     std::condition_variable _ready_to_send_notifier;
 
-    uint32_t        _pending_sequence_number;
     bool            _ready_to_send;
     bool            _connected;
     bool            _muted;
     bool            _verify_acks;
 };
+
+std::pair<uint8_t, bool> to_xmos_hw_type(SensorHwType type);
+std::pair<uint8_t, bool> to_xmos_sending_mode(SendingMode mode);
+
+
 
 
 } // end namespace hw_frontend

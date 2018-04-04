@@ -35,7 +35,7 @@ std::string xmos_status_to_string(uint8_t);
 
 struct Pinlist
 {
-    char pincount;
+    uint8_t pincount;
     std::array<uint8_t, 20> pins;
 };
 
