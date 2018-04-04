@@ -25,24 +25,35 @@
       "hardware" :
       {
         "hardware_type" : "analog_input_pin",
-        "pin_index" : 5,
+        "pins" : [5],
         "delta_ticks" : 1,
         "adc_resolution" : 8
+      }
+    },
+    {
+      "id" : 6,
+      "enabled": true,
+      "name" : "multiplexer",
+      "sensor_type" : "no_output",
+      "hardware" :
+      {
+        "hardware_type" : "multiplexer",
+        "pins" : [24,25,26,27,28]
       }
     },
     {
       "id" : 10,
       "enabled": true,
       "name" : "leds",
-      "sensor_type" : "analog_input",
-      "adc_resolution" : 8,
-      "range" : [0,127],
+      "sensor_type" : "range_output",
+      "range" : [0,15],
       "hardware" :
       {
         "hardware_type" : "stepped_output",
-        "pins" : [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25],
-        "delta_ticks" : 4,
-        "adc_resolution" : 8
+        "multiplexed" : true,
+        "multiplexer_id" : 6,
+        "multiplexer_pin" : 24,
+        "pins" : [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
       }
     }
   ]
