@@ -162,6 +162,9 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(int p
             cached_cfg.cfg_data.sendingMode = eSendingMode::SENDING_MODE_CONTINUOUS;
             break;
         case SendingMode::ON_VALUE_CHANGED:
+        case SendingMode::TOGGLED:
+        case SendingMode::ON_PRESS:
+        case SendingMode::ON_RELEASE:
             cached_cfg.cfg_data.sendingMode = eSendingMode::SENDING_MODE_ON_VALUE_CHANGED;
             break;
         case SendingMode::ON_REQUEST:

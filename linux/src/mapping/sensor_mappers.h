@@ -29,7 +29,7 @@ public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(BaseSensorMapper)
 
     BaseSensorMapper(SensorType pin_type = SensorType::ANALOG_INPUT,
-                     int pin_index = 0);
+                     int index = 0);
 
     virtual ~BaseSensorMapper();
 
@@ -81,7 +81,7 @@ class DigitalSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DigitalSensorMapper)
 
-    DigitalSensorMapper(int pin_index = 0);
+    DigitalSensorMapper(int index = 0);
 
     ~DigitalSensorMapper();
 
@@ -100,7 +100,7 @@ class AnalogSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AnalogSensorMapper)
 
-    AnalogSensorMapper(int pin_index = 0,
+    AnalogSensorMapper(int index = 0,
                        float adc_sampling_rate = 1000.0f);
 
     ~AnalogSensorMapper();
@@ -113,13 +113,13 @@ public:
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
-    CommandErrorCode _set_adc_bit_resolution(const int resolution);
-    CommandErrorCode _set_input_scale_range_low(const int value);
-    CommandErrorCode _set_input_scale_range_high(const int value);
-    CommandErrorCode _set_delta_ticks_sending(const int value);
-    CommandErrorCode _set_lowpass_filter_order(const int value);
-    CommandErrorCode _set_lowpass_cutoff(const float value);
-    CommandErrorCode _set_slider_threshold(const int value);
+    CommandErrorCode _set_adc_bit_resolution(int resolution);
+    CommandErrorCode _set_input_scale_range_low(int value);
+    CommandErrorCode _set_input_scale_range_high(int value);
+    CommandErrorCode _set_delta_ticks_sending(int value);
+    CommandErrorCode _set_lowpass_filter_order(int value);
+    CommandErrorCode _set_lowpass_cutoff(float value);
+    CommandErrorCode _set_slider_threshold(int value);
 
     // External board config
     int _delta_ticks_sending;
@@ -142,7 +142,7 @@ class ImuMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(ImuMapper)
 
-    ImuMapper(const int pin_index = 0);
+    ImuMapper(int index = 0);
 
     ~ImuMapper();
 
@@ -153,8 +153,8 @@ public:
     void process(Value *value, output_backend::OutputBackend *backend) override;
 
 private:
-    CommandErrorCode _set_input_scale_range_low(const float value);
-    CommandErrorCode _set_input_scale_range_high(const float value);
+    CommandErrorCode _set_input_scale_range_low(float value);
+    CommandErrorCode _set_input_scale_range_high(float value);
 
     // Mapping parameters
     float _input_scale_range_low;

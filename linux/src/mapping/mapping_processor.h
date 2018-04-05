@@ -19,7 +19,7 @@ class MappingProcessor
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(MappingProcessor);
 
-    MappingProcessor(const int max_n_input_pins = 64);
+    MappingProcessor(int max_n_input_pins = 64);
 
     CommandErrorCode apply_command(const Command *cmd);
 

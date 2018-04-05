@@ -15,7 +15,7 @@ using namespace sensei::mapping;
 
 SENSEI_GET_LOGGER;
 
-MappingProcessor::MappingProcessor(const int max_n_input_pins) :
+MappingProcessor::MappingProcessor(int max_n_input_pins) :
     _max_n_pins(max_n_input_pins)
 {
     _mappers.resize(_max_n_pins);

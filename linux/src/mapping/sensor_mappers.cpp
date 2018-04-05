@@ -34,7 +34,7 @@ using namespace sensei::mapping;
 // BaseSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-BaseSensorMapper::BaseSensorMapper(const SensorType pin_type, const int pin_index) :
+BaseSensorMapper::BaseSensorMapper(SensorType pin_type, int pin_index) :
     _sensor_type(pin_type),
     _sensor_index(pin_index),
     _enabled(false),
@@ -117,8 +117,8 @@ void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 // DigitalSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-DigitalSensorMapper::DigitalSensorMapper(const int pin_index) :
-    BaseSensorMapper(SensorType::DIGITAL_INPUT, pin_index)
+DigitalSensorMapper::DigitalSensorMapper(const int index) :
+    BaseSensorMapper(SensorType::DIGITAL_INPUT, index)
 {
 }
 
@@ -194,8 +194,8 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
 // AnalogSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-AnalogSensorMapper::AnalogSensorMapper(const int pin_index,
-                                       const float adc_sampling_rate) :
+AnalogSensorMapper::AnalogSensorMapper(int pin_index,
+                                       float adc_sampling_rate) :
     BaseSensorMapper(SensorType::ANALOG_INPUT, pin_index),
     _delta_ticks_sending(1),
     _lowpass_filter_order(4),
@@ -354,7 +354,7 @@ CommandErrorCode AnalogSensorMapper::_set_sensor_hw_type(SensorHwType hw_type)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolution)
+CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(int resolution)
 {
     if ((resolution < 1) || (resolution > MAX_ADC_BIT_RESOLUTION))
     {
@@ -369,7 +369,7 @@ CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolutio
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_delta_ticks_sending(const int value)
+CommandErrorCode AnalogSensorMapper::_set_delta_ticks_sending(int value)
 {
     if (value < 1)
     {
@@ -380,7 +380,7 @@ CommandErrorCode AnalogSensorMapper::_set_delta_ticks_sending(const int value)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_lowpass_filter_order(const int value)
+CommandErrorCode AnalogSensorMapper::_set_lowpass_filter_order(int value)
 {
     if ((value < 1) || (value > MAX_LOWPASS_FILTER_ORDER))
     {
@@ -391,7 +391,7 @@ CommandErrorCode AnalogSensorMapper::_set_lowpass_filter_order(const int value)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_lowpass_cutoff(const float value)
+CommandErrorCode AnalogSensorMapper::_set_lowpass_cutoff(float value)
 {
     if ( (value <= 0.0f) || (value >= (0.5f * _adc_sampling_rate)) )
     {
@@ -402,7 +402,7 @@ CommandErrorCode AnalogSensorMapper::_set_lowpass_cutoff(const float value)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_slider_threshold(const int value)
+CommandErrorCode AnalogSensorMapper::_set_slider_threshold(int value)
 {
     if ( (value < 0) || (value > (_max_allowed_input-1)) )
     {
@@ -413,7 +413,7 @@ CommandErrorCode AnalogSensorMapper::_set_slider_threshold(const int value)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_input_scale_range_low(const int value)
+CommandErrorCode AnalogSensorMapper::_set_input_scale_range_low(int value)
 {
     if ( (value < 0) || (value > (_max_allowed_input-1)) )
     {
@@ -430,7 +430,7 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_low(const int value)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(const int value)
+CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(int value)
 {
     if ( (value < 0) || (value > (_max_allowed_input-1)) )
     {
@@ -451,7 +451,7 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(const int value
 // ImuMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-ImuMapper::ImuMapper(const int pin_index) :
+ImuMapper::ImuMapper(int pin_index) :
         BaseSensorMapper(SensorType::CONTINUOUS_INPUT, pin_index),
         _input_scale_range_low(-M_PI),
         _input_scale_range_high(M_PI),
@@ -545,7 +545,7 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
     }
 }
 
-CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)
+CommandErrorCode ImuMapper::_set_input_scale_range_low(float value)
 {
     if ( std::abs(value) > _max_allowed_input )
     {
@@ -562,7 +562,7 @@ CommandErrorCode ImuMapper::_set_input_scale_range_low(const float value)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode ImuMapper::_set_input_scale_range_high(const float value)
+CommandErrorCode ImuMapper::_set_input_scale_range_high(float value)
 {
     if ( std::abs(value) > _max_allowed_input )
     {
