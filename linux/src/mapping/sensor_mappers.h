@@ -28,10 +28,9 @@ class BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(BaseSensorMapper)
 
-    BaseSensorMapper(SensorType pin_type = SensorType::ANALOG_INPUT,
-                     int index = 0);
+    explicit BaseSensorMapper(SensorType pin_type = SensorType::ANALOG_INPUT, int index = 0);
 
-    virtual ~BaseSensorMapper();
+    virtual ~BaseSensorMapper() = default;
 
     /**
      * @brief Modify internal configuration according to the given command.
@@ -76,14 +75,17 @@ protected:
     bool _invert_value;
 };
 
+/**
+ * @brief Mapper for sensors that produce a digital (on/off) output
+ */
 class DigitalSensorMapper : public BaseSensorMapper
 {
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DigitalSensorMapper)
 
-    DigitalSensorMapper(int index = 0);
+    explicit DigitalSensorMapper(int index = 0);
 
-    ~DigitalSensorMapper();
+    ~DigitalSensorMapper() = default;
 
     CommandErrorCode apply_command(const Command *cmd) override;
 
@@ -95,15 +97,18 @@ private:
 
 };
 
+/**
+ * @brief Mappers for sensors that produce analog value sampled with a given
+ *        adc resolution, values are sent to mapper as an integer value
+ */
 class AnalogSensorMapper : public BaseSensorMapper
 {
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AnalogSensorMapper)
 
-    AnalogSensorMapper(int index = 0,
-                       float adc_sampling_rate = 1000.0f);
+    explicit AnalogSensorMapper(int index = 0, float adc_sampling_rate = 1000.0f);
 
-    ~AnalogSensorMapper();
+    ~AnalogSensorMapper() = default;
 
     CommandErrorCode apply_command(const Command *cmd) override;
 
@@ -137,14 +142,54 @@ private:
     float _adc_sampling_rate;
 };
 
-class ImuMapper : public BaseSensorMapper
+/**
+ * @brief Mapper for sensors that produce discrete integer values such as
+ *        multi position switches
+ */
+class RangeSensorMapper : public BaseSensorMapper
 {
 public:
-    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(ImuMapper)
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(RangeSensorMapper)
 
-    ImuMapper(int index = 0);
+    explicit RangeSensorMapper(int index = 0);
 
-    ~ImuMapper();
+    ~RangeSensorMapper() = default;
+
+    CommandErrorCode apply_command(const Command *cmd) override;
+
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value *value, output_backend::OutputBackend *backend) override;
+
+private:
+    CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
+    CommandErrorCode _set_input_scale_range_low(int value);
+    CommandErrorCode _set_input_scale_range_high(int value);
+    CommandErrorCode _set_delta_ticks_sending(int value);
+
+
+    // External board config
+    int _delta_ticks_sending;
+
+    // Mapping parameters
+    int _input_scale_range_low;
+    int _input_scale_range_high;
+
+    // Internal helper attributes
+    int _previous_int_value;
+};
+
+/**
+ * @brief Mapper for sensors that produce a continuous value represented as a float
+ */
+class ContinuousSensorMapper : public BaseSensorMapper
+{
+public:
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(ContinuousSensorMapper)
+
+    explicit ContinuousSensorMapper(int index = 0);
+
+    ~ContinuousSensorMapper() = default;
 
     CommandErrorCode apply_command(const Command *cmd) override;
 
@@ -159,9 +204,6 @@ private:
     // Mapping parameters
     float _input_scale_range_low;
     float _input_scale_range_high;
-
-    // Internal helper attributes
-    int _max_allowed_input;
 };
 
 }; // namespace mapping

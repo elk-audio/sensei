@@ -50,7 +50,11 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
             break;
 
         case SensorType::CONTINUOUS_INPUT:
-            _mappers[sensor_index].reset(new ImuMapper(sensor_index));
+            _mappers[sensor_index].reset(new ContinuousSensorMapper(sensor_index));
+            break;
+
+        case SensorType::RANGE_INPUT:
+            _mappers[sensor_index].reset(new RangeSensorMapper(sensor_index));
             break;
 
         default:

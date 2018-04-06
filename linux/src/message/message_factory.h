@@ -66,8 +66,8 @@ public:
                                                 const float value,
                                                 const uint32_t timestamp = 0)
     {
-        auto msg = new ImuValue(sensor_id, value, timestamp);
-        return std::unique_ptr<ImuValue>(msg);
+        auto msg = new ContinuousValue(sensor_id, value, timestamp);
+        return std::unique_ptr<ContinuousValue>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_output_value(const int sensor_id,

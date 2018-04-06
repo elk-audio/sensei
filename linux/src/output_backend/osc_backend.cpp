@@ -84,9 +84,9 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
             }
             break;
 
-        case ValueType::IMU:
+        case ValueType::CONTINUOUS:
             {
-                auto typed_val = static_cast<const ImuValue *>(raw_input_value);
+                auto typed_val = static_cast<const ContinuousValue *>(raw_input_value);
                 input_val = static_cast<int>(typed_val->value());
             }
             break;

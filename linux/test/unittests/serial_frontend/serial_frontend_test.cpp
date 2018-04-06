@@ -116,17 +116,17 @@ TEST_F(SerialFrontendTest, test_imu_packet)
     /* This should result in 3 imu messages */
     ASSERT_FALSE(_out_queue.empty());
     auto msg = _out_queue.pop();
-    auto typed_msg = static_cast<ImuValue*>(msg.get());
+    auto typed_msg = static_cast<ContinuousValue*>(msg.get());
     EXPECT_EQ(ImuIndex::YAW, typed_msg->index());
     EXPECT_EQ(0, typed_msg->value());
 
     msg = _out_queue.pop();
-    typed_msg = static_cast<ImuValue*>(msg.get());
+    typed_msg = static_cast<ContinuousValue*>(msg.get());
     EXPECT_EQ(ImuIndex::PITCH, typed_msg->index());
     EXPECT_EQ(0, typed_msg->value());
 
     msg = _out_queue.pop();
-    typed_msg = static_cast<ImuValue*>(msg.get());
+    typed_msg = static_cast<ContinuousValue*>(msg.get());
     EXPECT_EQ(ImuIndex::ROLL, typed_msg->index());
     EXPECT_EQ(0, typed_msg->value());
 }
