@@ -522,9 +522,9 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
                                                                     cmd->timestamp(),
                                                                     cmd->data());
         }
-        case CommandType::SEND_DIGITAL_PIN_VALUE:
+        case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
-            auto cmd = static_cast<SendDigitalPinValueCommand *>(message);
+            auto cmd = static_cast<SetDigitalOutputValueCommand *>(message);
             return _packet_factory.make_set_digital_pin_cmd(_id_to_pin_table[cmd->index()],
                                                             cmd->timestamp(),
                                                             cmd->data());

@@ -40,7 +40,9 @@ enum class CommandType
     SET_SLIDER_THRESHOLD,
     SET_MULTIPLEXED,
     SET_HW_POLARITY,
-    SEND_DIGITAL_PIN_VALUE,
+    SET_DIGITAL_OUTPUT_VALUE,
+    SET_CONTINUOUS_OUTPUT_VALUE,
+    SET_RANGE_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
     // Imu specific commands
     SET_IMU_ENABLED,
@@ -277,10 +279,22 @@ SENSEI_DECLARE_COMMAND(SetSensorHwPolarityCommand,
                        "Set polarity of hw sensor",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
 
-SENSEI_DECLARE_COMMAND(SendDigitalPinValueCommand,
-                       CommandType::SEND_DIGITAL_PIN_VALUE,
+SENSEI_DECLARE_COMMAND(SetDigitalOutputValueCommand,
+                       CommandType::SET_DIGITAL_OUTPUT_VALUE,
                        bool,
-                       "Send Digital Pin Value",
+                       "Set Digital Output Value",
+                       CommandDestination::HARDWARE_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetContinuousOutputValueCommand,
+                       CommandType::SET_CONTINUOUS_OUTPUT_VALUE,
+                       float,
+                       "Set Continuous Output Value",
+                       CommandDestination::HARDWARE_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetRangeOutputValueCommand,
+                       CommandType::SET_RANGE_OUTPUT_VALUE,
+                       int,
+                       "Send Range Output Value",
                        CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,

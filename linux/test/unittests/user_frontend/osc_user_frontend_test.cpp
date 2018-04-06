@@ -49,7 +49,7 @@ protected:
 
 TEST_F(TestOSCUserFrontend, test_set_pin_enabled)
 {
-    lo_send(_address, "/set_pin_enabled", "ii", 5, 1);
+    lo_send(_address, "/set_enabled", "ii", 5, 1);
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
     ASSERT_FALSE(_event_queue.empty());
     std::unique_ptr<BaseMessage> event = _event_queue.pop();
@@ -68,10 +68,41 @@ TEST_F(TestOSCUserFrontend, test_set_digital_output)
     ASSERT_FALSE(_event_queue.empty());
     std::unique_ptr<BaseMessage> event = _event_queue.pop();
     ASSERT_EQ(MessageType::COMMAND, event->base_type());
-    auto cmd = static_unique_ptr_cast<SendDigitalPinValueCommand, BaseMessage>(std::move(event));
+    auto cmd = static_unique_ptr_cast<SetDigitalOutputValueCommand, BaseMessage>(std::move(event));
 
+    ASSERT_EQ(CommandType::SET_DIGITAL_OUTPUT_VALUE, cmd->type());
     ASSERT_EQ(3, cmd->index());
     ASSERT_FALSE(cmd->data());
+    ASSERT_TRUE(_event_queue.empty());
+}
+
+TEST_F(TestOSCUserFrontend, test_set_continuous_output)
+{
+    lo_send(_address, "/set_continuous_output", "if", 4, 0.4f);
+    _event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_event_queue.empty());
+    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    ASSERT_EQ(MessageType::COMMAND, event->base_type());
+    auto cmd = static_unique_ptr_cast<SetContinuousOutputValueCommand, BaseMessage>(std::move(event));
+
+    ASSERT_EQ(CommandType::SET_CONTINUOUS_OUTPUT_VALUE, cmd->type());
+    ASSERT_EQ(4, cmd->index());
+    ASSERT_FLOAT_EQ(0.4f, cmd->data());
+    ASSERT_TRUE(_event_queue.empty());
+}
+
+TEST_F(TestOSCUserFrontend, test_set_range_output)
+{
+    lo_send(_address, "/set_range_output", "ii", 5, 12);
+    _event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_event_queue.empty());
+    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    ASSERT_EQ(MessageType::COMMAND, event->base_type());
+    auto cmd = static_unique_ptr_cast<SetRangeOutputValueCommand, BaseMessage>(std::move(event));
+
+    ASSERT_EQ(CommandType::SET_RANGE_OUTPUT_VALUE, cmd->type());
+    ASSERT_EQ(5, cmd->index());
+    ASSERT_EQ(12, cmd->data());
     ASSERT_TRUE(_event_queue.empty());
 }
 

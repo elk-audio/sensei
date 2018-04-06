@@ -1,4 +1,4 @@
-/**
+    /**
  * @brief OSC runtime user frontend
  * @copyright MIND Music Labs AB, Stockholm
  */
@@ -22,12 +22,13 @@ static void osc_error(int num, const char *msg, const char *path)
     SENSEI_LOG_ERROR("liblo server error {} in path {}: {}", num, path, msg);
 }
 
-static int osc_set_pin_enabled(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
+static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, lo_arg**argv, int /*argc*/,
+                                  void* /*data*/, void*user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
     int pin_idx = argv[0]->i;
     bool enabled = static_cast<bool>(argv[1]->i);
-    self->set_pin_enabled(pin_idx, enabled);
+    self->set_enabled(pin_idx, enabled);
     SENSEI_LOG_DEBUG("Setting pin {} to enabled status {}", pin_idx, enabled);
 
     return 0;
@@ -36,10 +37,32 @@ static int osc_set_pin_enabled(const char* /*path*/, const char* /*types*/, lo_a
 static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
-    int pin_idx = argv[0]->i;
+    int id = argv[0]->i;
     bool value = static_cast<bool>(argv[1]->i);
-    self->set_digital_output(pin_idx, value);
-    SENSEI_LOG_DEBUG("Sending value {} to digital pin {}", value, pin_idx);
+    self->set_digital_output(id, value);
+    SENSEI_LOG_DEBUG("Sending value {} to digital output {}", value, id);
+
+    return 0;
+}
+
+static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
+{
+    OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
+    int id = argv[0]->i;
+    float value = argv[1]->f;
+    self->set_continuous_output(id, value);
+    SENSEI_LOG_DEBUG("Sending value {} to output {}", value, id);
+
+    return 0;
+}
+
+static int osc_set_range_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
+{
+    OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
+    int id = argv[0]->i;
+    int value = argv[1]->i;
+    self->set_range_output(id, value);
+    SENSEI_LOG_DEBUG("Sending value {} to range output {}", value, id);
 
     return 0;
 }
@@ -129,8 +152,10 @@ void OSCUserFrontend::_start_server()
     port_stream << _server_port;
 
     _osc_server = lo_server_thread_new(port_stream.str().c_str(), osc_error);
-    lo_server_thread_add_method(_osc_server, "/set_pin_enabled", "ii", osc_set_pin_enabled, this);
+    lo_server_thread_add_method(_osc_server, "/set_enabled", "ii", osc_set_sensor_enabled, this);
     lo_server_thread_add_method(_osc_server, "/set_digital_output", "ii", osc_set_digital_output, this);
+    lo_server_thread_add_method(_osc_server, "/set_continuous_output", "if", osc_set_continuous_output, this);
+    lo_server_thread_add_method(_osc_server, "/set_range_output", "ii", osc_set_range_output, this);
     lo_server_thread_add_method(_osc_server, "/imu_calibrate", "", osc_imu_calibrate, this);
     lo_server_thread_add_method(_osc_server, "/imu_reset", "", osc_imu_factory_reset, this);
     lo_server_thread_add_method(_osc_server, "/imu_reboot", "", osc_imu_reboot, this);

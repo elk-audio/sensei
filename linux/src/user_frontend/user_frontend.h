@@ -45,21 +45,43 @@ public:
      * This should be preferably called by derived classes in their
      * runtime thread.
      *
-     * @param [in] pin_index    Configurable input pin index
+     * @param [in] sensor_index Configurable input pin index
      * @param [in] enabled      Enable status
      */
-    void set_pin_enabled(const int pin_index, const bool enabled);
+    void set_enabled(int index, bool enabled);
 
     /**
-     * @brief Set a message to change the value of a digital output pin.
+     * @brief Set the value of a digital output.
      *
      * This should be preferably called by derived classes in their
      * runtime thread.
      *
-     * @param [in] out_pin_index    Digital output pin index
-     * @param [in] value            New value for selected pin
+     * @param [in] index         Digital output index
+     * @param [in] value         New value for selected output
      */
-    void set_digital_output(const int out_pin_index, const bool value);
+    void set_digital_output(int index, bool value);
+
+    /**
+     * @brief Set the value of a continuous output
+     *
+     * This should be preferably called by derived classes in their
+     * runtime thread.
+     *
+     * @param [in] index         Output index
+     * @param [in] value         New value for selected sensor normalised to a [0, 1] range
+     */
+    void set_continuous_output(int index, float value);
+
+    /**
+     * @brief Set the value of a range output.
+     *
+     * This should be preferably called by derived classes in their
+     * runtime thread.
+     *
+     * @param [in] index         Output index
+     * @param [in] value         New value for selected sensor
+     */
+    void set_range_output(int index, int value);
 
     /**
      * @brief Trigger an automatic self calibration of the IMU gyro

@@ -195,12 +195,28 @@ public:
         return std::unique_ptr<SetSensorHwPolarityCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_send_digital_value_command(const int sensor_id,
+    std::unique_ptr<BaseMessage> make_set_digital_output_command(const int sensor_id,
                                                                  const bool value,
                                                                  const uint32_t timestamp = 0)
     {
-        auto msg = new SendDigitalPinValueCommand(sensor_id, value, timestamp);
-        return std::unique_ptr<SendDigitalPinValueCommand>(msg);
+        auto msg = new SetDigitalOutputValueCommand(sensor_id, value, timestamp);
+        return std::unique_ptr<SetDigitalOutputValueCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_continuous_output_command(const int sensor_id,
+                                                                    const float value,
+                                                                    const uint32_t timestamp = 0)
+    {
+        auto msg = new SetContinuousOutputValueCommand(sensor_id, value, timestamp);
+        return std::unique_ptr<SetContinuousOutputValueCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_range_output_command(const int sensor_id,
+                                                               const int value,
+                                                               const uint32_t timestamp = 0)
+    {
+        auto msg = new SetRangeOutputValueCommand(sensor_id, value, timestamp);
+        return std::unique_ptr<SetRangeOutputValueCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_enable_sending_packets_command(const int index,

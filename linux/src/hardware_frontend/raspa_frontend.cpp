@@ -336,10 +336,22 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             _send_list.push_back(_packet_factory.make_set_analog_resolution_command(cmd->index(), cmd->data()));
             break;
         }
-        case CommandType::SEND_DIGITAL_PIN_VALUE:
+        case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
-            auto cmd = static_cast<const SendDigitalPinValueCommand*>(message);
+            auto cmd = static_cast<const SetDigitalOutputValueCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), cmd->data()? 1 : 0));
+            break;
+        }
+        case CommandType::SET_CONTINUOUS_OUTPUT_VALUE:
+        {
+            auto cmd = static_cast<const SetContinuousOutputValueCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), std::round(cmd->data() * 256.0f)));
+            break;
+        }
+        case CommandType::SET_RANGE_OUTPUT_VALUE:
+        {
+            auto cmd = static_cast<const SetRangeOutputValueCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), cmd->data()));
             break;
         }
         case CommandType::ENABLE_SENDING_PACKETS:
