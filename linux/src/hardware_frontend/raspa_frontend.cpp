@@ -267,12 +267,10 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::SET_SENSOR_HW_TYPE:
         {
             auto cmd = static_cast<const SetSensorHwTypeCommand*>(message);
-            uint8_t hw_type;
-            bool    valid;
-            std::tie(hw_type, valid) = to_xmos_hw_type(cmd->data());
-            if (valid)
+            auto hw_type = to_xmos_hw_type(cmd->data());
+            if (hw_type.has_value())
             {
-                _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type));
+                _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type.value()));
             }
             break;
         }
@@ -315,12 +313,10 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::SET_SENDING_MODE:
         {
             auto cmd = static_cast<const SetSendingModeCommand*>(message);
-            uint8_t mode;
-            bool valid;
-            std::tie(mode, valid) = to_xmos_sending_mode(cmd->data());
-            if (valid)
+            auto mode = to_xmos_sending_mode(cmd->data());
+            if (mode.has_value())
             {
-                _send_list.push_back(_packet_factory.make_set_notification_mode(cmd->index(), mode));
+                _send_list.push_back(_packet_factory.make_set_notification_mode(cmd->index(), mode.value()));
             }
             break;
         }
@@ -427,7 +423,7 @@ void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
     SENSEI_LOG_INFO("Got a value packet!");
 }
 
-std::pair<uint8_t, bool> to_xmos_hw_type(SensorHwType type)
+std::optional<uint8_t> to_xmos_hw_type(SensorHwType type)
 {
     uint8_t hw_type;
     switch (type)
@@ -466,19 +462,19 @@ std::pair<uint8_t, bool> to_xmos_hw_type(SensorHwType type)
 
         default:
             SENSEI_LOG_WARNING("Unsupported Sensor HW type: {}", static_cast<int>(type));
-            return {0, false};
+            return std::nullopt;
     }
-    return {hw_type, true};
+    return std::make_optional(hw_type);
 }
 
-std::pair<uint8_t, bool> to_xmos_sending_mode(SendingMode mode)
+std::optional<uint8_t> to_xmos_sending_mode(SendingMode mode)
 {
     uint8_t xmos_mode;
     switch (mode)
     {
         case SendingMode::OFF:
             // TODO - Maybe send a mute command here
-            return {0, false};
+            return std::nullopt;
 
         case SendingMode::CONTINUOUS:
             xmos_mode = NotificationMode::EVERY_CNTRLR_TICK;
@@ -497,8 +493,9 @@ std::pair<uint8_t, bool> to_xmos_sending_mode(SendingMode mode)
 
         default:
             SENSEI_LOG_WARNING("Unsupported Sending Mode: {}", static_cast<int>(mode));
+            return std::nullopt;
     }
-    return {xmos_mode, true};
+    return xmos_mode;
 }
 }
 }

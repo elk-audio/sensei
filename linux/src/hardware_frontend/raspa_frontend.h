@@ -13,6 +13,7 @@
 #include <atomic>
 #include <cassert>
 #include <utility>
+#include <optional>
 
 #include "hw_frontend.h"
 #include "message_tracker.h"
@@ -109,8 +110,8 @@ private:
     bool            _verify_acks;
 };
 
-std::pair<uint8_t, bool> to_xmos_hw_type(SensorHwType type);
-std::pair<uint8_t, bool> to_xmos_sending_mode(SendingMode mode);
+std::optional<uint8_t> to_xmos_hw_type(SensorHwType type);
+std::optional<uint8_t> to_xmos_sending_mode(SendingMode mode);
 
 
 

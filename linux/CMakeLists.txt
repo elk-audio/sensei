@@ -6,7 +6,7 @@ project(sensei)
 ####################
 
 # Global flags
-set(PROJECT_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-rtti")
+set(PROJECT_CXX_FLAGS "-Wall -Wextra -std=c++17 -fno-rtti")
 set(PROJECT_LINK_FLAGS "")
 
 # Platform specific stuff
