@@ -132,6 +132,16 @@ enum class BackendType
 };
 
 /**
+ * @brief Hw Frontend Types
+ */
+enum class HwFrontendType
+{
+    NONE,
+    SERIAL_TEENSY,
+    RASPA_XMOS
+};
+
+/**
  * @brief Sending behaviours
  */
 enum class SendingMode
@@ -197,21 +207,21 @@ SENSEI_DECLARE_COMMAND(SetEnabledCommand,
                        CommandType::SET_ENABLED,
                        bool,
                        "Set Enabled",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSensorTypeCommand,
                        CommandType::SET_SENSOR_TYPE,
                        SensorType,
                        "Set Sensor Type",
                        CommandDestination::HARDWARE_FRONTEND
-                           | CommandDestination::INTERNAL
+                           | CommandDestination::MAPPING_PROCESSOR
                            | CommandDestination::OUTPUT_BACKEND);
 
 SENSEI_DECLARE_COMMAND(SetSensorHwTypeCommand,
                        CommandType::SET_SENSOR_HW_TYPE,
                        SensorHwType,
                        "Set Sensor Hardware Type",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetVirtualPinCommand,
                        CommandType::SET_VIRTUAL_PIN,
@@ -223,61 +233,61 @@ SENSEI_DECLARE_COMMAND(SetSingleHwPinCommand,
                        CommandType::SET_HW_PIN,
                        int,
                        "Set hardware pin",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetHwPinsCommand,
                        CommandType::SET_HW_PINS,
                        std::vector<int>,
                        "Set multiple hardware pins",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSendingModeCommand,
                        CommandType::SET_SENDING_MODE,
                        SendingMode,
                        "Set Sending Mode",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSendingDeltaTicksCommand,
                        CommandType::SET_SENDING_DELTA_TICKS,
                        int,
                        "Set Sending Delta Ticks",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
                        CommandType::SET_ADC_BIT_RESOLUTION,
                        int,
                        "Set ADC Bit Resolution",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetLowpassFilterOrderCommand,
                        CommandType::SET_LOWPASS_FILTER_ORDER,
                        int,
                        "Set Lowpass Filter order",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetLowpassCutoffCommand,
                        CommandType::SET_LOWPASS_CUTOFF,
                        float,
                        "Set Lowpass Cutoff",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
                        CommandType::SET_SLIDER_THRESHOLD,
                        int,
                        "Set Slider Threshold",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetMultiplexedSensorCommand,
                        CommandType::SET_MULTIPLEXED,
                        MultiplexerData,
                        "Set multiplexed sensor",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSensorHwPolarityCommand,
                        CommandType::SET_HW_POLARITY,
                        HwPolarity,
                        "Set polarity of hw sensor",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetDigitalOutputValueCommand,
                        CommandType::SET_DIGITAL_OUTPUT_VALUE,
@@ -401,19 +411,19 @@ SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
                        CommandType::SET_INVERT_ENABLED,
                        bool,
                        "Set Invert Enabled",
-                       CommandDestination::INTERNAL);
+                       CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetInputScaleRangeLow,
                        CommandType::SET_INPUT_SCALE_RANGE_LOW,
                        float,
                        "Set Input Scale Range Low",
-                       CommandDestination::INTERNAL);
+                       CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
                        CommandType::SET_INPUT_SCALE_RANGE_HIGH,
                        float,
                        "Set Input Scale Range Low",
-                       CommandDestination::INTERNAL);
+                       CommandDestination::MAPPING_PROCESSOR);
 
 // Output Backend commands
 

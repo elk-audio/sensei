@@ -157,7 +157,7 @@ TEST(MessagesTest, test_internal_command_creation)
 
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::INTERNAL);
+        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::MAPPING_PROCESSOR);
 
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
