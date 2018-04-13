@@ -20,6 +20,8 @@
 namespace sensei {
 namespace hw_frontend {
 
+constexpr char SENSEI_DEFAULT_SERIAL_DEVICE[] = "/dev/ttyS01";
+
 static const int MAX_NUMBER_OFF_INPUT_PINS = 64;
 static const int MAX_NUMBER_OFF_OUTPUT_PINS = 32;
 static const int INITIAL_TICK_DIVISOR = 1;
@@ -51,10 +53,9 @@ bool verify_message(const sSenseiDataPacket *packet)
 SerialFrontend::SerialFrontend(const std::string &port_name,
                                SynchronizedQueue<std::unique_ptr<Command>> *in_queue,
                                SynchronizedQueue<std::unique_ptr<BaseMessage>> *out_queue) :
+        HwFrontend(in_queue, out_queue),
         _packet_factory(MAX_NUMBER_OFF_INPUT_PINS + MAX_NUMBER_OFF_OUTPUT_PINS),
         _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
-        _in_queue(in_queue),
-        _out_queue(out_queue),
         _read_thread_state(running_state::STOPPED),
         _write_thread_state(running_state::STOPPED),
         _ready_to_send(true),
@@ -73,7 +74,8 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
     }
     _id_to_pin_table.fill(0);
     _pin_to_id_table.fill(0);
-    if (setup_port(port_name) == SP_OK)
+
+    if (setup_port(port_name.empty()? SENSEI_DEFAULT_SERIAL_DEVICE : port_name) == SP_OK)
     {
         SENSEI_LOG_INFO("Serial port opened ok, sending initialize packet");
         send_initialize_packet(INITIAL_TICK_DIVISOR, MAX_NUMBER_OFF_INPUT_PINS, MAX_NUMBER_OFF_OUTPUT_PINS, 0);

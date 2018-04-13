@@ -34,7 +34,6 @@ enum class CommandDestination : int
     OUTPUT_BACKEND = 1 << 2,
     CONFIG_BACKEND = 1 << 3,
     USER_FRONTEND = 1 << 4,
-    INTERNAL = 1 << 5
 };
 
 using CommandDestinationType = std::underlying_type_t <CommandDestination>;

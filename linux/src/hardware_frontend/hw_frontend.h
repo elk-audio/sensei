@@ -65,6 +65,20 @@ protected:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>*_out_queue;
 };
 
+
+class NoOpFrontend : public HwFrontend
+{
+public:
+    NoOpFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
+                 SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue) : HwFrontend(in_queue, out_queue)
+    {}
+    virtual bool connected() {return false;}
+    virtual void run() {}
+    virtual void stop() {}
+    virtual void mute(bool /*enabled*/) {}
+    virtual void verify_acks(bool /*enabled*/) {}
+};
+
 }; // namespace hw_frontend
 }; // namespace sensei
 

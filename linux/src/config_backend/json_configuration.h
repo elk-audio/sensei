@@ -14,19 +14,17 @@ class JsonConfiguration : public BaseConfiguration
 public:
     JsonConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& file) :
             BaseConfiguration(queue, file)
-    {
-    }
+    {}
 
-    ~JsonConfiguration()
-    {
+    ~JsonConfiguration() = default;
 
-    }
     /*
      * Open file, parse json and put commands in queue
      */
-    ConfigStatus read() override;
+    ConfigStatus read(HwFrontendConfig& hw_config) override;
 
 private:
+    ConfigStatus handle_hw_config(const Json::Value& frontend, HwFrontendConfig& config);
     ConfigStatus handle_sensor(const Json::Value& sensor);
     ConfigStatus handle_sensor_hw(const Json::Value& hardware, int sensor_id);
     ConfigStatus handle_backend(const Json::Value& backend);
