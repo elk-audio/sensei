@@ -24,8 +24,7 @@ public:
     ~EventHandler()
     {}
 
-    void init(const std::string port_name, const int max_n_input_pins, const int max_n_digital_out_pins,
-                  const std::string config_file);
+    void init(const int max_n_input_pins, const int max_n_digital_out_pins, const std::string config_file);
 
     void handle_events(std::chrono::milliseconds wait_period);
 
@@ -33,7 +32,8 @@ public:
 
     void reload_config()
     {
-        _config_backend->read();
+        config::HwFrontendConfig hwc;
+        _config_backend->read(hwc);
     }
 
 private:

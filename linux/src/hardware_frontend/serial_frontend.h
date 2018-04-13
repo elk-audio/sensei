@@ -15,13 +15,15 @@
 #include <condition_variable>
 #include <mutex>
 
+#include "libserialport.h"
+#include "synchronized_queue.h"
+#include "hw_frontend.h"
 #include "message/message_factory.h"
 #include "../../common/sensei_serial_protocol.h"
 #include "serial_command_creator.h"
 #include "message_tracker.h"
 
-#include "libserialport.h"
-#include "synchronized_queue.h"
+
 
 namespace sensei {
 namespace hw_frontend {
@@ -34,7 +36,7 @@ enum class running_state {
 constexpr size_t MAX_SENSORS = 64;
 
 
-class SerialFrontend
+class SerialFrontend : public HwFrontend
 {
 public:
     /**
@@ -54,17 +56,17 @@ public:
     * @brief Returns true if connection to the serial port is ok and ready to send
     * @return State of serial port connection
     */
-    bool connected();
+    bool connected() override;
 
     /**
     * @brief Spawn new threads for reading continuously from the port and in_queue
     */
-    void run();
+    void run() override ;
 
     /**
     * @brief Stops the read and write threads if they are running
     */
-    void stop();
+    void stop() override;
 
     /**
      * @brief Stops the flow of messages. If set to true, incoming serial packets
@@ -72,14 +74,14 @@ public:
      *
      * @param [in] enabled Sets mute enabled/disabled
      */
-    void mute(bool enabled);
+    void mute(bool enabled) override;
 
     /**
      * @brief Enables tracking and verification of serial ack packets
      *
      * @param [in] enabled Sets ack verification enabled/disabled
      */
-    void verify_acks(bool enabled);
+    void verify_acks(bool enabled) override ;
 
 private:
     int setup_port(const std::string& name);
@@ -103,8 +105,6 @@ private:
     MessageConcatenator  _message_concatenator;
 
     sp_port *_port;
-    SynchronizedQueue<std::unique_ptr<Command>>* _in_queue;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* _out_queue;
 
     running_state   _read_thread_state;
     running_state   _write_thread_state;

@@ -22,7 +22,11 @@ enum class ConfigStatus {
     PARAMETER_ERROR,
 };
 
-
+struct HwFrontendConfig
+{
+    HwFrontendType type;
+    std::string    port;
+};
 
 class BaseConfiguration
 {
@@ -62,7 +66,7 @@ public:
     /**
      * @brief Read configuration and construct messages from it
      */
-    virtual ConfigStatus read()
+    virtual ConfigStatus read(HwFrontendConfig& /*hw_config*/)
     {
         return ConfigStatus::OK;
     }

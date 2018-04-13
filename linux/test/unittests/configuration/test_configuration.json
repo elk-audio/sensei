@@ -18,6 +18,11 @@
         }
 	],
 
+	"hw_frontend" : {
+		"type" : "serial_teensy",
+		"port" : "/dev/ttyS01"
+	},
+
 	"sensors" : [
 		{
 			"id" : 1,

@@ -19,7 +19,6 @@
 #define SENSEI_DEFAULT_N_OUTPUT_PINS_STR    "32"
 #define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
-#define SENSEI_DEFAULT_SERIAL_DEVICE        "/dev/ttyS01"
 #define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +105,6 @@ struct SenseiArg : public option::Arg
         }
         return option::ARG_ILLEGAL;
     }
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +115,6 @@ enum OptionIndex
 { 
     UNKNOWN,
     HELP,
-    PORT,
     N_INPUT_PINS,
     N_OUTPUT_PINS,
     SLEEP_PERIOD,
@@ -141,14 +138,6 @@ const option::Descriptor usage[] =
         "help",
         SenseiArg::None,
         "\t\t-h --help \tPrint usage and exit."
-    },
-    {
-        PORT,
-        0,
-        "p",
-        "port",
-        SenseiArg::NonEmpty,
-        "\t\t-p <device>, --port=<device> \tSpecify serial port device [default=" SENSEI_DEFAULT_SERIAL_DEVICE "]."
     },
     {
         N_INPUT_PINS,
@@ -222,7 +211,6 @@ int main(int argc, char* argv[])
     int n_input_pins = SENSEI_DEFAULT_N_INPUT_PINS;
     int n_output_pins = SENSEI_DEFAULT_N_OUTPUT_PINS;
     std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
-    std::string port_name = std::string(SENSEI_DEFAULT_SERIAL_DEVICE);
     std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
     for (int i=0; i<cl_parser.optionsCount(); i++)
     {
@@ -274,10 +262,6 @@ int main(int argc, char* argv[])
             }
             break;
 
-        case PORT:
-            port_name.assign(opt.arg);
-            break;
-
         case CONFIG_FILENAME:
             config_filename.assign(opt.arg);
             break;
@@ -305,8 +289,7 @@ int main(int argc, char* argv[])
     signal(SIGTERM, kill_signal_handler);
     signal(SIGUSR1, user_signal_handler);
 
-    event_handler.init(port_name, n_input_pins, n_output_pins,
-                       config_filename);
+    event_handler.init(n_input_pins, n_output_pins, config_filename);
 
     ////////////////////////////////////////////////////////////////////////////////
     // Main loop

@@ -32,7 +32,7 @@ Json::Value read_configuration(std::ifstream& file)
 /*
  * Open _source as a file and parse is as a json file
  */
-ConfigStatus JsonConfiguration::read()
+ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
 {
     SENSEI_LOG_INFO("Reading configuration file");
     std::ifstream file(_source);
@@ -49,11 +49,18 @@ ConfigStatus JsonConfiguration::read()
 
     /* Start by disabling all pins to mute the board while sending the configuration commands */
     _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, false)));
+    const Json::Value& hw_frontend = config["hw_frontend"];
     const Json::Value& backends = config["backends"];
     const Json::Value& sensors = config["sensors"];
     const Json::Value& imu = config["imu"];
-    ConfigStatus status;
 
+    /* Read the hw status, needs to be returned directly and not as an event */
+    ConfigStatus status = handle_hw_config(hw_frontend, hw_config);
+    if (status != ConfigStatus::OK)
+    {
+        return status;
+    }
+    /* Read the rest of the configuration */
     if (backends.isArray())
     {
         for(const Json::Value& backend : backends)
@@ -83,6 +90,32 @@ ConfigStatus JsonConfiguration::read()
     }
     /* The last commands enables sending of packets */
     _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, true)));
+    return ConfigStatus::OK;
+}
+
+ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, HwFrontendConfig& config)
+{
+    const Json::Value& type = frontend["type"];
+    if (type.isString())
+    {
+        if (type == "serial_teensy")
+        {
+            config.type = HwFrontendType::SERIAL_TEENSY;
+            const Json::Value& port = frontend["port"];
+            if (port.isString())
+            {
+                config.port = port.asString();
+            }
+        }
+        else if (type == "raspa_xmos")
+        {
+            config.type = HwFrontendType::RASPA_XMOS;
+        } else
+        {
+            SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware fronted type", type);
+            return ConfigStatus::PARSING_ERROR;
+        }
+    }
     return ConfigStatus::OK;
 }
 
