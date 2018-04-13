@@ -12,6 +12,9 @@
     }
   ],
 
+  "hw_frontend" : {
+    "type" : "raspa_xmos"
+  },
 
   "sensors" : [
     {
