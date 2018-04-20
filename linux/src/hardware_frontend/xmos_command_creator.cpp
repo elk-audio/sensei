@@ -138,8 +138,8 @@ xmos::XmosGpioPacket XmosCommandCreator::make_mute_controller_command(uint8_t co
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
     packet.sub_command = XMOS_SUB_CMD_MUTE_UNMUTE_CNTRLR;
-    packet.payload.mute_cmnd_data.controller_id = controller_id;
-    packet.payload.mute_cmnd_data.mute_status = mute_status;
+    packet.payload.mute_cmd_data.controller_id = controller_id;
+    packet.payload.mute_cmd_data.mute_status = mute_status;
     return packet;
 }
 
@@ -175,7 +175,7 @@ xmos::XmosGpioPacket XmosCommandCreator::make_set_value_command(uint8_t controll
     XmosGpioPacket packet = _prepare_packet();
     packet.command = xmos::XMOS_CMD_SET_VALUE;
     packet.payload.value_request_data.controller_id = controller_id;
-    packet.payload.value_send_data.controller_val = to_xmos_byteord(value);
+    packet.payload.value_data.controller_val = to_xmos_byteord(value);
     return packet;
 }
 

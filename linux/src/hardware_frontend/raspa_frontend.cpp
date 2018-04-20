@@ -422,7 +422,7 @@ void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 
 void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
 {
-    auto& m = packet.payload.value_send_data;
+    auto& m = packet.payload.value_data;
     _out_queue->push(_message_factory.make_analog_value(m.controller_id, from_xmos_byteord(m.controller_val), 0));
     SENSEI_LOG_INFO("Got a value packet!");
 }
