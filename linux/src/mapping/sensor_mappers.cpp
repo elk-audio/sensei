@@ -158,10 +158,20 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     {
         return;
     }
-    assert(value->type() == ValueType::DIGITAL);
-
-    auto digital_val = static_cast<DigitalValue*>(value);
-    float out_val = digital_val->value() ? 1.0f : 0.0f;
+    bool digital_val;
+    if (value->type() == ValueType::DIGITAL)
+    {
+        digital_val = static_cast<DigitalValue*>(value)->value();
+    }
+    else if (value->type() == ValueType::ANALOG)
+    {
+        digital_val = static_cast<AnalogValue*>(value)->value() > 0;
+    }
+    else
+    {
+        return;
+    }
+    float out_val = digital_val? 1.0f : 0.0f;
     if (_invert_value)
     {
         out_val = 1.0f - out_val;
