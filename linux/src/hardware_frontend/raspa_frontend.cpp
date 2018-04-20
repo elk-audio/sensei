@@ -336,6 +336,30 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             _send_list.push_back(_packet_factory.make_set_analog_resolution_command(cmd->index(), cmd->data()));
             break;
         }
+        case CommandType::SET_MULTIPLEXED:
+        {
+            auto cmd = static_cast<const SetMultiplexedSensorCommand*>(message);
+            _send_list.push_back(_packet_factory.make_add_controller_to_mux_command(cmd->index(),
+                                                                                    cmd->data().id,
+                                                                                    cmd->data().pin));
+            break;
+        }
+        case CommandType::SET_HW_POLARITY:
+        {
+            auto cmd = static_cast<const SetSensorHwPolarityCommand*>(message);
+            uint8_t polarity;
+            switch (cmd->data())
+            {
+                case HwPolarity::ACTIVE_HIGH:
+                    polarity = CntrlrPolarity::ACTIVE_HIGH;
+                    break;
+                case HwPolarity::ACTIVE_LOW:
+                    polarity = CntrlrPolarity::ACTIVE_LOW;
+                    break;
+            }
+            _send_list.push_back(_packet_factory.make_set_polarity_command(cmd->index(), polarity));
+            break;
+        }
         case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
             auto cmd = static_cast<const SetDigitalOutputValueCommand*>(message);
