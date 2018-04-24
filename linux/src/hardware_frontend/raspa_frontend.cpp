@@ -38,9 +38,11 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
                 _muted(false),
                 _verify_acks(true)
 {
+    /* Prepare the setup and query hw commands to be the first to send */
+    _send_list.push_back(_packet_factory.make_reset_system_command());
+    _send_list.push_back(_packet_factory.make_get_board_info_command());
     _in_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
-    _send_list.push_back(_packet_factory.make_reset_system_command());
     if (_in_socket >= 0 && _out_socket >= 0)
     {
         /* Sensei binds one socket to SENSEI_SOCKET, then tries to connect
@@ -369,7 +371,8 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::SET_CONTINUOUS_OUTPUT_VALUE:
         {
             auto cmd = static_cast<const SetContinuousOutputValueCommand*>(message);
-            _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), std::round(cmd->data() * 256.0f)));
+            _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(),
+                                                                        std::round(cmd->data() * _dac_output_max)));
             break;
         }
         case CommandType::SET_RANGE_OUTPUT_VALUE:
@@ -410,6 +413,11 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
             _handle_ack(packet);
             break;
 
+        case XMOS_CMD_CONFIGURE_CNTRLR:
+            if (packet.sub_command == XMOS_SUB_CMD_GET_BOARD_INFO)
+            _handle_board_info(packet);
+            break;
+
         default:
             SENSEI_LOG_WARNING("Unhandled command type: {}", (int)packet.command);
     }
@@ -418,7 +426,7 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 {
     uint32_t seq_no = from_xmos_byteord(ack.payload.ack_data.returned_seq_no);
-    SENSEI_LOG_INFO("Got ack for packet: {}, {}", ack.command, seq_no);
+    SENSEI_LOG_INFO("Got ack for packet: {}", seq_no);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);
@@ -437,7 +445,7 @@ void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
         }
     }
     char status = ack.payload.ack_data.status;
-    if (status != 0)
+    if (status != xmos::XmosReturnStatus::OK)
     {
         SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_xmos_byteord(ack.payload.ack_data.returned_seq_no),
                                                                        xmos_status_to_string(status));
@@ -449,6 +457,16 @@ void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
     auto& m = packet.payload.value_data;
     _out_queue->push(_message_factory.make_analog_value(m.controller_id, from_xmos_byteord(m.controller_val), 0));
     SENSEI_LOG_INFO("Got a value packet!");
+}
+
+void RaspaFrontend::_handle_board_info(const xmos::XmosGpioPacket& packet)
+{
+    _board_info = packet.payload.board_info_data;
+    _dac_output_max = powf(2.0f, _board_info.adc_res_in_bits);
+    SENSEI_LOG_INFO("Received board info: No of digital input pins: {}",_board_info.num_digital_input_pins);
+    SENSEI_LOG_INFO("No of digital output pins: {}",_board_info.num_digital_output_pins);
+    SENSEI_LOG_INFO("No of analog input pins: {}", _board_info.num_analog_input_pins);
+    SENSEI_LOG_INFO("ADC bit resolution: {}", _board_info.adc_res_in_bits);
 }
 
 std::pair<uint8_t, bool> to_xmos_hw_type(SensorHwType type)

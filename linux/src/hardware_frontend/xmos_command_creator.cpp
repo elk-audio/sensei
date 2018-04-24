@@ -45,7 +45,7 @@ xmos::XmosGpioPacket XmosCommandCreator::make_get_board_info_command()
 {
     XmosGpioPacket packet = _prepare_packet();
     packet.command = XMOS_CMD_SYSTEM_CNTRL;
-    packet.sub_command = 0; //XMOS_SUB_CMD_GET_BOARD_INFO;
+    packet.sub_command = XMOS_SUB_CMD_GET_BOARD_INFO;
     return packet;
 }
 
@@ -186,7 +186,6 @@ xmos::XmosGpioPacket XmosCommandCreator::_prepare_packet()
     packet.sequence_no = to_xmos_byteord(_sequence_number());
     return packet;
 }
-
 
 std::string xmos_status_to_string(uint8_t status)
 {

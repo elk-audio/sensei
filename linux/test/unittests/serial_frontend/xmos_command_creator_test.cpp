@@ -58,9 +58,9 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(XMOS_SUB_CMD_SET_TICK_RATE, packet.sub_command);
     EXPECT_EQ(TICK_1000_HZ, packet.payload.tick_rate_data.system_tick_rate);
 
-    //packet = _module_under_test.make_get_board_info_command();
-    //EXPECT_EQ(XMOS_CMD_SYSTEM_CNTRL, packet.command);
-    //EXPECT_EQ(XMOS_SUB_CMD_GET_BOARD_INFO, packet.sub_command);
+    packet = _module_under_test.make_get_board_info_command();
+    EXPECT_EQ(XMOS_CMD_SYSTEM_CNTRL, packet.command);
+    EXPECT_EQ(XMOS_SUB_CMD_GET_BOARD_INFO, packet.sub_command);
 
     packet = _module_under_test.make_reset_all_controllers_command();
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
