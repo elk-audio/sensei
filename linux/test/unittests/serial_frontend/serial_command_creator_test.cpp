@@ -2,7 +2,7 @@
 #include "gtest/gtest.h"
 
 #define private public
-#include "serial_frontend/serial_command_creator.cpp"
+#include "hardware_frontend/serial_command_creator.cpp"
 
 
 using namespace sensei;
@@ -103,7 +103,7 @@ TEST_F(TestSerialCommandCreator, test_make_get_value_cmd)
 
 TEST_F(TestSerialCommandCreator, test_make_config_pintype_cmd)
 {
-    const sSenseiDataPacket* packet = _module_under_test.make_config_pintype_cmd(3, test_tstamp, PinType::ANALOG_INPUT);
+    const sSenseiDataPacket* packet = _module_under_test.make_config_pintype_cmd(3, test_tstamp, SensorHwType::ANALOG_INPUT_PIN);
     EXPECT_EQ(PIN_ANALOG_INPUT, packet->sub_cmd);
     EXPECT_EQ(test_tstamp, packet->timestamp);
 }
@@ -151,15 +151,6 @@ TEST_F(TestSerialCommandCreator, test_make_config_lowpass_cutoff_cmd)
     EXPECT_EQ(test_tstamp, packet->timestamp);
     EXPECT_FLOAT_EQ(1.234, pin_config->lowPassCutOffFilter);
     EXPECT_EQ(7, pin_config->idxPin);
-}
-
-TEST_F(TestSerialCommandCreator, test_make_config_slidermode_cmd)
-{
-    const sSenseiDataPacket* packet = _module_under_test.make_config_slidermode_cmd(8, test_tstamp, 1);
-    const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
-    EXPECT_EQ(test_tstamp, packet->timestamp);
-    EXPECT_EQ(1, pin_config->sliderMode);
-    EXPECT_EQ(8, pin_config->idxPin);
 }
 
 TEST_F(TestSerialCommandCreator, test_make_config_slider_threshold_cmd)
@@ -284,7 +275,7 @@ TEST_F(TestSerialCommandCreator, test_make_imu_commit_settings_cmd)
 TEST_F(TestSerialCommandCreator, test_cacheing)
 {
     const sSenseiDataPacket* packet = _module_under_test.make_config_adc_bitres_cmd(10, test_tstamp, 10);
-    packet = _module_under_test.make_config_pintype_cmd(10, test_tstamp, PinType::ANALOG_INPUT);
+    packet = _module_under_test.make_config_pintype_cmd(10, test_tstamp, SensorHwType::ANALOG_INPUT_PIN);
     packet = _module_under_test.make_config_sendingmode_cmd(10, 0x12341234, SendingMode::CONTINUOUS);
     const sPinConfiguration* pin_config = reinterpret_cast<const sPinConfiguration*>(&packet->payload);
     EXPECT_EQ(static_cast<uint32_t>(0x12341234), packet->timestamp);

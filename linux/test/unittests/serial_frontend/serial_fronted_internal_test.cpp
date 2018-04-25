@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "serial_frontend/serial_frontend_internal.h"
+#include "hardware_frontend/serial_frontend_internal.h"
 
 using namespace sensei;
 using namespace serial_frontend;

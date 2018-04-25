@@ -31,6 +31,7 @@ enum class running_state {
     STOPPING,
     STOPPED,
 };
+constexpr size_t MAX_SENSORS = 64;
 
 
 class SerialFrontend
@@ -119,6 +120,9 @@ private:
     bool _connected;
     bool _muted;
     bool _verify_acks;
+
+    std::array<int, MAX_SENSORS> _id_to_pin_table;
+    std::array<int, MAX_SENSORS> _pin_to_id_table;
 };
 
 }; // end namespace sensei

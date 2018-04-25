@@ -28,8 +28,8 @@ class BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(BaseSensorMapper)
 
-    BaseSensorMapper(const PinType pin_type = PinType::ANALOG_INPUT,
-                     const int pin_index = 0);
+    BaseSensorMapper(SensorType pin_type = SensorType::ANALOG_INPUT,
+                     int pin_index = 0);
 
     virtual ~BaseSensorMapper();
 
@@ -65,9 +65,11 @@ public:
     virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
 
 protected:
-    PinType _pin_type;
-    int _pin_index;
-    bool _pin_enabled;
+    SensorType _sensor_type;
+    SensorHwType _hw_type;
+    int _sensor_index;
+    int _hw_pin_index;
+    bool _enabled;
     SendingMode _sending_mode;
 
     float _previous_value;
@@ -79,7 +81,7 @@ class DigitalSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DigitalSensorMapper)
 
-    DigitalSensorMapper(const int pin_index = 0);
+    DigitalSensorMapper(int pin_index = 0);
 
     ~DigitalSensorMapper();
 
@@ -98,8 +100,8 @@ class AnalogSensorMapper : public BaseSensorMapper
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AnalogSensorMapper)
 
-    AnalogSensorMapper(const int pin_index = 0,
-                       const float adc_sampling_rate = 1000.0f);
+    AnalogSensorMapper(int pin_index = 0,
+                       float adc_sampling_rate = 1000.0f);
 
     ~AnalogSensorMapper();
 
@@ -110,6 +112,7 @@ public:
     void process(Value *value, output_backend::OutputBackend *backend) override;
 
 private:
+    CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
     CommandErrorCode _set_adc_bit_resolution(const int resolution);
     CommandErrorCode _set_input_scale_range_low(const int value);
     CommandErrorCode _set_input_scale_range_high(const int value);
@@ -123,7 +126,6 @@ private:
     int _adc_bit_resolution;
     int _lowpass_filter_order;
     float _lowpass_cutoff;
-    bool _slider_mode_enabled;
     int _slider_threshold;
 
     // Mapping parameters

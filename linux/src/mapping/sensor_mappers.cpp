@@ -34,10 +34,10 @@ using namespace sensei::mapping;
 // BaseSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-BaseSensorMapper::BaseSensorMapper(const PinType pin_type, const int pin_index) :
-    _pin_type(pin_type),
-    _pin_index(pin_index),
-    _pin_enabled(false),
+BaseSensorMapper::BaseSensorMapper(const SensorType pin_type, const int pin_index) :
+    _sensor_type(pin_type),
+    _sensor_index(pin_index),
+    _enabled(false),
     _sending_mode(SendingMode::OFF),
     _previous_value(0.0f),
     _invert_value(false)
@@ -50,7 +50,7 @@ BaseSensorMapper::~BaseSensorMapper()
 
 CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
 {
-    assert(cmd->index() == _pin_index);
+    assert(cmd->index() == _sensor_index);
 
     CommandErrorCode status = CommandErrorCode::OK;
 
@@ -60,7 +60,21 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
     case CommandType::SET_ENABLED:
         {
             const auto typed_cmd = static_cast<const SetEnabledCommand*>(cmd);
-            _pin_enabled = typed_cmd->data();
+            _enabled = typed_cmd->data();
+        };
+        break;
+
+    case CommandType::SET_SENSOR_HW_TYPE:
+        {
+            const auto typed_cmd = static_cast<const SetSensorHwTypeCommand*>(cmd);
+            _hw_type = typed_cmd->data();
+        };
+        break;
+
+    case CommandType::SET_HW_PIN:
+        {
+            const auto typed_cmd = static_cast<const SetSingleHwPinCommand*>(cmd);
+            _hw_pin_index = typed_cmd->data();
         };
         break;
 
@@ -91,10 +105,12 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
 void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
     MessageFactory factory;
-
-    *out_iterator = factory.make_set_enabled_command(_pin_index, _pin_enabled);
-    *out_iterator = factory.make_set_sending_mode_command(_pin_index, _sending_mode);
-    *out_iterator = factory.make_set_invert_enabled_command(_pin_index, _invert_value);
+    *out_iterator = factory.make_set_sensor_type_command(_sensor_index, _sensor_type);
+    *out_iterator = factory.make_set_sensor_hw_type_command(_sensor_index, _hw_type);
+    *out_iterator = factory.make_set_hw_pin_command(_sensor_index, _hw_pin_index);
+    *out_iterator = factory.make_set_enabled_command(_sensor_index, _enabled);
+    *out_iterator = factory.make_set_sending_mode_command(_sensor_index, _sending_mode);
+    *out_iterator = factory.make_set_invert_enabled_command(_sensor_index, _invert_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +118,7 @@ void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 ////////////////////////////////////////////////////////////////////////////////
 
 DigitalSensorMapper::DigitalSensorMapper(const int pin_index) :
-    BaseSensorMapper(PinType::DIGITAL_INPUT, pin_index)
+    BaseSensorMapper(SensorType::DIGITAL_INPUT, pin_index)
 {
 }
 
@@ -116,10 +132,10 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
     CommandErrorCode status = CommandErrorCode::OK;
     switch(cmd->type())
     {
-    case CommandType::SET_PIN_TYPE:
+    case CommandType::SET_SENSOR_TYPE:
         {
             // This is set internally and not from the user, so just assert for bugs
-            assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::DIGITAL_INPUT);
+            assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::DIGITAL_INPUT);
         };
         break;
 
@@ -144,14 +160,11 @@ CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
 void DigitalSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
     BaseSensorMapper::put_config_commands_into(out_iterator);
-
-    MessageFactory factory;
-    *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::DIGITAL_INPUT);
 }
 
 void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
 {
-    if (! _pin_enabled)
+    if (! _enabled)
     {
         return;
     }
@@ -169,7 +182,7 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     MessageFactory factory;
     // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
     // it gets optimized away by the compiler in release mode
-    auto temp_msg = factory.make_output_value(_pin_index,
+    auto temp_msg = factory.make_output_value(_sensor_index,
                                               out_val,
                                               value->timestamp());
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
@@ -183,11 +196,10 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
 
 AnalogSensorMapper::AnalogSensorMapper(const int pin_index,
                                        const float adc_sampling_rate) :
-    BaseSensorMapper(PinType::ANALOG_INPUT, pin_index),
+    BaseSensorMapper(SensorType::ANALOG_INPUT, pin_index),
     _delta_ticks_sending(1),
     _lowpass_filter_order(4),
     _lowpass_cutoff(DEFAULT_LOWPASS_CUTOFF),
-    _slider_mode_enabled(false),
     _slider_threshold(0),
     _input_scale_range_low(0),
     _input_scale_range_high((1<<DEFAULT_ADC_BIT_RESOLUTION)-1),
@@ -208,10 +220,17 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     switch(cmd->type())
     {
     // External
-    case CommandType::SET_PIN_TYPE:
+    case CommandType::SET_SENSOR_TYPE:
         {
             // This is set internally and not from the user, so just assert for bugs
-            assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::ANALOG_INPUT);
+            assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::ANALOG_INPUT);
+        };
+        break;
+
+    case CommandType::SET_SENSOR_HW_TYPE:
+        {
+            const auto typed_cmd = static_cast<const SetSensorHwTypeCommand*>(cmd);
+            status = _set_sensor_hw_type(typed_cmd->data());
         };
         break;
 
@@ -240,13 +259,6 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
         {
             const auto typed_cmd = static_cast<const SetLowpassCutoffCommand*>(cmd);
             status = _set_lowpass_cutoff(typed_cmd->data());
-        };
-        break;
-
-    case CommandType::SET_SLIDER_MODE_ENABLED:
-        {
-            const auto typed_cmd = static_cast<const SetSliderModeEnabledCommand*>(cmd);
-            _slider_mode_enabled = typed_cmd->data();
         };
         break;
 
@@ -296,20 +308,18 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::ANALOG_INPUT);
-    *out_iterator = factory.make_set_sending_delta_ticks_command(_pin_index, _delta_ticks_sending);
-    *out_iterator = factory.make_set_adc_bit_resolution_command(_pin_index, _adc_bit_resolution);
-    *out_iterator = factory.make_set_lowpass_filter_order_command(_pin_index, _lowpass_filter_order);
-    *out_iterator = factory.make_set_lowpass_cutoff_command(_pin_index, _lowpass_cutoff);
-    *out_iterator = factory.make_set_slider_mode_enabled_command(_pin_index, _slider_mode_enabled);
-    *out_iterator = factory.make_set_slider_threshold_command(_pin_index, _slider_threshold);
-    *out_iterator = factory.make_set_input_scale_range_low_command(_pin_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high_command(_pin_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
+    *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
+    *out_iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
+    *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
+    *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
+    *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
 }
 
 void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
-    if (! _pin_enabled)
+    if (! _enabled)
     {
         return;
     }
@@ -328,7 +338,7 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
         MessageFactory factory;
         // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
         // it gets optimized away by the compiler in release mode
-        auto temp_msg = factory.make_output_value(_pin_index,
+        auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
                                                   value->timestamp());
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
@@ -336,6 +346,12 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
         _previous_value = out_val;
     }
 
+}
+
+CommandErrorCode AnalogSensorMapper::_set_sensor_hw_type(SensorHwType hw_type)
+{
+    _hw_type = hw_type;
+    return CommandErrorCode::OK;
 }
 
 CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(const int resolution)
@@ -436,7 +452,7 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(const int value
 ////////////////////////////////////////////////////////////////////////////////
 
 ImuMapper::ImuMapper(const int pin_index) :
-        BaseSensorMapper(PinType::IMU_INPUT, pin_index),
+        BaseSensorMapper(SensorType::CONTINUOUS_INPUT, pin_index),
         _input_scale_range_low(-M_PI),
         _input_scale_range_high(M_PI),
         _max_allowed_input(M_PI * 2)
@@ -454,10 +470,10 @@ CommandErrorCode ImuMapper::apply_command(const Command *cmd)
     SENSEI_LOG_INFO("ImuMapper: Got a set pintype command {}!", (int)cmd->type());
     switch(cmd->type())
     {
-        case CommandType::SET_PIN_TYPE:
+        case CommandType::SET_SENSOR_TYPE:
         {
             // This is set internally and not from the user, so just assert for bugs
-            assert(static_cast<const SetPinTypeCommand*>(cmd)->data() == PinType::IMU_INPUT);
+            assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::CONTINUOUS_INPUT);
             break;
         }
         case CommandType::SET_INPUT_SCALE_RANGE_LOW:
@@ -495,14 +511,13 @@ void ImuMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_pin_type_command(_pin_index, PinType::IMU_INPUT);
-    *out_iterator = factory.make_set_input_scale_range_low_command(_pin_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high_command(_pin_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
+    *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
 }
 
 void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
 {
-    if (! _pin_enabled)
+    if (! _enabled)
     {
         return;
     }
@@ -521,7 +536,7 @@ void ImuMapper::process(Value *value, output_backend::OutputBackend *backend)
         MessageFactory factory;
         // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
         // it gets optimized away by the compiler in release mode
-        auto temp_msg = factory.make_output_value(_pin_index,
+        auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
                                                   value->timestamp());
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());

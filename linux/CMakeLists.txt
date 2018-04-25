@@ -31,9 +31,9 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/event_handler.cpp
                       src/output_backend/std_stream_backend.cpp
                       src/output_backend/osc_backend.cpp
-                      src/serial_frontend/serial_frontend.cpp
-                      src/serial_frontend/serial_command_creator.cpp
-                      src/serial_frontend/message_tracker.cpp
+                      src/hardware_frontend/serial_frontend.cpp
+                      src/hardware_frontend/serial_command_creator.cpp
+                      src/hardware_frontend/message_tracker.cpp
                       src/main.cpp
                       src/logging.cpp
                       src/user_frontend/user_frontend.cpp src/user_frontend/osc_user_frontend.cpp)
@@ -56,10 +56,10 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/output_backend/output_backend.h
                         src/output_backend/std_stream_backend.h
                         src/output_backend/osc_backend.h
-                        src/serial_frontend/serial_frontend.h
-                        src/serial_frontend/serial_frontend_internal.h
-                        src/serial_frontend/serial_command_creator.h
-                        src/serial_frontend/message_tracker.h
+                        src/hardware_frontend/serial_frontend.h
+                        src/hardware_frontend/serial_frontend_internal.h
+                        src/hardware_frontend/serial_command_creator.h
+                        src/hardware_frontend/message_tracker.h
                         src/locked_queue.h
                         src/synchronized_queue.h
                         src/event_handler.h

@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 #define private public
-#include "serial_frontend/serial_frontend.cpp"
+#include "hardware_frontend/serial_frontend.cpp"
 
 using namespace sensei;
 using namespace serial_frontend;

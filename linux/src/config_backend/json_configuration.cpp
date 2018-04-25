@@ -69,7 +69,7 @@ ConfigStatus JsonConfiguration::read()
     {
         for(const Json::Value& sensor : sensors)
         {
-            status = handle_pin(sensor);
+            status = handle_sensor(sensor);
             if (status != ConfigStatus::OK)
             {
                 return status;
@@ -93,75 +93,86 @@ ConfigStatus JsonConfiguration::read()
  * "id" is the only required key, also note that pin type must be
  * handled as the first key.
  */
-ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
+ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
 {
-    int pin_id;
-    const Json::Value& id = pin["id"];
+    int sensor_id;
+    const Json::Value& id = sensor["id"];
     if (id.isInt())
     {
-        pin_id = id.asInt();
+        sensor_id = id.asInt();
     }
     else
     {
         /* id is a mandatory parameter */
-        SENSEI_LOG_WARNING("Pin id not found in configuration");
+        SENSEI_LOG_WARNING("Sensor id not found in configuration");
         return ConfigStatus::PARAMETER_ERROR;
     }
 
-    /* read pin name */
-    const Json::Value& name = pin["name"];
+    /* read sensor name */
+    const Json::Value& name = sensor["name"];
     if (name.isString())
     {
-        auto m = _message_factory.make_set_pin_name_command(pin_id, name.asString());
+        auto m = _message_factory.make_set_sensor_name_command(sensor_id, name.asString());
         _queue->push(std::move(m));
     }
 
-    /* read pin type configuration */
-    const Json::Value& pin_type = pin["pin_type"];
-    if (pin_type.isString())
+    /* read sensor type configuration */
+    const Json::Value& sensor_type = sensor["sensor_type"];
+    if (sensor_type.isString())
     {
         std::unique_ptr<BaseMessage> m = nullptr;
-        const std::string& pin_type_str = pin_type.asString();
-        if (pin_type_str == "analog_input")
+        const std::string& sensor_type_str = sensor_type.asString();
+        if (sensor_type_str == "analog_input")
         {
-            m = _message_factory.make_set_pin_type_command(pin_id, PinType::ANALOG_INPUT);
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::ANALOG_INPUT);
         }
-        else if (pin_type_str == "digital_input")
+        else if (sensor_type_str == "digital_input")
         {
-            m = _message_factory.make_set_pin_type_command(pin_id, PinType::DIGITAL_INPUT);
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::DIGITAL_INPUT);
         }
-        else if (pin_type_str == "imu_input")
+        else if (sensor_type_str == "continuous_input")
         {
-            m = _message_factory.make_set_pin_type_command(pin_id, PinType::IMU_INPUT);
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::CONTINUOUS_INPUT);
         }
-        else if (pin_type_str == "digital_output")
+        else if (sensor_type_str == "digital_output")
         {
-            m = _message_factory.make_set_pin_type_command(pin_id, PinType::DIGITAL_OUTPUT);
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::DIGITAL_OUTPUT);
         }
         else
         {
-            SENSEI_LOG_WARNING("\"{}\" is not a recognized pin type", pin_type_str);
+            SENSEI_LOG_WARNING("\"{}\" is not a recognized sensor type", sensor_type_str);
             return ConfigStatus::PARAMETER_ERROR;
         }
         _queue->push(std::move(m));
     }
-    /* Read Imu parameter to map to this pin */
-    const Json::Value& param = pin["parameter"];
+
+    const Json::Value& hw_config = sensor["hardware"];
+    if (!hw_config.empty())
+    {
+        auto status = handle_sensor_hw(hw_config, sensor_id);
+        if (status != ConfigStatus::OK)
+        {
+            return status;
+        }
+    }
+
+    /* Read Imu parameter to map to this sensor */
+    const Json::Value& param = sensor["parameter"];
     if (param.isString())
     {
         const std::string parameter = param.asString();
         std::unique_ptr<BaseMessage> m;
         if (parameter == "yaw")
         {
-            m = _message_factory.make_set_virtual_pin_command(pin_id, ImuIndex::YAW);
+            m = _message_factory.make_set_virtual_pin_command(sensor_id, ImuIndex::YAW);
         }
         else if (parameter == "pitch")
         {
-            m = _message_factory.make_set_virtual_pin_command(pin_id, ImuIndex::PITCH);
+            m = _message_factory.make_set_virtual_pin_command(sensor_id, ImuIndex::PITCH);
         }
         else if (parameter == "roll")
         {
-            m = _message_factory.make_set_virtual_pin_command(pin_id, ImuIndex::ROLL);
+            m = _message_factory.make_set_virtual_pin_command(sensor_id, ImuIndex::ROLL);
         }
         if (m)
         {
@@ -169,27 +180,27 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
         }
     }
 
-    /* read pin enabled/disabled configuration */
-    const Json::Value& enabled = pin["enabled"];
+    /* read sensor enabled/disabled configuration */
+    const Json::Value& enabled = sensor["enabled"];
     if (enabled.isBool())
     {
-        auto m = _message_factory.make_set_enabled_command(pin_id, enabled.asBool());
+        auto m = _message_factory.make_set_enabled_command(sensor_id, enabled.asBool());
         _queue->push(std::move(m));
     }
 
     /* read sending mode configuration */
-    const Json::Value& mode = pin["mode"];
+    const Json::Value& mode = sensor["mode"];
     if (mode.isString())
     {
         const std::string& mode_str = mode.asString();
         if (mode_str == "continuous")
         {
-            auto m = _message_factory.make_set_sending_mode_command(pin_id, SendingMode::CONTINUOUS);
+            auto m = _message_factory.make_set_sending_mode_command(sensor_id, SendingMode::CONTINUOUS);
             _queue->push(std::move(m));
         }
         else if (mode_str == "on_value_changed")
         {
-            auto m = _message_factory.make_set_sending_mode_command(pin_id, SendingMode::ON_VALUE_CHANGED);
+            auto m = _message_factory.make_set_sending_mode_command(sensor_id, SendingMode::ON_VALUE_CHANGED);
             _queue->push(std::move(m));
         }
         else
@@ -199,74 +210,127 @@ ConfigStatus JsonConfiguration::handle_pin(const Json::Value &pin)
         }
     }
 
-    /* read tick divisor configuration */
-    const Json::Value& ticks = pin["delta_ticks"];
-    if (ticks.isInt())
-    {
-        auto m = _message_factory.make_set_sending_delta_ticks_command(pin_id, ticks.asInt());
-        _queue->push(std::move(m));
-    }
-
-    /* read adc bit resolution configuration */
-    const Json::Value& res = pin["adc_resolution"];
-    if (res.isInt())
-    {
-        auto m = _message_factory.make_set_adc_bit_resolution_command(pin_id, res.asInt());
-        _queue->push(std::move(m));
-    }
-
-    /* read pin lowpass filter cutoff configuration */
-    const Json::Value& cutoff = pin["lowpass_cutoff"];
-    if (cutoff.isNumeric())
-    {
-        auto m = _message_factory.make_set_lowpass_cutoff_command(pin_id, cutoff.asFloat());
-        _queue->push(std::move(m));
-    }
-
-    /* read lowpass filter order configuration */
-    const Json::Value& order = pin["lowpass_order"];
-    if (order.isInt())
-    {
-        auto m = _message_factory.make_set_lowpass_filter_order_command(pin_id, order.asInt());
-        _queue->push(std::move(m));
-    }
-
-    /* read slider mode configuration */
-    const Json::Value& slider_mode = pin["slider_mode"];
-    if (slider_mode.isBool())
-    {
-        auto m = _message_factory.make_set_slider_mode_enabled_command(pin_id, slider_mode.asBool());
-        _queue->push(std::move(m));
-    }
-
-    /* read slider threshold configuration */
-    const Json::Value& threshold = pin["slider_threshold"];
-    if (threshold.isInt())
-    {
-        auto m = _message_factory.make_set_slider_threshold_command(pin_id, threshold.asInt());
-        _queue->push(std::move(m));
-    }
-
     /* read inverted configuration */
-    const Json::Value& inverted = pin["inverted"];
+    const Json::Value& inverted = sensor["inverted"];
     if (inverted.isBool())
     {
-        auto m = _message_factory.make_set_invert_enabled_command(pin_id, inverted.asBool());
+        auto m = _message_factory.make_set_invert_enabled_command(sensor_id, inverted.asBool());
         _queue->push(std::move(m));
     }
 
     /* read range configuration */
-    const Json::Value& range = pin["range"];
+    const Json::Value& range = sensor["range"];
     if (range.isArray() && range.size() >= 2)
     {
-        auto low = _message_factory.make_set_input_scale_range_low_command(pin_id, range[0].asFloat());
-        auto high = _message_factory.make_set_input_scale_range_high_command(pin_id, range[1].asFloat());
+        auto low = _message_factory.make_set_input_scale_range_low_command(sensor_id, range[0].asFloat());
+        auto high = _message_factory.make_set_input_scale_range_high_command(sensor_id, range[1].asFloat());
         _queue->push(std::move(low));
         _queue->push(std::move(high));
     }
     return ConfigStatus::OK ;
 }
 
+/*
+ * Handle the hardware specific parts of a sensor
+ */
+ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, int sensor_id)
+{
+    /* Read pin index as the first thing */
+    const Json::Value& param = hardware["pin_index"];
+    if (param.isIntegral())
+    {
+        int pin_id = param.asInt();
+        _queue->push(_message_factory.make_set_hw_pin_command(sensor_id, pin_id));
+    }
+
+    /* read sensor type configuration */
+    const Json::Value& sensor_type = hardware["hardware_type"];
+    if (sensor_type.isString())
+    {
+        std::unique_ptr<BaseMessage> m = nullptr;
+        const std::string& hw_type_str = sensor_type.asString();
+        if (hw_type_str == "analog_input_pin")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::ANALOG_INPUT_PIN);
+        }
+        else if (hw_type_str == "digital_input_pin")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::DIGITAL_INPUT_PIN);
+        }
+        else if (hw_type_str == "digital_output_pin")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::DIGITAL_OUTPUT_PIN);
+        }
+        else if (hw_type_str == "ribbon")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::RIBBON);
+        }
+        else if (hw_type_str == "button")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::BUTTON);
+        }
+        else if (hw_type_str == "imu_pitch")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_PITCH);
+        }
+        else if (hw_type_str == "imu_roll")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_ROLL);
+        }
+        else if (hw_type_str == "imu_yaw")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_YAW);
+        }
+        else
+        {
+            SENSEI_LOG_WARNING("\"{}\" is not a recognized sensor hardware type", hw_type_str);
+            return ConfigStatus::PARAMETER_ERROR;
+        }
+        _queue->push(std::move(m));
+    }
+
+    /* read tick divisor configuration */
+    const Json::Value& ticks = hardware["delta_ticks"];
+    if (ticks.isInt())
+    {
+        auto m = _message_factory.make_set_sending_delta_ticks_command(sensor_id, ticks.asInt());
+        _queue->push(std::move(m));
+    }
+
+    /* read adc bit resolution configuration */
+    const Json::Value& res = hardware["adc_resolution"];
+    if (res.isInt())
+    {
+        auto m = _message_factory.make_set_adc_bit_resolution_command(sensor_id, res.asInt());
+        _queue->push(std::move(m));
+    }
+
+    /* read sensor lowpass filter cutoff configuration */
+    const Json::Value& cutoff = hardware["lowpass_cutoff"];
+    if (cutoff.isNumeric())
+    {
+        auto m = _message_factory.make_set_lowpass_cutoff_command(sensor_id, cutoff.asFloat());
+        _queue->push(std::move(m));
+    }
+
+    /* read lowpass filter order configuration */
+    const Json::Value& order = hardware["lowpass_order"];
+    if (order.isInt())
+    {
+        auto m = _message_factory.make_set_lowpass_filter_order_command(sensor_id, order.asInt());
+        _queue->push(std::move(m));
+    }
+
+    /* read slider threshold configuration */
+    const Json::Value& threshold = hardware["slider_threshold"];
+    if (threshold.isInt())
+    {
+        auto m = _message_factory.make_set_slider_threshold_command(sensor_id, threshold.asInt());
+        _queue->push(std::move(m));
+    }
+
+    return ConfigStatus::OK;
+}
 
 /*
  * Handle a backend configuration

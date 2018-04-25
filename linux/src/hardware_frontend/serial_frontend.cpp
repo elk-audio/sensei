@@ -71,6 +71,8 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
     {
         port = -1;
     }
+    _id_to_pin_table.fill(0);
+    _pin_to_id_table.fill(0);
     if (setup_port(port_name) == SP_OK)
     {
         SENSEI_LOG_INFO("Serial port opened ok, sending initialize packet");
@@ -447,17 +449,29 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             return _packet_factory.make_enable_sending_packets_cmd(cmd->timestamp(),
                                                                    cmd->data());
         }
-        case CommandType::SET_PIN_TYPE:
+        case CommandType::SET_HW_PIN:
         {
-            auto cmd = static_cast<SetPinTypeCommand *>(message);
-            return _packet_factory.make_config_pintype_cmd(cmd->index(),
+            auto cmd = static_cast<SetSingleHwPinCommand*>(message);
+            int pin_id = cmd->data();
+            int sensor_id = cmd->index();
+            if (pin_id >= MAX_SENSORS || sensor_id >= MAX_SENSORS)
+            {
+                SENSEI_LOG_ERROR("Wrong pin or sensor id ({}, {}", pin_id, sensor_id);
+            }
+            _pin_to_id_table[pin_id] = sensor_id;
+            _id_to_pin_table[sensor_id] = pin_id;
+            return nullptr;
+        }
+        case CommandType::SET_SENSOR_HW_TYPE:
+        {
+            auto cmd = static_cast<SetSensorHwTypeCommand*>(message);
+            return _packet_factory.make_config_pintype_cmd(_id_to_pin_table[cmd->index()],
                                                            cmd->timestamp(),
                                                            cmd->data());
         }
         case CommandType::SET_ENABLED:
         {
-            /* If the pin index is used for a virtual pin to map to imu data
-             * then don't send anything to the teensy */
+            /* If the sensor index is used for an imu axis then don't send anything to the teensy */
             for (int& i : _virtual_pin_table)
             {
                 if (message->index() == i)
@@ -469,56 +483,49 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
         case CommandType::SET_SENDING_MODE:
         {
             auto cmd = static_cast<SetSendingModeCommand *>(message);
-            return _packet_factory.make_config_sendingmode_cmd(cmd->index(),
+            return _packet_factory.make_config_sendingmode_cmd(_id_to_pin_table[cmd->index()],
                                                                cmd->timestamp(),
                                                                cmd->data());
         }
         case CommandType::SET_SENDING_DELTA_TICKS:
         {
             auto cmd = static_cast<SetSendingDeltaTicksCommand *>(message);
-            return _packet_factory.make_config_delta_ticks_cmd(cmd->index(),
+            return _packet_factory.make_config_delta_ticks_cmd(_id_to_pin_table[cmd->index()],
                                                                cmd->timestamp(),
                                                                cmd->data());
         }
         case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             auto cmd = static_cast<SetADCBitResolutionCommand *>(message);
-            return _packet_factory.make_config_adc_bitres_cmd(cmd->index(),
+            return _packet_factory.make_config_adc_bitres_cmd(_id_to_pin_table[cmd->index()],
                                                               cmd->timestamp(),
                                                               cmd->data());
         }
         case CommandType::SET_LOWPASS_FILTER_ORDER:
         {
             auto cmd = static_cast<SetLowpassFilterOrderCommand *>(message);
-            return _packet_factory.make_config_filter_order_cmd(cmd->index(),
+            return _packet_factory.make_config_filter_order_cmd(_id_to_pin_table[cmd->index()],
                                                                 cmd->timestamp(),
                                                                 cmd->data());
         }
         case CommandType::SET_LOWPASS_CUTOFF:
         {
             auto cmd = static_cast<SetLowpassCutoffCommand *>(message);
-            return _packet_factory.make_config_lowpass_cutoff_cmd(cmd->index(),
+            return _packet_factory.make_config_lowpass_cutoff_cmd(_id_to_pin_table[cmd->index()],
                                                                   cmd->timestamp(),
                                                                   cmd->data());
-        }
-        case CommandType::SET_SLIDER_MODE_ENABLED:
-        {
-            auto cmd = static_cast<SetSliderModeEnabledCommand *>(message);
-            return _packet_factory.make_config_slidermode_cmd(cmd->index(),
-                                                              cmd->timestamp(),
-                                                              cmd->data());
         }
         case CommandType::SET_SLIDER_THRESHOLD:
         {
             auto cmd = static_cast<SetSliderThresholdCommand *>(message);
-            return _packet_factory.make_config_slider_threshold_cmd(cmd->index(),
+            return _packet_factory.make_config_slider_threshold_cmd(_id_to_pin_table[cmd->index()],
                                                                     cmd->timestamp(),
                                                                     cmd->data());
         }
         case CommandType::SEND_DIGITAL_PIN_VALUE:
         {
             auto cmd = static_cast<SendDigitalPinValueCommand *>(message);
-            return _packet_factory.make_set_digital_pin_cmd(cmd->index(),
+            return _packet_factory.make_set_digital_pin_cmd(_id_to_pin_table[cmd->index()],
                                                             cmd->timestamp(),
                                                             cmd->data());
         }

@@ -85,16 +85,17 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
 
 
     /* And now the sensors, first an analog input configuration */
-    /* HW setup */
     index = 1;
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_PIN_NAME, SetPinNameCommand, index, "ribbon_1");
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_NAME, SetPinNameCommand, index, "ribbon_1");
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_PIN_TYPE, SetPinTypeCommand, index, PinType::ANALOG_INPUT);
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_TYPE, SetSensorTypeCommand, index, SensorType::ANALOG_INPUT);
+
+    /* HW specific setup */
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int)true);
+    EXPECT_COMMAND(m, CommandType::SET_HW_PIN, SetSingleHwPinCommand, index, 1);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::CONTINUOUS);
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_HW_TYPE, SetSensorHwTypeCommand, index, SensorHwType::ANALOG_INPUT_PIN);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
     m = std::move(_queue.pop());
@@ -103,12 +104,15 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     EXPECT_COMMAND_FLOAT(m, CommandType::SET_LOWPASS_CUTOFF, SetLowpassCutoffCommand, index, 300.0f);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_LOWPASS_FILTER_ORDER, SetLowpassFilterOrderCommand, index, 4);
-    m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_SLIDER_MODE_ENABLED, SetSliderModeEnabledCommand, index, (int)false)
-    m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_SLIDER_THRESHOLD, SetSliderThresholdCommand, index, 10);
+    //m = std::move(_queue.pop());
+    //EXPECT_COMMAND(m, CommandType::SET_SLIDER_THRESHOLD, SetSliderThresholdCommand, index, 10);
+
 
     /* Mapping configuration */
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int)true);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::CONTINUOUS);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_INVERT_ENABLED, SetInvertEnabledCommand, index, (int)false);
     m = std::move(_queue.pop());
@@ -120,24 +124,30 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     /* Then a pin configured as a digital input */
     /* HW setup */
     index = 0;
-    EXPECT_COMMAND(m, CommandType::SET_PIN_NAME, SetPinNameCommand, index, "button_0");
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_NAME, SetPinNameCommand, index, "button_0");
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_PIN_TYPE, SetPinTypeCommand, index, PinType::DIGITAL_INPUT);
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_TYPE, SetSensorTypeCommand, index, SensorType::DIGITAL_INPUT);
+    m = std::move(_queue.pop());
+    /* HW specific setup */
+    EXPECT_COMMAND(m, CommandType::SET_HW_PIN, SetSingleHwPinCommand, index, 0);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_HW_TYPE, SetSensorHwTypeCommand, index, SensorHwType::DIGITAL_INPUT_PIN);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int)true);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::ON_VALUE_CHANGED);
-    m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 4);
 
     /* The a virtual pin to use for IMU data */
     index = 61;
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_PIN_NAME, SetPinNameCommand, index, "yaw");
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_NAME, SetPinNameCommand, index, "yaw");
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_PIN_TYPE, SetPinTypeCommand, index, PinType::IMU_INPUT);
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_TYPE, SetSensorTypeCommand, index, SensorType::CONTINUOUS_INPUT);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_VIRTUAL_PIN, SetVirtualPinCommand, index, ImuIndex::YAW);
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_HW_TYPE, SetSensorHwTypeCommand, index, SensorHwType::IMU_YAW);
+
     /* And it's related mapping configuration */
     m = std::move(_queue.pop());
     EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_LOW, SetInputScaleRangeLow, index, 0.0f);

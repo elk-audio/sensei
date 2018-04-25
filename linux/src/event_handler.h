@@ -8,7 +8,7 @@
 #include "synchronized_queue.h"
 #include "mapping/mapping_processor.h"
 #include "message/message_factory.h"
-#include "serial_frontend/serial_frontend.h"
+#include "hardware_frontend/serial_frontend.h"
 #include "output_backend/output_backend.h"
 #include "config_backend/base_configuration.h"
 #include "user_frontend/user_frontend.h"

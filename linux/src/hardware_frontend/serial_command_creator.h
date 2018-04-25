@@ -35,14 +35,13 @@ public:
     const sSenseiDataPacket* make_set_digital_pin_cmd(int pin_id, uint32_t timestamp, bool value);
     const sSenseiDataPacket* make_set_bank_cmd(int pin_id, uint32_t timestamp, int value);
     const sSenseiDataPacket* make_get_value_cmd(int pin_id, uint32_t timestamp);
-    const sSenseiDataPacket* make_config_pintype_cmd(int pin_id, uint32_t timestamp, PinType type);
+    const sSenseiDataPacket* make_config_pintype_cmd(int pin_id, uint32_t timestamp, SensorHwType type);
     const sSenseiDataPacket* make_config_enabled_cmd(uint32_t timestamp, bool enabled);
     const sSenseiDataPacket* make_config_sendingmode_cmd(int pin_id, uint32_t timestamp, SendingMode mode);
     const sSenseiDataPacket* make_config_delta_ticks_cmd(int pin_id, uint32_t timestamp, int ticks);
     const sSenseiDataPacket* make_config_adc_bitres_cmd(int pin_id, uint32_t timestamp, int bits);
     const sSenseiDataPacket* make_config_filter_order_cmd(int pin_id, uint32_t timestamp, int order);
     const sSenseiDataPacket* make_config_lowpass_cutoff_cmd(int pin_id, uint32_t timestamp, float cutoff);
-    const sSenseiDataPacket* make_config_slidermode_cmd(int pin_id, uint32_t timestamp, int mode);
     const sSenseiDataPacket* make_config_slider_threshold_cmd(int pin_id, uint32_t timestamp, int threshold);
     const sSenseiDataPacket* make_imu_enable_cmd(uint32_t timestamp, bool enable);
     const sSenseiDataPacket* make_imu_set_filtermode_cmd(uint32_t timestamp, int mode);
