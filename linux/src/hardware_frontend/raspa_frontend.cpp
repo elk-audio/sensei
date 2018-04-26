@@ -75,10 +75,6 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
             }
         }
         _connected = _connect_to_raspa();
-        if (!_connected)
-        {
-            SENSEI_LOG_INFO("Could not connect to raspa");
-        }
     }
     else
     {
@@ -113,7 +109,7 @@ void RaspaFrontend::run()
 
 void RaspaFrontend::stop()
 {
-    if (_state.load() == ThreadState::RUNNING)
+    if (_state.load() != ThreadState::RUNNING)
     {
         return;
     }
@@ -155,7 +151,7 @@ void RaspaFrontend::read_loop()
                 _connected = _connect_to_raspa();
             }
             _handle_raspa_packet(buffer);
-            SENSEI_LOG_INFO("Received from raspa: {} bytes", bytes);
+            SENSEI_LOG_DEBUG("Received from raspa: {} bytes", bytes);
         }
         if (!_ready_to_send)
         {
@@ -180,10 +176,10 @@ void RaspaFrontend::write_loop()
         while(!_send_list.empty())
         {
             std::unique_lock<std::mutex> lock(_send_mutex);
-            SENSEI_LOG_INFO("Going through sendlist: {} packets", _send_list.size());
+            SENSEI_LOG_DEBUG("Going through sendlist: {} packets", _send_list.size());
             if (_verify_acks && !_ready_to_send )
             {
-                SENSEI_LOG_INFO("Waiting for ack");
+                SENSEI_LOG_DEBUG("Waiting for ack");
                 _ready_to_send_notifier.wait(lock);
                 continue;
             }
@@ -191,8 +187,8 @@ void RaspaFrontend::write_loop()
             auto ret = send(_out_socket, &packet, sizeof(XmosGpioPacket), 0);
             if (_verify_acks && ret > 0)
             {
-                SENSEI_LOG_INFO("Sent raspa packet, cmd {}, id {}", static_cast<int>(packet.command),
-                                                                    static_cast<int>(from_xmos_byteord(packet.sequence_no)));
+                SENSEI_LOG_INFO("Sent raspa packet, cmd: {}, id: {}", static_cast<int>(packet.command),
+                                                                      static_cast<int>(from_xmos_byteord(packet.sequence_no)));
                 _message_tracker.store(nullptr, from_xmos_byteord(packet.sequence_no));
                 _ready_to_send = false;
             } else
@@ -222,6 +218,7 @@ void RaspaFrontend::_handle_timeouts()
             {
                 _send_list.pop_front();
             }
+            [[fallthrough]];
         }
         case timeout::TIMED_OUT:
         {
