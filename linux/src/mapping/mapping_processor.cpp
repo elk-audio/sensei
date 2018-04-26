@@ -35,7 +35,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
 
     if (cmd->type() == CommandType::SET_SENSOR_TYPE)
     {
-        SENSEI_LOG_INFO("Setting up new mapper with id: {}", sensor_index);
+        SENSEI_LOG_INFO("Setting up new mapper for sensor id: {}", sensor_index);
         CommandErrorCode status = CommandErrorCode::OK;
         const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
         auto pin_type = typed_cmd->data();

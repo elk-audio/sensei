@@ -454,9 +454,9 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
         case CommandType::SET_HW_PIN:
         {
             auto cmd = static_cast<SetSingleHwPinCommand*>(message);
-            int pin_id = cmd->data();
-            int sensor_id = cmd->index();
-            if (pin_id >= MAX_SENSORS || sensor_id >= MAX_SENSORS)
+            unsigned int pin_id = static_cast<unsigned int>(cmd->data());
+            unsigned int sensor_id = static_cast<unsigned int>(cmd->index());
+            if (pin_id >= _pin_to_id_table.size() || sensor_id >= _id_to_pin_table.size())
             {
                 SENSEI_LOG_ERROR("Wrong pin or sensor id ({}, {}", pin_id, sensor_id);
             }

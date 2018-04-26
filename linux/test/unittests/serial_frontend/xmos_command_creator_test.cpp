@@ -58,9 +58,9 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(XMOS_SUB_CMD_SET_TICK_RATE, packet.sub_command);
     EXPECT_EQ(TICK_1000_HZ, packet.payload.tick_rate_data.system_tick_rate);
 
-    //packet = _module_under_test.make_get_board_info_command();
-    //EXPECT_EQ(XMOS_CMD_SYSTEM_CNTRL, packet.command);
-    //EXPECT_EQ(XMOS_SUB_CMD_GET_BOARD_INFO, packet.sub_command);
+    packet = _module_under_test.make_get_board_info_command();
+    EXPECT_EQ(XMOS_CMD_SYSTEM_CNTRL, packet.command);
+    EXPECT_EQ(XMOS_SUB_CMD_GET_BOARD_INFO, packet.sub_command);
 
     packet = _module_under_test.make_reset_all_controllers_command();
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
@@ -114,8 +114,8 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     packet = _module_under_test.make_mute_controller_command(13, MuteStatus::CNTRLR_UNMUTED);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
     EXPECT_EQ(XMOS_SUB_CMD_MUTE_UNMUTE_CNTRLR, packet.sub_command);
-    EXPECT_EQ(13, packet.payload.mute_cmnd_data.controller_id);
-    EXPECT_EQ(MuteStatus::CNTRLR_UNMUTED, packet.payload.mute_cmnd_data.mute_status);
+    EXPECT_EQ(13, packet.payload.mute_cmd_data.controller_id);
+    EXPECT_EQ(MuteStatus::CNTRLR_UNMUTED, packet.payload.mute_cmd_data.mute_status);
 
     packet = _module_under_test.make_remove_controller_command(14);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
@@ -136,7 +136,7 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     packet = _module_under_test.make_set_value_command(17, 2048);
     EXPECT_EQ(XMOS_CMD_SET_VALUE, packet.command);
     EXPECT_EQ(0, packet.sub_command);
-    EXPECT_EQ(17, packet.payload.value_send_data.controller_id);
-    EXPECT_EQ(2048u, from_xmos_byteord(packet.payload.value_send_data.controller_val));
+    EXPECT_EQ(17, packet.payload.value_data.controller_id);
+    EXPECT_EQ(2048u, from_xmos_byteord(packet.payload.value_data.controller_val));
 }
 

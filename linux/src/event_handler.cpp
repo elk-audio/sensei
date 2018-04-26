@@ -14,10 +14,9 @@ using namespace sensei;
 
 SENSEI_GET_LOGGER;
 
-void EventHandler::init(const int max_n_input_pins,
-                        const int max_n_digital_out_pins,
-                        const std::string config_file)
-
+void EventHandler::init(int max_n_input_pins,
+                        int max_n_digital_out_pins,
+                        const std::string& config_file)
 {
     _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
     _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
@@ -71,6 +70,7 @@ void EventHandler::init(const int max_n_input_pins,
 
 void EventHandler::deinit()
 {
+    _hw_frontend->stop();
     _hw_frontend.reset(nullptr);
     _processor.reset(nullptr);
     _output_backend.reset(nullptr);

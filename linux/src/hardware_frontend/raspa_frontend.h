@@ -87,6 +87,7 @@ private:
     void _handle_raspa_packet(const xmos::XmosGpioPacket& packet);
     void _handle_ack(const xmos::XmosGpioPacket& ack);
     void _handle_value(const xmos::XmosGpioPacket& packet);
+    void _handle_board_info(const xmos::XmosGpioPacket& packet);
     void _process_sensei_command(const Command*message);
 
     MessageFactory   _message_factory;
@@ -108,6 +109,8 @@ private:
     bool            _connected;
     bool            _muted;
     bool            _verify_acks;
+    xmos::BoardInfoData _board_info;
+    float           _dac_output_max{256};
 };
 
 std::optional<uint8_t> to_xmos_hw_type(SensorHwType type);
