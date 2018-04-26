@@ -28,7 +28,6 @@ enum class CommandType
     // External Commands
     SET_SENSOR_TYPE,
     SET_SENSOR_HW_TYPE,
-    SET_HW_PIN,
     SET_HW_PINS,
     SET_VIRTUAL_PIN,
     SET_ENABLED,
@@ -228,12 +227,6 @@ SENSEI_DECLARE_COMMAND(SetVirtualPinCommand,
                        ImuIndex,
                        "Set virtual pin",
                        CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetSingleHwPinCommand,
-                       CommandType::SET_HW_PIN,
-                       int,
-                       "Set hardware pin",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetHwPinsCommand,
                        CommandType::SET_HW_PINS,

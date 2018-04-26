@@ -76,7 +76,7 @@ ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
     {
         for(const Json::Value& sensor : sensors)
         {
-            status = handle_sensor(sensor);
+            status = handle_sensor(sensor, hw_config.type);
             if (status != ConfigStatus::OK)
             {
                 return status;
@@ -126,7 +126,7 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
  * "id" is the only required key, also note that pin type must be
  * handled as the first key.
  */
-ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
+ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFrontendType hw_type)
 {
     int sensor_id;
     const Json::Value& id = sensor["id"];
@@ -194,7 +194,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     const Json::Value& hw_config = sensor["hardware"];
     if (!hw_config.empty())
     {
-        auto status = handle_sensor_hw(hw_config, sensor_id);
+        auto status = handle_sensor_hw(hw_config, sensor_id, hw_type == HwFrontendType::SERIAL_TEENSY);
         if (status != ConfigStatus::OK)
         {
             return status;
@@ -278,14 +278,17 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
 /*
  * Handle the hardware specific parts of a sensor
  */
-ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, int sensor_id)
+ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, int sensor_id, bool pins_first)
 {
-    /* Read pin index as the first thing, this applies only to serial/teensy frontend */
-    const Json::Value& param = hardware["pin_index"];
-    if (param.isIntegral())
+    /* Read pin index as the first thing, this is neccesary for serial/teensy frontend
+     * to be able to map sensors to pins */
+    if (pins_first)
     {
-        int pin_id = param.asInt();
-        _queue->push(_message_factory.make_set_hw_pin_command(sensor_id, pin_id));
+        auto res = read_pins(hardware["pins"], sensor_id);
+        if (res != ConfigStatus::OK)
+        {
+            return res;
+        }
     }
 
     /* Read sensor type configuration */
@@ -350,16 +353,14 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         _queue->push(std::move(m));
     }
 
-    /* Read pin configuration if using multiple pins, this is used by the raspa/xmos frontend */
-    const Json::Value& pin_list = hardware["pins"];
-    if (pin_list.isArray())
+    /* For the raspa/xmos frontend we need to set the hw type before assigning pins to it */
+    if (!pins_first)
     {
-        std::vector<int> pins;
-        for (const Json::Value& p : pin_list)
+        auto res = read_pins(hardware["pins"], sensor_id);
+        if (res != ConfigStatus::OK)
         {
-            pins.push_back(p.asInt());
+            return res;
         }
-        _queue->push(_message_factory.make_set_hw_pins_command(sensor_id, pins));
     }
 
     /* read multiplexer configuration if sensor is multiplexed */
@@ -663,6 +664,21 @@ ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
         _queue->push(std::move(m));
     }
 
+    return ConfigStatus::OK;
+}
+
+ConfigStatus JsonConfiguration::read_pins(const Json::Value& pin_list, int sensor_id)
+{
+    if (pin_list.isArray())
+    {
+        std::vector<int> pins;
+        for (const Json::Value& p : pin_list)
+        {
+            pins.push_back(p.asInt());
+        }
+        _queue->push(_message_factory.make_set_hw_pins_command(sensor_id, pins));
+    }
+    /* Pins is not a mandatory configuration parameter */
     return ConfigStatus::OK;
 }
 

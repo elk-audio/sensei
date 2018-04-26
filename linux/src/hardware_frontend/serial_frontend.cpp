@@ -452,11 +452,17 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             return _packet_factory.make_enable_sending_packets_cmd(cmd->timestamp(),
                                                                    cmd->data());
         }
-        case CommandType::SET_HW_PIN:
+        case CommandType::SET_HW_PINS:
         {
-            auto cmd = static_cast<SetSingleHwPinCommand*>(message);
-            unsigned int pin_id = static_cast<unsigned int>(cmd->data());
+            auto cmd = static_cast<SetHwPinsCommand*>(message);
+            auto pins = cmd->data();
             unsigned int sensor_id = static_cast<unsigned int>(cmd->index());
+            assert(pins.size() > 0);
+            if (pins.size() > 1)
+            {
+                SENSEI_LOG_WARNING("{} pins configured for sensor {}, only 1 supported", pins.size(), sensor_id);
+            }
+            unsigned int pin_id = static_cast<unsigned int>(cmd->data().at(0));
             if (pin_id >= _pin_to_id_table.size() || sensor_id >= _id_to_pin_table.size())
             {
                 SENSEI_LOG_ERROR("Wrong pin or sensor id ({}, {}", pin_id, sensor_id);

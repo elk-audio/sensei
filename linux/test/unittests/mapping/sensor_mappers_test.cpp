@@ -33,7 +33,7 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pin_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
@@ -51,7 +51,7 @@ protected:
 protected:
     int _sensor_idx{2};
     bool _enabled{true};
-    int _hw_pin{5};
+    std::vector<int> _hw_pin{5};
     SensorHwType _hw_type{SensorHwType::DIGITAL_INPUT_PIN};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
@@ -178,7 +178,7 @@ protected:
                                                                                                 _input_scale_low))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
                                                                                                  _input_scale_high))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pin_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
@@ -197,7 +197,7 @@ protected:
     int _sensor_idx{2};
     bool _enabled{true};
     SensorHwType _hw_type{SensorHwType::ANALOG_INPUT_PIN};
-    int _hw_pin{3};
+    std::vector<int> _hw_pin{3};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
     int _delta_ticks{5};
@@ -258,8 +258,8 @@ TEST_F(TestAnalogSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_ENABLED, cmd_enabled->type());
     ASSERT_EQ(_enabled, cmd_enabled->data());
 
-    auto cmd_hw_pin = extract_cmd_from<SetSingleHwPinCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_HW_PIN, cmd_hw_pin->type());
+    auto cmd_hw_pin = extract_cmd_from<SetHwPinsCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_HW_PINS, cmd_hw_pin->type());
     ASSERT_EQ(_hw_pin, cmd_hw_pin->data());
 
     auto _cmd_hw_type = extract_cmd_from<SetSensorHwTypeCommand>(stored_cmds);
@@ -449,7 +449,7 @@ protected:
                                                                                                 _input_scale_low))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
                                                                                                  _input_scale_high))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pin_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
@@ -468,7 +468,7 @@ protected:
     int _sensor_idx{2};
     bool _enabled{true};
     SensorHwType _hw_type{SensorHwType::N_WAY_SWITCH};
-    int _hw_pin{3};
+    std::vector<int> _hw_pin{3};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
     int _delta_ticks{5};
@@ -509,8 +509,8 @@ TEST_F(TestRangeSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_ENABLED, cmd_enabled->type());
     ASSERT_EQ(_enabled, cmd_enabled->data());
 
-    auto cmd_hw_pin = extract_cmd_from<SetSingleHwPinCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_HW_PIN, cmd_hw_pin->type());
+    auto cmd_hw_pin = extract_cmd_from<SetHwPinsCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_HW_PINS, cmd_hw_pin->type());
     ASSERT_EQ(_hw_pin, cmd_hw_pin->data());
 
     auto _cmd_hw_type = extract_cmd_from<SetSensorHwTypeCommand>(stored_cmds);
@@ -679,7 +679,7 @@ protected:
                                                                                                 _input_scale_low))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
                                                                                                  _input_scale_high))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pin_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
@@ -700,7 +700,7 @@ protected:
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
     SensorHwType _hw_type{SensorHwType::IMU_YAW};
-    int _hw_pin{0};
+    std::vector<int> _hw_pin{0};
 
     float _input_scale_low{1};
     float _input_scale_high{3.14};
@@ -735,8 +735,8 @@ TEST_F(TestContinuousSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_ENABLED, cmd_enabled->type());
     EXPECT_EQ(_enabled, cmd_enabled->data());
 
-    auto cmd_hw_pin = extract_cmd_from<SetSingleHwPinCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_HW_PIN, cmd_hw_pin->type());
+    auto cmd_hw_pin = extract_cmd_from<SetHwPinsCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_HW_PINS, cmd_hw_pin->type());
     ASSERT_EQ(_hw_pin, cmd_hw_pin->data());
 
     auto _cmd_hw_type = extract_cmd_from<SetSensorHwTypeCommand>(stored_cmds);

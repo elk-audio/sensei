@@ -67,7 +67,7 @@ protected:
     SensorType _sensor_type;
     SensorHwType _hw_type;
     int _sensor_index;
-    int _hw_pin_index;
+    std::vector<int> _hw_pins;
     bool _enabled;
     SendingMode _sending_mode;
 

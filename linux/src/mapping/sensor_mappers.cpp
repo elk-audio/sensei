@@ -66,10 +66,10 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
         };
         break;
 
-    case CommandType::SET_HW_PIN:
+    case CommandType::SET_HW_PINS:
         {
-            const auto typed_cmd = static_cast<const SetSingleHwPinCommand*>(cmd);
-            _hw_pin_index = typed_cmd->data();
+            const auto typed_cmd = static_cast<const SetHwPinsCommand*>(cmd);
+            _hw_pins = typed_cmd->data();
         };
         break;
 
@@ -102,7 +102,7 @@ void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     MessageFactory factory;
     *out_iterator = factory.make_set_sensor_type_command(_sensor_index, _sensor_type);
     *out_iterator = factory.make_set_sensor_hw_type_command(_sensor_index, _hw_type);
-    *out_iterator = factory.make_set_hw_pin_command(_sensor_index, _hw_pin_index);
+    *out_iterator = factory.make_set_hw_pins_command(_sensor_index, _hw_pins);
     *out_iterator = factory.make_set_enabled_command(_sensor_index, _enabled);
     *out_iterator = factory.make_set_sending_mode_command(_sensor_index, _sending_mode);
     *out_iterator = factory.make_set_invert_enabled_command(_sensor_index, _invert_value);
