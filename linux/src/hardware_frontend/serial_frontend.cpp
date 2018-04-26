@@ -414,6 +414,7 @@ void SerialFrontend::handle_timeouts()
             auto error_message = _message_factory.make_too_many_timeouts_error(m->index(), 0);
             SENSEI_LOG_WARNING("Message {} timed out, sending next message.", m->representation());
             _out_queue->push(std::move(error_message));
+            [[fallthrough]];
         }
         case timeout::TIMED_OUT:
         {
