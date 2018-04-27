@@ -126,7 +126,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
                 SENSEI_LOG_ERROR("Internal Mapping, Unhandled command: {}, pin: {}", cmd->representation(), cmd->index());
                 break;
 
-            case CommandErrorCode::INVALID_PIN_INDEX:
+            case CommandErrorCode::INVALID_SENSOR_INDEX:
                 SENSEI_LOG_ERROR("Invalid pin index {} for command: {}", cmd->index(), cmd->representation());
                 break;
 

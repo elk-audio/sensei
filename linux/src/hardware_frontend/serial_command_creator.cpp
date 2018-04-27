@@ -14,10 +14,10 @@ SerialCommandCreator::SerialCommandCreator(int max_pins) :
         _cached_imu_cfgs({0, 0, 0, 0, 0, 0, 0, IMU_GET_QUATERNIONS, 0})
 {
     int id = 0;
-    for (std::vector<pin_config>::iterator i = _cached_cfgs.begin(); i < _cached_cfgs.end(); ++i)
+    for (auto& config : _cached_cfgs)
     {
-        memset(i.base(), 0, sizeof(pin_config));
-        i->cfg_data.idxPin = id++;
+        memset(&config, 0, sizeof(pin_config));
+        config.cfg_data.idxPin = static_cast<uint16_t>(id++);
     }
 }
 

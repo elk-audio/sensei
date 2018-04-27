@@ -115,12 +115,12 @@ private:
     std::mutex      _send_mutex;
     std::condition_variable _ready_to_send_notifier;
 
-    int  _virtual_pin_table[ImuIndex::N_IMU_INDEXES];
     bool _ready_to_send;
     bool _connected;
     bool _muted;
     bool _verify_acks;
 
+    std::array<int, ImuIndex::N_IMU_INDEXES> _imu_sensor_index;
     std::array<int, MAX_SENSORS> _id_to_pin_table;
     std::array<int, MAX_SENSORS> _pin_to_id_table;
 };

@@ -201,30 +201,6 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFront
         }
     }
 
-    /* Read Imu parameter to map to this sensor */
-    const Json::Value& param = sensor["parameter"];
-    if (param.isString())
-    {
-        const std::string parameter = param.asString();
-        std::unique_ptr<BaseMessage> m;
-        if (parameter == "yaw")
-        {
-            m = _message_factory.make_set_virtual_pin_command(sensor_id, ImuIndex::YAW);
-        }
-        else if (parameter == "pitch")
-        {
-            m = _message_factory.make_set_virtual_pin_command(sensor_id, ImuIndex::PITCH);
-        }
-        else if (parameter == "roll")
-        {
-            m = _message_factory.make_set_virtual_pin_command(sensor_id, ImuIndex::ROLL);
-        }
-        if (m)
-        {
-            _queue->push(std::move(m));
-        }
-    }
-
     /* read sensor enabled/disabled configuration */
     const Json::Value& enabled = sensor["enabled"];
     if (enabled.isBool())

@@ -68,12 +68,13 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
      * and speeds up the program   */
     sp_set_debug_handler(nullptr);
 #endif
-    for (int& port : _virtual_pin_table)
+    for (int& port : _imu_sensor_index)
     {
         port = -1;
     }
     _id_to_pin_table.fill(0);
     _pin_to_id_table.fill(0);
+    _imu_sensor_index.fill(-1);
 
     if (setup_port(port_name.empty()? SENSEI_DEFAULT_SERIAL_DEVICE : port_name) == SP_OK)
     {
@@ -291,14 +292,20 @@ void SerialFrontend::process_serial_packet(const sSenseiDataPacket *packet)
 void SerialFrontend::process_value(const sSenseiDataPacket *packet)
 {
     const teensy_value_msg *m = reinterpret_cast<const teensy_value_msg *>(&packet->payload);
+    int id = _pin_to_id_table[m->pin_id];
+    if (id < 0)
+    {
+        SENSEI_LOG_INFO("Got a value from uninitialised pin {}", m->pin_id);
+        return;
+    }
     switch (m->pin_type)
     {
         case PIN_DIGITAL_INPUT:
-            _out_queue->push(_message_factory.make_digital_value(m->pin_id, m->value, packet->timestamp));
+            _out_queue->push(_message_factory.make_digital_value(id, m->value, packet->timestamp));
             break;
 
         case PIN_ANALOG_INPUT:
-            _out_queue->push(_message_factory.make_analog_value(m->pin_id, m->value, packet->timestamp));
+            _out_queue->push(_message_factory.make_analog_value(id, m->value, packet->timestamp));
             break;
 
         default:
@@ -319,23 +326,23 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
     {
         const sImuQuaternion *data = reinterpret_cast<const sImuQuaternion*>(assembled_payload);
         EulerAngles angles = quat_to_euler(data->qw, data->qx, data->qy, data->qz);
-        if (_virtual_pin_table[ImuIndex::YAW] >= 0)
+        if (_imu_sensor_index[ImuIndex::YAW] >= 0)
         {
-            auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::YAW],
+            auto msg = _message_factory.make_imu_value(_imu_sensor_index[ImuIndex::YAW],
                                                        angles.yaw,
                                                        packet->timestamp);
             _out_queue->push(std::move(msg));
         }
-        if (_virtual_pin_table[ImuIndex::PITCH] >= 0)
+        if (_imu_sensor_index[ImuIndex::PITCH] >= 0)
         {
-            auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::PITCH],
+            auto msg = _message_factory.make_imu_value(_imu_sensor_index[ImuIndex::PITCH],
                                                        angles.pitch,
                                                        packet->timestamp);
             _out_queue->push(std::move(msg));
         }
-        if (_virtual_pin_table[ImuIndex::ROLL] >= 0)
+        if (_imu_sensor_index[ImuIndex::ROLL] >= 0)
         {
-            auto msg = _message_factory.make_imu_value(_virtual_pin_table[ImuIndex::ROLL],
+            auto msg = _message_factory.make_imu_value(_imu_sensor_index[ImuIndex::ROLL],
                                                        angles.roll,
                                                        packet->timestamp);
             _out_queue->push(std::move(msg));
@@ -439,13 +446,6 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
     SENSEI_LOG_DEBUG("Got command {} ", message->representation());
     switch (message->type())
     {
-        case CommandType::SET_VIRTUAL_PIN:
-        {
-            /* This command is internal to the SerialFrontend and is not passed on the the Teensy */
-            auto cmd = static_cast<SetVirtualPinCommand *>(message);
-            _virtual_pin_table[cmd->data()] = cmd->index();
-            return nullptr;
-        }
         case CommandType::ENABLE_SENDING_PACKETS:
         {
             auto cmd = static_cast<EnableSendingPacketsCommand *>(message);
@@ -474,14 +474,31 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
         case CommandType::SET_SENSOR_HW_TYPE:
         {
             auto cmd = static_cast<SetSensorHwTypeCommand*>(message);
-            return _packet_factory.make_config_pintype_cmd(_id_to_pin_table[cmd->index()],
-                                                           cmd->timestamp(),
-                                                           cmd->data());
+            auto hw_type = cmd->data();
+            switch (hw_type)
+            {
+                case SensorHwType::IMU_PITCH:
+                    _imu_sensor_index[ImuIndex::PITCH] = cmd->index();
+                    return nullptr;
+
+                case SensorHwType::IMU_ROLL:
+                    _imu_sensor_index[ImuIndex::ROLL] = cmd->index();
+                    return nullptr;
+
+                case SensorHwType::IMU_YAW:
+                    _imu_sensor_index[ImuIndex::YAW] = cmd->index();
+                    return nullptr;
+
+                default:
+                    return _packet_factory.make_config_pintype_cmd(_id_to_pin_table[cmd->index()],
+                                                                   cmd->timestamp(),
+                                                                   cmd->data());
+            }
         }
         case CommandType::SET_ENABLED:
         {
             /* If the sensor index is used for an imu axis then don't send anything to the teensy */
-            for (int& i : _virtual_pin_table)
+            for (int& i : _imu_sensor_index)
             {
                 if (message->index() == i)
                     return nullptr;
