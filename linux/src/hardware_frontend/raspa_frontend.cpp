@@ -151,7 +151,6 @@ void RaspaFrontend::read_loop()
                 _connected = _connect_to_raspa();
             }
             _handle_raspa_packet(buffer);
-            SENSEI_LOG_DEBUG("Received from raspa: {} bytes", bytes);
         }
         if (!_ready_to_send)
         {
@@ -187,8 +186,8 @@ void RaspaFrontend::write_loop()
             auto ret = send(_out_socket, &packet, sizeof(XmosGpioPacket), 0);
             if (_verify_acks && ret > 0)
             {
-                SENSEI_LOG_INFO("Sent raspa packet, cmd: {}, id: {}", static_cast<int>(packet.command),
-                                                                      static_cast<int>(from_xmos_byteord(packet.sequence_no)));
+                SENSEI_LOG_INFO("Sent raspa packet: {}, id: {}", xmos_packet_to_string(packet),
+                                                                 static_cast<int>(from_xmos_byteord(packet.sequence_no)));
                 _message_tracker.store(nullptr, from_xmos_byteord(packet.sequence_no));
                 _ready_to_send = false;
             } else
@@ -391,6 +390,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
 
 void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 {
+    SENSEI_LOG_DEBUG("Received a packet: {}", xmos_packet_to_string(packet));
     switch (packet.command)
     {
         case XMOS_CMD_GET_VALUE:
