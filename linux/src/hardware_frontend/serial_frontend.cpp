@@ -72,8 +72,8 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
     {
         port = -1;
     }
-    _id_to_pin_table.fill(0);
-    _pin_to_id_table.fill(0);
+    _id_to_pin_table.fill(-1);
+    _pin_to_id_table.fill(-1);
     _imu_sensor_index.fill(-1);
 
     if (setup_port(port_name.empty()? SENSEI_DEFAULT_SERIAL_DEVICE : port_name) == SP_OK)
@@ -444,6 +444,8 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
 {
     assert(message->base_type() == MessageType::COMMAND);
     SENSEI_LOG_DEBUG("Got command {} ", message->representation());
+    int pin = _id_to_pin_table[message->index()];
+    bool valid_pin = pin >= 0;
     switch (message->type())
     {
         case CommandType::ENABLE_SENDING_PACKETS:
@@ -457,7 +459,7 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             auto cmd = static_cast<SetHwPinsCommand*>(message);
             auto pins = cmd->data();
             unsigned int sensor_id = static_cast<unsigned int>(cmd->index());
-            assert(pins.size() > 0);
+            assert(!pins.empty());
             if (pins.size() > 1)
             {
                 SENSEI_LOG_WARNING("{} pins configured for sensor {}, only 1 supported", pins.size(), sensor_id);
@@ -490,9 +492,7 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
                     return nullptr;
 
                 default:
-                    return _packet_factory.make_config_pintype_cmd(_id_to_pin_table[cmd->index()],
-                                                                   cmd->timestamp(),
-                                                                   cmd->data());
+                    return valid_pin? _packet_factory.make_config_pintype_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
             }
         }
         case CommandType::SET_ENABLED:
@@ -509,51 +509,37 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
         case CommandType::SET_SENDING_MODE:
         {
             auto cmd = static_cast<SetSendingModeCommand *>(message);
-            return _packet_factory.make_config_sendingmode_cmd(_id_to_pin_table[cmd->index()],
-                                                               cmd->timestamp(),
-                                                               cmd->data());
+            return valid_pin? _packet_factory.make_config_sendingmode_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
         }
         case CommandType::SET_SENDING_DELTA_TICKS:
         {
             auto cmd = static_cast<SetSendingDeltaTicksCommand *>(message);
-            return _packet_factory.make_config_delta_ticks_cmd(_id_to_pin_table[cmd->index()],
-                                                               cmd->timestamp(),
-                                                               cmd->data());
+            return valid_pin? _packet_factory.make_config_delta_ticks_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
         }
         case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             auto cmd = static_cast<SetADCBitResolutionCommand *>(message);
-            return _packet_factory.make_config_adc_bitres_cmd(_id_to_pin_table[cmd->index()],
-                                                              cmd->timestamp(),
-                                                              cmd->data());
+            return valid_pin? _packet_factory.make_config_adc_bitres_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
         }
         case CommandType::SET_LOWPASS_FILTER_ORDER:
         {
             auto cmd = static_cast<SetLowpassFilterOrderCommand *>(message);
-            return _packet_factory.make_config_filter_order_cmd(_id_to_pin_table[cmd->index()],
-                                                                cmd->timestamp(),
-                                                                cmd->data());
+            return valid_pin? _packet_factory.make_config_filter_order_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
         }
         case CommandType::SET_LOWPASS_CUTOFF:
         {
             auto cmd = static_cast<SetLowpassCutoffCommand *>(message);
-            return _packet_factory.make_config_lowpass_cutoff_cmd(_id_to_pin_table[cmd->index()],
-                                                                  cmd->timestamp(),
-                                                                  cmd->data());
+            return valid_pin? _packet_factory.make_config_lowpass_cutoff_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
         }
         case CommandType::SET_SLIDER_THRESHOLD:
         {
             auto cmd = static_cast<SetSliderThresholdCommand *>(message);
-            return _packet_factory.make_config_slider_threshold_cmd(_id_to_pin_table[cmd->index()],
-                                                                    cmd->timestamp(),
-                                                                    cmd->data());
+            return valid_pin? _packet_factory.make_config_slider_threshold_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
         }
         case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
             auto cmd = static_cast<SetDigitalOutputValueCommand *>(message);
-            return _packet_factory.make_set_digital_pin_cmd(_id_to_pin_table[cmd->index()],
-                                                            cmd->timestamp(),
-                                                            cmd->data());
+            return valid_pin? _packet_factory.make_set_digital_pin_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
         }
         case CommandType::SET_IMU_ENABLED:
         {

@@ -33,8 +33,8 @@ enum class running_state {
     STOPPING,
     STOPPED,
 };
-constexpr size_t MAX_SENSORS = 64;
-
+constexpr size_t MAX_SENSORS = 256;
+constexpr size_t MAX_SERIAL_PINS = 64;
 
 class SerialFrontend : public HwFrontend
 {
@@ -122,7 +122,7 @@ private:
 
     std::array<int, ImuIndex::N_IMU_INDEXES> _imu_sensor_index;
     std::array<int, MAX_SENSORS> _id_to_pin_table;
-    std::array<int, MAX_SENSORS> _pin_to_id_table;
+    std::array<int, MAX_SERIAL_PINS> _pin_to_id_table;
 };
 
 }; // end namespace sensei
