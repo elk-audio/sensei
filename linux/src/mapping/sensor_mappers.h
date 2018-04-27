@@ -64,15 +64,15 @@ public:
     virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
 
 protected:
-    SensorType _sensor_type;
-    SensorHwType _hw_type;
-    int _sensor_index;
-    std::vector<int> _hw_pins;
-    bool _enabled;
-    SendingMode _sending_mode;
+    SensorType          _sensor_type;
+    SensorHwType        _hw_type;
+    int                 _sensor_index;
+    std::vector<int>    _hw_pins;
+    bool                _enabled;
+    SendingMode         _sending_mode;
 
-    float _previous_value;
-    bool _invert_value;
+    float               _previous_value;
+    bool                _invert_value;
 };
 
 /**

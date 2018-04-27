@@ -49,7 +49,6 @@ TEST(MessagesTest, test_external_command_creation)
 
     // Fill message queue with all types of commands
     msg_queue.push_back(factory.make_set_enabled_command(2, false));
-    msg_queue.push_back(factory.make_set_sensor_type_command(3, SensorType::ANALOG_INPUT));
     msg_queue.push_back(factory.make_set_sending_mode_command(4, SendingMode::ON_VALUE_CHANGED));
     msg_queue.push_back(factory.make_set_sending_delta_ticks_command(5, 10));
     msg_queue.push_back(factory.make_set_adc_bit_resolution_command(6, 12));

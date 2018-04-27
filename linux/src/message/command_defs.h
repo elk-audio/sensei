@@ -212,9 +212,7 @@ SENSEI_DECLARE_COMMAND(SetSensorTypeCommand,
                        CommandType::SET_SENSOR_TYPE,
                        SensorType,
                        "Set Sensor Type",
-                       CommandDestination::HARDWARE_FRONTEND
-                           | CommandDestination::MAPPING_PROCESSOR
-                           | CommandDestination::OUTPUT_BACKEND);
+                       CommandDestination::MAPPING_PROCESSOR | CommandDestination::OUTPUT_BACKEND);
 
 SENSEI_DECLARE_COMMAND(SetSensorHwTypeCommand,
                        CommandType::SET_SENSOR_HW_TYPE,

@@ -42,6 +42,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
         switch(pin_type)
         {
         case SensorType::DIGITAL_INPUT:
+        case SensorType::NO_OUTPUT:
             _mappers[sensor_index].reset(new DigitalSensorMapper(sensor_index));
             break;
 
@@ -95,7 +96,7 @@ void MappingProcessor::process(Value *value, output_backend::OutputBackend *back
     }
     else
     {
-        SENSEI_LOG_ERROR("Got value message for initialized pin {}", value->index());
+        SENSEI_LOG_ERROR("Got value message for initialized sensor {}", value->index());
     }
 }
 
