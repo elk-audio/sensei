@@ -467,7 +467,7 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
             unsigned int pin_id = static_cast<unsigned int>(cmd->data().at(0));
             if (pin_id >= _pin_to_id_table.size() || sensor_id >= _id_to_pin_table.size())
             {
-                SENSEI_LOG_ERROR("Wrong pin or sensor id ({}, {}", pin_id, sensor_id);
+                SENSEI_LOG_ERROR("Wrong pin or sensor id ({}, {})", pin_id, sensor_id);
             }
             _pin_to_id_table[pin_id] = sensor_id;
             _id_to_pin_table[sensor_id] = pin_id;
@@ -492,7 +492,12 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
                     return nullptr;
 
                 default:
-                    return valid_pin? _packet_factory.make_config_pintype_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
+                    if (valid_pin)
+                    {
+                        return _packet_factory.make_config_pintype_cmd(pin, cmd->timestamp(), cmd->data());
+                    }
+                    SENSEI_LOG_WARNING("Sensor id {} does not have pin associated with it", cmd->index());
+                    return nullptr;
             }
         }
         case CommandType::SET_ENABLED:
@@ -514,32 +519,62 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
         case CommandType::SET_SENDING_DELTA_TICKS:
         {
             auto cmd = static_cast<SetSendingDeltaTicksCommand *>(message);
-            return valid_pin? _packet_factory.make_config_delta_ticks_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
+            if (valid_pin)
+            {
+                return _packet_factory.make_config_delta_ticks_cmd(pin, cmd->timestamp(), cmd->data());
+            }
+            SENSEI_LOG_WARNING("Sensor id {} does not have pin associated with it", cmd->index());
+            return nullptr;
         }
         case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             auto cmd = static_cast<SetADCBitResolutionCommand *>(message);
-            return valid_pin? _packet_factory.make_config_adc_bitres_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
+            if (valid_pin)
+            {
+                return _packet_factory.make_config_adc_bitres_cmd(pin, cmd->timestamp(), cmd->data());
+            }
+            SENSEI_LOG_WARNING("Sensor id {} does not have pin associated with it", cmd->index());
+            return nullptr;
         }
         case CommandType::SET_LOWPASS_FILTER_ORDER:
         {
             auto cmd = static_cast<SetLowpassFilterOrderCommand *>(message);
-            return valid_pin? _packet_factory.make_config_filter_order_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
+            if (valid_pin)
+            {
+                return _packet_factory.make_config_filter_order_cmd(pin, cmd->timestamp(), cmd->data());
+            }
+            SENSEI_LOG_WARNING("Sensor id {} does not have pin associated with it", cmd->index());
+            return nullptr;
         }
         case CommandType::SET_LOWPASS_CUTOFF:
         {
             auto cmd = static_cast<SetLowpassCutoffCommand *>(message);
-            return valid_pin? _packet_factory.make_config_lowpass_cutoff_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
+            if (valid_pin)
+            {
+                return _packet_factory.make_config_lowpass_cutoff_cmd(pin, cmd->timestamp(), cmd->data());
+            }
+            SENSEI_LOG_WARNING("Sensor id {} does not have pin associated with it", cmd->index());
+            return nullptr;
         }
         case CommandType::SET_SLIDER_THRESHOLD:
         {
             auto cmd = static_cast<SetSliderThresholdCommand *>(message);
-            return valid_pin? _packet_factory.make_config_slider_threshold_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
+            if (valid_pin)
+            {
+                return _packet_factory.make_config_slider_threshold_cmd(pin, cmd->timestamp(), cmd->data());
+            }
+            SENSEI_LOG_WARNING("Sensor id {} does not have pin associated with it", cmd->index());
+            return nullptr;
         }
         case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
             auto cmd = static_cast<SetDigitalOutputValueCommand *>(message);
-            return valid_pin? _packet_factory.make_set_digital_pin_cmd(pin, cmd->timestamp(), cmd->data()) : nullptr;
+            if (valid_pin)
+            {
+                return _packet_factory.make_set_digital_pin_cmd(pin, cmd->timestamp(), cmd->data());
+            }
+            SENSEI_LOG_WARNING("Sensor id {} does not have pin associated with it", cmd->index());
+            return nullptr;
         }
         case CommandType::SET_IMU_ENABLED:
         {
