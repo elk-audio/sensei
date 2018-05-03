@@ -341,11 +341,11 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
 
     /* read multiplexer configuration if sensor is multiplexed */
     const Json::Value& multiplexed = hardware["multiplexed"];
-    if (multiplexed.isBool() && multiplexed.asBool())
+    if (multiplexed.isObject())
     {
         int id;
         int pin;
-        const Json::Value& multiplexer_id = hardware["multiplexer_id"];
+        const Json::Value& multiplexer_id = multiplexed["multiplexer_id"];
         if (multiplexer_id.isIntegral())
         {
             id = multiplexer_id.asInt();
@@ -355,7 +355,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
             SENSEI_LOG_WARNING("Multiplexer id is required");
             return ConfigStatus::PARAMETER_ERROR;
         }
-        const Json::Value& multiplexer_pin = hardware["multiplexer_pin"];
+        const Json::Value& multiplexer_pin = multiplexed["multiplexer_pin"];
         if (multiplexer_pin.isIntegral())
         {
             pin = multiplexer_pin.asInt();
