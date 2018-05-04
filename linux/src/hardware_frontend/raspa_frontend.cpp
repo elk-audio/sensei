@@ -17,12 +17,13 @@ namespace hw_frontend {
 
 using namespace xmos;
 
-constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
-constexpr char RASPA_SOCKET[] = "/tmp/raspa";
-constexpr int  SOCKET_TIMEOUT_US = 500'000;
-constexpr auto READ_WRITE_TIMEOUT = std::chrono::seconds(1);
-constexpr auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
-constexpr int  MAX_RESEND_ATTEMPTS = 3;
+constexpr char      SENSEI_SOCKET[] = "/tmp/sensei";
+constexpr char      RASPA_SOCKET[] = "/tmp/raspa";
+constexpr uint8_t   DEFAULT_TICK_RATE = SystemTickRate::TICK_5000_HZ;
+constexpr int       SOCKET_TIMEOUT_US = 500'000;
+constexpr auto      READ_WRITE_TIMEOUT = std::chrono::seconds(1);
+constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
+constexpr int       MAX_RESEND_ATTEMPTS = 3;
 
 SENSEI_GET_LOGGER;
 
@@ -41,6 +42,7 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
     /* Prepare the setup and query hw commands to be the first to send */
     _send_list.push_back(_packet_factory.make_reset_system_command());
     _send_list.push_back(_packet_factory.make_get_board_info_command());
+    _send_list.push_back(_packet_factory.make_set_tick_rate_command(DEFAULT_TICK_RATE));
     _in_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (_in_socket >= 0 && _out_socket >= 0)
