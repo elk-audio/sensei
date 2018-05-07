@@ -21,7 +21,7 @@ constexpr char      SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char      RASPA_SOCKET[] = "/tmp/raspa";
 constexpr uint8_t   DEFAULT_TICK_RATE = SystemTickRate::TICK_5000_HZ;
 constexpr int       SOCKET_TIMEOUT_US = 500'000;
-constexpr auto      READ_WRITE_TIMEOUT = std::chrono::seconds(1);
+constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(500);
 constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
 constexpr int       MAX_RESEND_ATTEMPTS = 3;
 
@@ -174,7 +174,7 @@ void RaspaFrontend::write_loop()
             _process_sensei_command(message.get());
         }
 
-        while(!_send_list.empty())
+        while(!_send_list.empty() && _state.load() == ThreadState::RUNNING)
         {
             std::unique_lock<std::mutex> lock(_send_mutex);
             SENSEI_LOG_DEBUG("Going through sendlist: {} packets", _send_list.size());
