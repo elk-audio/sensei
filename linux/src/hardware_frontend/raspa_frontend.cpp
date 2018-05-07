@@ -188,7 +188,7 @@ void RaspaFrontend::write_loop()
             auto ret = send(_out_socket, &packet, sizeof(XmosGpioPacket), 0);
             if (_verify_acks && ret > 0)
             {
-                SENSEI_LOG_INFO("Sent raspa packet: {}, id: {}", xmos_packet_to_string(packet),
+                SENSEI_LOG_DEBUG("Sent raspa packet: {}, id: {}", xmos_packet_to_string(packet),
                                                                  static_cast<int>(from_xmos_byteord(packet.sequence_no)));
                 _message_tracker.store(nullptr, from_xmos_byteord(packet.sequence_no));
                 _ready_to_send = false;
@@ -261,7 +261,7 @@ bool RaspaFrontend::_connect_to_raspa()
 
 void RaspaFrontend::_process_sensei_command(const Command*message)
 {
-    SENSEI_LOG_INFO("Raspafrontend: got command: {}", message->representation());
+    SENSEI_LOG_DEBUG("Raspafrontend: got command: {}", message->representation());
     switch (message->type())
     {
         case CommandType::SET_SENSOR_HW_TYPE:
@@ -416,7 +416,7 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 {
     uint32_t seq_no = from_xmos_byteord(ack.payload.ack_data.returned_seq_no);
-    SENSEI_LOG_INFO("Got ack for packet: {}", seq_no);
+    SENSEI_LOG_DEBUG("Got ack for packet: {}, ack seq_no: {}", seq_no, ack.sequence_no);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);
@@ -446,7 +446,7 @@ void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
 {
     auto& m = packet.payload.value_data;
     _out_queue->push(_message_factory.make_analog_value(m.controller_id, from_xmos_byteord(m.controller_val), 0));
-    SENSEI_LOG_INFO("Got a value packet!");
+    SENSEI_LOG_DEBUG("Got a value packet!");
 }
 
 void RaspaFrontend::_handle_board_info(const xmos::XmosGpioPacket& packet)

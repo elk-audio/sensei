@@ -32,6 +32,7 @@ protected:
         std::vector<std::unique_ptr<Command>> config_cmds;
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
@@ -55,6 +56,7 @@ protected:
     SensorHwType _hw_type{SensorHwType::DIGITAL_INPUT_PIN};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
+    int _delta_ticks{5};
 
     OutputBackendMockup _backend;
     DigitalSensorMapper _mapper{_sensor_idx};
@@ -69,6 +71,10 @@ TEST_F(TestDigitalSensorMapper, test_config)
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
     ASSERT_EQ(_inverted, cmd_invert->data());
+
+    auto cmd_delta_ticks = extract_cmd_from<SetSendingDeltaTicksCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
+    ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
 
     auto cmd_send_mode = extract_cmd_from<SetSendingModeCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_SENDING_MODE, cmd_send_mode->type());
@@ -170,6 +176,9 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_multiplexed_sensor_command(_sensor_idx,
+                                                                                             _multiplexer_data.id,
+                                                                                             _multiplexer_data.pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, _lowpass_filter_order))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
@@ -201,6 +210,7 @@ protected:
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
     int _delta_ticks{5};
+    MultiplexerData _multiplexer_data{3,8};
     int _lowpass_filter_order{4};
     float _lowpass_cutoff{199.123f};
     int _adc_bit_resolution{12};
@@ -242,13 +252,18 @@ TEST_F(TestAnalogSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_ADC_BIT_RESOLUTION, cmd_adc_res->type());
     ASSERT_EQ(_adc_bit_resolution, cmd_adc_res->data());
 
-    auto cmd_delta_ticks = extract_cmd_from<SetSendingDeltaTicksCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
-    ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
+    auto cmd_multiplexed = extract_cmd_from<SetMultiplexedSensorCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_MULTIPLEXED, cmd_multiplexed->type());
+    ASSERT_EQ(_multiplexer_data.id, cmd_multiplexed->data().id);
+    ASSERT_EQ(_multiplexer_data.pin, cmd_multiplexed->data().pin);
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
     ASSERT_EQ(_inverted, cmd_invert->data());
+
+    auto cmd_delta_ticks = extract_cmd_from<SetSendingDeltaTicksCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
+    ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
 
     auto cmd_send_mode = extract_cmd_from<SetSendingModeCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_SENDING_MODE, cmd_send_mode->type());
@@ -443,8 +458,8 @@ protected:
         std::vector<std::unique_ptr<Command>> config_cmds;
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
                                                                                                 _input_scale_low))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
@@ -493,13 +508,13 @@ TEST_F(TestRangeSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_LOW, cmd_scale_low->type());
     ASSERT_EQ(_input_scale_low, cmd_scale_low->data());
 
-    auto cmd_delta_ticks = extract_cmd_from<SetSendingDeltaTicksCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
-    ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
-
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
     ASSERT_EQ(_inverted, cmd_invert->data());
+
+    auto cmd_delta_ticks = extract_cmd_from<SetSendingDeltaTicksCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
+    ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
 
     auto cmd_send_mode = extract_cmd_from<SetSendingModeCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_SENDING_MODE, cmd_send_mode->type());
@@ -674,6 +689,7 @@ protected:
         std::vector<std::unique_ptr<Command>> config_cmds;
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
                                                                                                 _input_scale_low))));
@@ -699,6 +715,7 @@ protected:
     bool _enabled{true};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
+    int _delta_ticks{5};
     SensorHwType _hw_type{SensorHwType::IMU_YAW};
     std::vector<int> _hw_pin{0};
 
@@ -726,6 +743,10 @@ TEST_F(TestContinuousSensorMapper, test_config)
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
     EXPECT_EQ(_inverted, cmd_invert->data());
+
+    auto cmd_delta_ticks = extract_cmd_from<SetSendingDeltaTicksCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SENDING_DELTA_TICKS, cmd_delta_ticks->type());
+    ASSERT_EQ(_delta_ticks, cmd_delta_ticks->data());
 
     auto cmd_send_mode = extract_cmd_from<SetSendingModeCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_SENDING_MODE, cmd_send_mode->type());

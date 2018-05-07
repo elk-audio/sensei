@@ -38,7 +38,10 @@ BaseSensorMapper::BaseSensorMapper(SensorType type, int index) :
     _sensor_type(type),
     _sensor_index(index),
     _enabled(false),
+    _multiplexed(false),
+    _multiplexer_data{0,0},
     _sending_mode(SendingMode::OFF),
+    _delta_ticks_sending(1),
     _previous_value(0.0f),
     _invert_value(false)
 {}
@@ -87,6 +90,29 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
         };
         break;
 
+    case CommandType::SET_SENDING_DELTA_TICKS:
+        {
+            const auto typed_cmd = static_cast<const SetSendingDeltaTicksCommand*>(cmd);
+            if (typed_cmd->data() > 0)
+            {
+                _delta_ticks_sending = typed_cmd->data();
+            }
+            else
+            {
+                _delta_ticks_sending = 1;
+                status = CommandErrorCode::INVALID_VALUE;
+            }
+        };
+        break;
+
+    case CommandType::SET_MULTIPLEXED:
+        {
+            const auto typed_cmd = static_cast<const SetMultiplexedSensorCommand*>(cmd);
+            _multiplexer_data = typed_cmd->data();
+            _multiplexed = true;
+        };
+        break;
+
     default:
         status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
         break;
@@ -105,7 +131,14 @@ void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_hw_pins_command(_sensor_index, _hw_pins);
     *out_iterator = factory.make_set_enabled_command(_sensor_index, _enabled);
     *out_iterator = factory.make_set_sending_mode_command(_sensor_index, _sending_mode);
+    *out_iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
     *out_iterator = factory.make_set_invert_enabled_command(_sensor_index, _invert_value);
+    if (_multiplexed)
+    {
+        *out_iterator = factory.make_set_multiplexed_sensor_command(_sensor_index,
+                                                                    _multiplexer_data.id,
+                                                                    _multiplexer_data.pin);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +229,6 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
 AnalogSensorMapper::AnalogSensorMapper(int index,
                                        float adc_sampling_rate) :
     BaseSensorMapper(SensorType::ANALOG_INPUT, index),
-    _delta_ticks_sending(1),
     _lowpass_filter_order(4),
     _lowpass_cutoff(DEFAULT_LOWPASS_CUTOFF),
     _slider_threshold(0),
@@ -226,13 +258,6 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
         {
             const auto typed_cmd = static_cast<const SetSensorHwTypeCommand*>(cmd);
             status = _set_sensor_hw_type(typed_cmd->data());
-        };
-        break;
-
-    case CommandType::SET_SENDING_DELTA_TICKS:
-        {
-            const auto typed_cmd = static_cast<const SetSendingDeltaTicksCommand*>(cmd);
-            status = _set_delta_ticks_sending(typed_cmd->data());
         };
         break;
 
@@ -303,7 +328,6 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
     *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
     *out_iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
     *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
@@ -361,17 +385,6 @@ CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(int resolution)
 
     _input_scale_range_low = std::min(_input_scale_range_low, _max_allowed_input);
     _input_scale_range_high = std::min(_input_scale_range_high, _max_allowed_input);
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode AnalogSensorMapper::_set_delta_ticks_sending(int value)
-{
-    if (value < 1)
-    {
-        return CommandErrorCode::INVALID_VALUE;
-    }
-
-    _delta_ticks_sending = value;
     return CommandErrorCode::OK;
 }
 
@@ -445,7 +458,6 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(int value)
 // RangeSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 RangeSensorMapper::RangeSensorMapper(int index) : BaseSensorMapper(SensorType::ANALOG_INPUT, index),
-                                                  _delta_ticks_sending(1),
                                                   _input_scale_range_low(0),
                                                   _input_scale_range_high(100)
 {}
@@ -470,12 +482,6 @@ CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
         };
         break;
 
-        case CommandType::SET_SENDING_DELTA_TICKS:
-        {
-            const auto typed_cmd = static_cast<const SetSendingDeltaTicksCommand*>(cmd);
-            status = _set_delta_ticks_sending(typed_cmd->data());
-        };
-        break;
         // Internal
 
         case CommandType::SET_INPUT_SCALE_RANGE_LOW:
@@ -514,7 +520,6 @@ void RangeSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
     *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
     *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
 }
@@ -574,17 +579,6 @@ CommandErrorCode RangeSensorMapper::_set_input_scale_range_high(int value)
     }
 
     _input_scale_range_high = value;
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode RangeSensorMapper::_set_delta_ticks_sending(int value)
-{
-    if (value < 1)
-    {
-        return CommandErrorCode::INVALID_VALUE;
-    }
-
-    _delta_ticks_sending = value;
     return CommandErrorCode::OK;
 }
 
