@@ -84,7 +84,6 @@ set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/xmos_protocol"
                  "${PROJECT_SOURCE_DIR}/../common"
                  "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/include"
-                 "${PROJECT_SOURCE_DIR}/third-party/install/liblo/include"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
                  "${PROJECT_SOURCE_DIR}/third-party")
 
@@ -100,8 +99,7 @@ include_directories(${INCLUDE_DIRS})
 #################################
 
 set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
-                   "${PROJECT_SOURCE_DIR}/third-party/install/liblo/lib/liblo.a"
-                   pthread jsoncpp)
+                    pthread jsoncpp lo)
 
 if (APPLE)
     link_directories(/usr/local/lib)
@@ -122,5 +120,4 @@ add_executable(sensei ${SOURCE_FILES})
 
 # Explicitly add external statically linked dependencies here
 add_dependencies(sensei libserialport)
-add_dependencies(sensei liblo)
 target_link_libraries(sensei "${LINK_LIBRARIES}")
