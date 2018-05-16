@@ -18,7 +18,9 @@
 
 
 namespace sensei {
-namespace serial_frontend {
+namespace hw_frontend {
+
+constexpr char SENSEI_DEFAULT_SERIAL_DEVICE[] = "/dev/ttyS01";
 
 static const int MAX_NUMBER_OFF_INPUT_PINS = 64;
 static const int MAX_NUMBER_OFF_OUTPUT_PINS = 32;
@@ -51,10 +53,9 @@ bool verify_message(const sSenseiDataPacket *packet)
 SerialFrontend::SerialFrontend(const std::string &port_name,
                                SynchronizedQueue<std::unique_ptr<Command>> *in_queue,
                                SynchronizedQueue<std::unique_ptr<BaseMessage>> *out_queue) :
+        HwFrontend(in_queue, out_queue),
         _packet_factory(MAX_NUMBER_OFF_INPUT_PINS + MAX_NUMBER_OFF_OUTPUT_PINS),
         _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
-        _in_queue(in_queue),
-        _out_queue(out_queue),
         _read_thread_state(running_state::STOPPED),
         _write_thread_state(running_state::STOPPED),
         _ready_to_send(true),
@@ -73,7 +74,8 @@ SerialFrontend::SerialFrontend(const std::string &port_name,
     }
     _id_to_pin_table.fill(0);
     _pin_to_id_table.fill(0);
-    if (setup_port(port_name) == SP_OK)
+
+    if (setup_port(port_name.empty()? SENSEI_DEFAULT_SERIAL_DEVICE : port_name) == SP_OK)
     {
         SENSEI_LOG_INFO("Serial port opened ok, sending initialize packet");
         send_initialize_packet(INITIAL_TICK_DIVISOR, MAX_NUMBER_OFF_INPUT_PINS, MAX_NUMBER_OFF_OUTPUT_PINS, 0);
@@ -412,6 +414,7 @@ void SerialFrontend::handle_timeouts()
             auto error_message = _message_factory.make_too_many_timeouts_error(m->index(), 0);
             SENSEI_LOG_WARNING("Message {} timed out, sending next message.", m->representation());
             _out_queue->push(std::move(error_message));
+            [[fallthrough]];
         }
         case timeout::TIMED_OUT:
         {
@@ -452,9 +455,9 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
         case CommandType::SET_HW_PIN:
         {
             auto cmd = static_cast<SetSingleHwPinCommand*>(message);
-            int pin_id = cmd->data();
-            int sensor_id = cmd->index();
-            if (pin_id >= MAX_SENSORS || sensor_id >= MAX_SENSORS)
+            unsigned int pin_id = static_cast<unsigned int>(cmd->data());
+            unsigned int sensor_id = static_cast<unsigned int>(cmd->index());
+            if (pin_id >= _pin_to_id_table.size() || sensor_id >= _id_to_pin_table.size())
             {
                 SENSEI_LOG_ERROR("Wrong pin or sensor id ({}, {}", pin_id, sensor_id);
             }
@@ -522,9 +525,9 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
                                                                     cmd->timestamp(),
                                                                     cmd->data());
         }
-        case CommandType::SEND_DIGITAL_PIN_VALUE:
+        case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
-            auto cmd = static_cast<SendDigitalPinValueCommand *>(message);
+            auto cmd = static_cast<SetDigitalOutputValueCommand *>(message);
             return _packet_factory.make_set_digital_pin_cmd(_id_to_pin_table[cmd->index()],
                                                             cmd->timestamp(),
                                                             cmd->data());
@@ -617,4 +620,4 @@ const sSenseiDataPacket* SerialFrontend::handle_command(Command* message)
 
 
 }; // end namespace sensei
-}; // end namespace serial_frontend
+}; // end namespace hw_frontend

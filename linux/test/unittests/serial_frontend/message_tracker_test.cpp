@@ -1,7 +1,3 @@
-//
-// Created by gustav on 3/17/16.
-//
-
 #include "gtest/gtest.h"
 #define private public
 
@@ -10,7 +6,7 @@
 #include "hardware_frontend/serial_frontend_internal.h"
 
 using namespace sensei;
-using namespace serial_frontend;
+using namespace hw_frontend;
 
 const int MAX_TIMEOUT = 1000;
 const int MAX_RESENDS = 2;
@@ -55,7 +51,7 @@ TEST_F (TestMessageTracker, test_simple_tracking)
     EXPECT_EQ(timeout::WAITING, _module_under_test.timed_out());
 
     /* First, test acking with an incorrect uuid */
-    EXPECT_TRUE(_module_under_test.ack(1234));
+    EXPECT_FALSE(_module_under_test.ack(1235));
 
     /* Test that an ack will correctly remove this msg */
     EXPECT_TRUE(_module_under_test.ack(1234));

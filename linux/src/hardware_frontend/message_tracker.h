@@ -19,7 +19,7 @@
 #include "message/base_command.h"
 
 namespace sensei {
-namespace serial_frontend {
+namespace hw_frontend {
 
 enum class timeout
 {
@@ -74,7 +74,7 @@ private:
     std::mutex  _mutex;
 
 };
-}; // end namespace serial_frontend
+}; // end namespace hw_frontend
 }; // end namespace sensei
 
 

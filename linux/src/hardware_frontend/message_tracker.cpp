@@ -1,7 +1,7 @@
 #include "message_tracker.h"
 
 namespace sensei {
-namespace serial_frontend {
+namespace hw_frontend {
 
 
 MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries) :
@@ -42,13 +42,14 @@ bool MessageTracker::ack(uint64_t identifier)
         return false;
     }
     _message_in_transit = nullptr;
+    _identifier = 0;
     return true;
 }
 
 timeout MessageTracker::timed_out()
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    if (_message_in_transit == nullptr)
+    if (_identifier == 0 &&  _message_in_transit == nullptr)
     {
         return timeout::NO_MESSAGE;
     }
@@ -86,5 +87,5 @@ void MessageTracker::update_time()
     _current_time = std::chrono::steady_clock::now();
 };
 
-}; // end namespace serial_frontend
+}; // end namespace hw_frontend
 }; // end namespace sensei

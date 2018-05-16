@@ -5,6 +5,8 @@
 #include "output_backend/osc_backend.h"
 #include "config_backend/json_configuration.h"
 #include "user_frontend/osc_user_frontend.h"
+#include "hardware_frontend/serial_frontend.h"
+#include "hardware_frontend/raspa_frontend.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -12,19 +14,17 @@ using namespace sensei;
 
 SENSEI_GET_LOGGER;
 
-void EventHandler::init(const std::string port_name,
-                        const int max_n_input_pins,
-                        const int max_n_digital_out_pins,
-                        const std::string config_file)
+void EventHandler::init(int max_n_input_pins,
+                        int max_n_digital_out_pins,
+                        const std::string& config_file)
 
 {
     _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
     _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
-    _serial_frontend.reset(new serial_frontend::SerialFrontend(port_name, &_to_frontend_queue, &_event_queue));
     _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
     _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_input_pins, max_n_digital_out_pins));
-
-    auto ret = _config_backend->read();
+    config::HwFrontendConfig hw_config;
+    auto ret = _config_backend->read(hw_config);
     if (ret != config::ConfigStatus::OK)
     {
         switch (ret)
@@ -45,18 +45,34 @@ void EventHandler::init(const std::string port_name,
         }
     }
 
-    if (!_serial_frontend->connected())
+    if (hw_config.type == HwFrontendType::SERIAL_TEENSY)
     {
-        SENSEI_LOG_ERROR("Serial connection failed.");
+        SENSEI_LOG_ERROR("Initialising a Serial Teensy Frontend");
+        _hw_frontend.reset(new hw_frontend::SerialFrontend(hw_config.port, &_to_frontend_queue, &_event_queue));
     }
-    _serial_frontend->verify_acks(true);
-    _serial_frontend->run();
+    else if (hw_config.type == HwFrontendType::RASPA_XMOS)
+    {
+        SENSEI_LOG_ERROR("Initializing a Raspa Xmos Frontend");
+        _hw_frontend.reset(new hw_frontend::RaspaFrontend(&_to_frontend_queue, &_event_queue));
+    }
+    else
+    {
+        _hw_frontend.reset(new hw_frontend::NoOpFrontend(&_to_frontend_queue, &_event_queue));
+        SENSEI_LOG_ERROR("No HW Frontend configured");
+    }
 
+    if (!_hw_frontend->connected())
+    {
+        SENSEI_LOG_ERROR("Hardware connection failed.");
+    }
+    _hw_frontend->verify_acks(true);
+    _hw_frontend->run();
 }
 
 void EventHandler::deinit()
 {
-    _serial_frontend.reset(nullptr);
+    _hw_frontend->stop();
+    _hw_frontend.reset(nullptr);
     _processor.reset(nullptr);
     _output_backend.reset(nullptr);
     _config_backend.reset(nullptr);
@@ -99,7 +115,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
     // Process first non-sink destinations
     // using non-owning raw pointer
-    if (address & CommandDestination::INTERNAL)
+    if (address & CommandDestination::MAPPING_PROCESSOR)
     {
         CommandErrorCode ret = _processor->apply_command(cmd.get());
         if (ret != CommandErrorCode::OK)
@@ -133,6 +149,9 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
             default:
                 break;
             }
+        } else
+        {
+            SENSEI_LOG_WARNING("Handled mapper command ok");
         }
     }
 
@@ -186,7 +205,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
     // At last, pass the message to serial receiver queue
     // which is a owning sink
-    if (address & CommandDestination::SERIAL_FRONTEND)
+    if (address & CommandDestination::HARDWARE_FRONTEND)
     {
         _to_frontend_queue.push(std::move(cmd));
     }

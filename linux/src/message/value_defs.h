@@ -28,7 +28,7 @@ enum class ValueType
 {
     ANALOG,
     DIGITAL,
-    IMU,
+    CONTINUOUS,
     OUTPUT
 };
 
@@ -36,7 +36,7 @@ SENSEI_DECLARE_VALUE(AnalogValue, ValueType::ANALOG, int, "Analog Value");
 
 SENSEI_DECLARE_VALUE(DigitalValue, ValueType::DIGITAL, bool, "Digital Value");
 
-SENSEI_DECLARE_VALUE(ImuValue, ValueType::IMU, float, "IMU Value");
+SENSEI_DECLARE_VALUE(ContinuousValue, ValueType::CONTINUOUS, float, "Continuous Value");
 
 SENSEI_DECLARE_VALUE(OutputValue, ValueType::OUTPUT, float, "Output Value");
 

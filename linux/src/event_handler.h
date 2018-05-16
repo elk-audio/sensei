@@ -8,7 +8,7 @@
 #include "synchronized_queue.h"
 #include "mapping/mapping_processor.h"
 #include "message/message_factory.h"
-#include "hardware_frontend/serial_frontend.h"
+#include "hardware_frontend/hw_frontend.h"
 #include "output_backend/output_backend.h"
 #include "config_backend/base_configuration.h"
 #include "user_frontend/user_frontend.h"
@@ -24,8 +24,7 @@ public:
     ~EventHandler()
     {}
 
-    void init(const std::string port_name, const int max_n_input_pins, const int max_n_digital_out_pins,
-                  const std::string config_file);
+    void init(int max_n_input_pins, int max_n_digital_out_pins, const std::string& config_file);
 
     void handle_events(std::chrono::milliseconds wait_period);
 
@@ -33,7 +32,8 @@ public:
 
     void reload_config()
     {
-        _config_backend->read();
+        config::HwFrontendConfig hwc;
+        _config_backend->read(hwc);
     }
 
 private:
@@ -45,7 +45,7 @@ private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
 
     // Sub-components instances
-    std::unique_ptr<serial_frontend::SerialFrontend> _serial_frontend;
+    std::unique_ptr<hw_frontend::HwFrontend> _hw_frontend;
     std::unique_ptr<mapping::MappingProcessor> _processor;
     std::unique_ptr<output_backend::OutputBackend> _output_backend;
     std::unique_ptr<config::BaseConfiguration> _config_backend;

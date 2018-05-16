@@ -32,7 +32,7 @@ Json::Value read_configuration(std::ifstream& file)
 /*
  * Open _source as a file and parse is as a json file
  */
-ConfigStatus JsonConfiguration::read()
+ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
 {
     SENSEI_LOG_INFO("Reading configuration file");
     std::ifstream file(_source);
@@ -49,11 +49,18 @@ ConfigStatus JsonConfiguration::read()
 
     /* Start by disabling all pins to mute the board while sending the configuration commands */
     _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, false)));
+    const Json::Value& hw_frontend = config["hw_frontend"];
     const Json::Value& backends = config["backends"];
     const Json::Value& sensors = config["sensors"];
     const Json::Value& imu = config["imu"];
-    ConfigStatus status;
 
+    /* Read the hw status, needs to be returned directly and not as an event */
+    ConfigStatus status = handle_hw_config(hw_frontend, hw_config);
+    if (status != ConfigStatus::OK)
+    {
+        return status;
+    }
+    /* Read the rest of the configuration */
     if (backends.isArray())
     {
         for(const Json::Value& backend : backends)
@@ -83,6 +90,32 @@ ConfigStatus JsonConfiguration::read()
     }
     /* The last commands enables sending of packets */
     _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, true)));
+    return ConfigStatus::OK;
+}
+
+ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, HwFrontendConfig& config)
+{
+    const Json::Value& type = frontend["type"];
+    if (type.isString())
+    {
+        if (type == "serial_teensy")
+        {
+            config.type = HwFrontendType::SERIAL_TEENSY;
+            const Json::Value& port = frontend["port"];
+            if (port.isString())
+            {
+                config.port = port.asString();
+            }
+        }
+        else if (type == "raspa_xmos")
+        {
+            config.type = HwFrontendType::RASPA_XMOS;
+        } else
+        {
+            SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware fronted type", type);
+            return ConfigStatus::PARSING_ERROR;
+        }
+    }
     return ConfigStatus::OK;
 }
 
@@ -137,6 +170,18 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
         else if (sensor_type_str == "digital_output")
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::DIGITAL_OUTPUT);
+        }
+        else if (sensor_type_str == "range_input")
+        {
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::RANGE_INPUT);
+        }
+        else if (sensor_type_str == "range_output")
+        {
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::RANGE_OUTPUT);
+        }
+        else if (sensor_type_str == "no_output")
+        {
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::NO_OUTPUT);
         }
         else
         {
@@ -235,7 +280,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
  */
 ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, int sensor_id)
 {
-    /* Read pin index as the first thing */
+    /* Read pin index as the first thing, this applies only to serial/teensy frontend */
     const Json::Value& param = hardware["pin_index"];
     if (param.isIntegral())
     {
@@ -243,7 +288,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         _queue->push(_message_factory.make_set_hw_pin_command(sensor_id, pin_id));
     }
 
-    /* read sensor type configuration */
+    /* Read sensor type configuration */
     const Json::Value& sensor_type = hardware["hardware_type"];
     if (sensor_type.isString())
     {
@@ -269,6 +314,22 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::BUTTON);
         }
+        else if (hw_type_str == "encoder")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::ENCODER);
+        }
+        else if (hw_type_str == "n_way_switch")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::N_WAY_SWITCH);
+        }
+        else if (hw_type_str == "stepped_output")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::STEPPED_OUTPUT);
+        }
+        else if (hw_type_str == "multiplexer")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::MULTIPLEXER);
+        }
         else if (hw_type_str == "imu_pitch")
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_PITCH);
@@ -289,6 +350,47 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         _queue->push(std::move(m));
     }
 
+    /* Read pin configuration if using multiple pins, this is used by the raspa/xmos frontend */
+    const Json::Value& pin_list = hardware["pins"];
+    if (pin_list.isArray())
+    {
+        std::vector<int> pins;
+        for (const Json::Value& p : pin_list)
+        {
+            pins.push_back(p.asInt());
+        }
+        _queue->push(_message_factory.make_set_hw_pins_command(sensor_id, pins));
+    }
+
+    /* read multiplexer configuration if sensor is multiplexed */
+    const Json::Value& multiplexed = hardware["multiplexed"];
+    if (multiplexed.isBool() && multiplexed.asBool())
+    {
+        int id;
+        int pin;
+        const Json::Value& multiplexer_id = hardware["multiplexer_id"];
+        if (multiplexer_id.isIntegral())
+        {
+            id = multiplexer_id.asInt();
+        }
+        else
+        {
+            SENSEI_LOG_WARNING("Multiplexer id is required");
+            return ConfigStatus::PARAMETER_ERROR;
+        }
+        const Json::Value& multiplexer_pin = hardware["multiplexer_pin"];
+        if (multiplexer_pin.isIntegral())
+        {
+            pin = multiplexer_pin.asInt();
+        }
+        else
+        {
+            SENSEI_LOG_WARNING("Multiplexer pin is required");
+            return ConfigStatus::PARAMETER_ERROR;
+        }
+        _queue->push(_message_factory.make_set_multiplexed_sensor_command(sensor_id, id, pin));
+    }
+
     /* read tick divisor configuration */
     const Json::Value& ticks = hardware["delta_ticks"];
     if (ticks.isInt())
@@ -302,6 +404,28 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (res.isInt())
     {
         auto m = _message_factory.make_set_adc_bit_resolution_command(sensor_id, res.asInt());
+        _queue->push(std::move(m));
+    }
+
+    /* read polarity configuration */
+    const Json::Value& polarity = hardware["polarity"];
+    if (polarity.isString())
+    {
+        const std::string& pol_str = polarity.asString();
+        std::unique_ptr<BaseMessage> m = nullptr;
+        if (pol_str == "active_high")
+        {
+            m = _message_factory.make_set_sensor_hw_polarity_command(sensor_id, HwPolarity::ACTIVE_HIGH);
+        }
+        else if (pol_str == "active_low")
+        {
+            m = _message_factory.make_set_sensor_hw_polarity_command(sensor_id, HwPolarity::ACTIVE_LOW);
+        }
+        else
+        {
+            SENSEI_LOG_WARNING("Unrecognised polarity: \"{}\"", pol_str);
+            return ConfigStatus::PARAMETER_ERROR;
+        }
         _queue->push(std::move(m));
     }
 

@@ -33,7 +33,9 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/output_backend/osc_backend.cpp
                       src/hardware_frontend/serial_frontend.cpp
                       src/hardware_frontend/serial_command_creator.cpp
+                      src/hardware_frontend/raspa_frontend.cpp
                       src/hardware_frontend/message_tracker.cpp
+                      src/hardware_frontend/xmos_command_creator.cpp
                       src/main.cpp
                       src/logging.cpp
                       src/user_frontend/user_frontend.cpp src/user_frontend/osc_user_frontend.cpp)
@@ -56,10 +58,13 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/output_backend/output_backend.h
                         src/output_backend/std_stream_backend.h
                         src/output_backend/osc_backend.h
+                        src/hardware_frontend/hw_frontend.h
                         src/hardware_frontend/serial_frontend.h
                         src/hardware_frontend/serial_frontend_internal.h
                         src/hardware_frontend/serial_command_creator.h
                         src/hardware_frontend/message_tracker.h
+                        src/hardware_frontend/raspa_frontend.h
+                        src/hardware_frontend/xmos_command_creator.h
                         src/locked_queue.h
                         src/synchronized_queue.h
                         src/event_handler.h
@@ -76,6 +81,7 @@ set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
 
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
+                 "${PROJECT_SOURCE_DIR}/xmos_protocol"
                  "${PROJECT_SOURCE_DIR}/../common"
                  "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/include"
                  "${PROJECT_SOURCE_DIR}/third-party/install/liblo/include"

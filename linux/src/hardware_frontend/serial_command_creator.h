@@ -16,7 +16,7 @@
 #include "message/base_message.h"
 
 namespace sensei {
-namespace serial_frontend {
+namespace hw_frontend {
 
 struct pin_config
 {

@@ -55,7 +55,7 @@ TEST(MessagesTest, test_external_command_creation)
     msg_queue.push_back(factory.make_set_adc_bit_resolution_command(6, 12));
     msg_queue.push_back(factory.make_set_lowpass_cutoff_command(7, 125.0f));
     msg_queue.push_back(factory.make_set_slider_threshold_command(9, 9));
-    msg_queue.push_back(factory.make_send_digital_value_command(10, true));
+    msg_queue.push_back(factory.make_set_digital_output_command(10, true));
     msg_queue.push_back(factory.make_enable_sending_packets_command(0, true));
 
 
@@ -64,7 +64,7 @@ TEST(MessagesTest, test_external_command_creation)
     {
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::SERIAL_FRONTEND);
+        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::HARDWARE_FRONTEND);
 
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
@@ -118,9 +118,9 @@ TEST(MessagesTest, test_external_command_creation)
             };
             break;
 
-        case CommandType::SEND_DIGITAL_PIN_VALUE:
+        case CommandType::SET_DIGITAL_OUTPUT_VALUE:
             {
-                auto typed_cmd = static_cast<SendDigitalPinValueCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<   SetDigitalOutputValueCommand *>(cmd_msg);
                 ASSERT_EQ(true, typed_cmd->data());
             };
             break;
@@ -157,7 +157,7 @@ TEST(MessagesTest, test_internal_command_creation)
 
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::INTERNAL);
+        ASSERT_TRUE(cmd_msg->destination() & CommandDestination::MAPPING_PROCESSOR);
 
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
@@ -227,7 +227,7 @@ TEST(MessagesTest, test_imu_specific_command_creation)
     {
         ASSERT_EQ(MessageType::COMMAND, msg->base_type());
         auto cmd_msg = static_cast<Command*>(msg.get());
-        ASSERT_TRUE(cmd_msg->destination()& CommandDestination::SERIAL_FRONTEND);
+        ASSERT_TRUE(cmd_msg->destination()& CommandDestination::HARDWARE_FRONTEND);
         CommandType cmd_type = cmd_msg->type();
         switch(cmd_type)
         {

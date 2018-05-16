@@ -4,7 +4,7 @@
 #include <cstring>
 
 namespace sensei {
-namespace serial_frontend {
+namespace hw_frontend {
 
 SENSEI_GET_LOGGER;
 
@@ -162,6 +162,9 @@ const sSenseiDataPacket* SerialCommandCreator::make_config_sendingmode_cmd(int p
             cached_cfg.cfg_data.sendingMode = eSendingMode::SENDING_MODE_CONTINUOUS;
             break;
         case SendingMode::ON_VALUE_CHANGED:
+        case SendingMode::TOGGLED:
+        case SendingMode::ON_PRESS:
+        case SendingMode::ON_RELEASE:
             cached_cfg.cfg_data.sendingMode = eSendingMode::SENDING_MODE_ON_VALUE_CHANGED;
             break;
         case SendingMode::ON_REQUEST:
@@ -466,5 +469,5 @@ void fill_data(const pin_config& cached_cfg, sSenseiDataPacket& packet, uint32_t
     packet.crc = calculate_crc(&packet);
 }
 
-} //end namespace serial_frontend
+} //end namespace hw_frontend
 } //end namespace sensei

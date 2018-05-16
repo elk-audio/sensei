@@ -1,0 +1,63 @@
+{
+  "backends" : [
+    {
+      "id" : 0,
+      "enabled": true,
+      "raw_input_enabled": false,
+      "type" : "osc",
+      "host" : "localhost",
+      "port" : 23023,
+      "base_path" : "/sensei/sensors",
+      "base_raw_input_path" : "/sensei/raw_input"
+    }
+  ],
+
+  "hw_frontend" : {
+    "type" : "raspa_xmos"
+  },
+
+  "sensors" : [
+    {
+      "id" : 5,
+      "enabled": true,
+      "name" : "test_pin",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "adc_resolution" : 8,
+      "range" : [0,127],
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pins" : [5],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8
+      }
+    },
+    {
+      "id" : 6,
+      "enabled": true,
+      "name" : "multiplexer",
+      "sensor_type" : "no_output",
+      "hardware" :
+      {
+        "hardware_type" : "multiplexer",
+        "pins" : [24,25,26,27,28]
+      }
+    },
+    {
+      "id" : 10,
+      "enabled": true,
+      "name" : "leds",
+      "sensor_type" : "range_output",
+      "range" : [0,15],
+      "hardware" :
+      {
+        "hardware_type" : "stepped_output",
+        "multiplexed" : true,
+        "multiplexer_id" : 6,
+        "multiplexer_pin" : 24,
+        "pins" : [10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
+      }
+    }
+  ]
+}

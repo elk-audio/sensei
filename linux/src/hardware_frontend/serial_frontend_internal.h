@@ -13,7 +13,7 @@
 #include "../../../common/sensei_serial_protocol.h"
 
 namespace sensei {
-namespace serial_frontend {
+namespace hw_frontend {
 
 const unsigned int READ_WRITE_TIMEOUT_MS = 2000;
 /*
@@ -241,6 +241,6 @@ struct teensy_set_samplerate_cmd
 
 
 }; // end namespace sensei
-}; // end namespace serial_frontend
+}; // end namespace hw_frontend
 
 #endif //SERIAL_FRONTEND_INTERNAL_H

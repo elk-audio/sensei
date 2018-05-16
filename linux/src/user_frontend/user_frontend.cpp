@@ -17,15 +17,27 @@ CommandErrorCode UserFrontend::apply_command(const Command* /*cmd*/)
     return status;
 }
 
-void UserFrontend::set_pin_enabled(const int pin_index, const bool enabled)
+void UserFrontend::set_enabled(int sensor_index, bool enabled)
 {
-    auto msg = _factory.make_set_enabled_command(pin_index, enabled);
+    auto msg = _factory.make_set_enabled_command(sensor_index, enabled);
     _queue->push(std::move(msg));
 }
 
-void UserFrontend::set_digital_output(const int out_pin_index, const bool value)
+void UserFrontend::set_digital_output(int index, bool value)
 {
-    auto msg = _factory.make_send_digital_value_command(out_pin_index, value);
+    auto msg = _factory.make_set_digital_output_command(index, value);
+    _queue->push(std::move(msg));
+}
+
+void UserFrontend::set_continuous_output(int index, float value)
+{
+    auto msg = _factory.make_set_continuous_output_command(index, value);
+    _queue->push(std::move(msg));
+}
+
+void UserFrontend::set_range_output(int index, int value)
+{
+    auto msg = _factory.make_set_range_output_command(index, value);
     _queue->push(std::move(msg));
 }
 

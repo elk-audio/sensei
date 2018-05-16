@@ -1,13 +1,9 @@
-//
-// Created by gustav on 3/17/16.
-//
-
 #include "gtest/gtest.h"
 #define private public
 #include "hardware_frontend/serial_frontend.cpp"
 
 using namespace sensei;
-using namespace serial_frontend;
+using namespace hw_frontend;
 
 static uint8_t test_msg[] = { 0x1, 0x2, 0x3, 0xff, 0x0, 0x0, 0x0, 0x0,
                               0x0, 0x8c, 0x3, 0x0, 0x0, 0x64, 0x1, 0x0,
@@ -120,17 +116,17 @@ TEST_F(SerialFrontendTest, test_imu_packet)
     /* This should result in 3 imu messages */
     ASSERT_FALSE(_out_queue.empty());
     auto msg = _out_queue.pop();
-    auto typed_msg = static_cast<ImuValue*>(msg.get());
+    auto typed_msg = static_cast<ContinuousValue*>(msg.get());
     EXPECT_EQ(ImuIndex::YAW, typed_msg->index());
     EXPECT_EQ(0, typed_msg->value());
 
     msg = _out_queue.pop();
-    typed_msg = static_cast<ImuValue*>(msg.get());
+    typed_msg = static_cast<ContinuousValue*>(msg.get());
     EXPECT_EQ(ImuIndex::PITCH, typed_msg->index());
     EXPECT_EQ(0, typed_msg->value());
 
     msg = _out_queue.pop();
-    typed_msg = static_cast<ImuValue*>(msg.get());
+    typed_msg = static_cast<ContinuousValue*>(msg.get());
     EXPECT_EQ(ImuIndex::ROLL, typed_msg->index());
     EXPECT_EQ(0, typed_msg->value());
 }

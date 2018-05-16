@@ -15,7 +15,7 @@ using namespace sensei::mapping;
 
 SENSEI_GET_LOGGER;
 
-MappingProcessor::MappingProcessor(const int max_n_input_pins) :
+MappingProcessor::MappingProcessor(int max_n_input_pins) :
     _max_n_pins(max_n_input_pins)
 {
     _mappers.resize(_max_n_pins);
@@ -35,6 +35,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
 
     if (cmd->type() == CommandType::SET_SENSOR_TYPE)
     {
+        SENSEI_LOG_INFO("Setting up new mapper for sensor id: {}", sensor_index);
         CommandErrorCode status = CommandErrorCode::OK;
         const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
         auto pin_type = typed_cmd->data();
@@ -49,7 +50,11 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
             break;
 
         case SensorType::CONTINUOUS_INPUT:
-            _mappers[sensor_index].reset(new ImuMapper(sensor_index));
+            _mappers[sensor_index].reset(new ContinuousSensorMapper(sensor_index));
+            break;
+
+        case SensorType::RANGE_INPUT:
+            _mappers[sensor_index].reset(new RangeSensorMapper(sensor_index));
             break;
 
         default:

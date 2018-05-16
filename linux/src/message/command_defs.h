@@ -29,6 +29,7 @@ enum class CommandType
     SET_SENSOR_TYPE,
     SET_SENSOR_HW_TYPE,
     SET_HW_PIN,
+    SET_HW_PINS,
     SET_VIRTUAL_PIN,
     SET_ENABLED,
     SET_SENDING_MODE,
@@ -37,7 +38,11 @@ enum class CommandType
     SET_LOWPASS_FILTER_ORDER,
     SET_LOWPASS_CUTOFF,
     SET_SLIDER_THRESHOLD,
-    SEND_DIGITAL_PIN_VALUE,
+    SET_MULTIPLEXED,
+    SET_HW_POLARITY,
+    SET_DIGITAL_OUTPUT_VALUE,
+    SET_CONTINUOUS_OUTPUT_VALUE,
+    SET_RANGE_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
     // Imu specific commands
     SET_IMU_ENABLED,
@@ -82,7 +87,9 @@ enum class SensorType
     ANALOG_INPUT,
     CONTINUOUS_INPUT,
     RANGE_INPUT,
+    RANGE_OUTPUT,
     UNDEFINED,
+    NO_OUTPUT,
     N_PIN_TYPES
 };
 
@@ -93,6 +100,10 @@ enum class SensorHwType
     ANALOG_INPUT_PIN,
     RIBBON,
     BUTTON,
+    ENCODER,
+    N_WAY_SWITCH,
+    STEPPED_OUTPUT,
+    MULTIPLEXER,
     IMU_PITCH,
     IMU_ROLL,
     IMU_YAW
@@ -121,6 +132,16 @@ enum class BackendType
 };
 
 /**
+ * @brief Hw Frontend Types
+ */
+enum class HwFrontendType
+{
+    NONE,
+    SERIAL_TEENSY,
+    RASPA_XMOS
+};
+
+/**
  * @brief Sending behaviours
  */
 enum class SendingMode
@@ -133,6 +154,33 @@ enum class SendingMode
     ON_PRESS,
     ON_RELEASE,
     N_SENDING_MODES
+};
+
+/**
+ * @brief For customising certain hw
+ */
+enum class HwPolarity
+{
+    ACTIVE_HIGH,
+    ACTIVE_LOW,
+};
+
+/**
+ * @brief Encapsulates a controller range definition
+ */
+struct Range
+{
+    float min;
+    float max;
+};
+
+/**
+ * @brief Control information for multiplexed sensors
+ */
+struct MultiplexerData
+{
+    int  id;
+    int  pin;
 };
 
 enum class CommandErrorCode
@@ -159,81 +207,111 @@ SENSEI_DECLARE_COMMAND(SetEnabledCommand,
                        CommandType::SET_ENABLED,
                        bool,
                        "Set Enabled",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSensorTypeCommand,
                        CommandType::SET_SENSOR_TYPE,
                        SensorType,
                        "Set Sensor Type",
-                       CommandDestination::SERIAL_FRONTEND
-                           | CommandDestination::INTERNAL
+                       CommandDestination::HARDWARE_FRONTEND
+                           | CommandDestination::MAPPING_PROCESSOR
                            | CommandDestination::OUTPUT_BACKEND);
 
 SENSEI_DECLARE_COMMAND(SetSensorHwTypeCommand,
                        CommandType::SET_SENSOR_HW_TYPE,
                        SensorHwType,
                        "Set Sensor Hardware Type",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetVirtualPinCommand,
                        CommandType::SET_VIRTUAL_PIN,
                        ImuIndex,
                        "Set virtual pin",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetSingleHwPinCommand,
                        CommandType::SET_HW_PIN,
                        int,
                        "Set hardware pin",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetHwPinsCommand,
+                       CommandType::SET_HW_PINS,
+                       std::vector<int>,
+                       "Set multiple hardware pins",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSendingModeCommand,
                        CommandType::SET_SENDING_MODE,
                        SendingMode,
                        "Set Sending Mode",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSendingDeltaTicksCommand,
                        CommandType::SET_SENDING_DELTA_TICKS,
                        int,
                        "Set Sending Delta Ticks",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
                        CommandType::SET_ADC_BIT_RESOLUTION,
                        int,
                        "Set ADC Bit Resolution",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetLowpassFilterOrderCommand,
                        CommandType::SET_LOWPASS_FILTER_ORDER,
                        int,
                        "Set Lowpass Filter order",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetLowpassCutoffCommand,
                        CommandType::SET_LOWPASS_CUTOFF,
                        float,
                        "Set Lowpass Cutoff",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
                        CommandType::SET_SLIDER_THRESHOLD,
                        int,
                        "Set Slider Threshold",
-                       CommandDestination::SERIAL_FRONTEND | CommandDestination::INTERNAL);
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
-SENSEI_DECLARE_COMMAND(SendDigitalPinValueCommand,
-                       CommandType::SEND_DIGITAL_PIN_VALUE,
+SENSEI_DECLARE_COMMAND(SetMultiplexedSensorCommand,
+                       CommandType::SET_MULTIPLEXED,
+                       MultiplexerData,
+                       "Set multiplexed sensor",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetSensorHwPolarityCommand,
+                       CommandType::SET_HW_POLARITY,
+                       HwPolarity,
+                       "Set polarity of hw sensor",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetDigitalOutputValueCommand,
+                       CommandType::SET_DIGITAL_OUTPUT_VALUE,
                        bool,
-                       "Send Digital Pin Value",
-                       CommandDestination::SERIAL_FRONTEND);
+                       "Set Digital Output Value",
+                       CommandDestination::HARDWARE_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetContinuousOutputValueCommand,
+                       CommandType::SET_CONTINUOUS_OUTPUT_VALUE,
+                       float,
+                       "Set Continuous Output Value",
+                       CommandDestination::HARDWARE_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetRangeOutputValueCommand,
+                       CommandType::SET_RANGE_OUTPUT_VALUE,
+                       int,
+                       "Send Range Output Value",
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
                        CommandType::ENABLE_SENDING_PACKETS,
                        bool,
                        "Enable Sending Packets",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 // IMU specific commands
 
@@ -241,91 +319,91 @@ SENSEI_DECLARE_COMMAND(SetImuEnabledCommand,
                        CommandType::SET_IMU_ENABLED,
                        bool,
                        "Enable IMU",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuFilterModeCommand,
                        CommandType::SET_IMU_FILTER_MODE,
                        int,
                        "Set IMU filter mode",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuAccelerometerRangeMaxCommand,
                        CommandType::SET_IMU_ACC_RANGE_MAX,
                        int,
                        "Set IMU Accelerometer max range",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuGyroscopeRangeMaxCommand,
                        CommandType::SET_IMU_GYRO_RANGE_MAX,
                        int,
                        "Set IMU Gyroscope max range",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuCompassRangeMaxCommand,
                        CommandType::SET_IMU_COMPASS_RANGE_MAX,
                        float,
                        "Set IMU compass max range",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuCompassEnabledCommand,
                        CommandType::SET_IMU_COMPASS_ENABLED,
                        bool,
                        "Enable IMU compass",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuSendingModeCommand,
                        CommandType::SET_IMU_SENDING_MODE,
                        SendingMode,
                        "Set IMU Sending Mode",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuSendingDeltaTicksCommand,
                        CommandType::SET_IMU_SENDING_DELTA_TICKS,
                        int,
                        "Set IMU Sending Delta Ticks",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuDataModeCommand,
                        CommandType::SET_IMU_DATA_MODE,
                        int,
                        "Set IMU type of data sent",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetImuAccThresholdCommand,
                        CommandType::SET_IMU_ACC_THRESHOLD,
                        float,
                        "Set IMU acceleration threshold for sending data in on_value_changed mode",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(ImuCalibrateCommand,
                        CommandType::IMU_CALIBRATE,
                        int,
                        "Initiate self calibration of IMU gyroscope",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(ImuFactoryResetCommand,
                        CommandType::IMU_FACTORY_RESET,
                        int,
                        "Reset the IMU to it's factory settings",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(ImuRebootCommand,
                        CommandType::IMU_REBOOT,
                        int,
                        "Initiate a reboot of the IMU",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(ImuGetTemperatureCommand,
                        CommandType::IMU_GET_TEMPERATURE,
                        int,
                        "Get the IMU temperature",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(ImuCommitSettingsCommand,
                        CommandType::IMU_COMMIT_SETTINGS,
                        int,
                        "Save settings and calibration to the IMU EPROM",
-                       CommandDestination::SERIAL_FRONTEND);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 // Internal commands
 
@@ -333,19 +411,19 @@ SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
                        CommandType::SET_INVERT_ENABLED,
                        bool,
                        "Set Invert Enabled",
-                       CommandDestination::INTERNAL);
+                       CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetInputScaleRangeLow,
                        CommandType::SET_INPUT_SCALE_RANGE_LOW,
                        float,
                        "Set Input Scale Range Low",
-                       CommandDestination::INTERNAL);
+                       CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
                        CommandType::SET_INPUT_SCALE_RANGE_HIGH,
                        float,
                        "Set Input Scale Range Low",
-                       CommandDestination::INTERNAL);
+                       CommandDestination::MAPPING_PROCESSOR);
 
 // Output Backend commands
 

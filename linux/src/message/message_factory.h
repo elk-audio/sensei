@@ -66,8 +66,8 @@ public:
                                                 const float value,
                                                 const uint32_t timestamp = 0)
     {
-        auto msg = new ImuValue(sensor_id, value, timestamp);
-        return std::unique_ptr<ImuValue>(msg);
+        auto msg = new ContinuousValue(sensor_id, value, timestamp);
+        return std::unique_ptr<ContinuousValue>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_output_value(const int sensor_id,
@@ -122,6 +122,14 @@ public:
         return std::unique_ptr<SetSingleHwPinCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_hw_pins_command(const int sensor_id,
+                                                          std::vector<int> pins,
+                                                          const uint32_t timestamp = 0)
+    {
+        auto msg = new SetHwPinsCommand(sensor_id, pins, timestamp);
+        return std::unique_ptr<SetHwPinsCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_set_sending_mode_command(const int sensor_id,
                                                                const SendingMode mode,
                                                                const uint32_t timestamp = 0)
@@ -170,12 +178,45 @@ public:
         return std::unique_ptr<SetSliderThresholdCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_send_digital_value_command(const int sensor_id,
+    std::unique_ptr<BaseMessage> make_set_multiplexed_sensor_command(const int sensor_id,
+                                                                     const int multiplexer_id,
+                                                                     const int multiplexer_pin,
+                                                                     const uint32_t timestamp = 0)
+    {
+        auto msg = new SetMultiplexedSensorCommand(sensor_id, {multiplexer_id, multiplexer_pin}, timestamp);
+        return std::unique_ptr<SetMultiplexedSensorCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_sensor_hw_polarity_command(const int sensor_id,
+                                                                     HwPolarity polarity,
+                                                                     const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSensorHwPolarityCommand(sensor_id, polarity, timestamp);
+        return std::unique_ptr<SetSensorHwPolarityCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_digital_output_command(const int sensor_id,
                                                                  const bool value,
                                                                  const uint32_t timestamp = 0)
     {
-        auto msg = new SendDigitalPinValueCommand(sensor_id, value, timestamp);
-        return std::unique_ptr<SendDigitalPinValueCommand>(msg);
+        auto msg = new SetDigitalOutputValueCommand(sensor_id, value, timestamp);
+        return std::unique_ptr<SetDigitalOutputValueCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_continuous_output_command(const int sensor_id,
+                                                                    const float value,
+                                                                    const uint32_t timestamp = 0)
+    {
+        auto msg = new SetContinuousOutputValueCommand(sensor_id, value, timestamp);
+        return std::unique_ptr<SetContinuousOutputValueCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_range_output_command(const int sensor_id,
+                                                               const int value,
+                                                               const uint32_t timestamp = 0)
+    {
+        auto msg = new SetRangeOutputValueCommand(sensor_id, value, timestamp);
+        return std::unique_ptr<SetRangeOutputValueCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_enable_sending_packets_command(const int index,

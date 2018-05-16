@@ -29,11 +29,11 @@ enum class CommandType;
  */
 enum class CommandDestination : int
 {
-    INTERNAL = 1 << 0,
-    SERIAL_FRONTEND = 1 << 1,
+    MAPPING_PROCESSOR = 1 << 0,
+    HARDWARE_FRONTEND = 1 << 1,
     OUTPUT_BACKEND = 1 << 2,
     CONFIG_BACKEND = 1 << 3,
-    USER_FRONTEND = 1 << 4
+    USER_FRONTEND = 1 << 4,
 };
 
 using CommandDestinationType = std::underlying_type_t <CommandDestination>;
