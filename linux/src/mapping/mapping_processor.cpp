@@ -15,10 +15,10 @@ using namespace sensei::mapping;
 
 SENSEI_GET_LOGGER;
 
-MappingProcessor::MappingProcessor(int max_n_input_pins) :
-    _max_n_pins(max_n_input_pins)
+MappingProcessor::MappingProcessor(int max_no_sensors) :
+    _max_no_sensors(max_no_sensors)
 {
-    _mappers.resize(_max_n_pins);
+    _mappers.resize(_max_no_sensors);
     std::fill(_mappers.begin(), _mappers.end(), nullptr);
 }
 
@@ -28,9 +28,9 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
     //       possibly without requiring SetPinType to be the 1st command received
 
     int sensor_index = cmd->index();
-    if ( (sensor_index < 0) || (sensor_index > (_max_n_pins-1)) )
+    if ( (sensor_index < 0) || (sensor_index > (_max_no_sensors-1)) )
     {
-        return CommandErrorCode::INVALID_PIN_INDEX;
+        return CommandErrorCode::INVALID_SENSOR_INDEX;
     }
 
     if (cmd->type() == CommandType::SET_SENSOR_TYPE)
@@ -42,6 +42,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
         switch(pin_type)
         {
         case SensorType::DIGITAL_INPUT:
+        case SensorType::NO_OUTPUT:
             _mappers[sensor_index].reset(new DigitalSensorMapper(sensor_index));
             break;
 
@@ -95,7 +96,7 @@ void MappingProcessor::process(Value *value, output_backend::OutputBackend *back
     }
     else
     {
-        SENSEI_LOG_ERROR("Got value message for initialized pin {}", value->index());
+        SENSEI_LOG_ERROR("Got value message for initialized sensor {}", value->index());
     }
 }
 

@@ -17,12 +17,13 @@ namespace hw_frontend {
 
 using namespace xmos;
 
-constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
-constexpr char RASPA_SOCKET[] = "/tmp/raspa";
-constexpr int  SOCKET_TIMEOUT_US = 500'000;
-constexpr auto READ_WRITE_TIMEOUT = std::chrono::seconds(1);
-constexpr auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
-constexpr int  MAX_RESEND_ATTEMPTS = 3;
+constexpr char      SENSEI_SOCKET[] = "/tmp/sensei";
+constexpr char      RASPA_SOCKET[] = "/tmp/raspa";
+constexpr uint8_t   DEFAULT_TICK_RATE = SystemTickRate::TICK_5000_HZ;
+constexpr int       SOCKET_TIMEOUT_US = 500'000;
+constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(500);
+constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
+constexpr int       MAX_RESEND_ATTEMPTS = 3;
 
 SENSEI_GET_LOGGER;
 
@@ -41,6 +42,7 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
     /* Prepare the setup and query hw commands to be the first to send */
     _send_list.push_back(_packet_factory.make_reset_system_command());
     _send_list.push_back(_packet_factory.make_get_board_info_command());
+    _send_list.push_back(_packet_factory.make_set_tick_rate_command(DEFAULT_TICK_RATE));
     _in_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (_in_socket >= 0 && _out_socket >= 0)
@@ -151,7 +153,6 @@ void RaspaFrontend::read_loop()
                 _connected = _connect_to_raspa();
             }
             _handle_raspa_packet(buffer);
-            SENSEI_LOG_DEBUG("Received from raspa: {} bytes", bytes);
         }
         if (!_ready_to_send)
         {
@@ -173,7 +174,7 @@ void RaspaFrontend::write_loop()
             _process_sensei_command(message.get());
         }
 
-        while(!_send_list.empty())
+        while(!_send_list.empty() && _state.load() == ThreadState::RUNNING)
         {
             std::unique_lock<std::mutex> lock(_send_mutex);
             SENSEI_LOG_DEBUG("Going through sendlist: {} packets", _send_list.size());
@@ -187,8 +188,8 @@ void RaspaFrontend::write_loop()
             auto ret = send(_out_socket, &packet, sizeof(XmosGpioPacket), 0);
             if (_verify_acks && ret > 0)
             {
-                SENSEI_LOG_INFO("Sent raspa packet, cmd: {}, id: {}", static_cast<int>(packet.command),
-                                                                      static_cast<int>(from_xmos_byteord(packet.sequence_no)));
+                SENSEI_LOG_DEBUG("Sent raspa packet: {}, id: {}", xmos_packet_to_string(packet),
+                                                                 static_cast<int>(from_xmos_byteord(packet.sequence_no)));
                 _message_tracker.store(nullptr, from_xmos_byteord(packet.sequence_no));
                 _ready_to_send = false;
             } else
@@ -260,7 +261,7 @@ bool RaspaFrontend::_connect_to_raspa()
 
 void RaspaFrontend::_process_sensei_command(const Command*message)
 {
-    SENSEI_LOG_INFO("Raspafrontend: got command: {}", message->representation());
+    SENSEI_LOG_DEBUG("Raspafrontend: got command: {}", message->representation());
     switch (message->type())
     {
         case CommandType::SET_SENSOR_HW_TYPE:
@@ -273,15 +274,6 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             {
                 _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type));
             }
-            break;
-        }
-        case CommandType::SET_HW_PIN:
-        {
-            auto cmd = static_cast<const SetSingleHwPinCommand*>(message);
-            Pinlist list;
-            list.pincount = 1;
-            list.pins[0] = cmd->data();
-            _send_list.push_back(_packet_factory.make_add_pins_to_controller_command(cmd->index(), list));
             break;
         }
         case CommandType::SET_HW_PINS:
@@ -400,6 +392,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
 
 void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 {
+    SENSEI_LOG_DEBUG("Received a packet: {}", xmos_packet_to_string(packet));
     switch (packet.command)
     {
         case XMOS_CMD_GET_VALUE:
@@ -423,7 +416,7 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 {
     uint32_t seq_no = from_xmos_byteord(ack.payload.ack_data.returned_seq_no);
-    SENSEI_LOG_INFO("Got ack for packet: {}", seq_no);
+    SENSEI_LOG_DEBUG("Got ack for packet: {}", seq_no);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);
@@ -453,7 +446,7 @@ void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
 {
     auto& m = packet.payload.value_data;
     _out_queue->push(_message_factory.make_analog_value(m.controller_id, from_xmos_byteord(m.controller_val), 0));
-    SENSEI_LOG_INFO("Got a value packet!");
+    SENSEI_LOG_DEBUG("Got a value packet!");
 }
 
 void RaspaFrontend::_handle_board_info(const xmos::XmosGpioPacket& packet)

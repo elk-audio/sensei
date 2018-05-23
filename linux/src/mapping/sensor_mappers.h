@@ -64,15 +64,18 @@ public:
     virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
 
 protected:
-    SensorType _sensor_type;
-    SensorHwType _hw_type;
-    int _sensor_index;
-    int _hw_pin_index;
-    bool _enabled;
-    SendingMode _sending_mode;
+    SensorType          _sensor_type;
+    SensorHwType        _hw_type;
+    int                 _sensor_index;
+    std::vector<int>    _hw_pins;
+    bool                _enabled;
+    bool                _multiplexed;
+    MultiplexerData     _multiplexer_data;
+    SendingMode         _sending_mode;
+    int                 _delta_ticks_sending;
 
-    float _previous_value;
-    bool _invert_value;
+    float               _previous_value;
+    bool                _invert_value;
 };
 
 /**
@@ -121,7 +124,6 @@ private:
     CommandErrorCode _set_adc_bit_resolution(int resolution);
     CommandErrorCode _set_input_scale_range_low(int value);
     CommandErrorCode _set_input_scale_range_high(int value);
-    CommandErrorCode _set_delta_ticks_sending(int value);
     CommandErrorCode _set_lowpass_filter_order(int value);
     CommandErrorCode _set_lowpass_cutoff(float value);
     CommandErrorCode _set_slider_threshold(int value);
@@ -165,11 +167,6 @@ private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
     CommandErrorCode _set_input_scale_range_low(int value);
     CommandErrorCode _set_input_scale_range_high(int value);
-    CommandErrorCode _set_delta_ticks_sending(int value);
-
-
-    // External board config
-    int _delta_ticks_sending;
 
     // Mapping parameters
     int _input_scale_range_low;

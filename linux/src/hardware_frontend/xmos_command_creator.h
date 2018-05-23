@@ -33,6 +33,8 @@ inline uint32_t from_xmos_byteord(uint32_t word)
 
 std::string xmos_status_to_string(uint8_t);
 
+std::string xmos_packet_to_string(const xmos::XmosGpioPacket& packet);
+
 struct Pinlist
 {
     uint8_t pincount;

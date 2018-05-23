@@ -227,5 +227,68 @@ std::string xmos_status_to_string(uint8_t status)
             return "";
     }
 }
+
+std::string xmos_packet_to_string(const xmos::XmosGpioPacket& packet)
+{
+    switch (packet.command)
+    {
+        case XMOS_CMD_SYSTEM_CNTRL:
+            switch(packet.sub_command)
+            {
+                case XMOS_SUB_CMD_STOP_RESET_SYSTEM:
+                    return "XMOS_SUB_CMD_STOP_RESET_SYSTEM";
+                case XMOS_SUB_CMD_START_SYSTEM:
+                    return "XMOS_SUB_CMD_START_SYSTEM";
+                case XMOS_SUB_CMD_STOP_SYSTEM:
+                    return "XMOS_SUB_CMD_STOP_SYSTEM";
+                case XMOS_SUB_CMD_SET_TICK_RATE:
+                    return "XMOS_SUB_CMD_SET_TICK_RATE";
+                case XMOS_SUB_CMD_GET_BOARD_INFO:
+                    return "XMOS_SUB_CMD_GET_BOARD_INFO";
+                default:
+                    return "Unrecognised Xmos command";
+            }
+        case XMOS_CMD_CONFIGURE_CNTRLR:
+            switch(packet.sub_command)
+            {
+                case XMOS_SUB_CMD_RESET_ALL_CNTRLRS:
+                    return "XMOS_SUB_CMD_RESET_ALL_CNTRLRS";
+                case XMOS_SUB_CMD_RESET_CNTRLR:
+                    return "XMOS_SUB_CMD_RESET_CNTRLR";
+                case XMOS_SUB_CMD_ADD_CNTRLR:
+                    return "XMOS_SUB_CMD_ADD_CNTRLR";
+                case XMOS_SUB_CMD_ADD_CNTRLR_TO_MUX:
+                    return "XMOS_SUB_CMD_ADD_CNTRLR_TO_MUX";
+                case XMOS_SUB_CMD_SET_CNTRLR_POLARITY:
+                    return "XMOS_SUB_CMD_SET_CNTRLR_POLARITY";
+                case XMOS_SUB_CMD_SET_INPUT_CNTRLR_TICK_RATE:
+                    return "XMOS_SUB_CMD_SET_INPUT_CNTRLR_TICK_RATE";
+                case XMOS_SUB_CMD_SET_INPUT_CNTRLR_NOTIF_MODE:
+                    return "XMOS_SUB_CMD_SET_INPUT_CNTRLR_NOTIF_MODE";
+                case XMOS_SUB_CMD_ADD_PINS_TO_CNTRLR:
+                    return "XMOS_SUB_CMD_ADD_PINS_TO_CNTRLR";
+                case XMOS_SUB_CMD_MUTE_UNMUTE_CNTRLR:
+                    return "XMOS_SUB_CMD_MUTE_UNMUTE_CNTRLR";
+                case XMOS_SUB_CMD_REMOVE_CNTRLR:
+                    return "XMOS_SUB_CMD_REMOVE_CNTRLR";
+                case XMOS_SUB_CMD_SET_ANALOG_CNTRLR_RES:
+                    return "XMOS_SUB_CMD_SET_ANALOG_CNTRLR_RES";
+                case XMOS_SUB_CMD_SET_CNTRLR_RANGE:
+                    return "XMOS_SUB_CMD_SET_CNTRLR_RANGE";
+                default:
+                    return "Unrecognised Xmos command";
+            }
+        case XMOS_CMD_GET_VALUE:
+            return "XMOS_CMD_GET_VALUE";
+        case XMOS_CMD_SET_VALUE:
+            return "XMOS_CMD_SET_VALUE";
+        case XMOS_ACK:
+            return "XMOS_ACK";
+        default:
+            return "Unrecognised Xmos command";
+    }
+}
+
+
 }
 }

@@ -114,14 +114,6 @@ public:
         return std::unique_ptr<SetVirtualPinCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_hw_pin_command(const int sensor_id,
-                                                         const int pin_id,
-                                                         const uint32_t timestamp = 0)
-    {
-        auto msg = new SetSingleHwPinCommand(sensor_id, pin_id, timestamp);
-        return std::unique_ptr<SetSingleHwPinCommand>(msg);
-    }
-
     std::unique_ptr<BaseMessage> make_set_hw_pins_command(const int sensor_id,
                                                           std::vector<int> pins,
                                                           const uint32_t timestamp = 0)

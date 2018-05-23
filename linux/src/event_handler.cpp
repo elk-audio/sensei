@@ -123,35 +123,32 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
             switch (ret)
             {
             case CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE:
-                SENSEI_LOG_ERROR("Internal Mapping, Unhandled command: {}, pin: {}", cmd->representation(), cmd->index());
+                SENSEI_LOG_ERROR("Internal Mapping, Unhandled command: {}, sensor: {}", cmd->representation(), cmd->index());
                 break;
 
-            case CommandErrorCode::INVALID_PIN_INDEX:
+            case CommandErrorCode::INVALID_SENSOR_INDEX:
                 SENSEI_LOG_ERROR("Invalid pin index {} for command: {}", cmd->index(), cmd->representation());
                 break;
 
             case CommandErrorCode::INVALID_RANGE:
-                SENSEI_LOG_ERROR("Invalid range for command: {}, pin: {}", cmd->representation(), cmd->index());
+                SENSEI_LOG_ERROR("Invalid range for command: {}, sensor: {}", cmd->representation(), cmd->index());
                 break;
 
             case CommandErrorCode::INVALID_VALUE:
-                SENSEI_LOG_ERROR("Invalid range for command: {}, pin: {}", cmd->representation(), cmd->index());
+                SENSEI_LOG_ERROR("Invalid range for command: {}, sensor: {}", cmd->representation(), cmd->index());
                 break;
 
             case CommandErrorCode::CLIP_WARNING:
-                SENSEI_LOG_WARNING("Clipped value for command: {}, pin: {}", cmd->representation(), cmd->index());
+                SENSEI_LOG_WARNING("Clipped value for command: {}, sensor: {}", cmd->representation(), cmd->index());
                 break;
 
             case CommandErrorCode::UNINITIALIZED_PIN:
-                SENSEI_LOG_WARNING("Dropping command {} for uninitialized pin {}", cmd->representation(), cmd->index());
+                SENSEI_LOG_WARNING("Dropping command {} for uninitialized sensor {}", cmd->representation(), cmd->index());
                 break;
 
             default:
                 break;
             }
-        } else
-        {
-            SENSEI_LOG_WARNING("Handled mapper command ok");
         }
     }
 

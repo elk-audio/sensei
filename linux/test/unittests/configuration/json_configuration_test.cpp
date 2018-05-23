@@ -98,7 +98,7 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
 
     /* HW specific setup */
     m = std::move(_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_HW_PIN, SetSingleHwPinCommand, index, 1);
+    EXPECT_COMMAND(m, CommandType::SET_HW_PINS, SetHwPinsCommand, index, std::vector<int>{1});
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENSOR_HW_TYPE, SetSensorHwTypeCommand, index, SensorHwType::ANALOG_INPUT_PIN);
     m = std::move(_queue.pop());
@@ -134,7 +134,7 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     EXPECT_COMMAND(m, CommandType::SET_SENSOR_TYPE, SetSensorTypeCommand, index, SensorType::DIGITAL_INPUT);
     m = std::move(_queue.pop());
     /* HW specific setup */
-    EXPECT_COMMAND(m, CommandType::SET_HW_PIN, SetSingleHwPinCommand, index, 0);
+    EXPECT_COMMAND(m, CommandType::SET_HW_PINS, SetHwPinsCommand, index, std::vector<int>{0});
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENSOR_HW_TYPE, SetSensorHwTypeCommand, index, SensorHwType::DIGITAL_INPUT_PIN);
     m = std::move(_queue.pop());

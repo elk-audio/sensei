@@ -54,17 +54,33 @@ protected:
 TEST_F(SerialFrontendTest, test_create_serial_message)
 {
     MessageFactory factory;
-    auto command = factory.make_set_sending_delta_ticks_command(3, 5, 100u);
+    // First send messages to map hw pins to sensor ids  This command in only used
+    // internally be the serial frontend so doesn't result in any teensy packets
+    auto command = factory.make_set_hw_pins_command(5, {10}, 0);
+    _module_under_test.handle_command(static_cast<Command*>(command.get()));
+    command = factory.make_set_hw_pins_command(4, {11}, 0);
+    _module_under_test.handle_command(static_cast<Command*>(command.get()));
+
+    // Now send a message that should be mapped to a teensy packet
+    command = factory.make_set_sending_delta_ticks_command(5, 7, 100u);
     const sSenseiDataPacket* packet = _module_under_test.handle_command(static_cast<Command*>(command.get()));
+    ASSERT_TRUE(packet);
     EXPECT_EQ(SENSEI_CMD::CONFIGURE_PIN, packet->cmd);
     auto payload = reinterpret_cast<const sPinConfiguration*>(packet->payload);
-    EXPECT_EQ(5, payload->deltaTicksContinuousMode);
+    EXPECT_EQ(7, payload->deltaTicksContinuousMode);
+    EXPECT_EQ(10, payload->idxPin);
 
     auto lp_command = factory.make_set_lowpass_cutoff_command(4, 1234.0, 100u);
     packet = _module_under_test.handle_command(static_cast<Command*>(lp_command.get()));
     EXPECT_EQ(SENSEI_CMD::CONFIGURE_PIN, packet->cmd);
     auto payload_cfg = reinterpret_cast<const sPinConfiguration*>(packet->payload);
     EXPECT_FLOAT_EQ(1234, payload_cfg->lowPassCutOffFilter);
+    EXPECT_EQ(11, payload->idxPin);
+
+    // Finally send a command to an unconfigured pin and assert that it returns null
+    command = factory.make_set_adc_bit_resolution_command(1, 8, 0);
+    packet = _module_under_test.handle_command(static_cast<Command*>(command.get()));
+    ASSERT_FALSE(packet);
 }
 
 /*
@@ -80,6 +96,8 @@ TEST_F(SerialFrontendTest, test_process_serial_packet)
     payload->pin_id = 12;
     payload->pin_type = PIN_ANALOG_INPUT;
     payload->value = 35;
+    // Prep the pin to id table to unsure proper mapping
+    _module_under_test._pin_to_id_table[12] = 10;
     _module_under_test.process_serial_packet(&packet);
     // The message is put in the queue so assert that it exists and retrieve it
     ASSERT_FALSE(_out_queue.empty());
@@ -88,7 +106,7 @@ TEST_F(SerialFrontendTest, test_process_serial_packet)
 
     ASSERT_EQ(MessageType::VALUE, valuemessage->base_type());
     EXPECT_EQ(1234u, valuemessage->timestamp());
-    EXPECT_EQ(12, valuemessage->index());
+    EXPECT_EQ(10, valuemessage->index());
     EXPECT_EQ(35, valuemessage->value());
 }
 
@@ -108,9 +126,9 @@ TEST_F(SerialFrontendTest, test_imu_packet)
     ASSERT_TRUE(_out_queue.empty());
 
     /* Set up the virtual ports table, would be done from a config file otherwise */
-    _module_under_test._virtual_pin_table[ImuIndex::YAW] = 0;
-    _module_under_test._virtual_pin_table[ImuIndex::PITCH] = 1;
-    _module_under_test._virtual_pin_table[ImuIndex::ROLL] = 2;
+    _module_under_test._imu_sensor_index[ImuIndex::YAW] = 0;
+    _module_under_test._imu_sensor_index[ImuIndex::PITCH] = 1;
+    _module_under_test._imu_sensor_index[ImuIndex::ROLL] = 2;
 
     _module_under_test.process_serial_packet(packet);
     /* This should result in 3 imu messages */
@@ -129,10 +147,4 @@ TEST_F(SerialFrontendTest, test_imu_packet)
     typed_msg = static_cast<ContinuousValue*>(msg.get());
     EXPECT_EQ(ImuIndex::ROLL, typed_msg->index());
     EXPECT_EQ(0, typed_msg->value());
-}
-
-TEST_F(SerialFrontendTest, test_enable_virtual_pin)
-{
-
-    //_module_under_test._virtual_pin_table[ImuIndex::ROLL] = 2;
 }

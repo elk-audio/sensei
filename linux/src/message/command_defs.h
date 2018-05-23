@@ -28,7 +28,6 @@ enum class CommandType
     // External Commands
     SET_SENSOR_TYPE,
     SET_SENSOR_HW_TYPE,
-    SET_HW_PIN,
     SET_HW_PINS,
     SET_VIRTUAL_PIN,
     SET_ENABLED,
@@ -190,7 +189,7 @@ enum class CommandErrorCode
     INVALID_VALUE,
     INVALID_RANGE,
     CLIP_WARNING,
-    INVALID_PIN_INDEX,
+    INVALID_SENSOR_INDEX,
     INVALID_URL,
     UNINITIALIZED_PIN,
     INVALID_PORT_NUMBER,
@@ -213,9 +212,7 @@ SENSEI_DECLARE_COMMAND(SetSensorTypeCommand,
                        CommandType::SET_SENSOR_TYPE,
                        SensorType,
                        "Set Sensor Type",
-                       CommandDestination::HARDWARE_FRONTEND
-                           | CommandDestination::MAPPING_PROCESSOR
-                           | CommandDestination::OUTPUT_BACKEND);
+                       CommandDestination::MAPPING_PROCESSOR | CommandDestination::OUTPUT_BACKEND);
 
 SENSEI_DECLARE_COMMAND(SetSensorHwTypeCommand,
                        CommandType::SET_SENSOR_HW_TYPE,
@@ -228,12 +225,6 @@ SENSEI_DECLARE_COMMAND(SetVirtualPinCommand,
                        ImuIndex,
                        "Set virtual pin",
                        CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetSingleHwPinCommand,
-                       CommandType::SET_HW_PIN,
-                       int,
-                       "Set hardware pin",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetHwPinsCommand,
                        CommandType::SET_HW_PINS,
