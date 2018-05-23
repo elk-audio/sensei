@@ -416,7 +416,7 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 {
     uint32_t seq_no = from_xmos_byteord(ack.payload.ack_data.returned_seq_no);
-    SENSEI_LOG_DEBUG("Got ack for packet: {}, ack seq_no: {}", seq_no, ack.sequence_no);
+    SENSEI_LOG_DEBUG("Got ack for packet: {}", seq_no);
     if (_verify_acks)
     {
         std::unique_lock<std::mutex> lock(_send_mutex);

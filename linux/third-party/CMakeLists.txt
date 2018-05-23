@@ -13,11 +13,3 @@ ExternalProject_Add(libserialport
         INSTALL_COMMAND make install
 )
 
-ExternalProject_Add(liblo
-        SOURCE_DIR ${PROJECT_SOURCE_DIR}/third-party/liblo
-        BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND ./autogen.sh --enable-static --prefix=${CMAKE_CURRENT_SOURCE_DIR}/install/liblo
-        BUILD_COMMAND make
-        INSTALL_COMMAND make install
-)
-
