@@ -411,7 +411,7 @@ std::unique_ptr<Command> AnalogSensorMapper::process_set_value(Value*value)
         out_val = 1.0f - out_val;
     }
     out_val = out_val * _input_scale_range_high;
-    return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_continuous_output_command(value->index(), out_val));
+    return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_range_output_command(value->index(), out_val));
 }
 
 CommandErrorCode AnalogSensorMapper::_set_sensor_hw_type(SensorHwType hw_type)

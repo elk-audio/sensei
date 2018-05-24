@@ -361,7 +361,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         {
             auto cmd = static_cast<const SetContinuousOutputValueCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(),
-                                                                        std::round(cmd->data() * _dac_output_max)));
+                                                                        std::round(cmd->data())));
             break;
         }
         case CommandType::SET_ANALOG_OUTPUT_VALUE:
