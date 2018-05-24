@@ -6,7 +6,10 @@ project(sensei)
 ####################
 
 # Global flags
-set(PROJECT_CXX_FLAGS "-Wall -Wextra -std=c++14 -fno-rtti")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(PROJECT_CXX_FLAGS "-Wall -Wextra -fno-rtti")
 set(PROJECT_LINK_FLAGS "")
 
 # Platform specific stuff
