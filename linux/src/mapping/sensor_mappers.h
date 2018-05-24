@@ -8,10 +8,11 @@
 #ifndef SENSEI_SENSOR_MAPPERS_H
 #define SENSEI_SENSOR_MAPPERS_H
 
-#include <message/base_value.h>
-#include <message/value_defs.h>
-#include <output_backend/output_backend.h>
+#include "message/base_value.h"
+#include "message/value_defs.h"
+#include "output_backend/output_backend.h"
 #include "message/command_defs.h"
+#include "message/message_factory.h"
 
 namespace sensei {
 
@@ -37,7 +38,7 @@ public:
      *
      * @param [in] cmd Configuration command.
      *
-     * @return CommandErrorCode::OK if command was succesful.
+     * @return CommandErrorCode::OK if command was successful.
      *
      * Other return codes can be errors specific to a parameter (e.g. CommandErrorCode::INVALID_RANGE),
      * or CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE
@@ -63,7 +64,16 @@ public:
      */
     virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
 
+    /**
+     * @brief Process a given value coming from a user frontend and generate a set command
+     *        that will be passed on to the hw frontend
+     * @param [in] value Input value from a user fronted
+     * @return A set value command to be sent to a hw frontend
+     */
+    virtual std::unique_ptr<Command> process_set_value(Value *value) = 0;
+
 protected:
+    MessageFactory      _factory;
     SensorType          _sensor_type;
     SensorHwType        _hw_type;
     int                 _sensor_index;
@@ -96,6 +106,8 @@ public:
 
     void process(Value *value, output_backend::OutputBackend *backend) override;
 
+    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+
 private:
 
 };
@@ -118,6 +130,8 @@ public:
     void put_config_commands_into(CommandIterator out_iterator) override;
 
     void process(Value *value, output_backend::OutputBackend *backend) override;
+
+    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
@@ -163,6 +177,8 @@ public:
 
     void process(Value *value, output_backend::OutputBackend *backend) override;
 
+    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
     CommandErrorCode _set_input_scale_range_low(int value);
@@ -193,6 +209,8 @@ public:
     void put_config_commands_into(CommandIterator out_iterator) override;
 
     void process(Value *value, output_backend::OutputBackend *backend) override;
+
+    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
 
 private:
     CommandErrorCode _set_input_scale_range_low(float value);

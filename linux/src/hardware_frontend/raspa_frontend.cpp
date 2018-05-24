@@ -364,7 +364,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
                                                                         std::round(cmd->data() * _dac_output_max)));
             break;
         }
-        case CommandType::SET_RANGE_OUTPUT_VALUE:
+        case CommandType::SET_ANALOG_OUTPUT_VALUE:
         {
             auto cmd = static_cast<const SetRangeOutputValueCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), cmd->data()));

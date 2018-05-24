@@ -37,6 +37,7 @@ public:
     }
 
 private:
+    void _handle_value(std::unique_ptr<Value> value);
     void _handle_command(std::unique_ptr<Command> cmd);
     void _handle_error(std::unique_ptr<Error> error);
 

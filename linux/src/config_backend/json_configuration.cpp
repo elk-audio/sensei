@@ -159,6 +159,10 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFront
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::ANALOG_INPUT);
         }
+        else if (sensor_type_str == "analog_output")
+        {
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::ANALOG_OUTPUT);
+        }
         else if (sensor_type_str == "digital_input")
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::DIGITAL_INPUT);
@@ -166,6 +170,10 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFront
         else if (sensor_type_str == "continuous_input")
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::CONTINUOUS_INPUT);
+        }
+        else if (sensor_type_str == "continuous_output")
+        {
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::CONTINUOUS_OUTPUT);
         }
         else if (sensor_type_str == "digital_output")
         {

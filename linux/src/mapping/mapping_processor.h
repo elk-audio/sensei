@@ -27,6 +27,8 @@ public:
 
     void process(Value* value, output_backend::OutputBackend* backend);
 
+    std::unique_ptr<Command> process_set(Value* value);
+
 private:
     int _max_no_sensors;
     std::vector<std::unique_ptr<BaseSensorMapper>> _mappers;

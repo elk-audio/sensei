@@ -222,6 +222,29 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     backend->send(transformed_value, value);
 }
 
+std::unique_ptr<Command> DigitalSensorMapper::process_set_value(Value*value)
+{
+    bool out_val;
+    if (!_enabled)
+    {
+        return nullptr;
+    }
+    switch (value->type())
+    {
+        case ValueType::INT_SET:
+            out_val = static_cast<IntegerSetValue*>(value)->value() > 0;
+            break;
+
+        default:
+            return nullptr;
+    }
+    if (_invert_value)
+    {
+        out_val = !out_val;
+    }
+    return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_digital_output_command(value->index(), out_val));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // AnalogSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
@@ -367,6 +390,30 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
 
 }
 
+std::unique_ptr<Command> AnalogSensorMapper::process_set_value(Value*value)
+{
+    if (!_enabled)
+    {
+        return nullptr;
+    }
+    float out_val;
+    switch (value->type())
+    {
+        case ValueType::FLOAT_SET:
+            out_val = static_cast<FloatSetValue*>(value)->value();
+            break;
+
+        default:
+            return nullptr;
+    }
+    if (_invert_value)
+    {
+        out_val = 1.0f - out_val;
+    }
+    out_val = out_val * _input_scale_range_high;
+    return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_continuous_output_command(value->index(), out_val));
+}
+
 CommandErrorCode AnalogSensorMapper::_set_sensor_hw_type(SensorHwType hw_type)
 {
     _hw_type = hw_type;
@@ -454,6 +501,7 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(int value)
     _input_scale_range_high = value;
     return CommandErrorCode::OK;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 // RangeSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
@@ -551,6 +599,30 @@ void RangeSensorMapper::process(Value*value, output_backend::OutputBackend*backe
         backend->send(transformed_value, value);
         _previous_int_value = out_val;
     }
+}
+
+std::unique_ptr<Command> RangeSensorMapper::process_set_value(Value*value)
+{
+    if (!_enabled)
+    {
+        return nullptr;
+    }
+    int out_val;
+    switch (value->type())
+    {
+        case ValueType::INT_SET:
+            out_val = static_cast<IntegerSetValue*>(value)->value();
+            break;
+
+        default:
+            return nullptr;
+    }
+    if (_invert_value)
+    {
+        out_val = _input_scale_range_high - out_val;
+    }
+    return static_unique_ptr_cast<Command, BaseMessage>(
+            _factory.make_set_range_output_command(value->index(), out_val));
 }
 
 CommandErrorCode RangeSensorMapper::_set_sensor_hw_type(SensorHwType hw_type)
@@ -674,6 +746,30 @@ void ContinuousSensorMapper::process(Value *value, output_backend::OutputBackend
     }
 }
 
+std::unique_ptr<Command> ContinuousSensorMapper::process_set_value(Value*value)
+{
+    if (!_enabled)
+    {
+        return nullptr;
+    }
+    float out_val;
+    switch (value->type())
+    {
+        case ValueType::FLOAT_SET:
+            out_val = static_cast<FloatSetValue*>(value)->value();
+            break;
+
+        default:
+            return nullptr;
+    }
+    if (_invert_value)
+    {
+        out_val = 1.0f - out_val;
+    }
+    return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_continuous_output_command(value->index(), out_val));
+
+}
+
 CommandErrorCode ContinuousSensorMapper::_set_input_scale_range_low(float value)
 {
     if (value >= _input_scale_range_high)
@@ -697,4 +793,3 @@ CommandErrorCode ContinuousSensorMapper::_set_input_scale_range_high(float value
     _input_scale_range_high = value;
     return CommandErrorCode::OK;
 }
-

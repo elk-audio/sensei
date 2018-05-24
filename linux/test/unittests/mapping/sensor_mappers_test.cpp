@@ -778,13 +778,14 @@ TEST_F(TestContinuousSensorMapper, test_process)
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
     // Middle value should return 0.5
-    auto input_msg = factory.make_imu_value(_sensor_idx, (_input_scale_low + _input_scale_high) / 2);
+    auto input_msg = factory.make_continuous_value(_sensor_idx, (_input_scale_low + _input_scale_high) / 2);
     auto input_val = static_cast<Value*>(input_msg.get());
     _mapper.process(input_val, &_backend);
     EXPECT_FLOAT_EQ(0.5f, _backend._last_output_value);
 
     // 1/4 of the range should return 0.25
-    input_msg = factory.make_imu_value(_sensor_idx, ((_input_scale_high - _input_scale_low) / 4 + _input_scale_low));
+    input_msg = factory.make_continuous_value(_sensor_idx,
+                                              ((_input_scale_high - _input_scale_low) / 4 + _input_scale_low));
     input_val = static_cast<Value*>(input_msg.get());
     _mapper.process(input_val, &_backend);
     EXPECT_FLOAT_EQ(0.25f, _backend._last_output_value);
@@ -799,7 +800,7 @@ TEST_F(TestContinuousSensorMapper, test_invert)
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
     int sensor_input = 1;
-    auto input_msg = factory.make_imu_value(_sensor_idx, sensor_input);
+    auto input_msg = factory.make_continuous_value(_sensor_idx, sensor_input);
     auto input_val = static_cast<Value*>(input_msg.get());
     _mapper.process(input_val, &_backend);
     float out_val = _backend._last_output_value;
@@ -821,14 +822,14 @@ TEST_F(TestContinuousSensorMapper, test_clip)
 
     // Under low range
     float sensor_input = -3.14f;
-    auto input_msg = factory.make_imu_value(_sensor_idx, sensor_input);
+    auto input_msg = factory.make_continuous_value(_sensor_idx, sensor_input);
     auto input_val = static_cast<Value*>(input_msg.get());
     _mapper.process(input_val, &_backend);
     EXPECT_FLOAT_EQ(0.0f, _backend._last_output_value);
 
     // Above high range
     sensor_input = 5;
-    input_msg = factory.make_imu_value(_sensor_idx, sensor_input);
+    input_msg = factory.make_continuous_value(_sensor_idx, sensor_input);
     input_val = static_cast<Value*>(input_msg.get());
     _mapper.process(input_val, &_backend);
     EXPECT_FLOAT_EQ(1.0f, _backend._last_output_value);

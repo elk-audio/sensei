@@ -41,7 +41,7 @@ enum class CommandType
     SET_HW_POLARITY,
     SET_DIGITAL_OUTPUT_VALUE,
     SET_CONTINUOUS_OUTPUT_VALUE,
-    SET_RANGE_OUTPUT_VALUE,
+    SET_ANALOG_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
     // Imu specific commands
     SET_IMU_ENABLED,
@@ -84,7 +84,9 @@ enum class SensorType
     DIGITAL_INPUT,
     DIGITAL_OUTPUT,
     ANALOG_INPUT,
+    ANALOG_OUTPUT,
     CONTINUOUS_INPUT,
+    CONTINUOUS_OUTPUT,
     RANGE_INPUT,
     RANGE_OUTPUT,
     UNDEFINED,
@@ -293,9 +295,9 @@ SENSEI_DECLARE_COMMAND(SetContinuousOutputValueCommand,
                        CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetRangeOutputValueCommand,
-                       CommandType::SET_RANGE_OUTPUT_VALUE,
+                       CommandType::SET_ANALOG_OUTPUT_VALUE,
                        int,
-                       "Send Range Output Value",
+                       "Send Range or Analog Output Value",
                        CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
