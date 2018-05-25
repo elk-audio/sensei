@@ -142,9 +142,9 @@ TEST_F(TestOscBackend, test_config)
     ASSERT_EQ(_host, _backend._host);
     ASSERT_EQ(_port, _backend._port);
     ASSERT_EQ(SensorType::DIGITAL_INPUT, _backend._pin_types[0]);
-    ASSERT_EQ("alice", _backend._pin_names[0]);
+    ASSERT_EQ("alice", _backend._sensor_names[0]);
     ASSERT_EQ(SensorType::ANALOG_INPUT, _backend._pin_types[1]);
-    ASSERT_EQ("bob", _backend._pin_names[1]);
+    ASSERT_EQ("bob", _backend._sensor_names[1]);
 }
 
 TEST_F(TestOscBackend, test_path_creation)

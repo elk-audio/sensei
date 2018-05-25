@@ -61,8 +61,7 @@ enum class CommandType
     IMU_COMMIT_SETTINGS,
     // Internal Commands
     SET_INVERT_ENABLED,
-    SET_INPUT_SCALE_RANGE_LOW,
-    SET_INPUT_SCALE_RANGE_HIGH,
+    SET_INPUT_RANGE,
     // Output Backend Commands
     SET_BACKEND_TYPE,
     SET_SENSOR_NAME,
@@ -406,17 +405,11 @@ SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
                        "Set Invert Enabled",
                        CommandDestination::MAPPING_PROCESSOR);
 
-SENSEI_DECLARE_COMMAND(SetInputScaleRangeLow,
-                       CommandType::SET_INPUT_SCALE_RANGE_LOW,
-                       float,
-                       "Set Input Scale Range Low",
-                       CommandDestination::MAPPING_PROCESSOR);
-
-SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
-                       CommandType::SET_INPUT_SCALE_RANGE_HIGH,
-                       float,
-                       "Set Input Scale Range Low",
-                       CommandDestination::MAPPING_PROCESSOR);
+SENSEI_DECLARE_COMMAND(SetInputRangeCommand,
+                       CommandType::SET_INPUT_RANGE,
+                       Range,
+                       "Set Input Scale Range",
+                       CommandDestination::MAPPING_PROCESSOR | CommandDestination::HARDWARE_FRONTEND);
 
 // Output Backend commands
 

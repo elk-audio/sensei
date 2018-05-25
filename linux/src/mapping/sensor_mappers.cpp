@@ -314,17 +314,12 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
 
     // Internal
 
-    case CommandType::SET_INPUT_SCALE_RANGE_LOW:
+    case CommandType::SET_INPUT_RANGE:
         {
-            const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
-            status = _set_input_scale_range_low(static_cast<int>(std::round(typed_cmd->data())));
-        };
-        break;
-
-    case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
-        {
-            const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
-            status = _set_input_scale_range_high(static_cast<int>(std::round(typed_cmd->data())));
+            const auto typed_cmd = static_cast<const SetInputRangeCommand*>(cmd);
+            auto range = typed_cmd->data();
+            status = _set_input_scale_range(static_cast<int>(std::round(range.min)),
+                                            static_cast<int>(std::round(range.max)));
         };
         break;
 
@@ -355,8 +350,7 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
     *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
     *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
-    *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
 
 void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
@@ -468,38 +462,23 @@ CommandErrorCode AnalogSensorMapper::_set_slider_threshold(int value)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_input_scale_range_low(int value)
+CommandErrorCode AnalogSensorMapper::_set_input_scale_range(int low, int high)
 {
-    if ( (value < 0) || (value > (_max_allowed_input-1)) )
+    CommandErrorCode status = CommandErrorCode::OK;
+    if ( (low < 0) || (high > (_max_allowed_input-1)))
     {
         return CommandErrorCode::INVALID_RANGE;
     }
 
-    if (value >= _input_scale_range_high)
+    if (high <= low)
     {
-        _input_scale_range_low = _input_scale_range_high - 1;
-        return CommandErrorCode::CLIP_WARNING;
+        high = low + 1 ;
+        status = CommandErrorCode::CLIP_WARNING;
     }
 
-    _input_scale_range_low = value;
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode AnalogSensorMapper::_set_input_scale_range_high(int value)
-{
-    if ( (value < 0) || (value > (_max_allowed_input-1)) )
-    {
-        return CommandErrorCode::INVALID_RANGE;
-    }
-
-    if (value <= _input_scale_range_low)
-    {
-        _input_scale_range_high = _input_scale_range_low + 1;
-        return CommandErrorCode::CLIP_WARNING;
-    }
-
-    _input_scale_range_high = value;
-    return CommandErrorCode::OK;
+    _input_scale_range_high = high;
+    _input_scale_range_low = low;
+    return status;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -532,18 +511,15 @@ CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
 
         // Internal
 
-        case CommandType::SET_INPUT_SCALE_RANGE_LOW:
+        case CommandType::SET_INPUT_RANGE:
         {
-            const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
-            status = _set_input_scale_range_low(static_cast<int>(std::round(typed_cmd->data())));
+            const auto typed_cmd = static_cast<const SetInputRangeCommand*>(cmd);
+            auto range = typed_cmd->data();
+            status = _set_input_scale_range(static_cast<int>(std::round(range.min)),
+                                            static_cast<int>(std::round(range.max)));
         };
         break;
 
-        case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
-        {
-            const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
-            status = _set_input_scale_range_high(static_cast<int>(std::round(typed_cmd->data())));
-        };
         break;
 
         default:
@@ -568,8 +544,7 @@ void RangeSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
 
 void RangeSensorMapper::process(Value*value, output_backend::OutputBackend*backend)
@@ -631,27 +606,18 @@ CommandErrorCode RangeSensorMapper::_set_sensor_hw_type(SensorHwType hw_type)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode RangeSensorMapper::_set_input_scale_range_low(int value)
+CommandErrorCode RangeSensorMapper::_set_input_scale_range(int low, int high)
 {
-    if (value >= _input_scale_range_high)
+    CommandErrorCode status = CommandErrorCode::OK;
+    if (high <= low)
     {
-        _input_scale_range_low = _input_scale_range_high - 1;
-        return CommandErrorCode::CLIP_WARNING;
+        high = low + 1 ;
+        status = CommandErrorCode::CLIP_WARNING;
     }
 
-    _input_scale_range_low = value;
-    return CommandErrorCode::OK;}
-
-CommandErrorCode RangeSensorMapper::_set_input_scale_range_high(int value)
-{
-    if (value <= _input_scale_range_low)
-    {
-        _input_scale_range_high = _input_scale_range_low + 1;
-        return CommandErrorCode::CLIP_WARNING;
-    }
-
-    _input_scale_range_high = value;
-    return CommandErrorCode::OK;
+    _input_scale_range_low = low;
+    _input_scale_range_high = high;
+    return status;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -677,16 +643,11 @@ CommandErrorCode ContinuousSensorMapper::apply_command(const Command *cmd)
             assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::CONTINUOUS_INPUT);
             break;
         }
-        case CommandType::SET_INPUT_SCALE_RANGE_LOW:
+        case CommandType::SET_INPUT_RANGE:
         {
-            const auto typed_cmd = static_cast<const SetInputScaleRangeLow*>(cmd);
-            status = _set_input_scale_range_low(typed_cmd->data());
-            break;
-        }
-        case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
-        {
-            const auto typed_cmd = static_cast<const SetInputScaleRangeHigh*>(cmd);
-            status = _set_input_scale_range_high(typed_cmd->data());
+            const auto typed_cmd = static_cast<const SetInputRangeCommand*>(cmd);
+            auto range = typed_cmd->data();
+            status = _set_input_scale_range(range.min, range.max);
             break;
         }
         default:
@@ -712,8 +673,7 @@ void ContinuousSensorMapper::put_config_commands_into(CommandIterator out_iterat
     BaseSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_input_scale_range_low_command(_sensor_index, _input_scale_range_low);
-    *out_iterator = factory.make_set_input_scale_range_high_command(_sensor_index, _input_scale_range_high);
+    *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
 
 void ContinuousSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
@@ -770,26 +730,15 @@ std::unique_ptr<Command> ContinuousSensorMapper::process_set_value(Value*value)
 
 }
 
-CommandErrorCode ContinuousSensorMapper::_set_input_scale_range_low(float value)
+CommandErrorCode ContinuousSensorMapper::_set_input_scale_range(float low, float high)
 {
-    if (value >= _input_scale_range_high)
+    CommandErrorCode status = CommandErrorCode::OK;
+    if (high <= low)
     {
-        _input_scale_range_low = _input_scale_range_high - 1;
-        return CommandErrorCode::CLIP_WARNING;
+        low = high - 1;
+        status = CommandErrorCode::CLIP_WARNING;
     }
-
-    _input_scale_range_low = value;
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode ContinuousSensorMapper::_set_input_scale_range_high(float value)
-{
-    if (value <= _input_scale_range_low)
-    {
-        _input_scale_range_high = _input_scale_range_low + 1;
-        return CommandErrorCode::CLIP_WARNING;
-    }
-
-    _input_scale_range_high = value;
-    return CommandErrorCode::OK;
+    _input_scale_range_low = low;
+    _input_scale_range_high = high;
+    return status;
 }

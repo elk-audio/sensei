@@ -347,20 +347,13 @@ public:
         return std::unique_ptr<SetInvertEnabledCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_low_command(const int sensor_id,
-                                                                        const float value,
-                                                                        const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_input_range_command(const int sensor_id,
+                                                              const float min,
+                                                              const float max,
+                                                              const uint32_t timestamp = 0)
     {
-        auto msg = new SetInputScaleRangeLow(sensor_id, value, timestamp);
-        return std::unique_ptr<SetInputScaleRangeLow>(msg);
-    }
-
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_high_command(const int sensor_id,
-                                                                         const float value,
-                                                                         const uint32_t timestamp = 0)
-    {
-        auto msg = new SetInputScaleRangeHigh(sensor_id, value, timestamp);
-        return std::unique_ptr<SetInputScaleRangeHigh>(msg);
+        auto msg = new SetInputRangeCommand(sensor_id, {min, max}, timestamp);
+        return std::unique_ptr<SetInputRangeCommand>(msg);
     }
 
     // Output Backend commands

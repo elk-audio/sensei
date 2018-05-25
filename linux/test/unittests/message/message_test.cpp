@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 
 #include "message/message_factory.h"
+#include "../test_utils.h"
 
 using namespace sensei;
 
@@ -147,8 +148,7 @@ TEST(MessagesTest, test_internal_command_creation)
 
     // Fill message queue with all types of commands
     msg_queue.push_back(factory.make_set_invert_enabled_command(1, true));
-    msg_queue.push_back(factory.make_set_input_scale_range_low_command(2, 20));
-    msg_queue.push_back(factory.make_set_input_scale_range_high_command(3, 200));
+    msg_queue.push_back(factory.make_set_input_range_command(2, 20, 200));
 
     // Parse messages in queue
     for (auto const& msg : msg_queue)
@@ -169,17 +169,11 @@ TEST(MessagesTest, test_internal_command_creation)
             };
             break;
 
-        case CommandType::SET_INPUT_SCALE_RANGE_LOW:
+        case CommandType::SET_INPUT_RANGE:
             {
-                auto typed_cmd = static_cast<SetInputScaleRangeLow *>(cmd_msg);
-                ASSERT_EQ(20, typed_cmd->data());
-            };
-            break;
-
-        case CommandType::SET_INPUT_SCALE_RANGE_HIGH:
-            {
-                auto typed_cmd = static_cast<SetInputScaleRangeHigh *>(cmd_msg);
-                ASSERT_EQ(200, typed_cmd->data());
+                auto typed_cmd = static_cast<SetInputRangeCommand*>(cmd_msg);
+                Range expected = {20, 200};
+                ASSERT_EQ(expected, typed_cmd->data());
             };
             break;
 

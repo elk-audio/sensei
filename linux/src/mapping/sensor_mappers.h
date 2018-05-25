@@ -136,8 +136,7 @@ public:
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
     CommandErrorCode _set_adc_bit_resolution(int resolution);
-    CommandErrorCode _set_input_scale_range_low(int value);
-    CommandErrorCode _set_input_scale_range_high(int value);
+    CommandErrorCode _set_input_scale_range(int low, int high);
     CommandErrorCode _set_lowpass_filter_order(int value);
     CommandErrorCode _set_lowpass_cutoff(float value);
     CommandErrorCode _set_slider_threshold(int value);
@@ -181,8 +180,7 @@ public:
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
-    CommandErrorCode _set_input_scale_range_low(int value);
-    CommandErrorCode _set_input_scale_range_high(int value);
+    CommandErrorCode _set_input_scale_range(int low, int high);
 
     // Mapping parameters
     int _input_scale_range_low;
@@ -213,8 +211,7 @@ public:
     virtual std::unique_ptr<Command> process_set_value(Value *value) override;
 
 private:
-    CommandErrorCode _set_input_scale_range_low(float value);
-    CommandErrorCode _set_input_scale_range_high(float value);
+    CommandErrorCode _set_input_scale_range(float low, float high);
 
     // Mapping parameters
     float _input_scale_range_low;

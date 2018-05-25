@@ -4,6 +4,7 @@
 
 #define private public
 #include "config_backend/json_configuration.cpp"
+#include "../test_utils.h"
 
 using namespace sensei;
 using namespace config;
@@ -121,9 +122,8 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_INVERT_ENABLED, SetInvertEnabledCommand, index, (int)false);
     m = std::move(_queue.pop());
-    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_LOW, SetInputScaleRangeLow, index, 10.0f);
-    m = std::move(_queue.pop());
-    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_HIGH, SetInputScaleRangeHigh, index, 240.0f);
+    Range expected_range = {10.0f, 240.0f};
+    EXPECT_COMMAND(m, CommandType::SET_INPUT_RANGE, SetInputRangeCommand, index, expected_range);
     m = std::move(_queue.pop());
 
     /* Then a pin configured as a digital input */
@@ -155,9 +155,8 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
 
     /* And it's related mapping configuration */
     m = std::move(_queue.pop());
-    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_LOW, SetInputScaleRangeLow, index, 0.0f);
-    m = std::move(_queue.pop());
-    EXPECT_COMMAND_FLOAT(m, CommandType::SET_INPUT_SCALE_RANGE_HIGH, SetInputScaleRangeHigh, index, 3.14f);
+    expected_range = {0.0f, 3.14f};
+    EXPECT_COMMAND(m, CommandType::SET_INPUT_RANGE, SetInputRangeCommand, index, expected_range);
 
     /* Now we should be receiving the IMU related commands */
     index = 0;

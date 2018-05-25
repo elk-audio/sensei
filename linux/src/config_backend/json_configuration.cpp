@@ -251,10 +251,8 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFront
     const Json::Value& range = sensor["range"];
     if (range.isArray() && range.size() >= 2)
     {
-        auto low = _message_factory.make_set_input_scale_range_low_command(sensor_id, range[0].asFloat());
-        auto high = _message_factory.make_set_input_scale_range_high_command(sensor_id, range[1].asFloat());
-        _queue->push(std::move(low));
-        _queue->push(std::move(high));
+        auto m = _message_factory.make_set_input_range_command(sensor_id, range[0].asFloat(), range[1].asFloat());
+        _queue->push(std::move(m));
     }
     return ConfigStatus::OK ;
 }

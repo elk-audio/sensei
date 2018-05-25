@@ -183,10 +183,9 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, _lowpass_filter_order))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
-                                                                                                _input_scale_low))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
-                                                                                                 _input_scale_high))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                                      _input_scale_low,
+                                                                                      _input_scale_high))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
@@ -228,13 +227,10 @@ TEST_F(TestAnalogSensorMapper, test_config)
     std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
     _mapper.put_config_commands_into(std::back_inserter(stored_cmds));
 
-    auto cmd_scale_high = extract_cmd_from<SetInputScaleRangeHigh>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_HIGH, cmd_scale_high->type());
-    ASSERT_EQ(_input_scale_high, cmd_scale_high->data());
-
-    auto cmd_scale_low = extract_cmd_from<SetInputScaleRangeLow>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_LOW, cmd_scale_low->type());
-    ASSERT_EQ(_input_scale_low, cmd_scale_low->data());
+    auto cmd_range = extract_cmd_from<SetInputRangeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_INPUT_RANGE, cmd_range->type());
+    Range expected = {static_cast<float>(_input_scale_low), static_cast<float>(_input_scale_high)};
+    ASSERT_EQ(expected, cmd_range->data());
 
     auto cmd_slider_thr = extract_cmd_from<SetSliderThresholdCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_SLIDER_THRESHOLD, cmd_slider_thr->type());
@@ -305,16 +301,12 @@ TEST_F(TestAnalogSensorMapper, test_config_fail)
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, 100)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx, -20)));
-    ASSERT_EQ(CommandErrorCode::INVALID_RANGE, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx, -20)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx, -20, -10)));
     ASSERT_EQ(CommandErrorCode::INVALID_RANGE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
-                                                                                       _input_scale_high + 1)));
-    ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
-                                                                                        _input_scale_low - 1)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                             _input_scale_high,
+                                                                             _input_scale_high)));
     ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
 }
 
@@ -331,8 +323,9 @@ TEST_F(TestAnalogSensorMapper, test_process)
     if ( ((_input_scale_low + _input_scale_high) % 2 ) == 1 )
     {
         _input_scale_low += 1;
-        ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
-                                                                                           _input_scale_low)));
+        ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                                 _input_scale_low,
+                                                                                 _input_scale_high)));
         ASSERT_EQ(CommandErrorCode::OK, ret);
     }
     auto input_msg = factory.make_analog_value(_sensor_idx,
@@ -460,11 +453,10 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
-                                                                                                _input_scale_low))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
-                                                                                                 _input_scale_high))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                                      _input_scale_low,
+                                                                                      _input_scale_high))));
+              config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
         for (auto const& cmd : config_cmds)
@@ -500,13 +492,10 @@ TEST_F(TestRangeSensorMapper, test_config)
     std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
     _mapper.put_config_commands_into(std::back_inserter(stored_cmds));
 
-    auto cmd_scale_high = extract_cmd_from<SetInputScaleRangeHigh>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_HIGH, cmd_scale_high->type());
-    ASSERT_EQ(_input_scale_high, cmd_scale_high->data());
-
-    auto cmd_scale_low = extract_cmd_from<SetInputScaleRangeLow>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_LOW, cmd_scale_low->type());
-    ASSERT_EQ(_input_scale_low, cmd_scale_low->data());
+    auto cmd_scale_range = extract_cmd_from<SetInputRangeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_INPUT_RANGE, cmd_scale_range->type());
+    Range expected = {static_cast<float>(_input_scale_low), static_cast<float>(_input_scale_high)};
+    ASSERT_EQ(expected, cmd_scale_range->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
@@ -546,13 +535,7 @@ TEST_F(TestRangeSensorMapper, test_config_fail)
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, -23)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx, 10)));
-    ASSERT_EQ(CommandErrorCode::OK, ret);
-
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx, 18)));
-    ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
-
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx, 0)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx, 18, 18)));
     ASSERT_EQ(CommandErrorCode::CLIP_WARNING, ret);
 }
 
@@ -563,9 +546,9 @@ TEST_F(TestRangeSensorMapper, test_process)
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx, _input_scale_high)));
-    ASSERT_EQ(CommandErrorCode::OK, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx, _input_scale_low)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                                        _input_scale_low,
+                                                                                        _input_scale_high)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
     auto input_msg = factory.make_analog_value(_sensor_idx, 11);
@@ -582,9 +565,9 @@ TEST_F(TestRangeSensorMapper, test_invert)
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, true)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx, _input_scale_high)));
-    ASSERT_EQ(CommandErrorCode::OK, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx, _input_scale_low)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                                        _input_scale_low,
+                                                                                        _input_scale_high)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
     auto input_msg = factory.make_analog_value(_sensor_idx, 14);
@@ -600,9 +583,9 @@ TEST_F(TestRangeSensorMapper, test_clip)
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, false)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_high_command(_sensor_idx, _input_scale_high)));
-    ASSERT_EQ(CommandErrorCode::OK, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_scale_range_low_command(_sensor_idx, _input_scale_low)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                                        _input_scale_low,
+                                                                                        _input_scale_high)));
     ASSERT_EQ(CommandErrorCode::OK, ret);
 
     // Under low range
@@ -691,10 +674,9 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_low_command(_sensor_idx,
-                                                                                                _input_scale_low))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_scale_range_high_command(_sensor_idx,
-                                                                                                 _input_scale_high))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_range_command(_sensor_idx,
+                                                                                      _input_scale_low,
+                                                                                      _input_scale_high))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
 
@@ -732,13 +714,10 @@ TEST_F(TestContinuousSensorMapper, test_config)
     std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
 
     _mapper.put_config_commands_into(std::back_inserter(stored_cmds));
-    auto cmd_scale_high = extract_cmd_from<SetInputScaleRangeHigh>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_HIGH, cmd_scale_high->type());
-    EXPECT_FLOAT_EQ(_input_scale_high, cmd_scale_high->data());
-
-    auto cmd_scale_low = extract_cmd_from<SetInputScaleRangeLow>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_INPUT_SCALE_RANGE_LOW, cmd_scale_low->type());
-    EXPECT_FLOAT_EQ(_input_scale_low, cmd_scale_low->data());
+    auto cmd_scale_range = extract_cmd_from<SetInputRangeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_INPUT_RANGE, cmd_scale_range->type());
+    Range expected = {_input_scale_low, _input_scale_high};
+    EXPECT_EQ(expected, cmd_scale_range->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());

@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "message/message_factory.h"
 
-
 #define CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
 #define CMD_PTR(msg) CMD_UPTR(msg).get()
 
@@ -17,4 +16,11 @@ std::unique_ptr<DerivedCommand> extract_cmd_from(std::vector<std::unique_ptr<sen
     return std::move(tmp_msg);
 }
 
+/* Custom comparison operator for Range structs. This is only needed for testing */
+namespace sensei {
+inline bool operator==(const Range& lhs, const Range& rhs)
+{
+    return lhs.min == rhs.min && lhs.max == rhs.max;
+}
+}
 #endif //SENSEI_TEST_UTILS_H

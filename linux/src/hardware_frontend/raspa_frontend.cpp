@@ -383,6 +383,16 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             }
             break;
         }
+        case CommandType::SET_INPUT_RANGE:
+        {
+            // TODO - maybe this should be reserved for encoders and led rings
+            auto cmd = static_cast<const SetInputRangeCommand*>(message);
+            auto range = cmd->data();
+            _send_list.push_back(_packet_factory.make_set_range_command(cmd->index(),
+                                                                        static_cast<uint32_t>(std::round(range.min)),
+                                                                        static_cast<uint32_t>(std::round(range.max))));
+            break;
+        }
 
         default:
             SENSEI_LOG_WARNING("Unsupported command: {}", message->representation());
