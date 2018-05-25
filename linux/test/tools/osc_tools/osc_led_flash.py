@@ -11,7 +11,7 @@ def main():
 	ring = FIRST_RING
 	inc = 1
 	while True:
-		liblo.send(target, '/set_range_output', ('i', ring), ('i', led))
+		liblo.send(target, '/set_output', ('i', ring), ('f', led/15.0))
 		led += 1
 		if led > 15:
 			led = 0
@@ -20,7 +20,7 @@ def main():
 			if ring > LAST_RING:
 				ring = FIRST_RING
 				for i in range(FIRST_RING, LAST_RING + 1):
-				 	liblo.send(target, '/set_range_output', ('i', i), ('i', 0))
+				 	liblo.send(target, '/set_output', ('i', i), ('f', 0))
 
 		time.sleep(0.05)
 
