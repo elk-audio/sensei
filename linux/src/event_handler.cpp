@@ -17,7 +17,6 @@ SENSEI_GET_LOGGER;
 void EventHandler::init(int max_n_input_pins,
                         int max_n_digital_out_pins,
                         const std::string& config_file)
-
 {
     _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
     _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
