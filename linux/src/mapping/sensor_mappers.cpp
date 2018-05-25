@@ -381,7 +381,6 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
         backend->send(transformed_value, value);
         _previous_value = out_val;
     }
-
 }
 
 std::unique_ptr<Command> AnalogSensorMapper::process_set_value(Value*value)
@@ -400,11 +399,12 @@ std::unique_ptr<Command> AnalogSensorMapper::process_set_value(Value*value)
         default:
             return nullptr;
     }
+    out_val = clip<float>(out_val, 0.0f, 1.0f);
     if (_invert_value)
     {
         out_val = 1.0f - out_val;
     }
-    out_val = out_val * _input_scale_range_high;
+    out_val = out_val * (_input_scale_range_high - _input_scale_range_low) + _input_scale_range_low;
     return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_range_output_command(value->index(), out_val));
 }
 
@@ -592,6 +592,7 @@ std::unique_ptr<Command> RangeSensorMapper::process_set_value(Value*value)
         default:
             return nullptr;
     }
+    out_val = clip<int>(out_val, _input_scale_range_low, _input_scale_range_high);
     if (_invert_value)
     {
         out_val = _input_scale_range_high - out_val;
@@ -722,10 +723,12 @@ std::unique_ptr<Command> ContinuousSensorMapper::process_set_value(Value*value)
         default:
             return nullptr;
     }
+    out_val = clip<float>(out_val, 0.0f, 1.0f);
     if (_invert_value)
     {
         out_val = 1.0f - out_val;
     }
+    out_val = out_val * (_input_scale_range_high - _input_scale_range_low) + _input_scale_range_low;
     return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_continuous_output_command(value->index(), out_val));
 
 }
