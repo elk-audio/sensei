@@ -235,6 +235,10 @@ std::unique_ptr<Command> DigitalSensorMapper::process_set_value(Value*value)
             out_val = static_cast<IntegerSetValue*>(value)->value() > 0;
             break;
 
+        case ValueType::FLOAT_SET:
+            out_val = static_cast<FloatSetValue*>(value)->value() > 0.5f;
+            break;
+
         default:
             return nullptr;
     }
@@ -587,6 +591,10 @@ std::unique_ptr<Command> RangeSensorMapper::process_set_value(Value*value)
     {
         case ValueType::INT_SET:
             out_val = static_cast<IntegerSetValue*>(value)->value();
+            break;
+
+        case ValueType::FLOAT_SET:
+            out_val = static_cast<int>(std::round(static_cast<FloatSetValue*>(value)->value()));
             break;
 
         default:

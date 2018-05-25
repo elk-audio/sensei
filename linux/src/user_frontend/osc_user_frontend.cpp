@@ -153,10 +153,7 @@ void OSCUserFrontend::_start_server()
 
     _osc_server = lo_server_thread_new(port_stream.str().c_str(), osc_error);
     lo_server_thread_add_method(_osc_server, "/set_enabled", "ii", osc_set_sensor_enabled, this);
-    lo_server_thread_add_method(_osc_server, "/set_digital_output", "ii", osc_set_digital_output, this);
-    lo_server_thread_add_method(_osc_server, "/set_continuous_output", "if", osc_set_continuous_output, this);
-    lo_server_thread_add_method(_osc_server, "/set_analog_output", "if", osc_set_continuous_output, this);
-    lo_server_thread_add_method(_osc_server, "/set_range_output", "ii", osc_set_range_output, this);
+    lo_server_thread_add_method(_osc_server, "/set_output", "if", osc_set_continuous_output, this);
     lo_server_thread_add_method(_osc_server, "/imu_calibrate", "", osc_imu_calibrate, this);
     lo_server_thread_add_method(_osc_server, "/imu_reset", "", osc_imu_factory_reset, this);
     lo_server_thread_add_method(_osc_server, "/imu_reboot", "", osc_imu_reboot, this);

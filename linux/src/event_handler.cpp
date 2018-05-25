@@ -47,12 +47,12 @@ void EventHandler::init(int max_n_input_pins,
 
     if (hw_config.type == HwFrontendType::SERIAL_TEENSY)
     {
-        SENSEI_LOG_ERROR("Initialising a Serial Teensy Frontend");
+        SENSEI_LOG_INFO("Initialising a Serial Teensy Frontend");
         _hw_frontend.reset(new hw_frontend::SerialFrontend(hw_config.port, &_to_frontend_queue, &_event_queue));
     }
     else if (hw_config.type == HwFrontendType::RASPA_XMOS)
     {
-        SENSEI_LOG_ERROR("Initializing a Raspa Xmos Frontend");
+        SENSEI_LOG_INFO("Initializing a Raspa Xmos Frontend");
         _hw_frontend.reset(new hw_frontend::RaspaFrontend(&_to_frontend_queue, &_event_queue));
     }
     else
@@ -159,7 +159,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
                 SENSEI_LOG_WARNING("Clipped value for command: {}, sensor: {}", cmd->representation(), cmd->index());
                 break;
 
-            case CommandErrorCode::UNINITIALIZED_PIN:
+            case CommandErrorCode::UNINITIALIZED_SENSOR:
                 SENSEI_LOG_WARNING("Dropping command {} for uninitialized sensor {}", cmd->representation(), cmd->index());
                 break;
 

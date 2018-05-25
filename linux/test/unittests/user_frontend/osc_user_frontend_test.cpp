@@ -61,24 +61,9 @@ TEST_F(TestOSCUserFrontend, test_set_pin_enabled)
     ASSERT_TRUE(_event_queue.empty());
 }
 
-TEST_F(TestOSCUserFrontend, test_set_digital_output)
+TEST_F(TestOSCUserFrontend, test_set_output)
 {
-    lo_send(_address, "/set_digital_output", "ii", 3, 0);
-    _event_queue.wait_for_data(std::chrono::milliseconds(10));
-    ASSERT_FALSE(_event_queue.empty());
-    std::unique_ptr<BaseMessage> event = _event_queue.pop();
-    ASSERT_EQ(MessageType::VALUE, event->base_type());
-    auto val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
-
-    ASSERT_EQ(ValueType::INT_SET, val->type());
-    ASSERT_EQ(3, val->index());
-    ASSERT_EQ(0, val->value());
-    ASSERT_TRUE(_event_queue.empty());
-}
-
-TEST_F(TestOSCUserFrontend, test_set_continuous_output)
-{
-    lo_send(_address, "/set_continuous_output", "if", 4, 0.4f);
+    lo_send(_address, "/set_output", "if", 5, 12.0f);
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
     ASSERT_FALSE(_event_queue.empty());
     std::unique_ptr<BaseMessage> event = _event_queue.pop();
@@ -86,23 +71,8 @@ TEST_F(TestOSCUserFrontend, test_set_continuous_output)
     auto val = static_unique_ptr_cast<FloatSetValue, BaseMessage>(std::move(event));
 
     ASSERT_EQ(ValueType::FLOAT_SET, val->type());
-    ASSERT_EQ(4, val->index());
-    ASSERT_FLOAT_EQ(0.4f, val->value());
-    ASSERT_TRUE(_event_queue.empty());
-}
-
-TEST_F(TestOSCUserFrontend, test_set_range_output)
-{
-    lo_send(_address, "/set_range_output", "ii", 5, 12);
-    _event_queue.wait_for_data(std::chrono::milliseconds(10));
-    ASSERT_FALSE(_event_queue.empty());
-    std::unique_ptr<BaseMessage> event = _event_queue.pop();
-    ASSERT_EQ(MessageType::VALUE, event->base_type());
-    auto val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
-
-    ASSERT_EQ(ValueType::INT_SET, val->type());
     ASSERT_EQ(5, val->index());
-    ASSERT_EQ(12, val->value());
+    ASSERT_FLOAT_EQ(12, val->value());
     ASSERT_TRUE(_event_queue.empty());
 }
 

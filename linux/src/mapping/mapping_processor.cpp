@@ -73,7 +73,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
         // Apply command only to already initialized pins
         if (_mappers[sensor_index] == nullptr)
         {
-            return CommandErrorCode::UNINITIALIZED_PIN;
+            return CommandErrorCode::UNINITIALIZED_SENSOR;
         }
         return _mappers[sensor_index]->apply_command(cmd);
     }
