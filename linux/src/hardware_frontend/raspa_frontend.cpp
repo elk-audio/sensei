@@ -25,7 +25,7 @@ constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(500);
 constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
 constexpr int       MAX_RESEND_ATTEMPTS = 3;
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("raspa_frontend");
 
 RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_queue,
                              SynchronizedQueue <std::unique_ptr<sensei::BaseMessage>>*out_queue)

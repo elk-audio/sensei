@@ -32,6 +32,7 @@ std::shared_ptr<spdlog::logger> setup_logging()
     const spdlog::level::level_enum MIN_LOG_LEVEL = spdlog::level::warn;
 
     spdlog::set_level(MIN_LOG_LEVEL);
+    spdlog::set_pattern("[%Y-%m-%d %T.%e] [%l] %v");
     spdlog::set_async_mode(LOGGER_QUEUE_SIZE);
     auto async_file_logger = spdlog::rotating_logger_mt(LOGGER_NAME,
                                                         LOGGER_FILE,

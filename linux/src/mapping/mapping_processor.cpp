@@ -13,7 +13,7 @@
 using namespace sensei;
 using namespace sensei::mapping;
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("mapper");
 
 MappingProcessor::MappingProcessor(int max_no_sensors) :
     _max_no_sensors(max_no_sensors)

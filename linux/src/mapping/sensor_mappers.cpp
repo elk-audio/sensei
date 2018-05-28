@@ -24,7 +24,7 @@ static const float PREVIOUS_VALUE_THRESHOLD = 1.0e-4f;
 
 }; // Anonymous namespace
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("mapper");
 
 using namespace sensei;
 using namespace sensei::mapping;

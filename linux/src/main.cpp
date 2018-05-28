@@ -29,7 +29,7 @@ sensei::EventHandler event_handler;
 static volatile sig_atomic_t main_loop_running = 1;
 static volatile sig_atomic_t config_reload_pending = 0;
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 
 
 ////////////////////////////////////////////////////////////////////////////////
