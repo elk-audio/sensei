@@ -88,7 +88,7 @@ set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/../common"
                  "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/include"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
-                 "${PROJECT_SOURCE_DIR}/third-party")
+                 "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
 
 # /usr/local doesn't get added by default in Mac OS X
 if (APPLE)

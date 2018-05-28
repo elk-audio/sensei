@@ -31,12 +31,6 @@
 /* Use this macro  at the top of every file to declare a local logger */
 #define SENSEI_GET_LOGGER static auto spdlog_instance = sensei::Logger::get_logger()
 
-#ifdef ENABLE_DEBUG_FILE_AND_LINE_NUM
-    #define SENSEI_EXTENDED_LOG << " (" << __FILE__ << " @" << __LINE__ <<")"
-#else
-    #define SENSEI_EXTENDED_LOG
-#endif
-
 /*
  * Use these macros to log messages. Use cppformat style, ie:
  * SENSEI_LOG_INFO("Setting x to {} and y to {}", x, y);
@@ -45,7 +39,11 @@
  * -DDISABLE_MACROS unfortunately
  */
 
-#define SENSEI_LOG_DEBUG(...)    spdlog_instance->debug(__VA_ARGS__)  SENSEI_EXTENDED_LOG
+#ifdef ENABLE_DEBUG_FILE_AND_LINE_NUM
+#define SENSEI_LOG_DEBUG(msg, ...) spdlog_instance->debug(msg " (@{} #{})", ##__VA_ARGS__, __FILE__ , __LINE__)
+#else
+#define SENSEI_LOG_DEBUG(...)    spdlog_instance->debug(__VA_ARGS__)
+#endif
 #define SENSEI_LOG_INFO(...)     spdlog_instance->info(__VA_ARGS__)
 #define SENSEI_LOG_WARNING(...)  spdlog_instance->warn(__VA_ARGS__)
 #define SENSEI_LOG_ERROR(...)    spdlog_instance->error(__VA_ARGS__)

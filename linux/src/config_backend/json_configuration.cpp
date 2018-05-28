@@ -112,7 +112,7 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
             config.type = HwFrontendType::RASPA_XMOS;
         } else
         {
-            SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware fronted type", type);
+            SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware frontend type", type.asString());
             return ConfigStatus::PARSING_ERROR;
         }
     }

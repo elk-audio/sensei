@@ -27,8 +27,8 @@ std::shared_ptr<spdlog::logger> setup_logging()
     const size_t LOGGER_QUEUE_SIZE  = 4096;                  // Should be power of 2
     const std::string LOGGER_FILE   = "log";
     const std::string LOGGER_NAME   = "Sensei_logger";
-    const int  MAX_LOG_FILE_SIZE    = 10'000'000;              // In bytes
-    const bool LOGGER_FORCE_FLUSH   = true;
+    const int  MAX_LOG_FILE_SIZE    = 10'000'000;            // In bytes
+    const auto MIN_FLUSH_LEVEL      = spdlog::level::err;    // Min level for automatic flush
     const spdlog::level::level_enum MIN_LOG_LEVEL = spdlog::level::warn;
 
     spdlog::set_level(MIN_LOG_LEVEL);
@@ -36,9 +36,9 @@ std::shared_ptr<spdlog::logger> setup_logging()
     auto async_file_logger = spdlog::rotating_logger_mt(LOGGER_NAME,
                                                         LOGGER_FILE,
                                                         MAX_LOG_FILE_SIZE,
-                                                        1,
-                                                        LOGGER_FORCE_FLUSH);
+                                                        1);
 
+    async_file_logger->flush_on(MIN_FLUSH_LEVEL);
     async_file_logger->info("#############################");
     async_file_logger->info("   Started Sensei Logger!");
     async_file_logger->info("#############################");
