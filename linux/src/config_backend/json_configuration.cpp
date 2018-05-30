@@ -14,7 +14,7 @@
 namespace sensei {
 namespace config {
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("config");
 
 Json::Value read_configuration(std::ifstream& file)
 {

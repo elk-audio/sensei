@@ -12,7 +12,7 @@
 
 using namespace sensei;
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("eventhandler");
 
 void EventHandler::init(int max_n_input_pins,
                         int max_n_digital_out_pins,

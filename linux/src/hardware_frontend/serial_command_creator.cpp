@@ -6,7 +6,7 @@
 namespace sensei {
 namespace hw_frontend {
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("serial_frontend");
 
 SerialCommandCreator::SerialCommandCreator(int max_pins) :
         _max_pins(max_pins),
