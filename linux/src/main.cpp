@@ -6,8 +6,8 @@
 #include "optionparser.h"
 
 #include "event_handler.h"
-
 #include "logging.h"
+#include "generated/version.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global constants
@@ -31,6 +31,21 @@ static volatile sig_atomic_t config_reload_pending = 0;
 
 SENSEI_GET_LOGGER;
 
+void print_headline()
+{
+    std::cout << "SENSEI - SEnsus SEnsor Interface" << std::endl;
+    std::cout << "Copyright 2016-2018 MIND Music Labs, Stockholm" << std::endl;
+}
+
+void print_version_and_build_info()
+{
+    std::cout << "\nVersion "   << SENSEI__VERSION_MAJ << "."
+              << SENSEI__VERSION_MIN << "."
+              << SENSEI__VERSION_REV << std::endl;
+
+    std::cout << "Git commit: " << SENSEI_GIT_COMMIT_HASH << std::endl;
+    std::cout << "Built on: " << SENSEI_BUILD_TIMESTAMP << std::endl;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Signal handlers
@@ -115,6 +130,7 @@ enum OptionIndex
 { 
     UNKNOWN,
     HELP,
+    VERSION,
     N_INPUT_PINS,
     N_OUTPUT_PINS,
     SLEEP_PERIOD,
@@ -129,7 +145,7 @@ const option::Descriptor usage[] =
         "",
         "",
         SenseiArg::Unknown,
-        "SEnsus SEnsor Interface. Copyright 2016 MIND Music Labs\n\nUSAGE: sensei [options]\n\nOptions:"
+        "\nUSAGE: sensei [options]\n\nOptions:"
     },
     {
         HELP,
@@ -138,6 +154,14 @@ const option::Descriptor usage[] =
         "help",
         SenseiArg::None,
         "\t\t-h --help \tPrint usage and exit."
+    },
+    {
+        VERSION,
+        0,
+        "v?",
+        "version",
+        SenseiArg::None,
+        "\t\t-v --version \tPrint version and build info and exit."
     },
     {
         N_INPUT_PINS,
@@ -204,7 +228,14 @@ int main(int argc, char* argv[])
     }
     if (cl_options[HELP])
     {
+        print_headline();
         option::printUsage(fwrite, stdout, usage);
+        return 0;
+    }
+    if (cl_options[VERSION])
+    {
+        print_headline();
+        print_version_and_build_info();
         return 0;
     }
 
@@ -219,6 +250,7 @@ int main(int argc, char* argv[])
         {
         case HELP:
         case UNKNOWN:
+        case VERSION:
             // should be handled before arriving here
             assert(false);
             break;
