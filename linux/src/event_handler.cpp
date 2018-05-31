@@ -86,8 +86,10 @@ void EventHandler::handle_events(std::chrono::milliseconds wait_period)
         switch(event->base_type())
         {
         case MessageType::VALUE:
-            SENSEI_LOG_INFO("Event handler: got value.");
-            _processor->process(static_cast<Value*>(event.get()), _output_backend.get());
+            {
+                auto value = static_unique_ptr_cast<Value, BaseMessage>(std::move(event));
+                _handle_value(std::move(value));
+            }
             break;
 
         case MessageType::COMMAND:
@@ -107,6 +109,21 @@ void EventHandler::handle_events(std::chrono::milliseconds wait_period)
     }
 }
 
+void EventHandler::_handle_value(std::unique_ptr<Value> value)
+{
+    if (is_output_value(value.get()))
+    {
+        _processor->process(value.get(), _output_backend.get());
+    }
+    else if (is_set_value(value.get()))
+    {
+        auto cmd = _processor->process_set(value.get());
+        if (cmd != nullptr)
+        {
+            _to_frontend_queue.push(std::move(cmd));
+        }
+    }
+}
 
 void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 {

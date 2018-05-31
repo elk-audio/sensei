@@ -111,7 +111,7 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
     case CommandType::SET_SENSOR_NAME:
         {
             const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
-            _pin_names[pin_idx] = typed_cmd->data();
+            _sensor_names[pin_idx] = typed_cmd->data();
             _compute_full_paths();
         };
         break;
@@ -198,8 +198,12 @@ void OSCBackend::_compute_full_paths()
             cur_sensor_type = std::string("digital");
             break;
 
+        case SensorType::RANGE_INPUT:
+            cur_sensor_type = std::string("range");
+            break;
+
         case SensorType::CONTINUOUS_INPUT:
-            cur_sensor_type = std::string("imu");
+            cur_sensor_type = std::string("continuous");
             break;
 
         default:
@@ -207,9 +211,9 @@ void OSCBackend::_compute_full_paths()
         }
 
         _full_out_paths[i] = concatenate_osc_paths(cur_path,
-                                                   concatenate_osc_paths(cur_sensor_type, _pin_names[i]) );
+                                                   concatenate_osc_paths(cur_sensor_type, _sensor_names[i]) );
         _full_raw_paths[i] = concatenate_osc_paths(cur_raw_path,
-                                                   concatenate_osc_paths(cur_sensor_type, _pin_names[i]) );
+                                                   concatenate_osc_paths(cur_sensor_type, _sensor_names[i]) );
     }
 
 

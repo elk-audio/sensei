@@ -41,7 +41,7 @@ enum class CommandType
     SET_HW_POLARITY,
     SET_DIGITAL_OUTPUT_VALUE,
     SET_CONTINUOUS_OUTPUT_VALUE,
-    SET_RANGE_OUTPUT_VALUE,
+    SET_ANALOG_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
     // Imu specific commands
     SET_IMU_ENABLED,
@@ -61,8 +61,7 @@ enum class CommandType
     IMU_COMMIT_SETTINGS,
     // Internal Commands
     SET_INVERT_ENABLED,
-    SET_INPUT_SCALE_RANGE_LOW,
-    SET_INPUT_SCALE_RANGE_HIGH,
+    SET_INPUT_RANGE,
     // Output Backend Commands
     SET_BACKEND_TYPE,
     SET_SENSOR_NAME,
@@ -84,7 +83,9 @@ enum class SensorType
     DIGITAL_INPUT,
     DIGITAL_OUTPUT,
     ANALOG_INPUT,
+    ANALOG_OUTPUT,
     CONTINUOUS_INPUT,
+    CONTINUOUS_OUTPUT,
     RANGE_INPUT,
     RANGE_OUTPUT,
     UNDEFINED,
@@ -293,9 +294,9 @@ SENSEI_DECLARE_COMMAND(SetContinuousOutputValueCommand,
                        CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetRangeOutputValueCommand,
-                       CommandType::SET_RANGE_OUTPUT_VALUE,
+                       CommandType::SET_ANALOG_OUTPUT_VALUE,
                        int,
-                       "Send Range Output Value",
+                       "Send Range or Analog Output Value",
                        CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
@@ -404,17 +405,11 @@ SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
                        "Set Invert Enabled",
                        CommandDestination::MAPPING_PROCESSOR);
 
-SENSEI_DECLARE_COMMAND(SetInputScaleRangeLow,
-                       CommandType::SET_INPUT_SCALE_RANGE_LOW,
-                       float,
-                       "Set Input Scale Range Low",
-                       CommandDestination::MAPPING_PROCESSOR);
-
-SENSEI_DECLARE_COMMAND(SetInputScaleRangeHigh,
-                       CommandType::SET_INPUT_SCALE_RANGE_HIGH,
-                       float,
-                       "Set Input Scale Range Low",
-                       CommandDestination::MAPPING_PROCESSOR);
+SENSEI_DECLARE_COMMAND(SetInputRangeCommand,
+                       CommandType::SET_INPUT_RANGE,
+                       Range,
+                       "Set Input Scale Range",
+                       CommandDestination::MAPPING_PROCESSOR | CommandDestination::HARDWARE_FRONTEND);
 
 // Output Backend commands
 

@@ -162,6 +162,17 @@ xmos::XmosGpioPacket XmosCommandCreator::make_set_analog_resolution_command(uint
     return packet;
 }
 
+xmos::XmosGpioPacket XmosCommandCreator::make_set_range_command(uint8_t controller_id, uint32_t min, uint32_t max)
+{
+    XmosGpioPacket packet = _prepare_packet();
+    packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
+    packet.sub_command = XMOS_SUB_CMD_SET_CNTRLR_RANGE;
+    packet.payload.cntrlr_range_data.controller_id = controller_id;
+    packet.payload.cntrlr_range_data.min_val = min;
+    packet.payload.cntrlr_range_data.max_val = max;
+    return packet;
+}
+
 xmos::XmosGpioPacket XmosCommandCreator::make_get_value_command(uint8_t controller_id)
 {
     XmosGpioPacket packet = _prepare_packet();
@@ -186,6 +197,7 @@ xmos::XmosGpioPacket XmosCommandCreator::_prepare_packet()
     packet.sequence_no = to_xmos_byteord(_sequence_number());
     return packet;
 }
+
 
 std::string xmos_status_to_string(uint8_t status)
 {

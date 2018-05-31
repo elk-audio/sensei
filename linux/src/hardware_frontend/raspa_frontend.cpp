@@ -357,10 +357,10 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         {
             auto cmd = static_cast<const SetContinuousOutputValueCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(),
-                                                                        std::round(cmd->data() * _dac_output_max)));
+                                                                        std::round(cmd->data())));
             break;
         }
-        case CommandType::SET_RANGE_OUTPUT_VALUE:
+        case CommandType::SET_ANALOG_OUTPUT_VALUE:
         {
             auto cmd = static_cast<const SetRangeOutputValueCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), cmd->data()));
@@ -377,6 +377,16 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             {
                 _send_list.push_back(_packet_factory.make_stop_system_command());
             }
+            break;
+        }
+        case CommandType::SET_INPUT_RANGE:
+        {
+            // TODO - maybe this should be reserved for encoders and led rings
+            auto cmd = static_cast<const SetInputRangeCommand*>(message);
+            auto range = cmd->data();
+            _send_list.push_back(_packet_factory.make_set_range_command(cmd->index(),
+                                                                        static_cast<uint32_t>(std::round(range.min)),
+                                                                        static_cast<uint32_t>(std::round(range.max))));
             break;
         }
 

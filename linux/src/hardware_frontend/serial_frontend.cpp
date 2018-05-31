@@ -328,23 +328,23 @@ void SerialFrontend::process_imu_data(const sSenseiDataPacket *packet)
         EulerAngles angles = quat_to_euler(data->qw, data->qx, data->qy, data->qz);
         if (_imu_sensor_index[ImuIndex::YAW] >= 0)
         {
-            auto msg = _message_factory.make_imu_value(_imu_sensor_index[ImuIndex::YAW],
-                                                       angles.yaw,
-                                                       packet->timestamp);
+            auto msg = _message_factory.make_continuous_value(_imu_sensor_index[ImuIndex::YAW],
+                                                              angles.yaw,
+                                                              packet->timestamp);
             _out_queue->push(std::move(msg));
         }
         if (_imu_sensor_index[ImuIndex::PITCH] >= 0)
         {
-            auto msg = _message_factory.make_imu_value(_imu_sensor_index[ImuIndex::PITCH],
-                                                       angles.pitch,
-                                                       packet->timestamp);
+            auto msg = _message_factory.make_continuous_value(_imu_sensor_index[ImuIndex::PITCH],
+                                                              angles.pitch,
+                                                              packet->timestamp);
             _out_queue->push(std::move(msg));
         }
         if (_imu_sensor_index[ImuIndex::ROLL] >= 0)
         {
-            auto msg = _message_factory.make_imu_value(_imu_sensor_index[ImuIndex::ROLL],
-                                                       angles.roll,
-                                                       packet->timestamp);
+            auto msg = _message_factory.make_continuous_value(_imu_sensor_index[ImuIndex::ROLL],
+                                                              angles.roll,
+                                                              packet->timestamp);
             _out_queue->push(std::move(msg));
         }
     }

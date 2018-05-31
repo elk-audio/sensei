@@ -42,19 +42,23 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
         switch(pin_type)
         {
         case SensorType::DIGITAL_INPUT:
+        case SensorType::DIGITAL_OUTPUT:
         case SensorType::NO_OUTPUT:
             _mappers[sensor_index].reset(new DigitalSensorMapper(sensor_index));
             break;
 
         case SensorType::ANALOG_INPUT:
+        case SensorType::ANALOG_OUTPUT:
             _mappers[sensor_index].reset(new AnalogSensorMapper(sensor_index));
             break;
 
         case SensorType::CONTINUOUS_INPUT:
+        case SensorType::CONTINUOUS_OUTPUT:
             _mappers[sensor_index].reset(new ContinuousSensorMapper(sensor_index));
             break;
 
         case SensorType::RANGE_INPUT:
+        case SensorType::RANGE_OUTPUT:
             _mappers[sensor_index].reset(new RangeSensorMapper(sensor_index));
             break;
 
@@ -96,7 +100,21 @@ void MappingProcessor::process(Value *value, output_backend::OutputBackend *back
     }
     else
     {
-        SENSEI_LOG_ERROR("Got value message for initialized sensor {}", value->index());
+        SENSEI_LOG_ERROR("Got value message for uninitialized sensor {}", value->index());
+    }
+}
+
+std::unique_ptr<Command> MappingProcessor::process_set(Value* value)
+{
+    int sensor_index = value->index();
+    if (static_cast<unsigned int>(sensor_index) < _mappers.size() && _mappers[sensor_index] != nullptr)
+    {
+        return _mappers[sensor_index]->process_set_value(value);
+    }
+    else
+    {
+        SENSEI_LOG_ERROR("Got set value message for uninitialized sensor {}", value->index());
+        return nullptr;
     }
 }
 

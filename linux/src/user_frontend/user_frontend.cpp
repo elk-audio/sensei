@@ -25,19 +25,19 @@ void UserFrontend::set_enabled(int sensor_index, bool enabled)
 
 void UserFrontend::set_digital_output(int index, bool value)
 {
-    auto msg = _factory.make_set_digital_output_command(index, value);
+    auto msg = _factory.make_integer_set_value(index, value? 1:0);
     _queue->push(std::move(msg));
 }
 
 void UserFrontend::set_continuous_output(int index, float value)
 {
-    auto msg = _factory.make_set_continuous_output_command(index, value);
+    auto msg = _factory.make_float_set_value(index, value);
     _queue->push(std::move(msg));
 }
 
 void UserFrontend::set_range_output(int index, int value)
 {
-    auto msg = _factory.make_set_range_output_command(index, value);
+    auto msg = _factory.make_integer_set_value(index, value);
     _queue->push(std::move(msg));
 }
 

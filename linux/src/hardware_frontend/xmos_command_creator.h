@@ -58,6 +58,7 @@ public:
     xmos::XmosGpioPacket make_set_notification_mode(uint8_t controller_id, uint8_t notif_mode);
     xmos::XmosGpioPacket make_add_pins_to_controller_command(uint8_t controller_id, Pinlist& pins);
     xmos::XmosGpioPacket make_mute_controller_command(uint8_t controller_id, uint8_t mute_status);
+    xmos::XmosGpioPacket make_set_range_command(uint8_t controller_id, uint32_t min, uint32_t max);
     xmos::XmosGpioPacket make_remove_controller_command(uint8_t controller_id);
     xmos::XmosGpioPacket make_set_analog_resolution_command(uint8_t controller_id, uint8_t adc_bits);
     xmos::XmosGpioPacket make_get_value_command(uint8_t controller_id);

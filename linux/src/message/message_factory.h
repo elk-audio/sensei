@@ -62,9 +62,9 @@ public:
         return std::unique_ptr<DigitalValue>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_imu_value(const int sensor_id,
-                                                const float value,
-                                                const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_continuous_value(const int sensor_id,
+                                                       const float value,
+                                                       const uint32_t timestamp = 0)
     {
         auto msg = new ContinuousValue(sensor_id, value, timestamp);
         return std::unique_ptr<ContinuousValue>(msg);
@@ -76,6 +76,22 @@ public:
     {
         auto msg = new OutputValue(sensor_id, value, timestamp);
         return std::unique_ptr<OutputValue>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_integer_set_value(const int sensor_id,
+                                                        const int value,
+                                                        const uint32_t timestamp = 0)
+    {
+        auto msg = new IntegerSetValue(sensor_id, value, timestamp);
+        return std::unique_ptr<IntegerSetValue>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_float_set_value(const int sensor_id,
+                                                      const float value,
+                                                      const uint32_t timestamp = 0)
+    {
+        auto msg = new FloatSetValue(sensor_id, value, timestamp);
+        return std::unique_ptr<FloatSetValue>(msg);
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -331,20 +347,13 @@ public:
         return std::unique_ptr<SetInvertEnabledCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_low_command(const int sensor_id,
-                                                                        const float value,
-                                                                        const uint32_t timestamp = 0)
+    std::unique_ptr<BaseMessage> make_set_input_range_command(const int sensor_id,
+                                                              const float min,
+                                                              const float max,
+                                                              const uint32_t timestamp = 0)
     {
-        auto msg = new SetInputScaleRangeLow(sensor_id, value, timestamp);
-        return std::unique_ptr<SetInputScaleRangeLow>(msg);
-    }
-
-    std::unique_ptr<BaseMessage> make_set_input_scale_range_high_command(const int sensor_id,
-                                                                         const float value,
-                                                                         const uint32_t timestamp = 0)
-    {
-        auto msg = new SetInputScaleRangeHigh(sensor_id, value, timestamp);
-        return std::unique_ptr<SetInputScaleRangeHigh>(msg);
+        auto msg = new SetInputRangeCommand(sensor_id, {min, max}, timestamp);
+        return std::unique_ptr<SetInputRangeCommand>(msg);
     }
 
     // Output Backend commands

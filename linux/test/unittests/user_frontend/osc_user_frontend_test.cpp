@@ -67,12 +67,12 @@ TEST_F(TestOSCUserFrontend, test_set_digital_output)
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
     ASSERT_FALSE(_event_queue.empty());
     std::unique_ptr<BaseMessage> event = _event_queue.pop();
-    ASSERT_EQ(MessageType::COMMAND, event->base_type());
-    auto cmd = static_unique_ptr_cast<SetDigitalOutputValueCommand, BaseMessage>(std::move(event));
+    ASSERT_EQ(MessageType::VALUE, event->base_type());
+    auto val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
 
-    ASSERT_EQ(CommandType::SET_DIGITAL_OUTPUT_VALUE, cmd->type());
-    ASSERT_EQ(3, cmd->index());
-    ASSERT_FALSE(cmd->data());
+    ASSERT_EQ(ValueType::INT_SET, val->type());
+    ASSERT_EQ(3, val->index());
+    ASSERT_EQ(0, val->value());
     ASSERT_TRUE(_event_queue.empty());
 }
 
@@ -82,12 +82,12 @@ TEST_F(TestOSCUserFrontend, test_set_continuous_output)
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
     ASSERT_FALSE(_event_queue.empty());
     std::unique_ptr<BaseMessage> event = _event_queue.pop();
-    ASSERT_EQ(MessageType::COMMAND, event->base_type());
-    auto cmd = static_unique_ptr_cast<SetContinuousOutputValueCommand, BaseMessage>(std::move(event));
+    ASSERT_EQ(MessageType::VALUE, event->base_type());
+    auto val = static_unique_ptr_cast<FloatSetValue, BaseMessage>(std::move(event));
 
-    ASSERT_EQ(CommandType::SET_CONTINUOUS_OUTPUT_VALUE, cmd->type());
-    ASSERT_EQ(4, cmd->index());
-    ASSERT_FLOAT_EQ(0.4f, cmd->data());
+    ASSERT_EQ(ValueType::FLOAT_SET, val->type());
+    ASSERT_EQ(4, val->index());
+    ASSERT_FLOAT_EQ(0.4f, val->value());
     ASSERT_TRUE(_event_queue.empty());
 }
 
@@ -97,12 +97,12 @@ TEST_F(TestOSCUserFrontend, test_set_range_output)
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
     ASSERT_FALSE(_event_queue.empty());
     std::unique_ptr<BaseMessage> event = _event_queue.pop();
-    ASSERT_EQ(MessageType::COMMAND, event->base_type());
-    auto cmd = static_unique_ptr_cast<SetRangeOutputValueCommand, BaseMessage>(std::move(event));
+    ASSERT_EQ(MessageType::VALUE, event->base_type());
+    auto val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
 
-    ASSERT_EQ(CommandType::SET_RANGE_OUTPUT_VALUE, cmd->type());
-    ASSERT_EQ(5, cmd->index());
-    ASSERT_EQ(12, cmd->data());
+    ASSERT_EQ(ValueType::INT_SET, val->type());
+    ASSERT_EQ(5, val->index());
+    ASSERT_EQ(12, val->value());
     ASSERT_TRUE(_event_queue.empty());
 }
 

@@ -117,26 +117,33 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(13, packet.payload.mute_cmd_data.controller_id);
     EXPECT_EQ(MuteStatus::CNTRLR_UNMUTED, packet.payload.mute_cmd_data.mute_status);
 
-    packet = _module_under_test.make_remove_controller_command(14);
+    packet = _module_under_test.make_set_range_command(14, 10, 25);
+    EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
+    EXPECT_EQ(XMOS_SUB_CMD_SET_CNTRLR_RANGE, packet.sub_command);
+    EXPECT_EQ(14, packet.payload.cntrlr_range_data.controller_id);
+    EXPECT_EQ(10, packet.payload.cntrlr_range_data.min_val);
+    EXPECT_EQ(25, packet.payload.cntrlr_range_data.max_val);
+
+    packet = _module_under_test.make_remove_controller_command(15);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
     EXPECT_EQ(XMOS_SUB_CMD_REMOVE_CNTRLR, packet.sub_command);
-    EXPECT_EQ(14, packet.payload.remove_cntrlr_data.controller_id);
+    EXPECT_EQ(15, packet.payload.remove_cntrlr_data.controller_id);
 
-    packet = _module_under_test.make_set_analog_resolution_command(15, 8);
+    packet = _module_under_test.make_set_analog_resolution_command(16, 8);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
     EXPECT_EQ(XMOS_SUB_CMD_SET_ANALOG_CNTRLR_RES, packet.sub_command);
-    EXPECT_EQ(15, packet.payload.analog_cntrlr_res_data.controller_id);
+    EXPECT_EQ(16, packet.payload.analog_cntrlr_res_data.controller_id);
     EXPECT_EQ(8u, from_xmos_byteord(packet.payload.analog_cntrlr_res_data.resolution_in_bits));
 
-    packet = _module_under_test.make_get_value_command(16);
+    packet = _module_under_test.make_get_value_command(17);
     EXPECT_EQ(XMOS_CMD_GET_VALUE, packet.command);
     EXPECT_EQ(0, packet.sub_command);
-    EXPECT_EQ(16, packet.payload.value_request_data.controller_id);
+    EXPECT_EQ(17, packet.payload.value_request_data.controller_id);
 
-    packet = _module_under_test.make_set_value_command(17, 2048);
+    packet = _module_under_test.make_set_value_command(18, 2048);
     EXPECT_EQ(XMOS_CMD_SET_VALUE, packet.command);
     EXPECT_EQ(0, packet.sub_command);
-    EXPECT_EQ(17, packet.payload.value_data.controller_id);
+    EXPECT_EQ(18, packet.payload.value_data.controller_id);
     EXPECT_EQ(2048u, from_xmos_byteord(packet.payload.value_data.controller_val));
 }
 

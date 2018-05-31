@@ -29,8 +29,20 @@ enum class ValueType
     ANALOG,
     DIGITAL,
     CONTINUOUS,
-    OUTPUT
+    OUTPUT,
+    INT_SET,
+    FLOAT_SET
 };
+
+inline bool is_output_value(const Value* value)
+{
+    return (value->type() >= ValueType::ANALOG && value->type() <= ValueType::CONTINUOUS);
+}
+
+inline bool is_set_value(const Value* value)
+{
+    return (value->type() >= ValueType::INT_SET && value->type() <= ValueType::FLOAT_SET);
+}
 
 SENSEI_DECLARE_VALUE(AnalogValue, ValueType::ANALOG, int, "Analog Value");
 
@@ -39,6 +51,10 @@ SENSEI_DECLARE_VALUE(DigitalValue, ValueType::DIGITAL, bool, "Digital Value");
 SENSEI_DECLARE_VALUE(ContinuousValue, ValueType::CONTINUOUS, float, "Continuous Value");
 
 SENSEI_DECLARE_VALUE(OutputValue, ValueType::OUTPUT, float, "Output Value");
+
+SENSEI_DECLARE_VALUE(IntegerSetValue, ValueType::INT_SET, int, "Analog SetValue");
+
+SENSEI_DECLARE_VALUE(FloatSetValue, ValueType::FLOAT_SET, float, "Continuous SetValue");
 
 
 }; // namespace sensei

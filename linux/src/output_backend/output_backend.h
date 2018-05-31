@@ -21,7 +21,7 @@ public:
             _send_output_active(true),
             _send_raw_input_active(false)
     {
-        _pin_names.resize(static_cast<size_t>(_max_n_pins));
+        _sensor_names.resize(static_cast<size_t>(_max_n_pins));
         _pin_types.resize(static_cast<size_t>(_max_n_pins));
         std::fill(_pin_types.begin(), _pin_types.end(), SensorType::UNDEFINED);
     }
@@ -39,7 +39,7 @@ public:
         case CommandType::SET_SENSOR_NAME:
             {
                 const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
-                _pin_names[pin_idx] = typed_cmd->data();
+                _sensor_names[pin_idx] = typed_cmd->data();
             };
             break;
 
@@ -78,7 +78,7 @@ protected:
     int _max_n_pins;
     bool _send_output_active;
     bool _send_raw_input_active;
-    std::vector<std::string> _pin_names;
+    std::vector<std::string> _sensor_names;
     std::vector<SensorType> _pin_types;
 };
 

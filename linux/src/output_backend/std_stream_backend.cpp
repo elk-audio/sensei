@@ -18,7 +18,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
     if (_send_output_active)
     {
         printf("Pin: %d, name: %s, value: %f\n", sensor_index,
-                                                 _pin_names[sensor_index].c_str(),
+                                                 _sensor_names[sensor_index].c_str(),
                                                  transformed_value->value());
     }
 
@@ -31,7 +31,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
             {
                 auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
-                                                                                _pin_names[sensor_index].c_str(),
+                                                                                _sensor_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }
             break;
@@ -40,7 +40,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
             {
                 auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
-                                                                                _pin_names[sensor_index].c_str(),
+                                                                                _sensor_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }
             break;
@@ -49,7 +49,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
             {
                 auto  typed_val = static_cast<const ContinuousValue*>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %f\n", sensor_index,
-                                                                                _pin_names[sensor_index].c_str(),
+                                                                                _sensor_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }
             break;
