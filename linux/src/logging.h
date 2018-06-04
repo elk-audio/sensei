@@ -28,14 +28,12 @@
 /* Add file and line numbers to debug prints */
 #define ENABLE_DEBUG_FILE_AND_LINE_NUM
 
-/* Use this macro  at the top of every file to declare a local logger */
-#define SENSEI_GET_LOGGER static auto spdlog_instance = sensei::Logger::get_logger()
+/* Use this macro  at the top of a source file to declare a local logger */
+#define SENSEI_GET_LOGGER_WITH_MODULE_NAME(prefix) static auto spdlog_instance = sensei::Logger::get_logger(); \
+            constexpr char local_log_prefix[] = "[" prefix "] " ;
 
-#ifdef ENABLE_DEBUG_FILE_AND_LINE_NUM
-    #define SENSEI_EXTENDED_LOG << " (" << __FILE__ << " @" << __LINE__ <<")"
-#else
-    #define SENSEI_EXTENDED_LOG
-#endif
+#define SENSEI_GET_LOGGER static auto spdlog_instance = sensei::Logger::get_logger(); \
+            constexpr char local_log_prefix[] = "";
 
 /*
  * Use these macros to log messages. Use cppformat style, ie:
@@ -44,12 +42,25 @@
  * spdlog supports ostream style, but that doesn't work with
  * -DDISABLE_MACROS unfortunately
  */
+#ifdef SUSHI_ENABLE_DEBUG_FILE_AND_LINE_NUM
+#define SENSEI_LOG_DEBUG(msg, ...) spdlog_instance->debug("{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__ , __LINE__)
+#else
+#define SENSEI_LOG_DEBUG(msg, ...)         spdlog_instance->debug("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#endif
+#define SENSEI_LOG_INFO(msg, ...)          spdlog_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_WARNING(msg, ...)       spdlog_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_ERROR(msg, ...)         spdlog_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_CRITICAL(msg, ...)      spdlog_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__)
 
-#define SENSEI_LOG_DEBUG(...)    spdlog_instance->debug(__VA_ARGS__)  SENSEI_EXTENDED_LOG
-#define SENSEI_LOG_INFO(...)     spdlog_instance->info(__VA_ARGS__)
-#define SENSEI_LOG_WARNING(...)  spdlog_instance->warn(__VA_ARGS__)
-#define SENSEI_LOG_ERROR(...)    spdlog_instance->error(__VA_ARGS__)
-#define SENSEI_LOG_CRITICAL(...) spdlog_instance->crit(__VA_ARGS__)
+#ifdef SUSHI_ENABLE_DEBUG_FILE_AND_LINE_NUM
+#define SENSEI_LOG_DEBUG_IF(condition, msg, ...) if (condition) { spdlog_instance->debug_if(condition, "{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__ , __LINE__); }
+#else
+#define SENSEI_LOG_DEBUG_IF(condition, msg, ...)    if (condition) { spdlog_instance->debug(condition, "{}" msg, local_log_prefix, ##__VA_ARGS__);}
+#endif
+#define SENSEI_LOG_INFO_IF(condition, msg, ...)     if (condition) { spdlog_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__); }
+#define SENSEI_LOG_WARNING_IF(condition, msg, ...)  if (condition) { spdlog_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__); }
+#define SENSEI_LOG_ERROR_IF(condition, msg, ...)    if (condition) { spdlog_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__); }
+#define SENSEI_LOG_CRITICAL_IF(condition, msg, ...) if (condition) { spdlog_instance->critical"{}" msg, local_log_prefix, ##__VA_ARGS__); }
 
 namespace sensei {
 
@@ -65,12 +76,18 @@ std::shared_ptr<spdlog::logger> setup_logging();
 
 #else
 /* Define empty macros */
+#define SENSEI_GET_LOGGER_WITH_MODULE_NAME(...)
 #define SENSEI_GET_LOGGER
 #define SENSEI_LOG_DEBUG(...)
 #define SENSEI_LOG_INFO(...)
 #define SENSEI_LOG_WARNING(...)
 #define SENSEI_LOG_ERROR(...)
 #define SENSEI_LOG_CRITICAL(...)
+#define SENSEI_LOG_DEBUG_IF(...)
+#define SENSEI_LOG_INFO_IF(...)
+#define SENSEI_LOG_WARNING_IF(...)
+#define SENSEI_LOG_ERROR_IF(...)
+#define SENSEI_LOG_CRITICAL_IF(...)
 #endif
 
 #endif //SENSEI_LOGGING_H

@@ -1,5 +1,24 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 project(sensei)
+
+##################################
+#  Build  information            #
+##################################
+
+# Get the latest commit hash of the working branch
+execute_process(
+        COMMAND git log -1 --format=%H
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMMIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+string(TIMESTAMP BUILD_TIMESTAMP "%Y-%m-%d %H:%M")
+
+configure_file(
+        ${CMAKE_SOURCE_DIR}/include/version.h.in
+        ${CMAKE_BINARY_DIR}/generated/version.h
+)
 
 ####################
 #  Compiler Flags  #
@@ -86,9 +105,10 @@ set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
                  "${PROJECT_SOURCE_DIR}/xmos_protocol"
                  "${PROJECT_SOURCE_DIR}/../common"
+                 "${CMAKE_BINARY_DIR}"
                  "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/include"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
-                 "${PROJECT_SOURCE_DIR}/third-party")
+                 "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
 
 # /usr/local doesn't get added by default in Mac OS X
 if (APPLE)

@@ -11,7 +11,7 @@
 using namespace sensei;
 using namespace sensei::user_frontend;
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("osc_frontend");
 
 namespace
 {

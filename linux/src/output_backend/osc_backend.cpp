@@ -11,7 +11,7 @@ using namespace sensei::output_backend;
 
 namespace {
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("osc_backend");
 
 void trim_osc_path_components(std::string& s)
 {

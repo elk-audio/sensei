@@ -28,7 +28,7 @@ static const int INITIAL_TICK_DIVISOR = 1;
 static const auto ACK_TIMEOUT = std::chrono::milliseconds(1000);
 static const int MAX_RESEND_ATTEMPTS = 3;
 
-SENSEI_GET_LOGGER;
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("serial_frontend");
 
 /*
  * Verify that a received message has not been corrupted
