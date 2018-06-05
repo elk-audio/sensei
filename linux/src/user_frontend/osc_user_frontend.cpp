@@ -15,7 +15,7 @@ SENSEI_GET_LOGGER;
 
 namespace
 {
-static const int DEFAULT_SERVER_PORT = 24024;
+static const int DEFAULT_SERVER_PORT = 23024;
 
 static void osc_error(int num, const char *msg, const char *path)
 {
