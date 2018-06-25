@@ -347,6 +347,15 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             _send_list.push_back(_packet_factory.make_set_polarity_command(cmd->index(), polarity));
             break;
         }
+        case CommandType::SET_FAST_MODE:
+        {
+            auto cmd = static_cast<const SetFastModeCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_debounce_mode_command(cmd->index(),
+                                                                                cmd->data()? CntrlrDebounceMode::CNTRLR_DEBOUNCE_ENABLED :
+                                                                                             CntrlrDebounceMode::CNTRLR_DEBOUNCE_DISABLED));
+            break;
+        }
+
         case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
             auto cmd = static_cast<const SetDigitalOutputValueCommand*>(message);
@@ -451,14 +460,15 @@ void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
 {
     auto& m = packet.payload.value_data;
-    _out_queue->push(_message_factory.make_analog_value(m.controller_id, from_xmos_byteord(m.controller_val), 0));
+   _out_queue->push(_message_factory.make_analog_value(m.controller_id,
+                                                       from_xmos_byteord(m.controller_val),
+                                                       packet.timestamp));
     SENSEI_LOG_DEBUG("Got a value packet!");
 }
 
 void RaspaFrontend::_handle_board_info(const xmos::XmosGpioPacket& packet)
 {
     _board_info = packet.payload.board_info_data;
-    _dac_output_max = powf(2.0f, _board_info.adc_res_in_bits);
     SENSEI_LOG_INFO("Received board info: No of digital input pins: {}",_board_info.num_digital_input_pins);
     SENSEI_LOG_INFO("No of digital output pins: {}",_board_info.num_digital_output_pins);
     SENSEI_LOG_INFO("No of analog input pins: {}", _board_info.num_analog_input_pins);

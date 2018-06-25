@@ -43,7 +43,8 @@ BaseSensorMapper::BaseSensorMapper(SensorType type, int index) :
     _sending_mode(SendingMode::OFF),
     _delta_ticks_sending(1),
     _previous_value(0.0f),
-    _invert_value(false)
+    _invert_value(false),
+    _send_timestamp(false)
 {}
 
 CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
@@ -113,6 +114,20 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
         };
         break;
 
+    case CommandType::SET_SEND_TIMESTAMP_ENABLED:
+        {
+            const auto typed_cmd = static_cast<const SetSendTimestampEnabledCommand*>(cmd);
+            _send_timestamp = typed_cmd->data();
+        }
+        break;
+
+    case CommandType::SET_FAST_MODE:
+        {
+            const auto typed_cmd = static_cast<const SetFastModeCommand*>(cmd);
+            _fast_mode = typed_cmd->data();
+        }
+        break;
+
     default:
         status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
         break;
@@ -133,6 +148,8 @@ void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_sending_mode_command(_sensor_index, _sending_mode);
     *out_iterator = factory.make_set_sending_delta_ticks_command(_sensor_index, _delta_ticks_sending);
     *out_iterator = factory.make_set_invert_enabled_command(_sensor_index, _invert_value);
+    *out_iterator = factory.make_set_send_timestamp_enabled(_sensor_index, _send_timestamp);
+    *out_iterator = factory.make_set_fast_mode_command(_sensor_index, _fast_mode);
     if (_multiplexed)
     {
         *out_iterator = factory.make_set_multiplexed_sensor_command(_sensor_index,
@@ -217,7 +234,7 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     // it gets optimized away by the compiler in release mode
     auto temp_msg = factory.make_output_value(_sensor_index,
                                               out_val,
-                                              value->timestamp());
+                                              _send_timestamp? value->timestamp() : 0);
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
 }
@@ -380,7 +397,7 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
         // it gets optimized away by the compiler in release mode
         auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
-                                                  value->timestamp());
+                                                  _send_timestamp? value->timestamp() : 0);
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
         backend->send(transformed_value, value);
         _previous_value = out_val;
@@ -573,7 +590,7 @@ void RangeSensorMapper::process(Value*value, output_backend::OutputBackend*backe
         // it gets optimized away by the compiler in release mode
         auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
-                                                  value->timestamp());
+                                                  _send_timestamp? value->timestamp() : 0);
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
         backend->send(transformed_value, value);
         _previous_int_value = out_val;
@@ -708,7 +725,7 @@ void ContinuousSensorMapper::process(Value *value, output_backend::OutputBackend
         // it gets optimized away by the compiler in release mode
         auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
-                                                  value->timestamp());
+                                                  _send_timestamp? value->timestamp() : 0);
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
         backend->send(transformed_value, value);
         _previous_value = out_val;

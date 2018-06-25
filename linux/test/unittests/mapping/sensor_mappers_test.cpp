@@ -33,6 +33,8 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_timestamp_enabled(_sensor_idx, _timestamp))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_fast_mode_command(_sensor_idx, _fast_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
@@ -56,6 +58,8 @@ protected:
     SensorHwType _hw_type{SensorHwType::DIGITAL_INPUT_PIN};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
+    bool _timestamp{false};
+    bool _fast_mode{true};
     int _delta_ticks{5};
 
     OutputBackendMockup _backend;
@@ -67,6 +71,14 @@ TEST_F(TestDigitalSensorMapper, test_config)
     // Get the config back inside a local container and check values in a LIFO manner
     std::vector<std::unique_ptr<BaseMessage>> stored_cmds;
     _mapper.put_config_commands_into(std::back_inserter(stored_cmds));
+
+    auto cmd_fast_mode = extract_cmd_from<SetFastModeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_FAST_MODE, cmd_fast_mode->type());
+    ASSERT_EQ(_fast_mode, cmd_fast_mode->data());
+
+    auto cmd_timestamped = extract_cmd_from<SetSendTimestampEnabledCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SEND_TIMESTAMP_ENABLED, cmd_timestamped->type());
+    ASSERT_EQ(_timestamp, cmd_timestamped->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
@@ -174,6 +186,8 @@ protected:
         std::vector<std::unique_ptr<Command>> config_cmds;
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_timestamp_enabled(_sensor_idx, _timestamp))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_fast_mode_command(_sensor_idx, _fast_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_multiplexed_sensor_command(_sensor_idx,
@@ -207,6 +221,8 @@ protected:
     SensorHwType _hw_type{SensorHwType::ANALOG_INPUT_PIN};
     std::vector<int> _hw_pin{3};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
+    bool _timestamp{true};
+    bool _fast_mode{true};
     bool _inverted{true};
     int _delta_ticks{5};
     MultiplexerData _multiplexer_data{3,8};
@@ -252,6 +268,14 @@ TEST_F(TestAnalogSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_MULTIPLEXED, cmd_multiplexed->type());
     ASSERT_EQ(_multiplexer_data.id, cmd_multiplexed->data().id);
     ASSERT_EQ(_multiplexer_data.pin, cmd_multiplexed->data().pin);
+
+    auto cmd_fast_mode = extract_cmd_from<SetFastModeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_FAST_MODE, cmd_fast_mode->type());
+    ASSERT_EQ(_fast_mode, cmd_fast_mode->data());
+
+    auto cmd_timestamped = extract_cmd_from<SetSendTimestampEnabledCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SEND_TIMESTAMP_ENABLED, cmd_timestamped->type());
+    ASSERT_EQ(_timestamp, cmd_timestamped->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
@@ -452,6 +476,8 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_timestamp_enabled(_sensor_idx, _timestamp))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_fast_mode_command(_sensor_idx, _fast_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_range_command(_sensor_idx,
                                                                                       _input_scale_low,
@@ -478,6 +504,8 @@ protected:
     std::vector<int> _hw_pin{3};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
+    bool _timestamp{true};
+    bool _fast_mode{true};
     int _delta_ticks{5};
     int _input_scale_low{2};
     int _input_scale_high{15};
@@ -496,6 +524,14 @@ TEST_F(TestRangeSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_INPUT_RANGE, cmd_scale_range->type());
     Range expected = {static_cast<float>(_input_scale_low), static_cast<float>(_input_scale_high)};
     ASSERT_EQ(expected, cmd_scale_range->data());
+
+    auto cmd_fast_mode = extract_cmd_from<SetFastModeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_FAST_MODE, cmd_fast_mode->type());
+    ASSERT_EQ(_fast_mode, cmd_fast_mode->data());
+
+    auto cmd_timestamped = extract_cmd_from<SetSendTimestampEnabledCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SEND_TIMESTAMP_ENABLED, cmd_timestamped->type());
+    ASSERT_EQ(_timestamp, cmd_timestamped->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());
@@ -673,6 +709,8 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_mode_command(_sensor_idx, _sending_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, _delta_ticks))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_send_timestamp_enabled(_sensor_idx, _timestamp))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_fast_mode_command(_sensor_idx, _fast_mode))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_invert_enabled_command(_sensor_idx, _inverted))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_range_command(_sensor_idx,
                                                                                       _input_scale_low,
@@ -697,6 +735,8 @@ protected:
     bool _enabled{true};
     SendingMode _sending_mode{SendingMode::ON_VALUE_CHANGED};
     bool _inverted{true};
+    bool _timestamp{false};
+    bool _fast_mode{true};
     int _delta_ticks{5};
     SensorHwType _hw_type{SensorHwType::IMU_YAW};
     std::vector<int> _hw_pin{0};
@@ -718,6 +758,14 @@ TEST_F(TestContinuousSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_INPUT_RANGE, cmd_scale_range->type());
     Range expected = {_input_scale_low, _input_scale_high};
     EXPECT_EQ(expected, cmd_scale_range->data());
+
+    auto cmd_fast_mode = extract_cmd_from<SetFastModeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_FAST_MODE, cmd_fast_mode->type());
+    ASSERT_EQ(_fast_mode, cmd_fast_mode->data());
+
+    auto cmd_timestamped = extract_cmd_from<SetSendTimestampEnabledCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_SEND_TIMESTAMP_ENABLED, cmd_timestamped->type());
+    ASSERT_EQ(_timestamp, cmd_timestamped->data());
 
     auto cmd_invert = extract_cmd_from<SetInvertEnabledCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_INVERT_ENABLED, cmd_invert->type());

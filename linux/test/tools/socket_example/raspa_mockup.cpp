@@ -183,8 +183,12 @@ private:
                     /* Send a random value on controller 5 */
                     XmosGpioPacket packet;
                     packet.command = XMOS_CMD_GET_VALUE;
-                    packet.payload.value_send_data.controller_id = 5;
-                    packet.payload.value_send_data.controller_val = to_xmos_byteord(rand() % 128);
+                    packet.payload.value_data.controller_id = 5;
+                    packet.payload.value_data.controller_val = to_xmos_byteord(rand() % 128);
+
+                    auto t = std::chrono::system_clock::now().time_since_epoch();
+                    packet.timestamp = std::chrono::duration_cast<std::chrono::microseconds>(t).count();  
+
                     auto ret = send(_out_socket, &packet, sizeof(packet), 0);
                     if (ret < sizeof(_ack))
                     {
@@ -194,7 +198,7 @@ private:
                     {
                         std::cout << "Sent value msg: "  << std::endl;
                     }
-                    std::this_thread::sleep_for(std::chrono::seconds(2));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
                 /*snprintf(buffer.data, sizeof(buffer), "Raspa, pkt: %x", _msg_count++);
                 buffer.data[19] = 0;

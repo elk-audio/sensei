@@ -203,6 +203,14 @@ public:
         return std::unique_ptr<SetSensorHwPolarityCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_fast_mode_command(const int sensor_id,
+                                                            const bool enabled,
+                                                            const uint32_t timestamp = 0)
+    {
+        auto msg = new SetFastModeCommand(sensor_id, enabled, timestamp);
+        return std::unique_ptr<SetFastModeCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_set_digital_output_command(const int sensor_id,
                                                                  const bool value,
                                                                  const uint32_t timestamp = 0)
@@ -354,6 +362,14 @@ public:
     {
         auto msg = new SetInputRangeCommand(sensor_id, {min, max}, timestamp);
         return std::unique_ptr<SetInputRangeCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_send_timestamp_enabled(const int index,
+                                                                 const bool enabled,
+                                                                 const uint32_t timestamp = 0)
+    {
+        auto msg = new SetSendTimestampEnabledCommand(index, enabled, timestamp);
+        return std::unique_ptr<SetSendTimestampEnabledCommand>(msg);
     }
 
     // Output Backend commands

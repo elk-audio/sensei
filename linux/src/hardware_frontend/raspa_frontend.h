@@ -110,7 +110,6 @@ private:
     bool            _muted;
     bool            _verify_acks;
     xmos::BoardInfoData _board_info;
-    float           _dac_output_max{256};
 };
 
 std::optional<uint8_t> to_xmos_hw_type(SensorHwType type);

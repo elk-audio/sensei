@@ -86,6 +86,8 @@ protected:
 
     float               _previous_value;
     bool                _invert_value;
+    bool                _send_timestamp;
+    bool                _fast_mode;
 };
 
 /**
