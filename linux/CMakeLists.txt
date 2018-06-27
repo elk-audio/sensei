@@ -5,6 +5,8 @@ project(sensei)
 #  Build  information            #
 ##################################
 
+set(WITH_UNIT_TESTS true CACHE BOOL "Build and run unittests")
+
 # Get the latest commit hash of the working branch
 execute_process(
         COMMAND git log -1 --format=%H
@@ -121,8 +123,7 @@ include_directories(${INCLUDE_DIRS})
 #  Statically linked libraries  #
 #################################
 
-set(LINK_LIBRARIES "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/lib/libserialport.a"
-                    pthread jsoncpp lo)
+set(LINK_LIBRARIES serialport pthread jsoncpp lo)
 
 if (APPLE)
     link_directories(/usr/local/lib)
@@ -131,10 +132,9 @@ endif()
 #############################################
 #  Subdirectory projects                    #
 #############################################
-
-add_subdirectory(third-party)
-add_subdirectory(test)
-
+if (${WITH_UNIT_TESTS})
+    add_subdirectory(test)
+endif()
 ####################
 #  Target Objects  #
 ####################
@@ -142,5 +142,4 @@ add_subdirectory(test)
 add_executable(sensei ${SOURCE_FILES})
 
 # Explicitly add external statically linked dependencies here
-add_dependencies(sensei libserialport)
 target_link_libraries(sensei "${LINK_LIBRARIES}")
