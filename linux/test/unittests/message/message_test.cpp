@@ -55,7 +55,8 @@ TEST(MessagesTest, test_external_command_creation)
     msg_queue.push_back(factory.make_set_adc_bit_resolution_command(6, 12));
     msg_queue.push_back(factory.make_set_lowpass_cutoff_command(7, 125.0f));
     msg_queue.push_back(factory.make_set_slider_threshold_command(9, 9));
-    msg_queue.push_back(factory.make_set_digital_output_command(10, true));
+    msg_queue.push_back(factory.make_set_fast_mode_command(10, true));
+    msg_queue.push_back(factory.make_set_digital_output_command(11, true));
     msg_queue.push_back(factory.make_enable_sending_packets_command(0, true));
 
 
@@ -118,6 +119,13 @@ TEST(MessagesTest, test_external_command_creation)
             };
             break;
 
+        case CommandType::SET_FAST_MODE:
+            {
+                auto typed_cmd = static_cast<SetFastModeCommand*>(cmd_msg);
+                ASSERT_EQ(true, typed_cmd->data());
+            };
+            break;
+
         case CommandType::SET_DIGITAL_OUTPUT_VALUE:
             {
                 auto typed_cmd = static_cast<   SetDigitalOutputValueCommand *>(cmd_msg);
@@ -149,7 +157,7 @@ TEST(MessagesTest, test_internal_command_creation)
     // Fill message queue with all types of commands
     msg_queue.push_back(factory.make_set_invert_enabled_command(1, true));
     msg_queue.push_back(factory.make_set_input_range_command(2, 20, 200));
-
+    msg_queue.push_back(factory.make_set_send_timestamp_enabled(3, true));
     // Parse messages in queue
     for (auto const& msg : msg_queue)
     {
@@ -174,6 +182,13 @@ TEST(MessagesTest, test_internal_command_creation)
                 auto typed_cmd = static_cast<SetInputRangeCommand*>(cmd_msg);
                 Range expected = {20, 200};
                 ASSERT_EQ(expected, typed_cmd->data());
+            };
+            break;
+
+         case CommandType::SET_SEND_TIMESTAMP_ENABLED:
+            {
+                auto typed_cmd = static_cast<SetSendTimestampEnabledCommand*>(cmd_msg);
+                ASSERT_TRUE(typed_cmd->data());
             };
             break;
 

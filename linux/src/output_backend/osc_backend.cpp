@@ -1,6 +1,8 @@
 #include <sstream>
 #include <algorithm>
 #include <iostream>
+#include <chrono>
+#include <lo/lo_types.h>
 
 #include "osc_backend.h"
 
@@ -12,6 +14,9 @@ using namespace sensei::output_backend;
 namespace {
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("osc_backend");
+
+constexpr uint32_t US_TO_S = 1'000'000;
+constexpr uint32_t OSC_TIME_FRAC = UINT32_MAX / US_TO_S;
 
 void trim_osc_path_components(std::string& s)
 {
@@ -25,6 +30,14 @@ void trim_osc_path_components(std::string& s)
     {
         s.erase(char_idx+1);
     }
+}
+
+lo_timetag to_osc_timestamp(uint32_t value_time)
+{
+    lo_timetag lo_time;
+    lo_time.sec = value_time / 1'000'000;
+    lo_time.frac = (value_time % 1'000'000) * OSC_TIME_FRAC;
+    return lo_time;
 }
 
 std::string concatenate_osc_paths(std::string a, std::string b)
@@ -55,13 +68,16 @@ OSCBackend::OSCBackend(const int max_n_input_pins) :
 void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_input_value)
 {
     // TODO: see if it's worth checking errors in lo_send calls
-
     int sensor_index = transformed_value->index();
 
     SENSEI_LOG_INFO("OSC backend, got value to send");
     if (_send_output_active)
     {
-        lo_send(_address, _full_out_paths[sensor_index].c_str(), "f", transformed_value->value());
+        if (transformed_value->timestamp() == 0)
+            lo_send(_address, _full_out_paths[sensor_index].c_str(), "f", transformed_value->value());
+        else
+            lo_send(_address, _full_out_paths[sensor_index].c_str(), "ft",
+                    transformed_value->value(), to_osc_timestamp(transformed_value->timestamp()));
     }
 
     if (_send_raw_input_active)
@@ -94,8 +110,10 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
         default:
             break;
         }
-
-        lo_send(_address, _full_raw_paths[sensor_index].c_str(), "i", input_val);
+        if (transformed_value->timestamp() == 0)
+            lo_send(_address, _full_raw_paths[sensor_index].c_str(), "i", input_val);
+        else
+            lo_send(_address, _full_raw_paths[sensor_index].c_str(), "i", input_val, to_osc_timestamp(transformed_value->timestamp()));
     }
 
 }

@@ -121,8 +121,14 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
     EXPECT_EQ(XMOS_SUB_CMD_SET_CNTRLR_RANGE, packet.sub_command);
     EXPECT_EQ(14, packet.payload.cntrlr_range_data.controller_id);
-    EXPECT_EQ(10, packet.payload.cntrlr_range_data.min_val);
-    EXPECT_EQ(25, packet.payload.cntrlr_range_data.max_val);
+    EXPECT_EQ(10u, packet.payload.cntrlr_range_data.min_val);
+    EXPECT_EQ(25u, packet.payload.cntrlr_range_data.max_val);
+
+    packet = _module_under_test.make_set_debounce_mode_command(15, CNTRLR_DEBOUNCE_ENABLED);
+    EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);
+    EXPECT_EQ(XMOS_SUB_CMD_SET_CNTRLR_DEBOUNCE_MODE, packet.sub_command);
+    EXPECT_EQ(CNTRLR_DEBOUNCE_ENABLED, packet.payload.cntrlr_debounce_data.cntrlr_debounce_mode);
+    EXPECT_EQ(15, packet.payload.cntrlr_debounce_data.controller_id);
 
     packet = _module_under_test.make_remove_controller_command(15);
     EXPECT_EQ(XMOS_CMD_CONFIGURE_CNTRLR, packet.command);

@@ -173,6 +173,16 @@ xmos::XmosGpioPacket XmosCommandCreator::make_set_range_command(uint8_t controll
     return packet;
 }
 
+xmos::XmosGpioPacket XmosCommandCreator::make_set_debounce_mode_command(uint8_t controller_id, uint8_t debounce_mode)
+{
+    XmosGpioPacket packet = _prepare_packet();
+    packet.command = XMOS_CMD_CONFIGURE_CNTRLR;
+    packet.sub_command = XMOS_SUB_CMD_SET_CNTRLR_DEBOUNCE_MODE;
+    packet.payload.cntrlr_debounce_data.controller_id = controller_id;
+    packet.payload.cntrlr_debounce_data.cntrlr_debounce_mode = debounce_mode;
+    return packet;
+}
+
 xmos::XmosGpioPacket XmosCommandCreator::make_get_value_command(uint8_t controller_id)
 {
     XmosGpioPacket packet = _prepare_packet();

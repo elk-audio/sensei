@@ -254,6 +254,15 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFront
         auto m = _message_factory.make_set_input_range_command(sensor_id, range[0].asFloat(), range[1].asFloat());
         _queue->push(std::move(m));
     }
+
+    /* read sensor timestamp output configuration */
+    const Json::Value& timestamped = sensor["timestamp"];
+    if (enabled.isBool())
+    {
+        auto m = _message_factory.make_set_send_timestamp_enabled(sensor_id, timestamped.asBool());
+        _queue->push(std::move(m));
+    }
+
     return ConfigStatus::OK ;
 }
 
@@ -433,6 +442,14 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (threshold.isInt())
     {
         auto m = _message_factory.make_set_slider_threshold_command(sensor_id, threshold.asInt());
+        _queue->push(std::move(m));
+    }
+
+    /* read fast mode configuration */
+    const Json::Value& fast_mode = hardware["fast_mode"];
+    if (fast_mode.isBool())
+    {
+        auto m = _message_factory.make_set_fast_mode_command(sensor_id, fast_mode.asBool());
         _queue->push(std::move(m));
     }
 

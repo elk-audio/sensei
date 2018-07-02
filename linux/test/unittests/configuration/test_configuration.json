@@ -48,6 +48,7 @@
 			"sensor_type" : "digital_input",
 			"enabled": true,
 			"mode" : "on_value_changed",
+			"timestamp" : true,
 			"hardware" :
 			{
 				"hardware_type" : "digital_input_pin",

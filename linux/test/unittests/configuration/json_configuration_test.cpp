@@ -89,7 +89,6 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SEND_RAW_INPUT_ENABLED, SetSendRawInputEnabledCommand, index, (int)true);
 
-
     /* And now the sensors, first an analog input configuration */
     index = 1;
     m = std::move(_queue.pop());
@@ -125,6 +124,8 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     Range expected_range = {10.0f, 240.0f};
     EXPECT_COMMAND(m, CommandType::SET_INPUT_RANGE, SetInputRangeCommand, index, expected_range);
     m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SEND_TIMESTAMP_ENABLED, SetSendTimestampEnabledCommand, index, (int)false);
+    m = std::move(_queue.pop());
 
     /* Then a pin configured as a digital input */
     /* HW setup */
@@ -133,6 +134,7 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENSOR_TYPE, SetSensorTypeCommand, index, SensorType::DIGITAL_INPUT);
     m = std::move(_queue.pop());
+
     /* HW specific setup */
     EXPECT_COMMAND(m, CommandType::SET_HW_PINS, SetHwPinsCommand, index, std::vector<int>{0});
     m = std::move(_queue.pop());
@@ -143,6 +145,8 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int)true);
     m = std::move(_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::ON_VALUE_CHANGED);
+    m = std::move(_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SEND_TIMESTAMP_ENABLED, SetSendTimestampEnabledCommand, index, (int)true);
 
     /* The a virtual pin to use for IMU data */
     index = 61;

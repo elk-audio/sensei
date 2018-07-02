@@ -39,6 +39,7 @@ enum class CommandType
     SET_SLIDER_THRESHOLD,
     SET_MULTIPLEXED,
     SET_HW_POLARITY,
+    SET_FAST_MODE,
     SET_DIGITAL_OUTPUT_VALUE,
     SET_CONTINUOUS_OUTPUT_VALUE,
     SET_ANALOG_OUTPUT_VALUE,
@@ -62,6 +63,7 @@ enum class CommandType
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_RANGE,
+    SET_SEND_TIMESTAMP_ENABLED,
     // Output Backend Commands
     SET_BACKEND_TYPE,
     SET_SENSOR_NAME,
@@ -281,6 +283,12 @@ SENSEI_DECLARE_COMMAND(SetSensorHwPolarityCommand,
                        "Set polarity of hw sensor",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
+SENSEI_DECLARE_COMMAND(SetFastModeCommand,
+                       CommandType::SET_FAST_MODE,
+                       bool,
+                       "Set Digital Output Value",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
 SENSEI_DECLARE_COMMAND(SetDigitalOutputValueCommand,
                        CommandType::SET_DIGITAL_OUTPUT_VALUE,
                        bool,
@@ -410,6 +418,12 @@ SENSEI_DECLARE_COMMAND(SetInputRangeCommand,
                        Range,
                        "Set Input Scale Range",
                        CommandDestination::MAPPING_PROCESSOR | CommandDestination::HARDWARE_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetSendTimestampEnabledCommand,
+                       CommandType::SET_SEND_TIMESTAMP_ENABLED,
+                       bool,
+                       "Set Output Timestamp Enabled",
+                       CommandDestination::MAPPING_PROCESSOR);
 
 // Output Backend commands
 
