@@ -108,7 +108,6 @@ set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/xmos_protocol"
                  "${PROJECT_SOURCE_DIR}/../common"
                  "${CMAKE_BINARY_DIR}"
-                 "${PROJECT_SOURCE_DIR}/third-party/install/libserialport/include"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
                  "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
 
