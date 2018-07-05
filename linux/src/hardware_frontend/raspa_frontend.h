@@ -109,7 +109,7 @@ private:
     bool            _connected;
     bool            _muted;
     bool            _verify_acks;
-    xmos::BoardInfoData _board_info;
+    xmos::GpioBoardInfoData _board_info;
 };
 
 std::optional<uint8_t> to_xmos_hw_type(SensorHwType type);
