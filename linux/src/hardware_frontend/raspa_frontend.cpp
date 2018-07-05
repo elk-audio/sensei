@@ -19,7 +19,7 @@ using namespace xmos;
 
 constexpr char      SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char      RASPA_SOCKET[] = "/tmp/raspa";
-constexpr uint8_t   DEFAULT_TICK_RATE = SystemTickRate::TICK_5000_HZ;
+constexpr uint8_t   DEFAULT_TICK_RATE = GPIO_SYSTEM_TICK_1000_HZ;
 constexpr int       SOCKET_TIMEOUT_US = 500'000;
 constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(500);
 constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
@@ -297,7 +297,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::SET_ENABLED:
         {
             auto cmd = static_cast<const SetEnabledCommand*>(message);
-            uint8_t muted = cmd->data()? CNTRLR_UNMUTED : CNTRLR_MUTED;
+            uint8_t muted = cmd->data()? GPIO_CONTROLLER_UNMUTED : GPIO_CONTROLLER_MUTED;
             _send_list.push_back(_packet_factory.make_mute_controller_command(cmd->index(), muted));
             break;
         }
@@ -338,10 +338,10 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             switch (cmd->data())
             {
                 case HwPolarity::ACTIVE_HIGH:
-                    polarity = CntrlrPolarity::ACTIVE_HIGH;
+                    polarity = GPIO_ACTIVE_HIGH;
                     break;
                 case HwPolarity::ACTIVE_LOW:
-                    polarity = CntrlrPolarity::ACTIVE_LOW;
+                    polarity = GPIO_ACTIVE_LOW;
                     break;
             }
             _send_list.push_back(_packet_factory.make_set_polarity_command(cmd->index(), polarity));
@@ -351,8 +351,8 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         {
             auto cmd = static_cast<const SetFastModeCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_debounce_mode_command(cmd->index(),
-                                                                                cmd->data()? CntrlrDebounceMode::CNTRLR_DEBOUNCE_ENABLED :
-                                                                                             CntrlrDebounceMode::CNTRLR_DEBOUNCE_DISABLED));
+                                                                                cmd->data()? GPIO_CONTROLLER_DEBOUNCE_ENABLED :
+                                                                                             GPIO_CONTROLLER_DEBOUNCE_DISABLED));
             break;
         }
 
@@ -410,16 +410,16 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
     SENSEI_LOG_DEBUG("Received a packet: {}", xmos_packet_to_string(packet));
     switch (packet.command)
     {
-        case XMOS_CMD_GET_VALUE:
+        case GPIO_CMD_GET_VALUE:
             _handle_value(packet);
             break;
 
-        case XMOS_ACK:
+        case GPIO_ACK:
             _handle_ack(packet);
             break;
 
-        case XMOS_CMD_CONFIGURE_CNTRLR:
-            if (packet.sub_command == XMOS_SUB_CMD_GET_BOARD_INFO)
+        case GPIO_CMD_CONFIG_CONTROLLER:
+            if (packet.sub_command == GPIO_SUB_CMD_GET_BOARD_INFO)
             _handle_board_info(packet);
             break;
 
@@ -430,7 +430,7 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
 
 void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
 {
-    uint32_t seq_no = from_xmos_byteord(ack.payload.ack_data.returned_seq_no);
+    uint32_t seq_no = from_xmos_byteord(ack.payload.gpio_ack_data.returned_seq_no);
     SENSEI_LOG_DEBUG("Got ack for packet: {}", seq_no);
     if (_verify_acks)
     {
@@ -449,17 +449,17 @@ void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
             SENSEI_LOG_WARNING("Got unrecognised ack for packet: {}", seq_no);
         }
     }
-    char status = ack.payload.ack_data.status;
-    if (status != xmos::XmosReturnStatus::OK)
+    char status = ack.payload.gpio_ack_data.gpio_return_status;
+    if (status != xmos::GpioReturnStatus::GPIO_OK)
     {
-        SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_xmos_byteord(ack.payload.ack_data.returned_seq_no),
+        SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_xmos_byteord(ack.payload.gpio_ack_data.returned_seq_no),
                                                                        xmos_status_to_string(status));
     }
 }
 
 void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
 {
-    auto& m = packet.payload.value_data;
+    auto& m = packet.payload.gpio_value_data;
    _out_queue->push(_message_factory.make_analog_value(m.controller_id,
                                                        from_xmos_byteord(m.controller_val),
                                                        packet.timestamp));
@@ -468,7 +468,7 @@ void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
 
 void RaspaFrontend::_handle_board_info(const xmos::XmosGpioPacket& packet)
 {
-    _board_info = packet.payload.board_info_data;
+    _board_info = packet.payload.gpio_board_info_data;
     SENSEI_LOG_INFO("Received board info: No of digital input pins: {}",_board_info.num_digital_input_pins);
     SENSEI_LOG_INFO("No of digital output pins: {}",_board_info.num_digital_output_pins);
     SENSEI_LOG_INFO("No of analog input pins: {}", _board_info.num_analog_input_pins);
@@ -481,35 +481,35 @@ std::optional<uint8_t> to_xmos_hw_type(SensorHwType type)
     switch (type)
     {
         case SensorHwType::DIGITAL_INPUT_PIN:
-            hw_type = HwType::BINARY_INPUT;
+            hw_type = GPIO_BINARY_INPUT;
             break;
 
         case SensorHwType::DIGITAL_OUTPUT_PIN:
-            hw_type = HwType::BINARY_OUTPUT;
+            hw_type = GPIO_BINARY_OUTPUT;
             break;
 
         case SensorHwType::ANALOG_INPUT_PIN:
-            hw_type = HwType::ANALOG_INPUT;
+            hw_type = GPIO_ANALOG_INPUT;
             break;
 
         case SensorHwType::STEPPED_OUTPUT:
-            hw_type = HwType::STEPPED_OUTPUT;
+            hw_type = GPIO_STEPPED_OUTPUT;
             break;
 
         case SensorHwType::MULTIPLEXER:
-            hw_type = HwType::MUX_OUTPUT;
+            hw_type = GPIO_MUX_OUTPUT;
             break;
 
         case SensorHwType::N_WAY_SWITCH:
-            hw_type = HwType::N_WAY_SWITCH;
+            hw_type = GPIO_N_WAY_SWITCH;
             break;
 
         case SensorHwType::ENCODER:
-            hw_type = HwType::ROTARY_ENCODER;
+            hw_type = GPIO_ROTARY_ENCODER;
             break;
 
         case SensorHwType::BUTTON:
-            hw_type = HwType::BINARY_INPUT;
+            hw_type = GPIO_BINARY_INPUT;
             break;
 
         default:
@@ -529,18 +529,18 @@ std::optional<uint8_t> to_xmos_sending_mode(SendingMode mode)
             return std::nullopt;
 
         case SendingMode::CONTINUOUS:
-            xmos_mode = NotificationMode::EVERY_CNTRLR_TICK;
+            xmos_mode = GPIO_EVERY_CONTROLLER_TICK;
             break;
 
         case SendingMode::ON_VALUE_CHANGED:
-            xmos_mode = NotificationMode::ON_VALUE_CHANGE;
+            xmos_mode = GPIO_ON_VALUE_CHANGE;
             break;
 
         case SendingMode::TOGGLED:
         case SendingMode::ON_PRESS:
         case SendingMode::ON_RELEASE:
             // TODO - currently handling these in the mapper
-            xmos_mode = NotificationMode::ON_VALUE_CHANGE;
+            xmos_mode = GPIO_ON_VALUE_CHANGE;
             break;
 
         default:
