@@ -512,6 +512,10 @@ std::optional<uint8_t> to_xmos_hw_type(SensorHwType type)
             hw_type = GPIO_BINARY_INPUT;
             break;
 
+        case SensorHwType::AUDIO_MUTE_BUTTON:
+            hw_type = GPIO_AUDIO_MUTE_BUTTON;
+            break;
+
         default:
             SENSEI_LOG_WARNING("Unsupported Sensor HW type: {}", static_cast<int>(type));
             return std::nullopt;

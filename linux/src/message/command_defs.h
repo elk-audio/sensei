@@ -106,6 +106,7 @@ enum class SensorHwType
     N_WAY_SWITCH,
     STEPPED_OUTPUT,
     MULTIPLEXER,
+    AUDIO_MUTE_BUTTON,
     IMU_PITCH,
     IMU_ROLL,
     IMU_YAW

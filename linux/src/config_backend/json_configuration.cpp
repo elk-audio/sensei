@@ -336,6 +336,10 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_YAW);
         }
+        else if (hw_type_str == "audio_mute_button")
+        {
+            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::AUDIO_MUTE_BUTTON);
+        }
         else
         {
             SENSEI_LOG_WARNING("\"{}\" is not a recognized sensor hardware type", hw_type_str);
