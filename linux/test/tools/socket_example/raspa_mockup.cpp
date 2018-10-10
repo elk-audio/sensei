@@ -12,7 +12,7 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 
-#include "../../../xmos_protocol/xmos_gpio_protocol.h"
+#include "include/xmos_protocol/xmos_gpio_protocol.h"
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";

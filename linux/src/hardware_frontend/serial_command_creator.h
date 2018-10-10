@@ -11,7 +11,7 @@
 #include <vector>
 #include <message/command_defs.h>
 
-#include "../../common/sensei_serial_protocol.h"
+#include "serial_protocol/sensei_serial_protocol.h"
 #include "serial_frontend_internal.h"
 #include "message/base_message.h"
 

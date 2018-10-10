@@ -99,14 +99,14 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
 
 set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}")
 
+add_executable(sensei ${SOURCE_FILES})
+
 #########################
 #  Include Directories  #
 #########################
 
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
-                 "${PROJECT_SOURCE_DIR}/xmos_protocol"
-                 "${PROJECT_SOURCE_DIR}/../common"
                  "${CMAKE_BINARY_DIR}"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
                  "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")

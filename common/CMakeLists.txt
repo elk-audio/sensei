@@ -1,0 +1,2 @@
+add_library(serial_protocol INTERFACE)
+target_include_directories(serial_protocol INTERFACE include)

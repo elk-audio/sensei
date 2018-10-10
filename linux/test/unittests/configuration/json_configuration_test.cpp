@@ -1,6 +1,7 @@
 #include <json/value.h>
-#include <sensei_serial_protocol.h>
 #include "gtest/gtest.h"
+
+#include "serial_protocol/sensei_serial_protocol.h"
 
 #define private public
 #include "config_backend/json_configuration.cpp"

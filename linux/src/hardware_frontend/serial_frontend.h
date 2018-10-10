@@ -19,7 +19,7 @@
 #include "synchronized_queue.h"
 #include "hw_frontend.h"
 #include "message/message_factory.h"
-#include "../../common/sensei_serial_protocol.h"
+#include "serial_protocol/sensei_serial_protocol.h"
 #include "serial_command_creator.h"
 #include "message_tracker.h"
 

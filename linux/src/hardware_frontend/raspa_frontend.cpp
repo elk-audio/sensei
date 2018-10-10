@@ -9,7 +9,7 @@
 #include <errno.h>
 
 #include "raspa_frontend.h"
-#include "xmos_gpio_protocol.h"
+#include "xmos_protocol/xmos_gpio_protocol.h"
 #include "logging.h"
 
 namespace sensei {
