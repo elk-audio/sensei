@@ -5,7 +5,7 @@ project(sensei)
 #  Build  information            #
 ##################################
 
-set(WITH_UNIT_TESTS true CACHE BOOL "Build and run unittests")
+option(WITH_UNIT_TESTS "Build and run unittests" ON)
 
 # Get the latest commit hash of the working branch
 execute_process(
@@ -22,32 +22,9 @@ configure_file(
         ${CMAKE_BINARY_DIR}/generated/version.h
 )
 
-####################
-#  Compiler Flags  #
-####################
-
-# Global flags
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(PROJECT_CXX_FLAGS "-Wall -Wextra -fno-rtti")
-set(PROJECT_LINK_FLAGS "")
-
-# Platform specific stuff
-if (APPLE)
-    set(PROJECT_LINK_FLAGS "${PROJECT_LINK_FLAGS} -framework IOKit -framework CoreFoundation")
-endif()
-
-# Build optimization flags
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
-set(CMAKE_CXX_FLAGS_DEBUG   "-DDEBUG -O0 -g")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PROJECT_CXX_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PROJECT_LINK_FLAGS}")
-
-##################
-#  Source Files  #
-##################
+############################
+#  Main executable target  #
+############################
 
 set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/mapping/sensor_mappers.cpp
@@ -66,7 +43,6 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
 
 
 # Enumerate all the headers separately so that CLion can index them
-
 set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/config_backend/json_configuration.h
                         src/message/base_message.h
@@ -116,29 +92,35 @@ if (APPLE)
     set(INCLUDE_DIRS "${INCLUDE_DIRS}" /usr/local/include)
 endif()
 
-include_directories(${INCLUDE_DIRS})
+target_include_directories(sensei PRIVATE ${INCLUDE_DIRS})
+if (APPLE)
+    target_include_directories(sensei PRIVATE /usr/local/lib)
+endif()
+
+####################################
+#  Compiler Flags and definitions  #
+####################################
+
+target_compile_features(sensei PRIVATE cxx_std_17)
+target_compile_options(sensei PRIVATE -Wall -Wextra -Wno-psabi -fno-rtti -ffast-math -mfpmath=sse)
+
+if (APPLE)
+    set_target_properties(sensei LINK_FLAGS -framework IOKit -framework CoreFoundation)
+endif()
 
 #################################
 #  Statically linked libraries  #
 #################################
+add_subdirectory(xmos_protocol)
+add_subdirectory(../common serial_protocol)
 
-set(LINK_LIBRARIES serialport pthread jsoncpp lo)
+set(LINK_LIBRARIES xmos_protocol serial_protocol serialport pthread jsoncpp lo)
+target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 
-if (APPLE)
-    link_directories(/usr/local/lib)
-endif()
+####################
+#  Add unit tests  #
+####################
 
-#############################################
-#  Subdirectory projects                    #
-#############################################
 if (${WITH_UNIT_TESTS})
     add_subdirectory(test)
 endif()
-####################
-#  Target Objects  #
-####################
-
-add_executable(sensei ${SOURCE_FILES})
-
-# Explicitly add external statically linked dependencies here
-target_link_libraries(sensei "${LINK_LIBRARIES}")
