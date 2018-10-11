@@ -124,3 +124,9 @@ target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 if (${WITH_UNIT_TESTS})
     add_subdirectory(test)
 endif()
+
+###########
+#  Tools  #
+###########
+
+add_subdirectory(test/tools/socket_example EXCLUDE_FROM_ALL)

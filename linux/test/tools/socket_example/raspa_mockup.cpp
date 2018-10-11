@@ -1,5 +1,3 @@
-
-
 #include <iostream>
 #include <cstring>
 #include <thread>
@@ -12,7 +10,7 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 
-#include "include/xmos_protocol/xmos_gpio_protocol.h"
+#include "xmos_protocol/xmos_gpio_protocol.h"
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
@@ -174,7 +172,7 @@ private:
                     }
                     else
                     {
-                        std::cout << "Sent ack to msg: " << from_xmos_byteord(_ack.payload.ack_data.returned_seq_no) << std::endl;
+                        std::cout << "Sent ack to msg: " << from_xmos_byteord(_ack.payload.gpio_ack_data.returned_seq_no) << std::endl;
                     }
                     _send_ack = false;
                 }
@@ -182,9 +180,9 @@ private:
                 {
                     /* Send a random value on controller 5 */
                     XmosGpioPacket packet;
-                    packet.command = XMOS_CMD_GET_VALUE;
-                    packet.payload.value_data.controller_id = 5;
-                    packet.payload.value_data.controller_val = to_xmos_byteord(rand() % 128);
+                    packet.command = GPIO_CMD_GET_VALUE;
+                    packet.payload.gpio_value_data.controller_id = 5;
+                    packet.payload.gpio_value_data.controller_val = to_xmos_byteord(rand() % 128);
 
                     auto t = std::chrono::system_clock::now().time_since_epoch();
                     packet.timestamp = std::chrono::duration_cast<std::chrono::microseconds>(t).count();  
@@ -220,8 +218,8 @@ private:
     {
         /* Just reply every packet with an ok ack */
         XmosGpioPacket ack{0};
-        ack.command = XMOS_ACK;
-        ack.payload.ack_data.returned_seq_no = packet.sequence_no;
+        ack.command = GPIO_ACK;
+        ack.payload.gpio_ack_data.returned_seq_no = packet.sequence_no;
         /* Signal ok to send it */
         _ack = ack;
         _send_ack = true;
@@ -242,7 +240,7 @@ private:
     int             _silent_count{0};
 };
 
-bool running(false);
+bool running(true);
 
 static void signal_handler(int sig_number)
 {
@@ -254,7 +252,6 @@ int main()
     signal(SIGINT, signal_handler);
     RaspaMockup instance;
     instance.run();
-    running = true;
     while(running)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
