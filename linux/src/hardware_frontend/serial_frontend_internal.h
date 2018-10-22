@@ -10,7 +10,7 @@
 #include <cstring>
 #include <cmath>
 
-#include "../../../common/sensei_serial_protocol.h"
+#include "serial_protocol/sensei_serial_protocol.h"
 
 namespace sensei {
 namespace hw_frontend {

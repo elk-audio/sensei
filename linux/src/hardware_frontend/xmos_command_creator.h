@@ -7,7 +7,7 @@
 #include <sys/param.h>
 #include <arpa/inet.h>
 
-#include "xmos_gpio_protocol.h"
+#include "xmos_protocol/xmos_gpio_protocol.h"
 
 namespace sensei {
 namespace hw_frontend {
