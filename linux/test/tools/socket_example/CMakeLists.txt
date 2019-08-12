@@ -1,2 +1,2 @@
 add_executable(raspa_mockup raspa_mockup.cpp)
-target_link_libraries(raspa_mockup PRIVATE xmos_protocol pthread)
+target_link_libraries(raspa_mockup PRIVATE gpio_protocol pthread)

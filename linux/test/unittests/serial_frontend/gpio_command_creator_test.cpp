@@ -2,15 +2,15 @@
 #include "gtest/gtest.h"
 
 #define private public
-#include "hardware_frontend/xmos_command_creator.cpp"
+#include "hardware_frontend/gpio_command_creator.cpp"
 
 using namespace sensei;
 using namespace hw_frontend;
 
-class TestXmosCommandCreator : public ::testing::Test
+class TestGpioCommandCreator : public ::testing::Test
 {
 protected:
-    TestXmosCommandCreator() :_module_under_test()
+    TestGpioCommandCreator() :_module_under_test()
     {
     }
     void SetUp()
@@ -20,28 +20,28 @@ protected:
     void TearDown()
     {
     }
-    XmosCommandCreator _module_under_test;
+    GpioCommandCreator _module_under_test;
 };
 
-TEST_F(TestXmosCommandCreator, test_initialize_common_data)
+TEST_F(TestGpioCommandCreator, test_initialize_common_data)
 {
-    XmosGpioPacket packet = _module_under_test._prepare_packet();
-    uint32_t seq_no = from_xmos_byteord(packet.sequence_no);
+    GpioPacket packet = _module_under_test._prepare_packet();
+    uint32_t seq_no = from_gpio_protocol_byteord(packet.sequence_no);
     EXPECT_EQ(0, packet.command);
     EXPECT_EQ(0, packet.sub_command);
-    for (unsigned int i = 0; i < sizeof(XmosGpioPacket::payload.raw_data) ; ++i)
+    for (unsigned int i = 0; i < sizeof(GpioPacket::payload.raw_data) ; ++i)
     {
         EXPECT_EQ(0, packet.payload.raw_data[i]);
     }
     /* Prepare a new packet and make sure the seq no is +1 */
     packet = _module_under_test._prepare_packet();
-    uint32_t next_seq_no = from_xmos_byteord(packet.sequence_no);
+    uint32_t next_seq_no = from_gpio_protocol_byteord(packet.sequence_no);
     ASSERT_EQ(next_seq_no, seq_no + 1);
 }
 
-TEST_F(TestXmosCommandCreator, test_command_creation)
+TEST_F(TestGpioCommandCreator, test_command_creation)
 {
-    XmosGpioPacket packet = _module_under_test.make_reset_system_command();
+    GpioPacket packet = _module_under_test.make_reset_system_command();
     EXPECT_EQ(GPIO_CMD_SYSTEM_CONTROL, packet.command);
     EXPECT_EQ(GPIO_SUB_CMD_STOP_RESET_SYSTEM, packet.sub_command);
 
@@ -139,7 +139,7 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(GPIO_CMD_CONFIG_CONTROLLER, packet.command);
     EXPECT_EQ(GPIO_SUB_CMD_SET_ANALOG_CONTROLLER_RES, packet.sub_command);
     EXPECT_EQ(16, packet.payload.analog_controller_res_data.controller_id);
-    EXPECT_EQ(8u, from_xmos_byteord(packet.payload.analog_controller_res_data.res_in_bits));
+    EXPECT_EQ(8u, from_gpio_protocol_byteord(packet.payload.analog_controller_res_data.res_in_bits));
 
     packet = _module_under_test.make_get_value_command(17);
     EXPECT_EQ(GPIO_CMD_GET_VALUE, packet.command);
@@ -150,6 +150,6 @@ TEST_F(TestXmosCommandCreator, test_command_creation)
     EXPECT_EQ(GPIO_CMD_SET_VALUE, packet.command);
     EXPECT_EQ(0, packet.sub_command);
     EXPECT_EQ(18, packet.payload.gpio_value_data.controller_id);
-    EXPECT_EQ(2048u, from_xmos_byteord(packet.payload.gpio_value_data.controller_val));
+    EXPECT_EQ(2048u, from_gpio_protocol_byteord(packet.payload.gpio_value_data.controller_val));
 }
 

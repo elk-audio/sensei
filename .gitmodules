@@ -1,3 +1,6 @@
 [submodule "linux/third-party/spdlog"]
 	path = linux/third-party/spdlog
 	url = git://github.com/gabime/spdlog.git
+[submodule "linux/gpio_protocol"]
+	path = linux/gpio_protocol
+	url = git@bitbucket.org:mindswteam/gpio_protocol.git

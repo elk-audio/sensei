@@ -10,7 +10,7 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 
-#include "xmos_protocol/xmos_gpio_protocol.h"
+#include "gpio_protocol/gpio_protocol.h"
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
@@ -19,7 +19,7 @@ constexpr auto PING_INTERVAL = std::chrono::milliseconds(250);
 
 constexpr int  SILENT_THRESHOLD = 5;
 
-using namespace xmos;
+using namespace gpio;
 
 /* Dummy task that can act as a stand in for raspalib
  * It claims a socket, prints what it receives on it
@@ -29,20 +29,20 @@ using namespace xmos;
  * g++ raspa_mockup.cpp -g -o mockup -lpthread
  */
 
-inline uint32_t to_xmos_byteord(uint32_t word)
+inline uint32_t to_gpio_protocol_byteord(uint32_t word)
 {
     return htole32(word);
 }
 
-inline uint32_t from_xmos_byteord(uint32_t word)
+inline uint32_t from_gpio_protocol_byteord(uint32_t word)
 {
     return le32toh(word);
 }
 
-void print_packet(const XmosGpioPacket& packet)
+void print_packet(const GpioPacket& packet)
 {
     const uint8_t* data = reinterpret_cast<const uint8_t*>(&packet);
-    for (int i = 0; i < sizeof(XmosGpioPacket); ++i)
+    for (int i = 0; i < sizeof(GpioPacket); ++i)
     {
         std::cout << ", " << (int)data[i]; 
     }
@@ -128,7 +128,7 @@ private:
 
     void read_loop()
     {
-        XmosGpioPacket buffer;
+        GpioPacket buffer;
         while (_running)
         {
             memset(&buffer, 0, sizeof(buffer));
@@ -157,7 +157,7 @@ private:
 
     void write_loop()
     {
-        XmosGpioPacket buffer;
+        GpioPacket buffer;
         while (_running)
         {
             if (_connected)
@@ -172,17 +172,17 @@ private:
                     }
                     else
                     {
-                        std::cout << "Sent ack to msg: " << from_xmos_byteord(_ack.payload.gpio_ack_data.returned_seq_no) << std::endl;
+                        std::cout << "Sent ack to msg: " << from_gpio_protocol_byteord(_ack.payload.gpio_ack_data.returned_seq_no) << std::endl;
                     }
                     _send_ack = false;
                 }
                 else
                 {
                     /* Send a random value on controller 5 */
-                    XmosGpioPacket packet;
+                    GpioPacket packet;
                     packet.command = GPIO_CMD_GET_VALUE;
                     packet.payload.gpio_value_data.controller_id = 5;
-                    packet.payload.gpio_value_data.controller_val = to_xmos_byteord(rand() % 128);
+                    packet.payload.gpio_value_data.controller_val = to_gpio_protocol_byteord(rand() % 128);
 
                     auto t = std::chrono::system_clock::now().time_since_epoch();
                     packet.timestamp = std::chrono::duration_cast<std::chrono::microseconds>(t).count();  
@@ -214,10 +214,10 @@ private:
         }
     }
 
-    void handle_incoming_packet(const XmosGpioPacket& packet)
+    void handle_incoming_packet(const GpioPacket& packet)
     {
         /* Just reply every packet with an ok ack */
-        XmosGpioPacket ack{0};
+        GpioPacket ack{0};
         ack.command = GPIO_ACK;
         ack.payload.gpio_ack_data.returned_seq_no = packet.sequence_no;
         /* Signal ok to send it */
@@ -229,7 +229,7 @@ private:
     bool            _running{false};
     bool            _connected{false};
     bool            _send_ack{false};
-    XmosGpioPacket  _ack;
+    GpioPacket  _ack;
 
     std::thread     _read_thread;
     std::thread     _write_thread;

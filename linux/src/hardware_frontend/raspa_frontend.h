@@ -1,5 +1,5 @@
 /**
- * @brief Class handling communication with XMOS based controller hardware over Raspa
+ * @brief Class handling communication using gpio protocol with hardware over Raspa
  * @copyright MIND Music Labs AB, Stockholm
  *
  */
@@ -20,7 +20,7 @@
 #include "message/base_message.h"
 #include "message/base_command.h"
 #include "message/message_factory.h"
-#include "xmos_command_creator.h"
+#include "gpio_command_creator.h"
 
 namespace sensei {
 namespace hw_frontend {
@@ -84,16 +84,16 @@ private:
 
     void _handle_timeouts();
     bool _connect_to_raspa();
-    void _handle_raspa_packet(const xmos::XmosGpioPacket& packet);
-    void _handle_ack(const xmos::XmosGpioPacket& ack);
-    void _handle_value(const xmos::XmosGpioPacket& packet);
-    void _handle_board_info(const xmos::XmosGpioPacket& packet);
+    void _handle_raspa_packet(const gpio::GpioPacket& packet);
+    void _handle_ack(const gpio::GpioPacket& ack);
+    void _handle_value(const gpio::GpioPacket& packet);
+    void _handle_board_info(const gpio::GpioPacket& packet);
     void _process_sensei_command(const Command*message);
 
     MessageFactory   _message_factory;
-    XmosCommandCreator _packet_factory;
+    GpioCommandCreator _packet_factory;
     MessageTracker     _message_tracker;
-    std::deque<xmos::XmosGpioPacket>  _send_list;
+    std::deque<gpio::GpioPacket>  _send_list;
 
     std::atomic<ThreadState> _state;
     std::thread     _read_thread;
@@ -109,11 +109,11 @@ private:
     bool            _connected;
     bool            _muted;
     bool            _verify_acks;
-    xmos::GpioBoardInfoData _board_info;
+    gpio::GpioBoardInfoData _board_info;
 };
 
-std::optional<uint8_t> to_xmos_hw_type(SensorHwType type);
-std::optional<uint8_t> to_xmos_sending_mode(SendingMode mode);
+std::optional<uint8_t> to_gpio_hw_type(SensorHwType type);
+std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode);
 
 
 

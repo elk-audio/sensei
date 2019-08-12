@@ -49,9 +49,9 @@ void EventHandler::init(int max_n_input_pins,
         SENSEI_LOG_INFO("Initialising a Serial Teensy Frontend");
         _hw_frontend.reset(new hw_frontend::SerialFrontend(hw_config.port, &_to_frontend_queue, &_event_queue));
     }
-    else if (hw_config.type == HwFrontendType::RASPA_XMOS)
+    else if (hw_config.type == HwFrontendType::RASPA_GPIO)
     {
-        SENSEI_LOG_INFO("Initializing a Raspa Xmos Frontend");
+        SENSEI_LOG_INFO("Initializing a Raspa GPIO Frontend");
         _hw_frontend.reset(new hw_frontend::RaspaFrontend(&_to_frontend_queue, &_event_queue));
     }
     else
