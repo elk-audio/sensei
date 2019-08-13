@@ -107,7 +107,7 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
                 config.port = port.asString();
             }
         }
-        else if (type == "raspa_gpio")
+        else if ((type == "raspa_xmos") || (type == "raspa_gpio"))
         {
             config.type = HwFrontendType::RASPA_GPIO;
         } else
