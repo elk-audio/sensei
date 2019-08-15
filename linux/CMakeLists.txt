@@ -102,7 +102,7 @@ endif()
 ####################################
 
 target_compile_features(sensei PRIVATE cxx_std_17)
-target_compile_options(sensei PRIVATE -Wall -Wextra -Wno-psabi -fno-rtti -ffast-math -mfpmath=sse)
+target_compile_options(sensei PRIVATE -Wall -Wextra -Wno-psabi -fno-rtti -ffast-math)
 
 if (APPLE)
     set_target_properties(sensei LINK_FLAGS -framework IOKit -framework CoreFoundation)
