@@ -9,13 +9,13 @@
 #include <errno.h>
 
 #include "raspa_frontend.h"
-#include "xmos_protocol/xmos_gpio_protocol.h"
+#include "gpio_protocol/gpio_protocol.h"
 #include "logging.h"
 
 namespace sensei {
 namespace hw_frontend {
 
-using namespace xmos;
+using namespace gpio;
 
 constexpr char      SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char      RASPA_SOCKET[] = "/tmp/raspa";
@@ -141,12 +141,12 @@ void RaspaFrontend::verify_acks(bool enabled)
 
 void RaspaFrontend::read_loop()
 {
-    XmosGpioPacket buffer;
+    GpioPacket buffer;
     while (_state.load() == ThreadState::RUNNING)
     {
         memset(&buffer, 0, sizeof(buffer));
         auto bytes = recv(_in_socket, &buffer, sizeof(buffer), 0);
-        if (_muted == false && bytes >= static_cast<ssize_t>(sizeof(XmosGpioPacket)))
+        if (_muted == false && bytes >= static_cast<ssize_t>(sizeof(GpioPacket)))
         {
             if (!_connected)
             {
@@ -185,18 +185,18 @@ void RaspaFrontend::write_loop()
                 continue;
             }
             auto& packet = _send_list.front();
-            auto ret = send(_out_socket, &packet, sizeof(XmosGpioPacket), 0);
+            auto ret = send(_out_socket, &packet, sizeof(GpioPacket), 0);
             if (_verify_acks && ret > 0)
             {
-                SENSEI_LOG_DEBUG("Sent raspa packet: {}, id: {}", xmos_packet_to_string(packet),
-                                                                 static_cast<int>(from_xmos_byteord(packet.sequence_no)));
-                _message_tracker.store(nullptr, from_xmos_byteord(packet.sequence_no));
+                SENSEI_LOG_DEBUG("Sent raspa packet: {}, id: {}", gpio_packet_to_string(packet),
+                                                                 static_cast<int>(from_gpio_protocol_byteord(packet.sequence_no)));
+                _message_tracker.store(nullptr, from_gpio_protocol_byteord(packet.sequence_no));
                 _ready_to_send = false;
             } else
             {
                 _send_list.pop_front();
             }
-            if (ret < static_cast<ssize_t>(sizeof(XmosGpioPacket)))
+            if (ret < static_cast<ssize_t>(sizeof(GpioPacket)))
             {
                 SENSEI_LOG_WARNING("Sending packet on socket failed {}", ret);
             }
@@ -267,7 +267,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::SET_SENSOR_HW_TYPE:
         {
             auto cmd = static_cast<const SetSensorHwTypeCommand*>(message);
-            auto hw_type = to_xmos_hw_type(cmd->data());
+            auto hw_type = to_gpio_hw_type(cmd->data());
             if (hw_type.has_value())
             {
                 _send_list.push_back(_packet_factory.make_add_controller_command(cmd->index(), hw_type.value()));
@@ -281,7 +281,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
             auto setpins = cmd->data();
             unsigned int i = 0;
             unsigned int i_mod = 0;
-            /* Split into more than 1 xmos packet if neccesary */
+            /* Split into more than 1 Gpio packet if neccesary */
             while (i < setpins.size())
             {
                 list.pins[i_mod++] = static_cast<uint8_t>(setpins[i++]);
@@ -304,7 +304,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::SET_SENDING_MODE:
         {
             auto cmd = static_cast<const SetSendingModeCommand*>(message);
-            auto mode = to_xmos_sending_mode(cmd->data());
+            auto mode = to_gpio_sending_mode(cmd->data());
             if (mode.has_value())
             {
                 _send_list.push_back(_packet_factory.make_set_notification_mode(cmd->index(), mode.value()));
@@ -405,9 +405,9 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
     return;
 }
 
-void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
+void RaspaFrontend::_handle_raspa_packet(const GpioPacket& packet)
 {
-    SENSEI_LOG_DEBUG("Received a packet: {}", xmos_packet_to_string(packet));
+    SENSEI_LOG_DEBUG("Received a packet: {}", gpio_packet_to_string(packet));
     switch (packet.command)
     {
         case GPIO_CMD_GET_VALUE:
@@ -428,9 +428,9 @@ void RaspaFrontend::_handle_raspa_packet(const XmosGpioPacket& packet)
     }
 }
 
-void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
+void RaspaFrontend::_handle_ack(const GpioPacket& ack)
 {
-    uint32_t seq_no = from_xmos_byteord(ack.payload.gpio_ack_data.returned_seq_no);
+    uint32_t seq_no = from_gpio_protocol_byteord(ack.payload.gpio_ack_data.returned_seq_no);
     SENSEI_LOG_DEBUG("Got ack for packet: {}", seq_no);
     if (_verify_acks)
     {
@@ -450,23 +450,23 @@ void RaspaFrontend::_handle_ack(const XmosGpioPacket& ack)
         }
     }
     char status = ack.payload.gpio_ack_data.gpio_return_status;
-    if (status != xmos::GpioReturnStatus::GPIO_OK)
+    if (status != gpio::GpioReturnStatus::GPIO_OK)
     {
-        SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_xmos_byteord(ack.payload.gpio_ack_data.returned_seq_no),
-                                                                       xmos_status_to_string(status));
+        SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_gpio_protocol_byteord(ack.payload.gpio_ack_data.returned_seq_no),
+                                                                       gpio_status_to_string(status));
     }
 }
 
-void RaspaFrontend::_handle_value(const XmosGpioPacket& packet)
+void RaspaFrontend::_handle_value(const GpioPacket& packet)
 {
     auto& m = packet.payload.gpio_value_data;
    _out_queue->push(_message_factory.make_analog_value(m.controller_id,
-                                                       from_xmos_byteord(m.controller_val),
+                                                       from_gpio_protocol_byteord(m.controller_val),
                                                        packet.timestamp));
     SENSEI_LOG_DEBUG("Got a value packet!");
 }
 
-void RaspaFrontend::_handle_board_info(const xmos::XmosGpioPacket& packet)
+void RaspaFrontend::_handle_board_info(const gpio::GpioPacket& packet)
 {
     _board_info = packet.payload.gpio_board_info_data;
     SENSEI_LOG_INFO("Received board info: No of digital input pins: {}",_board_info.num_digital_input_pins);
@@ -475,7 +475,7 @@ void RaspaFrontend::_handle_board_info(const xmos::XmosGpioPacket& packet)
     SENSEI_LOG_INFO("ADC bit resolution: {}", _board_info.adc_res_in_bits);
 }
 
-std::optional<uint8_t> to_xmos_hw_type(SensorHwType type)
+std::optional<uint8_t> to_gpio_hw_type(SensorHwType type)
 {
     uint8_t hw_type;
     switch (type)
@@ -523,9 +523,9 @@ std::optional<uint8_t> to_xmos_hw_type(SensorHwType type)
     return std::make_optional(hw_type);
 }
 
-std::optional<uint8_t> to_xmos_sending_mode(SendingMode mode)
+std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode)
 {
-    uint8_t xmos_mode;
+    uint8_t gpio_mode;
     switch (mode)
     {
         case SendingMode::OFF:
@@ -533,25 +533,25 @@ std::optional<uint8_t> to_xmos_sending_mode(SendingMode mode)
             return std::nullopt;
 
         case SendingMode::CONTINUOUS:
-            xmos_mode = GPIO_EVERY_CONTROLLER_TICK;
+            gpio_mode = GPIO_EVERY_CONTROLLER_TICK;
             break;
 
         case SendingMode::ON_VALUE_CHANGED:
-            xmos_mode = GPIO_ON_VALUE_CHANGE;
+            gpio_mode = GPIO_ON_VALUE_CHANGE;
             break;
 
         case SendingMode::TOGGLED:
         case SendingMode::ON_PRESS:
         case SendingMode::ON_RELEASE:
             // TODO - currently handling these in the mapper
-            xmos_mode = GPIO_ON_VALUE_CHANGE;
+            gpio_mode = GPIO_ON_VALUE_CHANGE;
             break;
 
         default:
             SENSEI_LOG_WARNING("Unsupported Sending Mode: {}", static_cast<int>(mode));
             return std::nullopt;
     }
-    return xmos_mode;
+    return gpio_mode;
 }
 }
 }

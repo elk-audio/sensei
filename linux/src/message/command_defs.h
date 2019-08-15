@@ -141,7 +141,7 @@ enum class HwFrontendType
 {
     NONE,
     SERIAL_TEENSY,
-    RASPA_XMOS
+    RASPA_GPIO
 };
 
 /**

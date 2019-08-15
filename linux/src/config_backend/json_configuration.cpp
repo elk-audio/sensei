@@ -107,9 +107,9 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
                 config.port = port.asString();
             }
         }
-        else if (type == "raspa_xmos")
+        else if ((type == "raspa_xmos") || (type == "raspa_gpio"))
         {
-            config.type = HwFrontendType::RASPA_XMOS;
+            config.type = HwFrontendType::RASPA_GPIO;
         } else
         {
             SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware frontend type", type.asString());
@@ -348,7 +348,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         _queue->push(std::move(m));
     }
 
-    /* For the raspa/xmos frontend we need to set the hw type before assigning pins to it */
+    /* For the raspa/gpio frontend we need to set the hw type before assigning pins to it */
     if (!pins_first)
     {
         auto res = read_pins(hardware["pins"], sensor_id);
