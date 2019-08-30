@@ -710,8 +710,8 @@ void ContinuousSensorMapper::process(Value *value, output_backend::OutputBackend
     }
     assert(value->type() == ValueType::CONTINUOUS);
 
-    auto imu_val = static_cast<ContinuousValue*>(value);
-    float clipped_val = clip<float>(imu_val->value(), _input_scale_range_low, _input_scale_range_high);
+    auto continuous_val = static_cast<ContinuousValue*>(value);
+    float clipped_val = clip<float>(continuous_val->value(), _input_scale_range_low, _input_scale_range_high);
     float out_val = (clipped_val - _input_scale_range_low) / (_input_scale_range_high - _input_scale_range_low);
 
     if (_invert_value)
