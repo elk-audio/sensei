@@ -33,7 +33,7 @@ public:
 
     /**
      * @brief Returns true if connection to the HW is ok and ready to send
-     * @return State of serial port connection
+     * @return State of hw frontend connection
      */
     virtual bool connected() = 0;
 
