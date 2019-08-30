@@ -83,23 +83,6 @@ public:
      */
     void set_range_output(int index, int value);
 
-    /**
-     * @brief Trigger an automatic self calibration of the IMU gyro
-     *
-     * The IMU should be still when this command is sent.
-     */
-    void set_imu_calibration();
-
-    /**
-     * @brief Reset the IMU calibration to its factory settings.
-     */
-    void set_imu_factory_reset();
-
-    /**
-     * @brief Restart the IMU.
-     */
-    void set_imu_reboot();
-
 private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
     int _max_n_input_pins;

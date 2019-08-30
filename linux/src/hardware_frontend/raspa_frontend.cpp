@@ -540,9 +540,8 @@ std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode)
             gpio_mode = GPIO_ON_VALUE_CHANGE;
             break;
 
-        case SendingMode::TOGGLED:
-        case SendingMode::ON_PRESS:
-        case SendingMode::ON_RELEASE:
+        case SendingMode::WHEN_TOGGLED_ON:
+        case SendingMode::WHEN_TOGGLED_OFF:
             // TODO - currently handling these in the mapper
             gpio_mode = GPIO_ON_VALUE_CHANGE;
             break;

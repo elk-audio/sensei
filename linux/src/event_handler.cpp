@@ -5,7 +5,6 @@
 #include "output_backend/osc_backend.h"
 #include "config_backend/json_configuration.h"
 #include "user_frontend/osc_user_frontend.h"
-#include "hardware_frontend/serial_frontend.h"
 #include "hardware_frontend/raspa_frontend.h"
 #include "utils.h"
 #include "logging.h"
@@ -44,12 +43,7 @@ void EventHandler::init(int max_n_input_pins,
         }
     }
 
-    if (hw_config.type == HwFrontendType::SERIAL_TEENSY)
-    {
-        SENSEI_LOG_INFO("Initialising a Serial Teensy Frontend");
-        _hw_frontend.reset(new hw_frontend::SerialFrontend(hw_config.port, &_to_frontend_queue, &_event_queue));
-    }
-    else if (hw_config.type == HwFrontendType::RASPA_GPIO)
+    if (hw_config.type == HwFrontendType::RASPA_GPIO)
     {
         SENSEI_LOG_INFO("Initializing a Raspa GPIO Frontend");
         _hw_frontend.reset(new hw_frontend::RaspaFrontend(&_to_frontend_queue, &_event_queue));
