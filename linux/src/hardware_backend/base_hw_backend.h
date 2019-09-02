@@ -65,6 +65,36 @@ public:
     virtual void reconnect_to_gpio_hw() = 0;
 };
 
+/**
+ * @brief Dummy hw backend
+ */
+class NoOpHwBackend : public BaseHwBackend
+{
+public:
+    void init() {}
+
+    void deinit() {}
+
+    // To suppress warnings
+    bool send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet __attribute__((unused)))
+    {
+        return true;
+    }
+
+    // To suppress warnings
+    bool receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet __attribute__((unused)))
+    {
+        return true;
+    }
+
+    bool get_status()
+    {
+        return true;
+    }
+
+    void reconnect_to_gpio_hw() {}
+};
+
 } // hw_backend
 } // sensei
 

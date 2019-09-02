@@ -54,6 +54,7 @@ void EventHandler::init(int max_n_input_pins,
         break;
 
     default:
+        _hw_backend.reset(new hw_backend::NoOpHwBackend);
         _hw_frontend.reset(new hw_frontend::NoOpFrontend(&_to_frontend_queue, &_event_queue));
         SENSEI_LOG_ERROR("No HW Frontend configured");
         break;
