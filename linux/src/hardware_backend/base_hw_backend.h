@@ -24,13 +24,13 @@ public:
      * @return true if initialization was successful
      * @return false false if not
      */
-    virtual void init();
+    virtual void init() = 0;
 
     /**
      * @brief Function to de initialize the hardware backend
      *
      */
-    virtual void deinit();
+    virtual void deinit() = 0;
 
     /**
      * @brief Send GPIO Packet to gpio hardware device
@@ -39,7 +39,7 @@ public:
      * @return true if packet was sent successfully
      * @return false if packet was not sent.
      */
-    virtual bool send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet);
+    virtual bool send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet) = 0;
 
     /**
      * @brief Receive a GPIO Packet from the gpio hardware device
@@ -48,7 +48,7 @@ public:
      * @return true if packet was received successfully
      * @return false if no packet was received.
      */
-    virtual bool receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet);
+    virtual bool receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet) = 0;
 
     /**
      * @brief Check the status of the gpio hardware device
@@ -56,13 +56,13 @@ public:
      * @return true if stuats is ok, false if not. Should have adequeate
      *         log messages in case of error.
      */
-    virtual bool get_status();
+    virtual bool get_status() = 0;
 
     /**
      * @brief Virtual function to restablish communication to a gpio hw device
      *
      */
-    virtual void reconnect_to_gpio_hw();
+    virtual void reconnect_to_gpio_hw() = 0;
 };
 
 } // hw_backend
