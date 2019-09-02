@@ -8,7 +8,8 @@
 #include "synchronized_queue.h"
 #include "mapping/mapping_processor.h"
 #include "message/message_factory.h"
-#include "hardware_frontend/hw_frontend.h"
+#include "hardware_frontend/base_hw_frontend.h"
+#include "hardware_backend/base_hw_backend.h"
 #include "output_backend/output_backend.h"
 #include "config_backend/base_configuration.h"
 #include "user_frontend/user_frontend.h"
@@ -46,7 +47,8 @@ private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
 
     // Sub-components instances
-    std::unique_ptr<hw_frontend::HwFrontend> _hw_frontend;
+    std::unique_ptr<hw_frontend::BaseHwFrontend> _hw_frontend;
+    std::unique_ptr<hw_backend::BaseHwBackend> _hw_backend;
     std::unique_ptr<mapping::MappingProcessor> _processor;
     std::unique_ptr<output_backend::OutputBackend> _output_backend;
     std::unique_ptr<config::BaseConfiguration> _config_backend;

@@ -1,14 +1,7 @@
-
-
 #include <iostream>
 #include <cstring>
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <errno.h>
-
-#include "raspa_frontend.h"
+#include "hw_frontend.h"
 #include "gpio_protocol/gpio_protocol.h"
 #include "logging.h"
 
@@ -17,25 +10,23 @@ namespace hw_frontend {
 
 using namespace gpio;
 
-constexpr char      SENSEI_SOCKET[] = "/tmp/sensei";
-constexpr char      RASPA_SOCKET[] = "/tmp/raspa";
 constexpr uint8_t   DEFAULT_TICK_RATE = GPIO_SYSTEM_TICK_1000_HZ;
-constexpr int       SOCKET_TIMEOUT_US = 500'000;
 constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(500);
+constexpr auto      HW_BACKEND_CON_TIMEOUT = std::chrono::milliseconds(250);
 constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
 constexpr int       MAX_RESEND_ATTEMPTS = 3;
 
-SENSEI_GET_LOGGER_WITH_MODULE_NAME("raspa_frontend");
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("gpio_hw_frontend");
 
-RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_queue,
-                             SynchronizedQueue <std::unique_ptr<sensei::BaseMessage>>*out_queue)
-              : HwFrontend(in_queue, out_queue),
+HwFrontend::HwFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_queue,
+                       SynchronizedQueue <std::unique_ptr<sensei::BaseMessage>>*out_queue,
+                       std::unique_ptr<hw_backend::BaseHwBackend>& hw_backend)
+                : BaseHwFrontend(in_queue, out_queue),
                 _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
+                _hw_backend(hw_backend),
                 _state(ThreadState::STOPPED),
-                _in_socket(-1),
-                _out_socket(-1),
                 _ready_to_send{true},
-                _connected(false),
+                _hw_backend_connected(false),
                 _muted(false),
                 _verify_acks(true)
 {
@@ -43,79 +34,30 @@ RaspaFrontend::RaspaFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>
     _send_list.push_back(_packet_factory.make_reset_system_command());
     _send_list.push_back(_packet_factory.make_get_board_info_command());
     _send_list.push_back(_packet_factory.make_set_tick_rate_command(DEFAULT_TICK_RATE));
-    _in_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
-    _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
-    if (_in_socket >= 0 && _out_socket >= 0)
-    {
-        /* Sensei binds one socket to SENSEI_SOCKET, then tries to connect
-         * the other one to RASPA_SOCKET, if this fails, Sensei will retry
-         * the connection to RASPA_SOCKET when it receives something on
-         * SENSEI_SOCKET.
-         * Raspalib does the opposite when it starts up, binds to its own
-         * port and waits for a message. This way the processes can be
-         * started in any order and synchronise  */
-
-        sockaddr_un address;
-        address.sun_family = AF_UNIX;
-        strcpy(address.sun_path, SENSEI_SOCKET);
-        // In case sensei didn't quit gracefully, clear the socket handle
-        unlink(SENSEI_SOCKET);
-        auto res = bind(_in_socket, reinterpret_cast<sockaddr*>(&address), sizeof(sockaddr_un));
-        if (res != 0)
-        {
-            SENSEI_LOG_ERROR("Failed to bind to socket: {}", strerror(errno));
-        }
-        else
-        {
-            timeval time;
-            time.tv_sec = 0;
-            time.tv_usec = SOCKET_TIMEOUT_US;
-            auto res = setsockopt(_in_socket, SOL_SOCKET, SO_RCVTIMEO, &time, sizeof(time));
-            if (res != 0 )
-            {
-                SENSEI_LOG_ERROR("Failed to set incoming socket timeout: {}", strerror(errno));
-            }
-        }
-        _connected = _connect_to_raspa();
-    }
-    else
-    {
-        SENSEI_LOG_ERROR("Failed to get sockets from system");
-    }
 }
 
-RaspaFrontend::~RaspaFrontend()
-{
-    unlink(SENSEI_SOCKET);
-}
-
-bool RaspaFrontend::connected()
-{
-    return _connected;
-}
-
-void RaspaFrontend::run()
+void HwFrontend::run()
 {
     SENSEI_LOG_INFO("Starting read and write threads");
-    if (_connected || _state.load() == ThreadState::STOPPED)
+    if (_hw_backend->get_status() || _state.load() == ThreadState::STOPPED)
     {
         _state.store(ThreadState::RUNNING);
-        _read_thread = std::thread(&RaspaFrontend::read_loop, this);
-        _write_thread = std::thread(&RaspaFrontend::write_loop, this);
+        _read_thread = std::thread(&HwFrontend::read_loop, this);
+        _write_thread = std::thread(&HwFrontend::write_loop, this);
     }
     else
     {
-        SENSEI_LOG_ERROR("Cant start RaspaFrontend, {}", _connected? "Already running" : "Not connected");
+        SENSEI_LOG_ERROR("Cant start HwFrontend, {}",_hw_backend_connected? "Already running" : "Not connected to hw backend");
     }
 }
 
-void RaspaFrontend::stop()
+void HwFrontend::stop()
 {
     if (_state.load() != ThreadState::RUNNING)
     {
         return;
     }
-    SENSEI_LOG_INFO("Stopping RaspaFrontend");
+    SENSEI_LOG_INFO("Stopping HwFrontend");
     _state.store(ThreadState::STOPPING);
     if (_read_thread.joinable())
     {
@@ -129,31 +71,28 @@ void RaspaFrontend::stop()
     SENSEI_LOG_INFO("Threads stopped");
 }
 
-void RaspaFrontend::mute(bool enabled)
+void HwFrontend::mute(bool enabled)
 {
     _muted = enabled;
 }
 
-void RaspaFrontend::verify_acks(bool enabled)
+void HwFrontend::verify_acks(bool enabled)
 {
     _verify_acks = enabled;
 }
 
-void RaspaFrontend::read_loop()
+void HwFrontend::read_loop()
 {
     GpioPacket buffer;
     while (_state.load() == ThreadState::RUNNING)
     {
-        memset(&buffer, 0, sizeof(buffer));
-        auto bytes = recv(_in_socket, &buffer, sizeof(buffer), 0);
-        if (_muted == false && bytes >= static_cast<ssize_t>(sizeof(GpioPacket)))
+        const auto recv_success_flag = _hw_backend->receive_gpio_packet(buffer);
+
+        if (_muted == false && recv_success_flag)
         {
-            if (!_connected)
-            {
-                _connected = _connect_to_raspa();
-            }
-            _handle_raspa_packet(buffer);
+            _handle_gpio_packet(buffer);
         }
+
         if (!_ready_to_send)
         {
             _handle_timeouts(); /* It's more efficient to not check this every time */
@@ -163,7 +102,7 @@ void RaspaFrontend::read_loop()
     _ready_to_send_notifier.notify_one();
 }
 
-void RaspaFrontend::write_loop()
+void HwFrontend::write_loop()
 {
     while (_state.load() == ThreadState::RUNNING)
     {
@@ -177,6 +116,15 @@ void RaspaFrontend::write_loop()
         while(!_send_list.empty() && _state.load() == ThreadState::RUNNING)
         {
             std::unique_lock<std::mutex> lock(_send_mutex);
+
+            if(!_hw_backend->get_status())
+            {
+                SENSEI_LOG_WARNING("Write Loop : hw backend is not connected! Attempting to reconnect..");
+                _hw_backend->reconnect_to_gpio_hw();
+                std::this_thread::sleep_for(std::chrono::milliseconds(HW_BACKEND_CON_TIMEOUT));
+                continue;
+            }
+
             SENSEI_LOG_DEBUG("Going through sendlist: {} packets", _send_list.size());
             if (_verify_acks && !_ready_to_send )
             {
@@ -184,11 +132,13 @@ void RaspaFrontend::write_loop()
                 _ready_to_send_notifier.wait(lock);
                 continue;
             }
+
             auto& packet = _send_list.front();
-            auto ret = send(_out_socket, &packet, sizeof(GpioPacket), 0);
-            if (_verify_acks && ret > 0)
+            const auto send_success_flag = _hw_backend->send_gpio_packet(packet);
+
+            if (_verify_acks && send_success_flag)
             {
-                SENSEI_LOG_DEBUG("Sent raspa packet: {}, id: {}", gpio_packet_to_string(packet),
+                SENSEI_LOG_DEBUG("Sent Gpio packet: {}, id: {}", gpio_packet_to_string(packet),
                                                                  static_cast<int>(from_gpio_protocol_byteord(packet.sequence_no)));
                 _message_tracker.store(nullptr, from_gpio_protocol_byteord(packet.sequence_no));
                 _ready_to_send = false;
@@ -196,15 +146,15 @@ void RaspaFrontend::write_loop()
             {
                 _send_list.pop_front();
             }
-            if (ret < static_cast<ssize_t>(sizeof(GpioPacket)))
+            if (!send_success_flag)
             {
-                SENSEI_LOG_WARNING("Sending packet on socket failed {}", ret);
+                SENSEI_LOG_WARNING("Failed sending packet to hw backend");
             }
         }
     }
 }
 
-void RaspaFrontend::_handle_timeouts()
+void HwFrontend::_handle_timeouts()
 {
     std::lock_guard<std::mutex> lock(_send_mutex);
     switch (_message_tracker.timed_out())
@@ -235,33 +185,9 @@ void RaspaFrontend::_handle_timeouts()
     }
 }
 
-bool RaspaFrontend::_connect_to_raspa()
+void HwFrontend::_process_sensei_command(const Command*message)
 {
-    sockaddr_un address;
-    address.sun_family = AF_UNIX;
-    strcpy(address.sun_path, RASPA_SOCKET);
-    auto res = connect(_out_socket, reinterpret_cast<sockaddr*>(&address), sizeof(sockaddr_un));
-    if (res != 0)
-    {
-        SENSEI_LOG_ERROR("Failed to connect to Raspa socket: {}", strerror(errno));
-        return false;
-    }
-    timeval time;
-    time.tv_sec = 0;
-    time.tv_usec = SOCKET_TIMEOUT_US;
-    res = setsockopt(_out_socket, SOL_SOCKET, SO_SNDTIMEO, &time, sizeof(time));
-    if (res != 0 )
-    {
-        SENSEI_LOG_ERROR("Failed to set outgoing socket timeout: {}", strerror(errno));
-        return false;
-    }
-    SENSEI_LOG_INFO("Connected to Raspa!");
-    return true;
-}
-
-void RaspaFrontend::_process_sensei_command(const Command*message)
-{
-    SENSEI_LOG_DEBUG("Raspafrontend: got command: {}", message->representation());
+    SENSEI_LOG_DEBUG("HwFrontend: got command: {}", message->representation());
     switch (message->type())
     {
         case CommandType::SET_SENSOR_HW_TYPE:
@@ -334,7 +260,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
         case CommandType::SET_HW_POLARITY:
         {
             auto cmd = static_cast<const SetSensorHwPolarityCommand*>(message);
-            uint8_t polarity;
+            uint8_t polarity = 0;
             switch (cmd->data())
             {
                 case HwPolarity::ACTIVE_HIGH:
@@ -405,7 +331,7 @@ void RaspaFrontend::_process_sensei_command(const Command*message)
     return;
 }
 
-void RaspaFrontend::_handle_raspa_packet(const GpioPacket& packet)
+void HwFrontend::_handle_gpio_packet(const GpioPacket& packet)
 {
     SENSEI_LOG_DEBUG("Received a packet: {}", gpio_packet_to_string(packet));
     switch (packet.command)
@@ -428,7 +354,7 @@ void RaspaFrontend::_handle_raspa_packet(const GpioPacket& packet)
     }
 }
 
-void RaspaFrontend::_handle_ack(const GpioPacket& ack)
+void HwFrontend::_handle_ack(const GpioPacket& ack)
 {
     uint32_t seq_no = from_gpio_protocol_byteord(ack.payload.gpio_ack_data.returned_seq_no);
     SENSEI_LOG_DEBUG("Got ack for packet: {}", seq_no);
@@ -457,7 +383,7 @@ void RaspaFrontend::_handle_ack(const GpioPacket& ack)
     }
 }
 
-void RaspaFrontend::_handle_value(const GpioPacket& packet)
+void HwFrontend::_handle_value(const GpioPacket& packet)
 {
     auto& m = packet.payload.gpio_value_data;
    _out_queue->push(_message_factory.make_analog_value(m.controller_id,
@@ -466,7 +392,7 @@ void RaspaFrontend::_handle_value(const GpioPacket& packet)
     SENSEI_LOG_DEBUG("Got a value packet!");
 }
 
-void RaspaFrontend::_handle_board_info(const gpio::GpioPacket& packet)
+void HwFrontend::_handle_board_info(const gpio::GpioPacket& packet)
 {
     _board_info = packet.payload.gpio_board_info_data;
     SENSEI_LOG_INFO("Received board info: No of digital input pins: {}",_board_info.num_digital_input_pins);
@@ -554,4 +480,3 @@ std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode)
 }
 }
 }
-

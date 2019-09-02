@@ -5,7 +5,8 @@
 #include "output_backend/osc_backend.h"
 #include "config_backend/json_configuration.h"
 #include "user_frontend/osc_user_frontend.h"
-#include "hardware_frontend/raspa_frontend.h"
+#include "hardware_frontend/hw_frontend.h"
+#include "hardware_backend/gpio_hw_socket.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -43,21 +44,22 @@ void EventHandler::init(int max_n_input_pins,
         }
     }
 
-    if (hw_config.type == HwFrontendType::RASPA_GPIO)
+    // hw_frontend initialization
+    switch (hw_config.type)
     {
-        SENSEI_LOG_INFO("Initializing a Raspa GPIO Frontend");
-        _hw_frontend.reset(new hw_frontend::RaspaFrontend(&_to_frontend_queue, &_event_queue));
-    }
-    else
-    {
+    case HwFrontendType::RASPA_GPIO:
+        SENSEI_LOG_INFO("Initializing Gpio Hw Frontend with socket hw backend");
+        _hw_backend.reset(new hw_backend::GpioHwSocket("/tmp/raspa"));
+        _hw_frontend.reset(new hw_frontend::HwFrontend(&_to_frontend_queue, &_event_queue, _hw_backend));
+        break;
+
+    default:
         _hw_frontend.reset(new hw_frontend::NoOpFrontend(&_to_frontend_queue, &_event_queue));
         SENSEI_LOG_ERROR("No HW Frontend configured");
+        break;
     }
 
-    if (!_hw_frontend->connected())
-    {
-        SENSEI_LOG_ERROR("Hardware connection failed.");
-    }
+    _hw_backend->init();
     _hw_frontend->verify_acks(true);
     _hw_frontend->run();
 }
@@ -66,6 +68,8 @@ void EventHandler::deinit()
 {
     _hw_frontend->stop();
     _hw_frontend.reset(nullptr);
+    _hw_backend->deinit();
+    _hw_backend.reset(nullptr);
     _processor.reset(nullptr);
     _output_backend.reset(nullptr);
     _config_backend.reset(nullptr);
