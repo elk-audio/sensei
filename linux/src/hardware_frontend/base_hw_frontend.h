@@ -66,10 +66,10 @@ public:
     NoOpFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
                  SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue) : BaseHwFrontend(in_queue, out_queue)
     {}
-    virtual void run() {}
-    virtual void stop() {}
-    virtual void mute(bool /*enabled*/) {}
-    virtual void verify_acks(bool /*enabled*/) {}
+    void run() {}
+    void stop() {}
+    void mute(bool /*enabled*/) {}
+    void verify_acks(bool /*enabled*/) {}
 };
 
 }; // namespace hw_frontend
