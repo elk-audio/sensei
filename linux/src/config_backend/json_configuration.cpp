@@ -96,7 +96,8 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
         if ((type == "raspa_xmos") || (type == "raspa_gpio"))
         {
             config.type = HwFrontendType::RASPA_GPIO;
-        } else
+        }
+        else
         {
             SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware frontend type", type.asString());
             return ConfigStatus::PARSING_ERROR;
