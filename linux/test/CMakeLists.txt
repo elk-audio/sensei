@@ -9,11 +9,8 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/locked_queue_test.cpp
                unittests/synchronized_queue_test.cpp
                unittests/configuration/json_configuration_test.cpp
-               unittests/serial_frontend/serial_command_creator_test.cpp
-               unittests/serial_frontend/serial_frontend_test.cpp
-               unittests/serial_frontend/serial_fronted_internal_test.cpp
-               unittests/serial_frontend/message_tracker_test.cpp
-               unittests/serial_frontend/gpio_command_creator_test.cpp
+               unittests/hw_frontend/message_tracker_test.cpp
+               unittests/hw_frontend/gpio_command_creator_test.cpp
                unittests/message/message_test.cpp
                unittests/mapping/sensor_mappers_test.cpp
                unittests/mapping/mapping_processor_test.cpp

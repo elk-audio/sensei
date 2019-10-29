@@ -32,8 +32,6 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/event_handler.cpp
                       src/output_backend/std_stream_backend.cpp
                       src/output_backend/osc_backend.cpp
-                      src/hardware_frontend/serial_frontend.cpp
-                      src/hardware_frontend/serial_command_creator.cpp
                       src/hardware_frontend/raspa_frontend.cpp
                       src/hardware_frontend/message_tracker.cpp
                       src/hardware_frontend/gpio_command_creator.cpp
@@ -59,9 +57,6 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/output_backend/std_stream_backend.h
                         src/output_backend/osc_backend.h
                         src/hardware_frontend/hw_frontend.h
-                        src/hardware_frontend/serial_frontend.h
-                        src/hardware_frontend/serial_frontend_internal.h
-                        src/hardware_frontend/serial_command_creator.h
                         src/hardware_frontend/message_tracker.h
                         src/hardware_frontend/raspa_frontend.h
                         src/hardware_frontend/gpio_command_creator.h
@@ -112,9 +107,8 @@ endif()
 #  Statically linked libraries  #
 #################################
 add_subdirectory(gpio_protocol)
-add_subdirectory(../common serial_protocol)
 
-set(LINK_LIBRARIES gpio_protocol serial_protocol serialport pthread jsoncpp lo)
+set(LINK_LIBRARIES gpio_protocol pthread jsoncpp lo)
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 
 ####################

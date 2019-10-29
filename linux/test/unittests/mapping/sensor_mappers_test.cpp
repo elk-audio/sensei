@@ -738,7 +738,7 @@ protected:
     bool _timestamp{false};
     bool _fast_mode{true};
     int _delta_ticks{5};
-    SensorHwType _hw_type{SensorHwType::IMU_YAW};
+    SensorHwType _hw_type{SensorHwType::ENCODER};
     std::vector<int> _hw_pin{0};
 
     float _input_scale_low{1};

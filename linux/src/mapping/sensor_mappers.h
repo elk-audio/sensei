@@ -59,7 +59,7 @@ public:
     /**
      * @brief Process a given input value and generate output values for the backend consumer.
      *
-     * @param [in] value Input value coming from the serial frontend
+     * @param [in] value Input value coming from the gpio hw frontend
      * @param [out] out_iterator Iterator to a collection to which output values will be added
      */
     virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;

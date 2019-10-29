@@ -52,7 +52,6 @@ ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
     const Json::Value& hw_frontend = config["hw_frontend"];
     const Json::Value& backends = config["backends"];
     const Json::Value& sensors = config["sensors"];
-    const Json::Value& imu = config["imu"];
 
     /* Read the hw status, needs to be returned directly and not as an event */
     ConfigStatus status = handle_hw_config(hw_frontend, hw_config);
@@ -76,18 +75,14 @@ ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
     {
         for(const Json::Value& sensor : sensors)
         {
-            status = handle_sensor(sensor, hw_config.type);
+            status = handle_sensor(sensor);
             if (status != ConfigStatus::OK)
             {
                 return status;
             }
         }
     }
-    status = handle_imu(imu);
-    if (status != ConfigStatus::OK)
-    {
-        return status;
-    }
+
     /* The last commands enables sending of packets */
     _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, true)));
     return ConfigStatus::OK;
@@ -98,19 +93,11 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
     const Json::Value& type = frontend["type"];
     if (type.isString())
     {
-        if (type == "serial_teensy")
-        {
-            config.type = HwFrontendType::SERIAL_TEENSY;
-            const Json::Value& port = frontend["port"];
-            if (port.isString())
-            {
-                config.port = port.asString();
-            }
-        }
-        else if ((type == "raspa_xmos") || (type == "raspa_gpio"))
+        if ((type == "raspa_xmos") || (type == "raspa_gpio"))
         {
             config.type = HwFrontendType::RASPA_GPIO;
-        } else
+        }
+        else
         {
             SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware frontend type", type.asString());
             return ConfigStatus::PARSING_ERROR;
@@ -126,7 +113,7 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
  * "id" is the only required key, also note that pin type must be
  * handled as the first key.
  */
-ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFrontendType hw_type)
+ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
 {
     int sensor_id;
     const Json::Value& id = sensor["id"];
@@ -202,7 +189,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFront
     const Json::Value& hw_config = sensor["hardware"];
     if (!hw_config.empty())
     {
-        auto status = handle_sensor_hw(hw_config, sensor_id, hw_type == HwFrontendType::SERIAL_TEENSY);
+        auto status = handle_sensor_hw(hw_config, sensor_id);
         if (status != ConfigStatus::OK)
         {
             return status;
@@ -269,19 +256,8 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor, HwFront
 /*
  * Handle the hardware specific parts of a sensor
  */
-ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, int sensor_id, bool pins_first)
+ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, int sensor_id)
 {
-    /* Read pin index as the first thing, this is neccesary for serial/teensy frontend
-     * to be able to map sensors to pins */
-    if (pins_first)
-    {
-        auto res = read_pins(hardware["pins"], sensor_id);
-        if (res != ConfigStatus::OK)
-        {
-            return res;
-        }
-    }
-
     /* Read sensor type configuration */
     const Json::Value& sensor_type = hardware["hardware_type"];
     if (sensor_type.isString())
@@ -324,18 +300,6 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::MULTIPLEXER);
         }
-        else if (hw_type_str == "imu_pitch")
-        {
-            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_PITCH);
-        }
-        else if (hw_type_str == "imu_roll")
-        {
-            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_ROLL);
-        }
-        else if (hw_type_str == "imu_yaw")
-        {
-            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::IMU_YAW);
-        }
         else if (hw_type_str == "audio_mute_button")
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::AUDIO_MUTE_BUTTON);
@@ -348,14 +312,11 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         _queue->push(std::move(m));
     }
 
-    /* For the raspa/gpio frontend we need to set the hw type before assigning pins to it */
-    if (!pins_first)
+    /* For gpio protocol compliant configs, we need to set the hw type before assigning pins to it */
+    auto read_pin_status = read_pins(hardware["pins"], sensor_id);
+    if (read_pin_status != ConfigStatus::OK)
     {
-        auto res = read_pins(hardware["pins"], sensor_id);
-        if (res != ConfigStatus::OK)
-        {
-            return res;
-        }
+        return read_pin_status;
     }
 
     /* read multiplexer configuration if sensor is multiplexed */
@@ -539,134 +500,6 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
         auto m = _message_factory.make_set_osc_output_raw_path_command(id, raw_path.asString());
         _queue->push(std::move(m));
     }
-    return ConfigStatus::OK;
-}
-
-/*
- * Handle IMU configuration
- */
-ConfigStatus JsonConfiguration::handle_imu(const Json::Value& imu)
-{
-    if (imu.empty())
-    {
-        return ConfigStatus::OK; /* Imu config is empty or not present, do nothing */
-    }
-    /* Read filter mode configuration */
-    const Json::Value& mode = imu["filter_mode"];
-    if (mode.isString())
-    {
-        std::string filter_str = mode.asString();
-        int filter = 0;
-        if (filter_str == "no_orientation")
-        {
-            filter = 0;
-        }
-        else if (filter_str == "kalman")
-        {
-            filter = 1;
-        }
-        else if (filter_str == "q_comp")
-        {
-            filter = 2;
-        }
-        else if (filter_str == "q_grad")
-        {
-            filter = 3;
-        }
-        auto m = _message_factory.make_imu_set_filter_mode_command(filter);
-        _queue->push(std::move(m));
-    }
-    /* Read accelerometer range max value configuration */
-    const Json::Value& acc_range = imu["accelerometer_range_max"];
-    if (acc_range.isNumeric())
-    {
-        auto m = _message_factory.make_imu_set_acc_range_max_command(acc_range.asInt());
-        _queue->push(std::move(m));
-    }
-    /* Read gyroscope range max value configuration */
-    const Json::Value& gyro_range = imu["gyroscope_range_max"];
-    if (gyro_range.isNumeric())
-    {
-        auto m = _message_factory.make_imu_set_gyro_range_max_command(gyro_range.asInt());
-        _queue->push(std::move(m));
-    }
-    /* Read compass range max value configuration */
-    const Json::Value& comp_range = imu["compass_range_max"];
-    if (comp_range.isNumeric())
-    {
-        auto m = _message_factory.make_imu_set_compass_range_max_command(comp_range.asInt());
-        _queue->push(std::move(m));
-    }
-    /* Read compass enabled configuration */
-    const Json::Value& compass = imu["compass_enabled"];
-    if (compass.isBool())
-    {
-        auto m = _message_factory.make_imu_enable_compass_command(compass.asBool());
-        _queue->push(std::move(m));
-    }
-    /* Read sending mode configuration */
-    const Json::Value& sending_mode = imu["mode"];
-    if (sending_mode.isString())
-    {
-        if (sending_mode.isString())
-        {
-            const std::string& mode_str = sending_mode.asString();
-            if (mode_str == "continuous")
-            {
-                auto m = _message_factory.make_imu_set_sending_mode_command(SendingMode::CONTINUOUS);
-                _queue->push(std::move(m));
-            }
-            else if (mode_str == "on_value_changed")
-            {
-                auto m = _message_factory.make_imu_set_sending_mode_command(SendingMode::ON_VALUE_CHANGED);
-                _queue->push(std::move(m));
-            }
-            else
-            {
-                SENSEI_LOG_WARNING("\"{}\" is not a recognized sending mode", mode_str);
-                return ConfigStatus::PARAMETER_ERROR;
-            }
-        }
-    }
-    /* Read delta ticks configuration */
-    const Json::Value& ticks = imu["delta_ticks"];
-    if (ticks.isInt())
-    {
-        auto m = _message_factory.make_imu_sending_delta_ticks_command(ticks.asInt());
-        _queue->push(std::move(m));
-    }
-    /* Read data mode configuration */
-    const Json::Value& data_mode = imu["data"];
-    if (data_mode.isString())
-    {
-        int mode;
-        if (data_mode.asString() == "quaternions")
-        {
-            mode = 2;
-        }
-        else
-        {
-            SENSEI_LOG_ERROR("{} was not a recognized data mode", data_mode.asString());
-            mode = 0;
-        }
-        auto m = _message_factory.make_imu_set_data_mode_command(mode);
-        _queue->push(std::move(m));
-    }
-    /* Read threshold for sending data configuration */
-    const Json::Value& threshold = imu["acc_norm_threshold"];
-    if (threshold.isNumeric())
-    {
-        auto m = _message_factory.make_imu_acc_threshold_command(threshold.asFloat());
-        _queue->push(std::move(m));
-    }
-    /* Read IMU enabled configuration */
-    const Json::Value& enabled = imu["enabled"];
-    if (enabled.isBool())
-    {
-        auto m = _message_factory.make_enable_imu_command(enabled.asBool());
-        _queue->push(std::move(m));
-    }
-
     return ConfigStatus::OK;
 }
 

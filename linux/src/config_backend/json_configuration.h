@@ -25,11 +25,10 @@ public:
 
 private:
     ConfigStatus handle_hw_config(const Json::Value& frontend, HwFrontendConfig& config);
-    ConfigStatus handle_sensor(const Json::Value& sensor, HwFrontendType hw_type);
-    ConfigStatus handle_sensor_hw(const Json::Value& hardware, int sensor_id, bool pins_first);
+    ConfigStatus handle_sensor(const Json::Value& sensor);
+    ConfigStatus handle_sensor_hw(const Json::Value& hardware, int sensor_id);
     ConfigStatus handle_backend(const Json::Value& backend);
     ConfigStatus handle_osc_backend(const Json::Value& backend, int id);
-    ConfigStatus handle_imu(const Json::Value& imu);
     ConfigStatus read_pins(const Json::Value& pins, int sensor_id);
 
     MessageFactory _message_factory;

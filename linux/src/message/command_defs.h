@@ -29,7 +29,6 @@ enum class CommandType
     SET_SENSOR_TYPE,
     SET_SENSOR_HW_TYPE,
     SET_HW_PINS,
-    SET_VIRTUAL_PIN,
     SET_ENABLED,
     SET_SENDING_MODE,
     SET_SENDING_DELTA_TICKS,
@@ -44,22 +43,6 @@ enum class CommandType
     SET_CONTINUOUS_OUTPUT_VALUE,
     SET_ANALOG_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
-    // Imu specific commands
-    SET_IMU_ENABLED,
-    SET_IMU_FILTER_MODE,
-    SET_IMU_ACC_RANGE_MAX,
-    SET_IMU_GYRO_RANGE_MAX,
-    SET_IMU_COMPASS_RANGE_MAX,
-    SET_IMU_COMPASS_ENABLED,
-    SET_IMU_SENDING_MODE,
-    SET_IMU_SENDING_DELTA_TICKS,
-    SET_IMU_DATA_MODE,
-    SET_IMU_ACC_THRESHOLD,
-    IMU_CALIBRATE,
-    IMU_FACTORY_RESET,
-    IMU_REBOOT,
-    IMU_GET_TEMPERATURE,
-    IMU_COMMIT_SETTINGS,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_RANGE,
@@ -106,21 +89,7 @@ enum class SensorHwType
     N_WAY_SWITCH,
     STEPPED_OUTPUT,
     MULTIPLEXER,
-    AUDIO_MUTE_BUTTON,
-    IMU_PITCH,
-    IMU_ROLL,
-    IMU_YAW
-};
-
-/**
- * @brief Index for pins to Imu parameters
- */
-enum ImuIndex
-{
-    YAW,
-    PITCH,
-    ROLL,
-    N_IMU_INDEXES
+    AUDIO_MUTE_BUTTON
 };
 
 /**
@@ -140,7 +109,6 @@ enum class BackendType
 enum class HwFrontendType
 {
     NONE,
-    SERIAL_TEENSY,
     RASPA_GPIO
 };
 
@@ -153,7 +121,6 @@ enum class SendingMode
     CONTINUOUS,
     ON_VALUE_CHANGED,
     ON_REQUEST,
-    TOGGLED,
     ON_PRESS,
     ON_RELEASE,
     N_SENDING_MODES
@@ -223,12 +190,6 @@ SENSEI_DECLARE_COMMAND(SetSensorHwTypeCommand,
                        SensorHwType,
                        "Set Sensor Hardware Type",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
-
-SENSEI_DECLARE_COMMAND(SetVirtualPinCommand,
-                       CommandType::SET_VIRTUAL_PIN,
-                       ImuIndex,
-                       "Set virtual pin",
-                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetHwPinsCommand,
                        CommandType::SET_HW_PINS,
@@ -312,98 +273,6 @@ SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
                        CommandType::ENABLE_SENDING_PACKETS,
                        bool,
                        "Enable Sending Packets",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-// IMU specific commands
-
-SENSEI_DECLARE_COMMAND(SetImuEnabledCommand,
-                       CommandType::SET_IMU_ENABLED,
-                       bool,
-                       "Enable IMU",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuFilterModeCommand,
-                       CommandType::SET_IMU_FILTER_MODE,
-                       int,
-                       "Set IMU filter mode",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuAccelerometerRangeMaxCommand,
-                       CommandType::SET_IMU_ACC_RANGE_MAX,
-                       int,
-                       "Set IMU Accelerometer max range",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuGyroscopeRangeMaxCommand,
-                       CommandType::SET_IMU_GYRO_RANGE_MAX,
-                       int,
-                       "Set IMU Gyroscope max range",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuCompassRangeMaxCommand,
-                       CommandType::SET_IMU_COMPASS_RANGE_MAX,
-                       float,
-                       "Set IMU compass max range",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuCompassEnabledCommand,
-                       CommandType::SET_IMU_COMPASS_ENABLED,
-                       bool,
-                       "Enable IMU compass",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuSendingModeCommand,
-                       CommandType::SET_IMU_SENDING_MODE,
-                       SendingMode,
-                       "Set IMU Sending Mode",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuSendingDeltaTicksCommand,
-                       CommandType::SET_IMU_SENDING_DELTA_TICKS,
-                       int,
-                       "Set IMU Sending Delta Ticks",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuDataModeCommand,
-                       CommandType::SET_IMU_DATA_MODE,
-                       int,
-                       "Set IMU type of data sent",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(SetImuAccThresholdCommand,
-                       CommandType::SET_IMU_ACC_THRESHOLD,
-                       float,
-                       "Set IMU acceleration threshold for sending data in on_value_changed mode",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(ImuCalibrateCommand,
-                       CommandType::IMU_CALIBRATE,
-                       int,
-                       "Initiate self calibration of IMU gyroscope",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(ImuFactoryResetCommand,
-                       CommandType::IMU_FACTORY_RESET,
-                       int,
-                       "Reset the IMU to it's factory settings",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(ImuRebootCommand,
-                       CommandType::IMU_REBOOT,
-                       int,
-                       "Initiate a reboot of the IMU",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(ImuGetTemperatureCommand,
-                       CommandType::IMU_GET_TEMPERATURE,
-                       int,
-                       "Get the IMU temperature",
-                       CommandDestination::HARDWARE_FRONTEND);
-
-SENSEI_DECLARE_COMMAND(ImuCommitSettingsCommand,
-                       CommandType::IMU_COMMIT_SETTINGS,
-                       int,
-                       "Save settings and calibration to the IMU EPROM",
                        CommandDestination::HARDWARE_FRONTEND);
 
 // Internal commands

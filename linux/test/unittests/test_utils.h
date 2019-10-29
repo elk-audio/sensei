@@ -16,11 +16,16 @@ std::unique_ptr<DerivedCommand> extract_cmd_from(std::vector<std::unique_ptr<sen
     return std::move(tmp_msg);
 }
 
-/* Custom comparison operator for Range structs. This is only needed for testing */
+/* Custom comparison operator for Range & MultiplexerData structs. This is only needed for testing */
 namespace sensei {
 inline bool operator==(const Range& lhs, const Range& rhs)
 {
     return lhs.min == rhs.min && lhs.max == rhs.max;
+}
+
+inline bool operator==(const MultiplexerData& lhs, const MultiplexerData& rhs)
+{
+    return lhs.id == rhs.id && lhs.pin == rhs.pin;
 }
 }
 #endif //SENSEI_TEST_UTILS_H

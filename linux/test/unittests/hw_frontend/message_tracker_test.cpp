@@ -3,7 +3,6 @@
 
 #include "hardware_frontend/message_tracker.cpp"
 #include "message/message_factory.h"
-#include "hardware_frontend/serial_frontend_internal.h"
 
 using namespace sensei;
 using namespace hw_frontend;
