@@ -13,8 +13,6 @@ using namespace config;
 
 static const std::string test_file = "../../../test/unittests/configuration/test_configuration.json";
 
-//std::cout << (int)commandtype << " " << (int)c->type() << "\n"; \
-
 /* Macro to reduce the footprint when verifying a single command */
 #define EXPECT_COMMAND(message, commandtype, commandclass, id, expected_value) { \
     Command* c = static_cast<Command *>(message.get()); \
