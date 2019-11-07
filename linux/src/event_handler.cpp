@@ -7,6 +7,7 @@
 #include "user_frontend/osc_user_frontend.h"
 #include "hardware_frontend/hw_frontend.h"
 #include "hardware_backend/gpio_hw_socket.h"
+#include "rpi_shiftreg_gpio/rpi_shiftreg_gpio.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -18,11 +19,8 @@ void EventHandler::init(int max_n_input_pins,
                         int max_n_digital_out_pins,
                         const std::string& config_file)
 {
-    _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
-    _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
-    _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
-    _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_input_pins, max_n_digital_out_pins));
     config::HwFrontendConfig hw_config;
+    _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
     auto ret = _config_backend->read(hw_config);
     if (ret != config::ConfigStatus::OK)
     {
@@ -53,6 +51,12 @@ void EventHandler::init(int max_n_input_pins,
         _hw_frontend.reset(new hw_frontend::HwFrontend(&_to_frontend_queue, &_event_queue, _hw_backend));
         break;
 
+    case HwFrontendType::ELK_PI_GPIO:
+        SENSEI_LOG_INFO("Initializing Gpio Frontend with Elk Pi hw backend");
+        _hw_backend.reset(new hw_backend::rpi_gpio::RpiShiftregGpio());
+        _hw_frontend.reset(new hw_frontend::HwFrontend(&_to_frontend_queue, &_event_queue, _hw_backend));
+        break;
+
     default:
         _hw_backend.reset(new hw_backend::NoOpHwBackend);
         _hw_frontend.reset(new hw_frontend::NoOpFrontend(&_to_frontend_queue, &_event_queue));
@@ -61,6 +65,11 @@ void EventHandler::init(int max_n_input_pins,
     }
 
     _hw_backend->init();
+
+    _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
+    _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
+    _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_input_pins, max_n_digital_out_pins));
+
     _hw_frontend->verify_acks(true);
     _hw_frontend->run();
 }
@@ -212,7 +221,6 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
                 break;
             }
         }
-
     }
 
     // At last, pass the message to serial receiver queue

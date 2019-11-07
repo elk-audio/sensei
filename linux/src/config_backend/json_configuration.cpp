@@ -97,6 +97,10 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
         {
             config.type = HwFrontendType::RASPA_GPIO;
         }
+        else if(type == "elk_pi")
+        {
+            config.type = HwFrontendType::ELK_PI_GPIO;
+        }
         else
         {
             SENSEI_LOG_WARNING("\"{}\" is not a recognized hardware frontend type", type.asString());
@@ -300,10 +304,6 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::MULTIPLEXER);
         }
-        else if (hw_type_str == "audio_mute_button")
-        {
-            m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::AUDIO_MUTE_BUTTON);
-        }
         else
         {
             SENSEI_LOG_WARNING("\"{}\" is not a recognized sensor hardware type", hw_type_str);
@@ -386,19 +386,11 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
         _queue->push(std::move(m));
     }
 
-    /* read sensor lowpass filter cutoff configuration */
-    const Json::Value& cutoff = hardware["lowpass_cutoff"];
-    if (cutoff.isNumeric())
+    /* read sensor filter time constant configuration */
+    const Json::Value& time_constant = hardware["filter_time_constant"];
+    if (time_constant.isNumeric())
     {
-        auto m = _message_factory.make_set_lowpass_cutoff_command(sensor_id, cutoff.asFloat());
-        _queue->push(std::move(m));
-    }
-
-    /* read lowpass filter order configuration */
-    const Json::Value& order = hardware["lowpass_order"];
-    if (order.isInt())
-    {
-        auto m = _message_factory.make_set_lowpass_filter_order_command(sensor_id, order.asInt());
+        auto m = _message_factory.make_set_analog_time_constant_command(sensor_id, time_constant.asFloat());
         _queue->push(std::move(m));
     }
 

@@ -46,7 +46,6 @@ class GpioCommandCreator
 public:
     gpio::GpioPacket make_reset_system_command();
     gpio::GpioPacket make_start_system_command();
-    gpio::GpioPacket make_stop_system_command();
     gpio::GpioPacket make_set_tick_rate_command(uint8_t tick_rate);
     gpio::GpioPacket make_get_board_info_command();
     gpio::GpioPacket make_reset_all_controllers_command();
@@ -60,8 +59,8 @@ public:
     gpio::GpioPacket make_mute_controller_command(uint8_t controller_id, uint8_t mute_status);
     gpio::GpioPacket make_set_range_command(uint8_t controller_id, uint32_t min, uint32_t max);
     gpio::GpioPacket make_set_debounce_mode_command(uint8_t controller_id, uint8_t debounce_mode);
-    gpio::GpioPacket make_remove_controller_command(uint8_t controller_id);
     gpio::GpioPacket make_set_analog_resolution_command(uint8_t controller_id, uint8_t adc_bits);
+    gpio::GpioPacket make_set_analog_time_constant_command(uint8_t controller_id, float time_constant);
     gpio::GpioPacket make_get_value_command(uint8_t controller_id);
     gpio::GpioPacket make_set_value_command(uint8_t controller_id, uint32_t value);
 

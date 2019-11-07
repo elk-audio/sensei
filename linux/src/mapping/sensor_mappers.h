@@ -139,15 +139,13 @@ private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
     CommandErrorCode _set_adc_bit_resolution(int resolution);
     CommandErrorCode _set_input_scale_range(int low, int high);
-    CommandErrorCode _set_lowpass_filter_order(int value);
-    CommandErrorCode _set_lowpass_cutoff(float value);
+    CommandErrorCode _set_adc_filter_time_constant(float value);
     CommandErrorCode _set_slider_threshold(int value);
 
     // External board config
     int _delta_ticks_sending;
     int _adc_bit_resolution;
-    int _lowpass_filter_order;
-    float _lowpass_cutoff;
+    float _filter_time_constant;
     int _slider_threshold;
 
     // Mapping parameters

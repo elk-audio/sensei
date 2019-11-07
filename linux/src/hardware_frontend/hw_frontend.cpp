@@ -11,7 +11,7 @@ namespace hw_frontend {
 using namespace gpio;
 
 constexpr uint8_t   DEFAULT_TICK_RATE = GPIO_SYSTEM_TICK_1000_HZ;
-constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(500);
+constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(100);
 constexpr auto      HW_BACKEND_CON_TIMEOUT = std::chrono::milliseconds(250);
 constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
 constexpr int       MAX_RESEND_ATTEMPTS = 3;
@@ -86,17 +86,20 @@ void HwFrontend::read_loop()
     GpioPacket buffer;
     while (_state.load() == ThreadState::RUNNING)
     {
-        const auto recv_success_flag = _hw_backend->receive_gpio_packet(buffer);
-
-        if (_muted == false && recv_success_flag)
+        while(_hw_backend->receive_gpio_packet(buffer))
         {
-            _handle_gpio_packet(buffer);
+            if (!_muted)
+            {
+                _handle_gpio_packet(buffer);
+            }
+
+            if (!_ready_to_send)
+            {
+                _handle_timeouts(); /* It's more efficient to not check this every time */
+            }
         }
 
-        if (!_ready_to_send)
-        {
-            _handle_timeouts(); /* It's more efficient to not check this every time */
-        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(READ_WRITE_TIMEOUT));
     }
     /* Notify the write thread in case it is waiting since no more notifications will follow */
     _ready_to_send_notifier.notify_one();
@@ -249,6 +252,12 @@ void HwFrontend::_process_sensei_command(const Command*message)
             _send_list.push_back(_packet_factory.make_set_analog_resolution_command(cmd->index(), cmd->data()));
             break;
         }
+        case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
+        {
+            auto cmd = static_cast<const SetADCFitlerTimeConstantCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_analog_time_constant_command(cmd->index(), cmd->data()));
+            break;
+        }
         case CommandType::SET_MULTIPLEXED:
         {
             auto cmd = static_cast<const SetMultiplexedSensorCommand*>(message);
@@ -310,7 +319,7 @@ void HwFrontend::_process_sensei_command(const Command*message)
             }
             else
             {
-                _send_list.push_back(_packet_factory.make_stop_system_command());
+                _send_list.push_back(_packet_factory.make_reset_system_command());
             }
             break;
         }
@@ -344,9 +353,11 @@ void HwFrontend::_handle_gpio_packet(const GpioPacket& packet)
             _handle_ack(packet);
             break;
 
-        case GPIO_CMD_CONFIG_CONTROLLER:
+        case GPIO_CMD_SYSTEM_CONTROL:
             if (packet.sub_command == GPIO_SUB_CMD_GET_BOARD_INFO)
-            _handle_board_info(packet);
+            {
+                _handle_board_info(packet);
+            }
             break;
 
         default:
@@ -436,10 +447,6 @@ std::optional<uint8_t> to_gpio_hw_type(SensorHwType type)
 
         case SensorHwType::BUTTON:
             hw_type = GPIO_BINARY_INPUT;
-            break;
-
-        case SensorHwType::AUDIO_MUTE_BUTTON:
-            hw_type = GPIO_AUDIO_MUTE_BUTTON;
             break;
 
         default:
