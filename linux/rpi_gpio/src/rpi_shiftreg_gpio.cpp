@@ -12,14 +12,13 @@
 #include "rpi_shiftreg_gpio/rpi_shiftreg_gpio.h"
 #include "shiftreg_driver_conf.h"
 #include "gpio_protocol_client/gpio_client.h"
-#include "../../../../../../secondary_hdd/yocto/extracted_sdks/sika/sysroots/aarch64-elk-linux/usr/xenomai/include/cobalt/time.h"
-#include "../../../../../../secondary_hdd/yocto/extracted_sdks/sika/sysroots/aarch64-elk-linux/usr/xenomai/include/cobalt/pthread.h"
 
 // xenomai includes
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
 #include <xenomai/init.h>
 #include <rtdm/rtdm.h>
+#include <cobalt/time.h>
 #include <cobalt/sys/ioctl.h>
 #include <cobalt/pthread.h>
 
