@@ -11,7 +11,7 @@ namespace hw_frontend {
 using namespace gpio;
 
 constexpr uint8_t   DEFAULT_TICK_RATE = GPIO_SYSTEM_TICK_1000_HZ;
-constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(100);
+constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(50);
 constexpr auto      HW_BACKEND_CON_TIMEOUT = std::chrono::milliseconds(250);
 constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
 constexpr int       MAX_RESEND_ATTEMPTS = 3;
