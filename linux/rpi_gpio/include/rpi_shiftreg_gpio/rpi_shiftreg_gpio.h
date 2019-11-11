@@ -58,7 +58,7 @@ enum class RpiShiftregTaskState
 
 /**
  * @brief Rpi shift register based gpio hwbackend class. Instantiation of this
- *        class will facliltate the creation and managment real time and non
+ *        class will facliltate the creation and management of real time and non
  *        real time threads which provide an interface between sensei and the
  *        gpio client. This class also is responsible for interfacing with the
  *        real time driver running on rpi to exchange gpio and adc data and
@@ -93,7 +93,7 @@ public:
 
     /**
      * @brief Interface function to stop all threads and delete any allocated
-     *        resources. Internally calls _cleanup()
+     *        resources in the order they were instantiated.
      */
     void deinit() override;
 
@@ -233,6 +233,10 @@ private:
 
     /* =======  Functions which run in RT context  ======= */
 
+    void _pre_config_rt_loop();
+
+    void _post_config_rt_loop();
+
     /**
      * @brief helper function called by the rt threads to rx packets from the
      *        hw frontend through the lock free fifo and call the gpio client
@@ -253,16 +257,6 @@ private:
      *        logger task, using a lock free fifo.
      */
     void _handle_log_msgs();
-
-    /**
-     * @brief Calculate the difference between two timespec structs
-     * @param result The timespec struct holding the difference
-     * @param start The timespec struct holding the start time info
-     * @param stop The timespec struct holding the stop time info
-     */
-    void _calc_time_diff(struct timespec &result,
-                         const struct timespec &start,
-                         const struct timespec &stop);
 
     bool _is_logger_running;
 

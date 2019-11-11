@@ -25,6 +25,9 @@
 // Blocking IO control call to wait on the drivers signal to proceed.
 #define SHIFTREG_DRIVER_WAIT_ON_RT_TASK   _IO(SHIFTREG_DRIVER_IOC_MAGIC, 3)
 
+// IO control to set the driver's shiftregister sampling period
+#define SHIFTREG_DRIVER_SET_TICK_PERIOD   _IOW(SHIFTREG_DRIVER_IOC_MAGIC, 4, int)
+
 #define SHIFTREG_DEVICE_NAME   "/dev/rtdm/shiftreg_rtdm"
 #define SHIFTREG_MODULE_PARAMETERS_PATH    "/sys/module/shiftreg_rtdm/parameters"
 

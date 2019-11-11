@@ -176,23 +176,15 @@ bool RpiShiftregGpio::get_status()
 void RpiShiftregGpio::rt_shiftreg_gpio_task()
 {
     _gpio_client.reset();
-    uint64_t val = 0;
 
-    while (1)
-    {
-        auto res = __cobalt_ioctl(_device_handle, SHIFTREG_DRIVER_WAIT_ON_RT_TASK, NULL);
-        if (res != 0)
-        {
-            break;
-        }
+    _pre_config_rt_loop();
 
-        _handle_rx_packets();
-        _gpio_client.process();
-        _handle_tx_packets();
-        _handle_log_msgs();
-    }
+    // set driver tick period after gpio client has been configured
+    const auto system_tick_period_ns = _gpio_client.get_tick_period_ns();
+    __cobalt_ioctl(_device_handle, SHIFTREG_DRIVER_SET_TICK_PERIOD,
+            &system_tick_period_ns);
 
-    pthread_exit(NULL);
+    _post_config_rt_loop();
 }
 
 void RpiShiftregGpio::nrt_logger_task()
@@ -452,6 +444,39 @@ void RpiShiftregGpio::_stop_driver()
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
+inline void RpiShiftregGpio::_pre_config_rt_loop()
+{
+    while (!_gpio_client.is_running())
+    {
+        auto res = __cobalt_ioctl(_device_handle, SHIFTREG_DRIVER_WAIT_ON_RT_TASK, NULL);
+        if (res != 0)
+        {
+            break;
+        }
+
+        _handle_rx_packets();
+        _handle_tx_packets();
+        _handle_log_msgs();
+    }
+}
+
+inline void RpiShiftregGpio::_post_config_rt_loop()
+{
+    while (1)
+    {
+        auto res = __cobalt_ioctl(_device_handle, SHIFTREG_DRIVER_WAIT_ON_RT_TASK, NULL);
+        if (res != 0)
+        {
+            break;
+        }
+
+        _handle_rx_packets();
+        _gpio_client.process();
+        _handle_tx_packets();
+        _handle_log_msgs();
+    }
+}
+
 inline void RpiShiftregGpio::_handle_rx_packets()
 {
     int num_rx_packets = 0;
@@ -492,22 +517,6 @@ void RpiShiftregGpio::_handle_log_msgs()
         auto log_msg = _gpio_client.get_log_msg();
         _from_rt_thread_log_msg_fifo.push(*log_msg);
         num_log_msg++;
-    }
-}
-
-void RpiShiftregGpio::_calc_time_diff(struct timespec &result,
-                                      const struct timespec &start,
-                                      const struct timespec &stop)
-{
-    if ((stop.tv_nsec - start.tv_nsec) < 0)
-    {
-        result.tv_sec = stop.tv_sec - start.tv_sec - 1;
-        result.tv_nsec = stop.tv_nsec - start.tv_nsec + 1000000000;
-    }
-    else
-    {
-        result.tv_sec = stop.tv_sec - start.tv_sec;
-        result.tv_nsec = stop.tv_nsec - start.tv_nsec;
     }
 }
 
