@@ -54,3 +54,9 @@ add_xenomai_to_target(rpi_shiftreg_gpio)
 target_include_directories(rpi_shiftreg_gpio PRIVATE ${ELK_PI_GPIO_INCLUDE_DIRS})
 target_link_libraries(rpi_shiftreg_gpio PRIVATE pthread fifo gpio_protocol gpio_protocol_client)
 target_compile_definitions(rpi_shiftreg_gpio PRIVATE -DWITH_ELK_PI_GPIO)
+
+# Board test
+add_executable(elk_pi_hw_test test/elk_pi_hw_test.cpp)
+add_xenomai_to_target(elk_pi_hw_test)
+target_link_libraries(elk_pi_hw_test PRIVATE pthread)
+target_include_directories(elk_pi_hw_test PRIVATE "${PROJECT_SOURCE_DIR}/src")
