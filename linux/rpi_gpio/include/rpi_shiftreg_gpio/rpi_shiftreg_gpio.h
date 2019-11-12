@@ -39,7 +39,7 @@ constexpr int NUM_ANALOG_INPUTS = 16;
 constexpr int ADC_RES_IN_BITS = 10;
 
 // Sizes of FIFO which sit between nrt and rt threads
-constexpr int GPIO_PACKET_Q_SIZE = 100;
+constexpr int GPIO_PACKET_Q_SIZE = 150;
 constexpr int GPIO_LOG_MSG_Q_SIZE = 50;
 
 /**

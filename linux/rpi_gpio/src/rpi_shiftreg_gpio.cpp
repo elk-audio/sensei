@@ -35,7 +35,7 @@ namespace rpi_gpio {
 
 // Should be lower than audio thread
 constexpr int TASK_PRIORITY = 50;
-constexpr int MAX_PACKETS_PER_TICK = 10;
+constexpr int MAX_PACKETS_PER_TICK = 50;
 constexpr int MAX_LOG_MSGS_SENT_PER_TICK = 5;
 constexpr int MAX_LOG_MSGS_RX_PER_TICK = 20;
 constexpr int LOGGER_THREAD_TASK_PERIOD_MS = 250;
