@@ -11,7 +11,7 @@ namespace hw_frontend {
 using namespace gpio;
 
 constexpr uint8_t   DEFAULT_TICK_RATE = GPIO_SYSTEM_TICK_1000_HZ;
-constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(500);
+constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(20);
 constexpr auto      HW_BACKEND_CON_TIMEOUT = std::chrono::milliseconds(250);
 constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
 constexpr int       MAX_RESEND_ATTEMPTS = 3;
@@ -86,17 +86,20 @@ void HwFrontend::read_loop()
     GpioPacket buffer;
     while (_state.load() == ThreadState::RUNNING)
     {
-        const auto recv_success_flag = _hw_backend->receive_gpio_packet(buffer);
-
-        if (_muted == false && recv_success_flag)
+        while(_hw_backend->receive_gpio_packet(buffer))
         {
-            _handle_gpio_packet(buffer);
+            if (!_muted)
+            {
+                _handle_gpio_packet(buffer);
+            }
+
+            if (!_ready_to_send)
+            {
+                _handle_timeouts(); /* It's more efficient to not check this every time */
+            }
         }
 
-        if (!_ready_to_send)
-        {
-            _handle_timeouts(); /* It's more efficient to not check this every time */
-        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(READ_WRITE_TIMEOUT));
     }
     /* Notify the write thread in case it is waiting since no more notifications will follow */
     _ready_to_send_notifier.notify_one();
@@ -344,9 +347,11 @@ void HwFrontend::_handle_gpio_packet(const GpioPacket& packet)
             _handle_ack(packet);
             break;
 
-        case GPIO_CMD_CONFIG_CONTROLLER:
+        case GPIO_CMD_SYSTEM_CONTROL:
             if (packet.sub_command == GPIO_SUB_CMD_GET_BOARD_INFO)
-            _handle_board_info(packet);
+            {
+                _handle_board_info(packet);
+            }
             break;
 
         default:
