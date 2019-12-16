@@ -20,7 +20,7 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("gpio_hw_frontend");
 
 HwFrontend::HwFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_queue,
                        SynchronizedQueue <std::unique_ptr<sensei::BaseMessage>>*out_queue,
-                       std::unique_ptr<hw_backend::BaseHwBackend>& hw_backend)
+                       hw_backend::BaseHwBackend* hw_backend)
                 : BaseHwFrontend(in_queue, out_queue),
                 _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
                 _hw_backend(hw_backend),

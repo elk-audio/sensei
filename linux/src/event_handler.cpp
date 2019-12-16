@@ -50,7 +50,7 @@ void EventHandler::init(int max_n_input_pins,
     case HwFrontendType::RASPA_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Hw Frontend with socket hw backend");
         _hw_backend.reset(new hw_backend::GpioHwSocket("/tmp/raspa"));
-        _hw_frontend.reset(new hw_frontend::HwFrontend(&_to_frontend_queue, &_event_queue, _hw_backend));
+        _hw_frontend.reset(new hw_frontend::HwFrontend(&_to_frontend_queue, &_event_queue, _hw_backend.get()));
         break;
 
     default:
