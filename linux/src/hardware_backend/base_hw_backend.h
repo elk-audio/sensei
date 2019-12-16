@@ -76,13 +76,13 @@ public:
     void deinit() {}
 
     // To suppress warnings
-    bool send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet __attribute__((unused)))
+    bool send_gpio_packet([[maybe_unused]] const gpio::GpioPacket& tx_gpio_packet)
     {
         return true;
     }
 
     // To suppress warnings
-    bool receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet __attribute__((unused)))
+    bool receive_gpio_packet([[maybe_unused]] gpio::GpioPacket& rx_gpio_packet)
     {
         return true;
     }
