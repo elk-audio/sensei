@@ -26,7 +26,6 @@ HwFrontend::HwFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_q
                 _hw_backend(hw_backend),
                 _state(ThreadState::STOPPED),
                 _ready_to_send{true},
-                _hw_backend_connected(false),
                 _muted(false),
                 _verify_acks(true)
 {
@@ -47,7 +46,7 @@ void HwFrontend::run()
     }
     else
     {
-        SENSEI_LOG_ERROR("Cant start HwFrontend, {}",_hw_backend_connected? "Already running" : "Not connected to hw backend");
+        SENSEI_LOG_ERROR("Cant start HwFrontend, {}",_hw_backend->get_status()? "Already running" : "Not connected to hw backend");
     }
 }
 

@@ -98,7 +98,6 @@ private:
     std::condition_variable _ready_to_send_notifier;
 
     bool            _ready_to_send;
-    bool            _hw_backend_connected;
     bool            _muted;
     bool            _verify_acks;
     gpio::GpioBoardInfoData _board_info;
