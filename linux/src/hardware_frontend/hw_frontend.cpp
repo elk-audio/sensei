@@ -20,13 +20,12 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("gpio_hw_frontend");
 
 HwFrontend::HwFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_queue,
                        SynchronizedQueue <std::unique_ptr<sensei::BaseMessage>>*out_queue,
-                       std::unique_ptr<hw_backend::BaseHwBackend>& hw_backend)
+                       hw_backend::BaseHwBackend* hw_backend)
                 : BaseHwFrontend(in_queue, out_queue),
                 _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
                 _hw_backend(hw_backend),
                 _state(ThreadState::STOPPED),
                 _ready_to_send{true},
-                _hw_backend_connected(false),
                 _muted(false),
                 _verify_acks(true)
 {
@@ -47,7 +46,7 @@ void HwFrontend::run()
     }
     else
     {
-        SENSEI_LOG_ERROR("Cant start HwFrontend, {}",_hw_backend_connected? "Already running" : "Not connected to hw backend");
+        SENSEI_LOG_ERROR("Cant start HwFrontend, {}",_hw_backend->get_status()? "Already running" : "Not connected to hw backend");
     }
 }
 
@@ -473,8 +472,8 @@ std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode)
             gpio_mode = GPIO_ON_VALUE_CHANGE;
             break;
 
-        case SendingMode::WHEN_TOGGLED_ON:
-        case SendingMode::WHEN_TOGGLED_OFF:
+        case SendingMode::ON_PRESS:
+        case SendingMode::ON_RELEASE:
             // TODO - currently handling these in the mapper
             gpio_mode = GPIO_ON_VALUE_CHANGE;
             break;

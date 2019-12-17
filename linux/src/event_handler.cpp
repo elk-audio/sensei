@@ -47,19 +47,20 @@ void EventHandler::init(int max_n_input_pins,
     {
     case HwFrontendType::RASPA_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Hw Frontend with socket hw backend");
-        _hw_backend.reset(new hw_backend::GpioHwSocket("/tmp/raspa"));
-        _hw_frontend.reset(new hw_frontend::HwFrontend(&_to_frontend_queue, &_event_queue, _hw_backend));
+        _hw_backend = std::make_unique<hw_backend::GpioHwSocket>("/tmp/raspa");
+        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(&_to_frontend_queue, &_event_queue, _hw_backend.get());
         break;
 
     case HwFrontendType::ELK_PI_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Frontend with Elk Pi hw backend");
-        _hw_backend.reset(new hw_backend::rpi_gpio::RpiShiftregGpio());
-        _hw_frontend.reset(new hw_frontend::HwFrontend(&_to_frontend_queue, &_event_queue, _hw_backend));
+        _hw_backend = std::make_unique<hw_backend::rpi_gpio::RpiShiftregGpio>();
+        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(&_to_frontend_queue, &_event_queue, _hw_backend.get());
+
         break;
 
     default:
-        _hw_backend.reset(new hw_backend::NoOpHwBackend);
-        _hw_frontend.reset(new hw_frontend::NoOpFrontend(&_to_frontend_queue, &_event_queue));
+        _hw_backend = std::make_unique<hw_backend::NoOpHwBackend>();
+        _hw_frontend = std::make_unique<hw_frontend::NoOpFrontend>(&_to_frontend_queue, &_event_queue);
         SENSEI_LOG_ERROR("No HW Frontend configured");
         break;
     }

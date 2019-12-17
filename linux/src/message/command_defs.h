@@ -120,8 +120,8 @@ enum class SendingMode
     CONTINUOUS,
     ON_VALUE_CHANGED,
     ON_REQUEST,
-    WHEN_TOGGLED_ON,
-    WHEN_TOGGLED_OFF,
+    ON_PRESS,
+    ON_RELEASE,
     N_SENDING_MODES
 };
 

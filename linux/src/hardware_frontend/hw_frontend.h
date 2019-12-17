@@ -37,7 +37,7 @@ public:
     */
     HwFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
                SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue,
-               std::unique_ptr<hw_backend::BaseHwBackend>& hw_backend);
+               hw_backend::BaseHwBackend* hw_backend);
 
     ~HwFrontend()
     {}
@@ -88,7 +88,7 @@ private:
     GpioCommandCreator _packet_factory;
     MessageTracker     _message_tracker;
     std::deque<gpio::GpioPacket>  _send_list;
-    std::unique_ptr<hw_backend::BaseHwBackend>& _hw_backend;
+    hw_backend::BaseHwBackend* _hw_backend;
 
     std::atomic<ThreadState> _state;
     std::thread     _read_thread;
@@ -98,7 +98,6 @@ private:
     std::condition_variable _ready_to_send_notifier;
 
     bool            _ready_to_send;
-    bool            _hw_backend_connected;
     bool            _muted;
     bool            _verify_acks;
     gpio::GpioBoardInfoData _board_info;
