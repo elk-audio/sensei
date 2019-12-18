@@ -9,7 +9,7 @@
 #include <array>
 #include <iostream>
 
-#include "rpi_shiftreg_gpio/rpi_shiftreg_gpio.h"
+#include "shiftreg_gpio/shiftreg_gpio.h"
 #include "shiftreg_driver_conf.h"
 #include "gpio_protocol_client/gpio_client.h"
 
@@ -28,10 +28,10 @@ extern int optind;
 
 namespace sensei {
 
-SENSEI_GET_LOGGER_WITH_MODULE_NAME("rpi_gpio_hwbackend");
+SENSEI_GET_LOGGER_WITH_MODULE_NAME("Shiftreg Gpio");
 
 namespace hw_backend {
-namespace rpi_gpio {
+namespace shiftregister_gpio {
 
 // Should be lower than audio thread
 constexpr int TASK_PRIORITY = 50;
@@ -48,18 +48,18 @@ static_assert(GPIO_PROTOCOL_VERSION_MINOR == 2,
 
 /**
  * @brief static function to act as an entry point for the xenomai rt thread.
- * @param args ptr to an instance of RpiShiftregGpio
+ * @param args ptr to an instance of ShiftregGpio
  * @return nullptr
  */
 static void* rt_task_entry(void* args)
 {
-    const auto rpi_shiftreg_gpio = static_cast<RpiShiftregGpio*>(args);
-    rpi_shiftreg_gpio->rt_shiftreg_gpio_task();
+    const auto shiftreg_gpio = static_cast<ShiftregGpio*>(args);
+    shiftreg_gpio->rt_shiftreg_gpio_task();
 
     return nullptr;
 }
 
-void RpiShiftregGpio::init()
+void ShiftregGpio::init()
 {
     // initialize xenomai
     if (!_init_xenomai())
@@ -76,7 +76,7 @@ void RpiShiftregGpio::init()
         _cleanup();
         return;
     }
-    _task_state = RpiShiftregTaskState::DEVICE_OPENED;
+    _task_state = ShiftregTaskState::DEVICE_OPENED;
 
     // check size of input, output, analog pins and adc res matches driver
     if (!_check_driver_params())
@@ -99,8 +99,8 @@ void RpiShiftregGpio::init()
                     "Num analog pins {} is not a multiple of the num adc" \
                              " channels {} sampled per tick mentioned in the driver.",
                     adc_chans_per_tick);
-            SENSEI_LOG_ERROR(
-                    "Reconfigure driver with a valid num of adc channels sampled per tick");
+            SENSEI_LOG_ERROR( "Reconfigure driver with a valid num of " \
+                              "adc channels sampled per tick");
 
             _cleanup();
             return;
@@ -113,11 +113,11 @@ void RpiShiftregGpio::init()
         _cleanup();
         return;
     }
-    _task_state = RpiShiftregTaskState::PIN_DATA_MEM_ACQUIRED;
+    _task_state = ShiftregTaskState::PIN_DATA_MEM_ACQUIRED;
 
     // start the logging thread
-    _logging_task = std::thread(&RpiShiftregGpio::nrt_logger_task, this);
-    _task_state = RpiShiftregTaskState::LOGGER_THREAD_STARTED;
+    _logging_task = std::thread(&ShiftregGpio::nrt_logger_task, this);
+    _task_state = ShiftregTaskState::LOGGER_THREAD_STARTED;
 
     // create the client
     uint32_t* input_pin_data = _pin_data;
@@ -137,7 +137,7 @@ void RpiShiftregGpio::init()
         _cleanup();
         return;
     }
-    _task_state = RpiShiftregTaskState::RT_TASK_CREATED;
+    _task_state = ShiftregTaskState::RT_TASK_CREATED;
 
     if (!_start_driver())
     {
@@ -145,27 +145,27 @@ void RpiShiftregGpio::init()
         _cleanup();
         return;
     }
-    _task_state = RpiShiftregTaskState::RUNNING;
+    _task_state = ShiftregTaskState::RUNNING;
 }
 
-void RpiShiftregGpio::deinit()
+void ShiftregGpio::deinit()
 {
     _cleanup();
 }
 
-bool RpiShiftregGpio::send_gpio_packet(const gpio::GpioPacket &tx_gpio_packet)
+bool ShiftregGpio::send_gpio_packet(const gpio::GpioPacket &tx_gpio_packet)
 {
     return _to_rt_thread_packet_fifo.push(tx_gpio_packet);
 }
 
-bool RpiShiftregGpio::receive_gpio_packet(gpio::GpioPacket &rx_gpio_packet)
+bool ShiftregGpio::receive_gpio_packet(gpio::GpioPacket &rx_gpio_packet)
 {
     return _from_rt_thread_packet_fifo.pop(rx_gpio_packet);
 }
 
-bool RpiShiftregGpio::get_status()
+bool ShiftregGpio::get_status()
 {
-    if (_task_state == RpiShiftregTaskState::RUNNING)
+    if (_task_state == ShiftregTaskState::RUNNING)
     {
         return true;
     }
@@ -173,7 +173,7 @@ bool RpiShiftregGpio::get_status()
     return false;
 }
 
-void RpiShiftregGpio::rt_shiftreg_gpio_task()
+void ShiftregGpio::rt_shiftreg_gpio_task()
 {
     _gpio_client.reset();
 
@@ -187,7 +187,7 @@ void RpiShiftregGpio::rt_shiftreg_gpio_task()
     _post_config_rt_loop();
 }
 
-void RpiShiftregGpio::nrt_logger_task()
+void ShiftregGpio::nrt_logger_task()
 {
     _is_logger_running = true;
     gpio::GpioLogMsg log_msg;
@@ -221,20 +221,20 @@ void RpiShiftregGpio::nrt_logger_task()
     }
 }
 
-void RpiShiftregGpio::_cleanup()
+void ShiftregGpio::_cleanup()
 {
     switch (_task_state)
     {
-    case RpiShiftregTaskState::RUNNING:
+    case ShiftregTaskState::RUNNING:
         _stop_driver();
         __attribute__((fallthrough));
 
-    case RpiShiftregTaskState::RT_TASK_CREATED:
+    case ShiftregTaskState::RT_TASK_CREATED:
         pthread_cancel(_processing_task);
         __cobalt_pthread_join(_processing_task, NULL);
         __attribute__((fallthrough));
 
-    case RpiShiftregTaskState::LOGGER_THREAD_STARTED:
+    case ShiftregTaskState::LOGGER_THREAD_STARTED:
         _is_logger_running = false;
         if (_logging_task.joinable())
         {
@@ -242,11 +242,11 @@ void RpiShiftregGpio::_cleanup()
         }
         __attribute__((fallthrough));
 
-    case RpiShiftregTaskState::PIN_DATA_MEM_ACQUIRED:
+    case ShiftregTaskState::PIN_DATA_MEM_ACQUIRED:
         munmap(_pin_data, (size_t) getpagesize());
         __attribute__((fallthrough));
 
-    case RpiShiftregTaskState::DEVICE_OPENED:
+    case ShiftregTaskState::DEVICE_OPENED:
         __cobalt_close(_device_handle);
         break;
 
@@ -255,7 +255,7 @@ void RpiShiftregGpio::_cleanup()
     }
 }
 
-bool RpiShiftregGpio::_init_xenomai()
+bool ShiftregGpio::_init_xenomai()
 {
     // Init xenomai
     int argc = 2;
@@ -288,7 +288,7 @@ bool RpiShiftregGpio::_init_xenomai()
     return true;
 }
 
-bool RpiShiftregGpio::_check_driver_params()
+bool ShiftregGpio::_check_driver_params()
 {
     if (_read_driver_param((char*) "num_input_pins") != NUM_DIGITAL_INPUTS)
     {
@@ -318,7 +318,7 @@ bool RpiShiftregGpio::_check_driver_params()
     return true;
 }
 
-int RpiShiftregGpio::_read_driver_param(char* param)
+int ShiftregGpio::_read_driver_param(char* param)
 {
     constexpr int PATH_LEN = 100;
     constexpr int VAL_STR_LEN = 25;
@@ -346,7 +346,7 @@ int RpiShiftregGpio::_read_driver_param(char* param)
     return atoi(value);
 }
 
-bool RpiShiftregGpio::_init_driver()
+bool ShiftregGpio::_init_driver()
 {
     _device_handle = __cobalt_open(SHIFTREG_DEVICE_NAME, O_RDWR);
     if (_device_handle < 0)
@@ -359,7 +359,7 @@ bool RpiShiftregGpio::_init_driver()
     return true;
 }
 
-bool RpiShiftregGpio::_get_pin_data_mem_from_driver()
+bool ShiftregGpio::_get_pin_data_mem_from_driver()
 {
     // get memory of the pin data
     _pin_data = (uint32_t*) __cobalt_mmap(NULL,
@@ -377,7 +377,7 @@ bool RpiShiftregGpio::_get_pin_data_mem_from_driver()
     return true;
 }
 
-bool RpiShiftregGpio::_init_rt_task()
+bool ShiftregGpio::_init_rt_task()
 {
     // Create the RT thread
     struct sched_param rt_params = {.sched_priority = TASK_PRIORITY};
@@ -424,7 +424,7 @@ bool RpiShiftregGpio::_init_rt_task()
     return true;
 }
 
-bool RpiShiftregGpio::_start_driver()
+bool ShiftregGpio::_start_driver()
 {
     auto res = __cobalt_ioctl(_device_handle, SHIFTREG_DRIVER_START_RT_TASK);
     if(res < 0)
@@ -436,7 +436,7 @@ bool RpiShiftregGpio::_start_driver()
     return true;
 }
 
-void RpiShiftregGpio::_stop_driver()
+void ShiftregGpio::_stop_driver()
 {
     __cobalt_ioctl(_device_handle, SHIFTREG_DRIVER_STOP_RT_TASK);
 
@@ -444,7 +444,7 @@ void RpiShiftregGpio::_stop_driver()
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
-inline void RpiShiftregGpio::_pre_config_rt_loop()
+inline void ShiftregGpio::_pre_config_rt_loop()
 {
     while (!_gpio_client.is_running())
     {
@@ -460,7 +460,7 @@ inline void RpiShiftregGpio::_pre_config_rt_loop()
     }
 }
 
-inline void RpiShiftregGpio::_post_config_rt_loop()
+inline void ShiftregGpio::_post_config_rt_loop()
 {
     while (1)
     {
@@ -477,7 +477,7 @@ inline void RpiShiftregGpio::_post_config_rt_loop()
     }
 }
 
-inline void RpiShiftregGpio::_handle_rx_packets()
+inline void ShiftregGpio::_handle_rx_packets()
 {
     int num_rx_packets = 0;
     gpio::GpioPacket rx_packet;
@@ -496,7 +496,7 @@ inline void RpiShiftregGpio::_handle_rx_packets()
     }
 }
 
-inline void RpiShiftregGpio::_handle_tx_packets()
+inline void ShiftregGpio::_handle_tx_packets()
 {
     int num_tx_packets = 0;
     while (_gpio_client.has_new_tx_packet() &&
@@ -508,7 +508,7 @@ inline void RpiShiftregGpio::_handle_tx_packets()
     }
 }
 
-void RpiShiftregGpio::_handle_log_msgs()
+void ShiftregGpio::_handle_log_msgs()
 {
     int num_log_msg = 0;
     while (_gpio_client.has_new_log_msg() &&
@@ -520,6 +520,6 @@ void RpiShiftregGpio::_handle_log_msgs()
     }
 }
 
-} // rpi_gpio
+} // shiftregister_gpio
 } // hw_bacend
 } //sensei

@@ -3,14 +3,12 @@
  * @copyright Modern Ancient Instruments Networked AB, Stockholm
  *
  * Contains the IOCTL definitions and device paths to use the rtdm
- * shift register driver. Only used by rpi_shiftreg_gpio to initialize
+ * shift register driver. Only used by shiftreg_gpio to initialize
  * and operate the rtdm driver.
  */
 
-#ifndef RPI_SHIFTREG_DRIVER_CONF_H
-#define RPI_SHIFTREG_DRIVER_CONF_H
-
-#include <cstdint>
+#ifndef SHIFTREG_DRIVER_CONF_H
+#define SHIFTREG_DRIVER_CONF_H
 
 #define SHIFTREG_DRIVER_IOC_MAGIC     's'
 
@@ -31,4 +29,4 @@
 #define SHIFTREG_DEVICE_NAME   "/dev/rtdm/shiftreg_rtdm"
 #define SHIFTREG_MODULE_PARAMETERS_PATH    "/sys/module/shiftreg_rtdm/parameters"
 
-#endif // RPI_SHIFTREG_DRIVER_CONF_H
+#endif // SHIFTREG_DRIVER_CONF_H

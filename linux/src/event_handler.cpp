@@ -7,7 +7,7 @@
 #include "user_frontend/osc_user_frontend.h"
 #include "hardware_frontend/hw_frontend.h"
 #include "hardware_backend/gpio_hw_socket.h"
-#include "rpi_shiftreg_gpio/rpi_shiftreg_gpio.h"
+#include "shiftreg_gpio/shiftreg_gpio.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -53,7 +53,7 @@ void EventHandler::init(int max_n_input_pins,
 
     case HwFrontendType::ELK_PI_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Frontend with Elk Pi hw backend");
-        _hw_backend = std::make_unique<hw_backend::rpi_gpio::RpiShiftregGpio>();
+        _hw_backend = std::make_unique<hw_backend::shiftregister_gpio::ShiftregGpio>();
         _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(&_to_frontend_queue, &_event_queue, _hw_backend.get());
 
         break;

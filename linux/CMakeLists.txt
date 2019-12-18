@@ -22,8 +22,8 @@ configure_file(
         ${CMAKE_BINARY_DIR}/generated/version.h
 )
 
-# Build for ELK Pi boards
-option(WITH_ELK_PI_GPIO "Build with elk pi support" OFF)
+# Enable
+option(WITH_GPIO_LOGIC "Perform gpio logic instead of a micro controller" OFF)
 
 ############################
 #  Main executable target  #
@@ -84,7 +84,7 @@ add_executable(sensei ${SOURCE_FILES})
 
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
-                 "${PROJECT_SOURCE_DIR}/rpi_gpio/include"
+                 "${PROJECT_SOURCE_DIR}/shiftregister_gpio/include"
                  "${CMAKE_BINARY_DIR}"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
                  "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
@@ -116,13 +116,14 @@ endif()
 add_subdirectory(gpio_protocol)
 set(LINK_LIBRARIES gpio_protocol pthread jsoncpp lo)
 
-if (${WITH_ELK_PI_GPIO})
-    message("Build with elk pi support")
+# if building for
+if (${WITH_GPIO_LOGIC})
+    message("Build with gpio logic")
     set(GPIO_PROTOCOL_BUILD_CLIENT_LIB ON CACHE BOOL "" FORCE)
     add_subdirectory(third-party/fifo)
-    add_subdirectory(rpi_gpio)
-    target_compile_definitions(sensei PRIVATE -DWITH_ELK_PI_GPIO)
-    set(LINK_LIBRARIES ${LINK_LIBRARIES} gpio_protocol_client rpi_shiftreg_gpio fifo)
+    add_subdirectory(shiftregister_gpio)
+    target_compile_definitions(sensei PRIVATE -DWITH_GPIO_LOGIC)
+    set(LINK_LIBRARIES ${LINK_LIBRARIES} gpio_protocol_client shiftreg_gpio fifo)
 else()
     set(GPIO_PROTOCOL_BUILD_CLIENT_LIB OFF CACHE BOOL "" FORCE)
 endif()

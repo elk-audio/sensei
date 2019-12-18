@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rpi_shiftreg_gpio)
+project(shiftreg_gpio)
 
 #######################
 #  Cross Compilation  #
@@ -36,24 +36,24 @@ endfunction()
 #######################
 # Include Directories #
 #######################
-set(ELK_PI_GPIO_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include"
-                             "${PROJECT_SOURCE_DIR}/src"
-                             "${CMAKE_SOURCE_DIR}/src"
-                             "${CMAKE_SOURCE_DIR}/third-party/spdlog/include")
+set(SHIFTREG_GPIO_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include"
+                               "${PROJECT_SOURCE_DIR}/src"
+                               "${CMAKE_SOURCE_DIR}/src"
+                               "${CMAKE_SOURCE_DIR}/third-party/spdlog/include")
 
 ####################
 # Lib Source Files #
 ####################
-set(ELK_PI_GPIO_LIB_SOURCES src/rpi_shiftreg_gpio.cpp)
+set(SHIFTREG_GPIO_LIB_SOURCES src/shiftreg_gpio.cpp)
 
 ###########
 # Targets #
 ###########
-add_library(rpi_shiftreg_gpio STATIC ${ELK_PI_GPIO_LIB_SOURCES})
-add_xenomai_to_target(rpi_shiftreg_gpio)
-target_include_directories(rpi_shiftreg_gpio PRIVATE ${ELK_PI_GPIO_INCLUDE_DIRS})
-target_link_libraries(rpi_shiftreg_gpio PRIVATE pthread fifo gpio_protocol gpio_protocol_client)
-target_compile_definitions(rpi_shiftreg_gpio PRIVATE -DWITH_ELK_PI_GPIO)
+add_library(shiftreg_gpio STATIC ${SHIFTREG_GPIO_LIB_SOURCES})
+add_xenomai_to_target(shiftreg_gpio)
+target_include_directories(shiftreg_gpio PRIVATE ${SHIFTREG_GPIO_INCLUDE_DIRS})
+target_link_libraries(shiftreg_gpio PRIVATE pthread fifo gpio_protocol gpio_protocol_client)
+target_compile_definitions(shiftreg_gpio PRIVATE -DWITH_GPIO_LOGIC)
 
 # Board test
 add_executable(elk_pi_hw_test test/elk_pi_hw_test.cpp)
