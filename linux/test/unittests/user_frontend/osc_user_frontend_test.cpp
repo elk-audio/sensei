@@ -61,7 +61,7 @@ TEST_F(TestOSCUserFrontend, test_set_pin_enabled)
     ASSERT_TRUE(_event_queue.empty());
 }
 
-/*TEST_F(TestOSCUserFrontend, test_set_output)
+TEST_F(TestOSCUserFrontend, test_set_output)
 {
     lo_send(_address, "/set_output", "if", 5, 12.0f);
     _event_queue.wait_for_data(std::chrono::milliseconds(10));
@@ -74,4 +74,4 @@ TEST_F(TestOSCUserFrontend, test_set_pin_enabled)
     ASSERT_EQ(5, val->index());
     ASSERT_FLOAT_EQ(12, val->value());
     ASSERT_TRUE(_event_queue.empty());
-}*/
+}
