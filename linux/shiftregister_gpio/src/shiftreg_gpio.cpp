@@ -2,10 +2,11 @@
  * @copyright Modern Ancient Instruments Networked AB, Stockholm
  */
 
-#include <string>
 #include <sys/mman.h>
 #include <sys/sysinfo.h>
 #include <sched.h>
+
+#include <string>
 #include <array>
 #include <iostream>
 
