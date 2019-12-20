@@ -59,10 +59,120 @@ static void* rt_task_entry(void* args)
     return nullptr;
 }
 
+/**
+ * @brief Initializes xenomai. Maintains affinity of nrt threads to what
+ *        they were before xenomai init.
+ *
+ * @return true if init is successful, false if otherwise.
+ */
+static bool init_xenomai()
+{
+    // Init xenomai
+    int argc = 2;
+    char** argv = (char**) malloc((argc + 1) * sizeof(char*));
+    for (int i = 0; i < argc; i++)
+    {
+        argv[i] = (char*) malloc(32 * sizeof(char));
+    }
+    argv[argc] = NULL;
+    strcpy(argv[0], "sensei");
+    strcpy(argv[1], "--cpu-affinity=0,1,2,3");
+    optind = 1;
+
+    xenomai_init(&argc, (char* const**) &argv);
+
+    for (int i = 0; i < argc; i++)
+    {
+        free(argv[i]);
+    }
+    free(argv);
+
+    auto res = mlockall(MCL_CURRENT | MCL_FUTURE);
+    if (res != 0)
+    {
+        SENSEI_LOG_ERROR("Failed to lock memory {}", res);
+        return false;
+    }
+
+    SENSEI_LOG_INFO("Xenomai succesfully initialized");
+    return true;
+}
+
+/**
+ * @brief helper function to read driver parameter as an integer. It looks
+ *        for param in a predefined path where the driver populates the
+ *        parameters as files.
+ * @param param The driver parameter name to be read
+ * @return The driver parameter if parameter exists, -1 otherwise
+ */
+static int read_driver_param(char* param)
+{
+    constexpr int PATH_LEN = 100;
+    constexpr int VAL_STR_LEN = 25;
+    char path[PATH_LEN];
+    char value[VAL_STR_LEN];
+
+    std::snprintf(path, PATH_LEN, SHIFTREG_MODULE_PARAMETERS_PATH"/%s", param);
+
+    auto rtdm_file = open(path, O_RDONLY);
+
+    if (rtdm_file < 0)
+    {
+        SENSEI_LOG_ERROR("Cannot read driver params, invalid param file");
+        return -1;
+    }
+
+    if (read(rtdm_file, value, VAL_STR_LEN) == -1)
+    {
+        SENSEI_LOG_ERROR("Cannot read driver params, invalid parameter");
+        return -1;
+    }
+
+    close(rtdm_file);
+
+    return atoi(value);
+}
+
+/**
+ * @brief checks the parameters of the driver to ensure that its compatible
+ *        with the internal configuration.
+ *
+ * @return true if all params match with the internal configuration
+ */
+static bool check_driver_params()
+{
+    if (read_driver_param((char*) "num_input_pins") != NUM_DIGITAL_INPUTS)
+    {
+        SENSEI_LOG_ERROR("Num input pins mismatched with driver");
+        return false;
+    }
+
+    if (read_driver_param((char*) "num_output_pins") != NUM_DIGITAL_OUTPUTS)
+    {
+        SENSEI_LOG_ERROR("Num output pins mismatched with driver");
+        return false;
+    }
+
+    if (read_driver_param((char*) "num_analog_pins") != NUM_ANALOG_INPUTS)
+    {
+        SENSEI_LOG_ERROR("Num input pins mismatched with driver");
+        return false;
+    }
+
+    if (read_driver_param((char*) "adc_res") != ADC_RES_IN_BITS)
+    {
+        SENSEI_LOG_ERROR("ADC resolution mismatched with driver");
+        return false;
+    }
+
+    SENSEI_LOG_INFO("Driver params matched");
+    return true;
+}
+
 bool ShiftregGpio::init()
 {
     // initialize xenomai
-    if (!_init_xenomai())
+    if (!init_xenomai())
     {
         SENSEI_LOG_ERROR("Failed to init xenomai.");
         _cleanup();
@@ -79,7 +189,7 @@ bool ShiftregGpio::init()
     _task_state = ShiftregTaskState::DEVICE_OPENED;
 
     // check size of input, output, analog pins and adc res matches driver
-    if (!_check_driver_params())
+    if (!check_driver_params())
     {
         SENSEI_LOG_ERROR("Failed to init, error in driver parameters");
         _cleanup();
@@ -87,7 +197,7 @@ bool ShiftregGpio::init()
     }
 
     const int adc_chans_per_tick =
-            _read_driver_param((char*) "adc_chans_per_tick");
+            read_driver_param((char*) "adc_chans_per_tick");
 
     if (NUM_ANALOG_INPUTS > 0)
     {
@@ -246,97 +356,6 @@ void ShiftregGpio::_cleanup()
     }
 
     _task_state = ShiftregTaskState::NOT_INITIALIZED;
-}
-
-bool ShiftregGpio::_init_xenomai()
-{
-    // Init xenomai
-    int argc = 2;
-    char** argv = (char**) malloc((argc + 1) * sizeof(char*));
-    for (int i = 0; i < argc; i++)
-    {
-        argv[i] = (char*) malloc(32 * sizeof(char));
-    }
-    argv[argc] = NULL;
-    strcpy(argv[0], "sensei");
-    strcpy(argv[1], "--cpu-affinity=0,1,2,3");
-    optind = 1;
-
-    xenomai_init(&argc, (char* const**) &argv);
-
-    for (int i = 0; i < argc; i++)
-    {
-        free(argv[i]);
-    }
-    free(argv);
-
-    auto res = mlockall(MCL_CURRENT | MCL_FUTURE);
-    if (res != 0)
-    {
-        SENSEI_LOG_ERROR("Failed to lock memory {}", res);
-        return false;
-    }
-
-    SENSEI_LOG_INFO("Xenomai succesfully initialized");
-    return true;
-}
-
-bool ShiftregGpio::_check_driver_params()
-{
-    if (_read_driver_param((char*) "num_input_pins") != NUM_DIGITAL_INPUTS)
-    {
-        SENSEI_LOG_ERROR("Num input pins mismatched with driver");
-        return false;
-    }
-
-    if (_read_driver_param((char*) "num_output_pins") != NUM_DIGITAL_OUTPUTS)
-    {
-        SENSEI_LOG_ERROR("Num output pins mismatched with driver");
-        return false;
-    }
-
-    if (_read_driver_param((char*) "num_analog_pins") != NUM_ANALOG_INPUTS)
-    {
-        SENSEI_LOG_ERROR("Num input pins mismatched with driver");
-        return false;
-    }
-
-    if (_read_driver_param((char*) "adc_res") != ADC_RES_IN_BITS)
-    {
-        SENSEI_LOG_ERROR("ADC resolution mismatched with driver");
-        return false;
-    }
-
-    SENSEI_LOG_INFO("Driver params matched");
-    return true;
-}
-
-int ShiftregGpio::_read_driver_param(char* param)
-{
-    constexpr int PATH_LEN = 100;
-    constexpr int VAL_STR_LEN = 25;
-    char path[PATH_LEN];
-    char value[VAL_STR_LEN];
-
-    std::snprintf(path, PATH_LEN, SHIFTREG_MODULE_PARAMETERS_PATH"/%s", param);
-
-    auto rtdm_file = open(path, O_RDONLY);
-
-    if (rtdm_file < 0)
-    {
-        SENSEI_LOG_ERROR("Cannot read driver params, invalid param file");
-        return -1;
-    }
-
-    if (read(rtdm_file, value, VAL_STR_LEN) == -1)
-    {
-        SENSEI_LOG_ERROR("Cannot read driver params, invalid parameter");
-        return -1;
-    }
-
-    close(rtdm_file);
-
-    return atoi(value);
 }
 
 bool ShiftregGpio::_init_driver()

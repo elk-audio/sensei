@@ -156,31 +156,6 @@ private:
     void _cleanup();
 
     /**
-     * @brief Initializes xenomai. Maintains affinity of nrt threads to what
-     *        they were before xenomai init.
-     *
-     * @return true if init is successful, false if otherwise.
-     */
-    bool _init_xenomai();
-
-    /**
-     * @brief checks the parameters of the driver to ensure that its compatible
-     *        with the internal configuration.
-     *
-     * @return true if all params match with the internal configuration
-     */
-    bool _check_driver_params();
-
-    /**
-     * @brief helper function to read driver parameter as an integer. It looks
-     *        for param in a predefined path where the driver populates the
-     *        parameters as files.
-     * @param param The driver parameter name to be read
-     * @return The driver parameter if parameter exists, -1 otherwise
-     */
-    int _read_driver_param(char* param);
-
-    /**
      * @brief Opens the shiftregister driver device
      * @return true if driver opened successfully, false if otherwise
      */
