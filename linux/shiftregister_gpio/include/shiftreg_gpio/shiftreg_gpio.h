@@ -36,6 +36,8 @@ using namespace memory_relaxed_aquire_release;
 constexpr int GPIO_PACKET_Q_SIZE = 150;
 constexpr int GPIO_LOG_MSG_Q_SIZE = 50;
 
+constexpr auto RECV_LOOP_SLEEP_PERIOD = std::chrono::milliseconds(5);
+
 /**
  * @brief Enum to denote various stages of initialization of the real task.
  *        Used to denote what to cleanup when any of the stages fail and the
@@ -62,11 +64,15 @@ enum class ShiftregTaskState
 class ShiftregGpio : public BaseHwBackend
 {
 public:
-    ShiftregGpio() : _is_logger_running(false),
-                     _task_state(ShiftregTaskState::NOT_INITIALIZED),
-                     _device_handle(0),
-                     _pin_data(nullptr)
-    {}
+    ShiftregGpio(std::chrono::milliseconds recv_packet_timeout) :
+                BaseHwBackend(recv_packet_timeout),
+                _is_logger_running(false),
+                 _task_state(ShiftregTaskState::NOT_INITIALIZED),
+                 _device_handle(0),
+                _pin_data(nullptr)
+    {
+        _num_recv_retries = recv_packet_timeout/RECV_LOOP_SLEEP_PERIOD;
+    }
 
     ~ShiftregGpio()
     {
@@ -114,7 +120,8 @@ public:
     /**
      * @brief Interface for sensei to receive a gpio packet from the gpio client
      *        running in real time context. Receives the packet through the
-     *        lock free fifo between the rt thread and the calling thread.
+     *        lock free fifo between the rt thread and the calling thread. This
+     *        is a blocking call with a timeout
      *
      * @param rx_gpio_packet The packet to be received.
      * @return true          A packet was successfully received
@@ -242,6 +249,8 @@ private:
             ADC_RES_IN_BITS> _gpio_client;
 
     uint32_t* _pin_data;
+
+    int _num_recv_retries;
 };
 
 } // shiftregister_gpio
@@ -262,7 +271,7 @@ class ShiftregGpio : public BaseHwBackend
 {
     bool init() override
     {
-        SENSEI_LOG_ERROR("Cannot Init Shiftregister Hw Backend. Its not enabled!")
+        SENSEI_LOG_ERROR("Cannot Init Shiftregister Hw Backend. Its not enabled!");
     }
 
     void deinit() override

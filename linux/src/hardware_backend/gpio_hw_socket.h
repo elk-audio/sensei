@@ -3,6 +3,7 @@
 
 #include <string>
 #include <atomic>
+#include <chrono>
 
 #include "base_hw_backend.h"
 
@@ -23,10 +24,13 @@ public:
      *
      * @param gpio_hw_socket_name The socket name to which it should connect to
      */
-    GpioHwSocket(std::string gpio_hw_socket_name) : _in_socket(-1),
-                                                    _out_socket(-1),
-                                                    _connected(false),
-                                                    _gpio_hw_socket_name(gpio_hw_socket_name)
+    GpioHwSocket(std::string gpio_hw_socket_name,
+                 std::chrono::milliseconds recv_packet_timeout) :
+                                                BaseHwBackend(recv_packet_timeout),
+                                                _in_socket(-1),
+                                                _out_socket(-1),
+                                                _connected(false),
+                                                _gpio_hw_socket_name(gpio_hw_socket_name)
     {}
 
     ~GpioHwSocket()

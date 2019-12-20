@@ -19,11 +19,9 @@ namespace sensei {
 class EventHandler
 {
 public:
-    EventHandler()
-    {}
+    EventHandler() = default;
 
-    ~EventHandler()
-    {}
+    ~EventHandler() = default;
 
     bool init(int max_n_input_pins, int max_n_digital_out_pins, const std::string& config_file);
 

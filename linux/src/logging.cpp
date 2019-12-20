@@ -29,7 +29,7 @@ std::shared_ptr<spdlog::logger> setup_logging()
     const std::string LOGGER_NAME   = "Sensei_logger";
     const int  MAX_LOG_FILE_SIZE    = 10'000'000;            // In bytes
     const auto MIN_FLUSH_LEVEL      = spdlog::level::err;    // Min level for automatic flush
-    const spdlog::level::level_enum MIN_LOG_LEVEL = spdlog::level::warn;
+    const spdlog::level::level_enum MIN_LOG_LEVEL = spdlog::level::info;
 
     spdlog::set_level(MIN_LOG_LEVEL);
     spdlog::set_pattern("[%Y-%m-%d %T.%e] [%l] %v");

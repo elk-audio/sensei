@@ -85,20 +85,15 @@ void HwFrontend::read_loop()
     GpioPacket buffer;
     while (_state.load() == ThreadState::RUNNING)
     {
-        while(_hw_backend->receive_gpio_packet(buffer))
+        if(!_muted && _hw_backend->receive_gpio_packet(buffer))
         {
-            if (!_muted)
-            {
-                _handle_gpio_packet(buffer);
-            }
-
-            if (!_ready_to_send)
-            {
-                _handle_timeouts(); /* It's more efficient to not check this every time */
-            }
+            _handle_gpio_packet(buffer);
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(READ_WRITE_TIMEOUT));
+        if (!_ready_to_send)
+        {
+            _handle_timeouts(); /* It's more efficient to not check this every time */
+        }
     }
     /* Notify the write thread in case it is waiting since no more notifications will follow */
     _ready_to_send_notifier.notify_one();
@@ -129,28 +124,15 @@ void HwFrontend::write_loop()
 
             auto& packet = _send_list.front();
 
-            /* attempt to send packets. It will retry until it is successful or
-              when the thread state has changed.*/
-            bool failed_to_send_packet = false;
-            while(!_hw_backend->send_gpio_packet(packet) &&
-                  _state.load() == ThreadState::RUNNING)
+            // attempt to send packets.
+            if(!_hw_backend->send_gpio_packet(packet))
             {
-                // prevent logging for each attempt.
-                if(!failed_to_send_packet)
-                {
-                    SENSEI_LOG_WARNING("Failed sending packet to hw backend");
-                    failed_to_send_packet = true;
-                }
+                SENSEI_LOG_WARNING("Failed sending packet to hw backend");
                 std::this_thread::sleep_for(std::chrono::milliseconds(HW_BACKEND_CON_TIMEOUT));
-            }
-
-            /* If the loop above exits due to thread state change, then skip
-             * the rest of the loop */
-            if(_state.load() != ThreadState::RUNNING)
-            {
                 continue;
             }
-            else if (_verify_acks)
+
+            if (_verify_acks)
             {
                 SENSEI_LOG_DEBUG("Sent Gpio packet: {}, id: {}", gpio_packet_to_string(packet),
                                                                  static_cast<int>(from_gpio_protocol_byteord(packet.sequence_no)));

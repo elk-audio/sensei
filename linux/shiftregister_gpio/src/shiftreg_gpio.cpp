@@ -66,7 +66,7 @@ static void* rt_task_entry(void* args)
  *
  * @return true if init is successful, false if otherwise.
  */
-static bool init_xenomai()
+bool init_xenomai()
 {
     // Init xenomai
     int argc = 2;
@@ -106,7 +106,7 @@ static bool init_xenomai()
  * @param param The driver parameter name to be read
  * @return The driver parameter if parameter exists, -1 otherwise
  */
-static int read_driver_param(char* param)
+int read_driver_param(char* param)
 {
     constexpr int PATH_LEN = 100;
     constexpr int VAL_STR_LEN = 25;
@@ -140,7 +140,7 @@ static int read_driver_param(char* param)
  *
  * @return true if all params match with the internal configuration
  */
-static bool check_driver_params()
+bool check_driver_params()
 {
     if (read_driver_param((char*) "num_input_pins") != NUM_DIGITAL_INPUTS)
     {
@@ -272,7 +272,17 @@ bool ShiftregGpio::send_gpio_packet(const gpio::GpioPacket &tx_gpio_packet)
 
 bool ShiftregGpio::receive_gpio_packet(gpio::GpioPacket &rx_gpio_packet)
 {
-    return _from_rt_thread_packet_fifo.pop(rx_gpio_packet);
+    for(int i = 0; i < _num_recv_retries; i++)
+    {
+        if(_from_rt_thread_packet_fifo.pop(rx_gpio_packet))
+        {
+            return true;
+        }
+
+        std::this_thread::sleep_for(RECV_LOOP_SLEEP_PERIOD);
+    }
+
+    return false;
 }
 
 void ShiftregGpio::rt_shiftreg_gpio_task()

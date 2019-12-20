@@ -13,7 +13,12 @@ namespace hw_backend {
 class BaseHwBackend
 {
 public:
-    BaseHwBackend()
+    /**
+     * @brief Constructor for the base hw backend.
+     * @param recv_packet_timeout The blocking timeout for receiving packets
+     */
+    BaseHwBackend(std::chrono::milliseconds recv_packet_timeout) :
+            _recv_packet_timeout(recv_packet_timeout)
     {}
 
     virtual ~BaseHwBackend() = default;
@@ -33,7 +38,8 @@ public:
     virtual void deinit() = 0;
 
     /**
-     * @brief Send GPIO Packet to gpio hardware device
+     * @brief Send GPIO Packet to gpio hardware device. This is a non blocking
+     *        call
      *
      * @param tx_gpio_packet The gpio packet to be sent
      * @return true if packet was sent successfully
@@ -42,13 +48,17 @@ public:
     virtual bool send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet) = 0;
 
     /**
-     * @brief Receive a GPIO Packet from the gpio hardware device
+     * @brief Receive a GPIO Packet from the gpio hardware device. This is a
+     *        blocking call with a timeout of _recv_packet_timeout
      *
      * @param rx_gpio_packet The gpio packet to be received
      * @return true if packet was received successfully
      * @return false if no packet was received.
      */
     virtual bool receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet) = 0;
+
+protected:
+    std::chrono::milliseconds _recv_packet_timeout;
 };
 
 /**
@@ -57,6 +67,10 @@ public:
 class NoOpHwBackend : public BaseHwBackend
 {
 public:
+    NoOpHwBackend(std::chrono::milliseconds recv_packet_timeout) :
+                                BaseHwBackend(recv_packet_timeout)
+    {}
+
     bool init()
     {
         return  false;
