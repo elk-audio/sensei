@@ -36,6 +36,8 @@ using namespace memory_relaxed_aquire_release;
 constexpr int GPIO_PACKET_Q_SIZE = 150;
 constexpr int GPIO_LOG_MSG_Q_SIZE = 50;
 
+constexpr auto RECV_LOOP_SLEEP_PERIOD = std::chrono::milliseconds(5);
+
 /**
  * @brief Enum to denote various stages of initialization of the real task.
  *        Used to denote what to cleanup when any of the stages fail and the
@@ -62,11 +64,20 @@ enum class ShiftregTaskState
 class ShiftregGpio : public BaseHwBackend
 {
 public:
-    ShiftregGpio() : _is_logger_running(false),
-                     _task_state(ShiftregTaskState::NOT_INITIALIZED),
-                     _device_handle(0),
-                     _pin_data(nullptr)
-    {}
+    ShiftregGpio(std::chrono::milliseconds recv_packet_timeout) :
+                BaseHwBackend(recv_packet_timeout),
+                _is_logger_running(false),
+                 _task_state(ShiftregTaskState::NOT_INITIALIZED),
+                 _device_handle(0),
+                _pin_data(nullptr)
+    {
+        _num_recv_retries = recv_packet_timeout/RECV_LOOP_SLEEP_PERIOD;
+    }
+
+    ~ShiftregGpio()
+    {
+        deinit();
+    }
 
     /**
      * @brief Initializes all the threads and the gpio client. Function flow is:
@@ -83,8 +94,10 @@ public:
      *        -> if any of the above stages fail, it is properly cleaned up
      *           using ShiftregTaskState which stores the initialization
      *           state.
+     * @return True if successful, false if not.
+     *
      */
-    void init() override;
+    bool init() override;
 
     /**
      * @brief Interface function to stop all threads and delete any allocated
@@ -107,32 +120,14 @@ public:
     /**
      * @brief Interface for sensei to receive a gpio packet from the gpio client
      *        running in real time context. Receives the packet through the
-     *        lock free fifo between the rt thread and the calling thread.
+     *        lock free fifo between the rt thread and the calling thread. This
+     *        is a blocking call with a timeout
      *
      * @param rx_gpio_packet The packet to be received.
      * @return true          A packet was successfully received
      * @return false         No packet was received.
      */
     bool receive_gpio_packet(gpio::GpioPacket &rx_gpio_packet) override;
-
-    /**
-     * @brief Interface for sensei to query the status of the hw backend. If
-     *        all tasks were initialized correctly, this will return true.
-     *
-     * @return true All tasks were initialized and the hw backend is up and
-     *              running
-     * @return false Something went wrong during initialization and the hwbackend
-     *               was not initialized
-     */
-    bool get_status() override;
-
-    /**
-     * @brief Function to reconnect to hw backend. In this implementation of the
-     *        hw backend, this has no meaning and is redundant. Only exists
-     *        as a placeholder to override the pure virtual base function.
-     */
-    void reconnect_to_gpio_hw() override
-    {}
 
     /**
      * @brief The real time task which runs the gpio client and processes all
@@ -166,31 +161,6 @@ private:
      *        the necessary actions depending on the current task state
      */
     void _cleanup();
-
-    /**
-     * @brief Initializes xenomai. Maintains affinity of nrt threads to what
-     *        they were before xenomai init.
-     *
-     * @return true if init is successful, false if otherwise.
-     */
-    bool _init_xenomai();
-
-    /**
-     * @brief checks the parameters of the driver to ensure that its compatible
-     *        with the internal configuration.
-     *
-     * @return true if all params match with the internal configuration
-     */
-    bool _check_driver_params();
-
-    /**
-     * @brief helper function to read driver parameter as an integer. It looks
-     *        for param in a predefined path where the driver populates the
-     *        parameters as files.
-     * @param param The driver parameter name to be read
-     * @return The driver parameter if parameter exists, -1 otherwise
-     */
-    int _read_driver_param(char* param);
 
     /**
      * @brief Opens the shiftregister driver device
@@ -279,6 +249,8 @@ private:
             ADC_RES_IN_BITS> _gpio_client;
 
     uint32_t* _pin_data;
+
+    int _num_recv_retries;
 };
 
 } // shiftregister_gpio
@@ -297,7 +269,7 @@ namespace shiftregister_gpio {
 
 class ShiftregGpio : public BaseHwBackend
 {
-    void init() override
+    bool init() override
     {
         SENSEI_LOG_ERROR("Cannot Init Shiftregister Hw Backend. Its not enabled!");
     }
@@ -314,14 +286,6 @@ class ShiftregGpio : public BaseHwBackend
     {
         return false;
     }
-
-    bool get_status() override
-    {
-        return false;
-    }
-
-    void reconnect_to_gpio_hw() override
-    {}
 };
 
 } // shiftregister_gpio

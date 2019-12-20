@@ -49,14 +49,25 @@ set(SHIFTREG_GPIO_LIB_SOURCES src/shiftreg_gpio.cpp)
 ###########
 # Targets #
 ###########
-add_library(shiftreg_gpio STATIC ${SHIFTREG_GPIO_LIB_SOURCES})
-add_xenomai_to_target(shiftreg_gpio)
-target_include_directories(shiftreg_gpio PRIVATE ${SHIFTREG_GPIO_INCLUDE_DIRS})
-target_link_libraries(shiftreg_gpio PRIVATE pthread fifo gpio_protocol gpio_protocol_client)
-target_compile_definitions(shiftreg_gpio PRIVATE -DWITH_GPIO_LOGIC)
+if (${WITH_GPIO_LOGIC})
+    # third party fifo library
+    add_subdirectory(${CMAKE_SOURCE_DIR}/third-party/fifo [EXCLUDE_FROM_ALL])
 
-# Board test
-add_executable(elk_pi_hw_test test/elk_pi_hw_test.cpp)
-add_xenomai_to_target(elk_pi_hw_test)
-target_link_libraries(elk_pi_hw_test PRIVATE pthread)
-target_include_directories(elk_pi_hw_test PRIVATE "${PROJECT_SOURCE_DIR}/src")
+    # build gpio protocol library
+    set(GPIO_PROTOCOL_BUILD_CLIENT_LIB ON CACHE BOOL "" FORCE)
+
+    add_library(shiftreg_gpio STATIC ${SHIFTREG_GPIO_LIB_SOURCES})
+    add_xenomai_to_target(shiftreg_gpio)
+    target_include_directories(shiftreg_gpio PRIVATE ${SHIFTREG_GPIO_INCLUDE_DIRS})
+    target_link_libraries(shiftreg_gpio PRIVATE pthread)
+    target_link_libraries(shiftreg_gpio PUBLIC fifo gpio_protocol gpio_protocol_client)
+    target_compile_definitions(shiftreg_gpio PUBLIC -DWITH_GPIO_LOGIC)
+
+else()
+
+    set(GPIO_PROTOCOL_BUILD_CLIENT_LIB OFF CACHE BOOL "" FORCE)
+
+    # just export header to sensei
+    add_library(shiftreg_gpio INTERFACE)
+    target_include_directories(shiftreg_gpio INTERFACE ${PROJECT_SOURCE_DIR}/include)
+endif()
