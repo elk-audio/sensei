@@ -269,9 +269,15 @@ namespace shiftregister_gpio {
 
 class ShiftregGpio : public BaseHwBackend
 {
+public:
+    ShiftregGpio(std::chrono::milliseconds recv_packet_timeout) :
+                                        BaseHwBackend(recv_packet_timeout)
+    {}
+
     bool init() override
     {
         SENSEI_LOG_ERROR("Cannot Init Shiftregister Hw Backend. Its not enabled!");
+        return false;
     }
 
     void deinit() override
