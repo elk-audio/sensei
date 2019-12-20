@@ -260,9 +260,9 @@ namespace shiftregister_gpio {
 
 class ShiftregGpio : public BaseHwBackend
 {
-    void init() override
+    bool init() override
     {
-        SENSEI_LOG_ERROR("Cannot Init Shiftregister Hw Backend. Its not enabled!");
+        SENSEI_LOG_ERROR("Cannot Init Shiftregister Hw Backend. Its not enabled!")
     }
 
     void deinit() override
@@ -277,14 +277,6 @@ class ShiftregGpio : public BaseHwBackend
     {
         return false;
     }
-
-    bool get_status() override
-    {
-        return false;
-    }
-
-    void reconnect_to_gpio_hw() override
-    {}
 };
 
 } // shiftregister_gpio

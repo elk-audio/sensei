@@ -114,19 +114,8 @@ endif()
 #  Statically linked libraries  #
 #################################
 add_subdirectory(gpio_protocol)
-set(LINK_LIBRARIES gpio_protocol pthread jsoncpp lo)
-
-# if building for
-if (${WITH_GPIO_LOGIC})
-    message("Build with gpio logic")
-    set(GPIO_PROTOCOL_BUILD_CLIENT_LIB ON CACHE BOOL "" FORCE)
-    add_subdirectory(third-party/fifo)
-    add_subdirectory(shiftregister_gpio)
-    target_compile_definitions(sensei PRIVATE -DWITH_GPIO_LOGIC)
-    set(LINK_LIBRARIES ${LINK_LIBRARIES} gpio_protocol_client shiftreg_gpio fifo)
-else()
-    set(GPIO_PROTOCOL_BUILD_CLIENT_LIB OFF CACHE BOOL "" FORCE)
-endif()
+add_subdirectory(shiftregister_gpio)
+set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread jsoncpp lo)
 
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 
