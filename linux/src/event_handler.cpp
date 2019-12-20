@@ -71,9 +71,9 @@ bool EventHandler::init(int max_n_input_pins,
         return false;
     }
 
-    _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
-    _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
-    _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, max_n_input_pins, max_n_digital_out_pins));
+    _processor = std::make_unique<mapping::MappingProcessor>(max_n_input_pins);
+    _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
+    _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
 
     _hw_frontend->verify_acks(true);
     _hw_frontend->run();
