@@ -85,7 +85,8 @@ void HwFrontend::read_loop()
     GpioPacket buffer;
     while (_state.load() == ThreadState::RUNNING)
     {
-        if(!_muted && _hw_backend->receive_gpio_packet(buffer))
+        const auto recv_msg = _hw_backend->receive_gpio_packet(buffer);
+        if(!_muted && recv_msg)
         {
             _handle_gpio_packet(buffer);
         }
