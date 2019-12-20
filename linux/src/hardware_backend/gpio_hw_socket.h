@@ -30,12 +30,16 @@ public:
     {}
 
     ~GpioHwSocket()
-    {}
+    {
+        deinit();
+    }
 
     /**
-     * @brief Initialize the socket.
+     * @brief Create and initialize the sockets to communicate with the
+     *         gpio_hw_socket.
+     * @return True if successful, false if not
      */
-    void init() override;
+    bool init() override;
 
     /**
      * @brief Close and unlink the socket.
@@ -44,12 +48,11 @@ public:
 
     /**
      * @brief Send a gpio packet through to socket. If it is unable to send, it will
-     *        assume that the connection has been lost and set the flag _connected as
-     *        false
+     *        assume that the connection has been lost and attempt to reconnect.
      *
      * @param tx_gpio_packet The gpio packet to be sent.0
      * @return true The packet was sent successfully
-     * @return false The packet was not sent. _connected flag is set to false.
+     * @return false The packet was not sent.
      */
     bool send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet) override;
 
@@ -63,28 +66,11 @@ public:
      */
     bool receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet) override;
 
-    /**
-     * @brief Get status of the socket connection. Returns _connected
-     *
-     * @return true if connected
-     * @return false if not connected
-     */
-    bool get_status() override;
-
-    /**
-     * @brief Reconnect to the gpio hw socket.
-     *
-     */
-    void reconnect_to_gpio_hw() override;
-
 private:
     /**
      * @brief Helper member to connect to the gpio hw socket.
-     *
-     * @return true for a succesful connection
-     * @return false false if not
      */
-    bool _connect_to_gpio_hw_socket();
+    void _connect_to_gpio_hw_socket();
 
     int _in_socket;
     int _out_socket;

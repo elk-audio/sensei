@@ -15,7 +15,7 @@ using namespace sensei;
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("eventhandler");
 
-void EventHandler::init(int max_n_input_pins,
+bool EventHandler::init(int max_n_input_pins,
                         int max_n_digital_out_pins,
                         const std::string& config_file)
 {
@@ -65,7 +65,11 @@ void EventHandler::init(int max_n_input_pins,
         break;
     }
 
-    _hw_backend->init();
+    if(!_hw_backend->init())
+    {
+        SENSEI_LOG_ERROR("Failed to initialize hw backend");
+        return false;
+    }
 
     _processor.reset(new mapping::MappingProcessor(max_n_input_pins));
     _output_backend.reset(new output_backend::OSCBackend(max_n_input_pins));
@@ -73,6 +77,7 @@ void EventHandler::init(int max_n_input_pins,
 
     _hw_frontend->verify_acks(true);
     _hw_frontend->run();
+    return true;
 }
 
 void EventHandler::deinit()

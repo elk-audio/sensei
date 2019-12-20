@@ -321,7 +321,13 @@ int main(int argc, char* argv[])
     signal(SIGTERM, kill_signal_handler);
     signal(SIGUSR1, user_signal_handler);
 
-    event_handler.init(n_input_pins, n_output_pins, config_filename);
+    if(!event_handler.init(n_input_pins, n_output_pins, config_filename))
+    {
+        std::cerr << "Failed to initialize, check logs for details. Exiting..."
+                  << std::endl;
+        event_handler.deinit();
+        return 1;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // Main loop
@@ -343,7 +349,7 @@ int main(int argc, char* argv[])
     ////////////////////////////////////////////////////////////////////////////////
 
     event_handler.deinit();
-    printf("Sensei terminated.\n");
+    std::cout << "Sensei terminated." << std::endl;
 
     return 0;
 }

@@ -38,7 +38,7 @@ HwFrontend::HwFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_q
 void HwFrontend::run()
 {
     SENSEI_LOG_INFO("Starting read and write threads");
-    if (_hw_backend->get_status() || _state.load() == ThreadState::STOPPED)
+    if (_state.load() == ThreadState::STOPPED)
     {
         _state.store(ThreadState::RUNNING);
         _read_thread = std::thread(&HwFrontend::read_loop, this);
@@ -46,7 +46,7 @@ void HwFrontend::run()
     }
     else
     {
-        SENSEI_LOG_ERROR("Cant start HwFrontend, {}",_hw_backend->get_status()? "Already running" : "Not connected to hw backend");
+        SENSEI_LOG_WARNING("Hw frontend is already running");
     }
 }
 
@@ -119,14 +119,6 @@ void HwFrontend::write_loop()
         {
             std::unique_lock<std::mutex> lock(_send_mutex);
 
-            if(!_hw_backend->get_status())
-            {
-                SENSEI_LOG_WARNING("Write Loop : hw backend is not connected! Attempting to reconnect..");
-                _hw_backend->reconnect_to_gpio_hw();
-                std::this_thread::sleep_for(std::chrono::milliseconds(HW_BACKEND_CON_TIMEOUT));
-                continue;
-            }
-
             SENSEI_LOG_DEBUG("Going through sendlist: {} packets", _send_list.size());
             if (_verify_acks && !_ready_to_send )
             {
@@ -136,21 +128,38 @@ void HwFrontend::write_loop()
             }
 
             auto& packet = _send_list.front();
-            const auto send_success_flag = _hw_backend->send_gpio_packet(packet);
 
-            if (_verify_acks && send_success_flag)
+            /* attempt to send packets. It will retry until it is successful or
+              when the thread state has changed.*/
+            bool failed_to_send_packet = false;
+            while(!_hw_backend->send_gpio_packet(packet) &&
+                  _state.load() == ThreadState::RUNNING)
+            {
+                // prevent logging for each attempt.
+                if(!failed_to_send_packet)
+                {
+                    SENSEI_LOG_WARNING("Failed sending packet to hw backend");
+                    failed_to_send_packet = true;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(HW_BACKEND_CON_TIMEOUT));
+            }
+
+            /* If the loop above exits due to thread state change, then skip
+             * the rest of the loop */
+            if(_state.load() != ThreadState::RUNNING)
+            {
+                continue;
+            }
+            else if (_verify_acks)
             {
                 SENSEI_LOG_DEBUG("Sent Gpio packet: {}, id: {}", gpio_packet_to_string(packet),
                                                                  static_cast<int>(from_gpio_protocol_byteord(packet.sequence_no)));
                 _message_tracker.store(nullptr, from_gpio_protocol_byteord(packet.sequence_no));
                 _ready_to_send = false;
-            } else
+            }
+            else
             {
                 _send_list.pop_front();
-            }
-            if (!send_success_flag)
-            {
-                SENSEI_LOG_WARNING("Failed sending packet to hw backend");
             }
         }
     }

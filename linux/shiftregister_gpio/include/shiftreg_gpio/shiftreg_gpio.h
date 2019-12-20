@@ -68,6 +68,11 @@ public:
                      _pin_data(nullptr)
     {}
 
+    ~ShiftregGpio()
+    {
+        deinit();
+    }
+
     /**
      * @brief Initializes all the threads and the gpio client. Function flow is:
      *        -> initializes xenomai
@@ -83,8 +88,10 @@ public:
      *        -> if any of the above stages fail, it is properly cleaned up
      *           using ShiftregTaskState which stores the initialization
      *           state.
+     * @return True if successful, false if not.
+     *
      */
-    void init() override;
+    bool init() override;
 
     /**
      * @brief Interface function to stop all threads and delete any allocated
@@ -114,25 +121,6 @@ public:
      * @return false         No packet was received.
      */
     bool receive_gpio_packet(gpio::GpioPacket &rx_gpio_packet) override;
-
-    /**
-     * @brief Interface for sensei to query the status of the hw backend. If
-     *        all tasks were initialized correctly, this will return true.
-     *
-     * @return true All tasks were initialized and the hw backend is up and
-     *              running
-     * @return false Something went wrong during initialization and the hwbackend
-     *               was not initialized
-     */
-    bool get_status() override;
-
-    /**
-     * @brief Function to reconnect to hw backend. In this implementation of the
-     *        hw backend, this has no meaning and is redundant. Only exists
-     *        as a placeholder to override the pure virtual base function.
-     */
-    void reconnect_to_gpio_hw() override
-    {}
 
     /**
      * @brief The real time task which runs the gpio client and processes all

@@ -59,14 +59,14 @@ static void* rt_task_entry(void* args)
     return nullptr;
 }
 
-void ShiftregGpio::init()
+bool ShiftregGpio::init()
 {
     // initialize xenomai
     if (!_init_xenomai())
     {
         SENSEI_LOG_ERROR("Failed to init xenomai.");
         _cleanup();
-        return;
+        return false;
     }
 
     // initialize driver
@@ -74,7 +74,7 @@ void ShiftregGpio::init()
     {
         SENSEI_LOG_ERROR("Failed to init driver");
         _cleanup();
-        return;
+        return false;
     }
     _task_state = ShiftregTaskState::DEVICE_OPENED;
 
@@ -83,7 +83,7 @@ void ShiftregGpio::init()
     {
         SENSEI_LOG_ERROR("Failed to init, error in driver parameters");
         _cleanup();
-        return;
+        return false;
     }
 
     const int adc_chans_per_tick =
@@ -103,7 +103,7 @@ void ShiftregGpio::init()
                               "adc channels sampled per tick");
 
             _cleanup();
-            return;
+            return false;
         }
     }
 
@@ -111,7 +111,7 @@ void ShiftregGpio::init()
     {
         SENSEI_LOG_ERROR("Failed to get pin data memory from driver");
         _cleanup();
-        return;
+        return false;
     }
     _task_state = ShiftregTaskState::PIN_DATA_MEM_ACQUIRED;
 
@@ -128,14 +128,14 @@ void ShiftregGpio::init()
                            adc_chans_per_tick))
     {
         SENSEI_LOG_ERROR("Cannot init gpio client.");
-        return;
+        return false;
     }
 
     if (!_init_rt_task())
     {
         SENSEI_LOG_ERROR("Failed to start RT task");
         _cleanup();
-        return;
+        return false;
     }
     _task_state = ShiftregTaskState::RT_TASK_CREATED;
 
@@ -143,9 +143,10 @@ void ShiftregGpio::init()
     {
         SENSEI_LOG_ERROR("Failed to start driver");
         _cleanup();
-        return;
+        return false;
     }
     _task_state = ShiftregTaskState::RUNNING;
+    return true;
 }
 
 void ShiftregGpio::deinit()
@@ -161,16 +162,6 @@ bool ShiftregGpio::send_gpio_packet(const gpio::GpioPacket &tx_gpio_packet)
 bool ShiftregGpio::receive_gpio_packet(gpio::GpioPacket &rx_gpio_packet)
 {
     return _from_rt_thread_packet_fifo.pop(rx_gpio_packet);
-}
-
-bool ShiftregGpio::get_status()
-{
-    if (_task_state == ShiftregTaskState::RUNNING)
-    {
-        return true;
-    }
-
-    return false;
 }
 
 void ShiftregGpio::rt_shiftreg_gpio_task()
@@ -253,6 +244,8 @@ void ShiftregGpio::_cleanup()
     default:
         break;
     }
+
+    _task_state = ShiftregTaskState::NOT_INITIALIZED;
 }
 
 bool ShiftregGpio::_init_xenomai()

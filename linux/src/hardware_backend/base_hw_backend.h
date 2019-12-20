@@ -24,7 +24,7 @@ public:
      * @return true if initialization was successful
      * @return false false if not
      */
-    virtual void init() = 0;
+    virtual bool init() = 0;
 
     /**
      * @brief Function to de initialize the hardware backend
@@ -49,20 +49,6 @@ public:
      * @return false if no packet was received.
      */
     virtual bool receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet) = 0;
-
-    /**
-     * @brief Check the status of the gpio hardware device
-     *
-     * @return true if stuats is ok, false if not. Should have adequeate
-     *         log messages in case of error.
-     */
-    virtual bool get_status() = 0;
-
-    /**
-     * @brief Virtual function to restablish communication to a gpio hw device
-     *
-     */
-    virtual void reconnect_to_gpio_hw() = 0;
 };
 
 /**
@@ -71,7 +57,10 @@ public:
 class NoOpHwBackend : public BaseHwBackend
 {
 public:
-    void init() {}
+    bool init()
+    {
+        return  false;
+    }
 
     void deinit() {}
 
@@ -86,13 +75,6 @@ public:
     {
         return true;
     }
-
-    bool get_status()
-    {
-        return true;
-    }
-
-    void reconnect_to_gpio_hw() {}
 };
 
 } // hw_backend
