@@ -243,8 +243,8 @@ private:
     CircularFifo<gpio::GpioPacket, GPIO_PACKET_Q_SIZE> _from_rt_thread_packet_fifo;
     CircularFifo<gpio::GpioLogMsg, GPIO_LOG_MSG_Q_SIZE> _from_rt_thread_log_msg_fifo;
 
-    gpio::GpioClient<NUM_DIGITAL_OUTPUTS,
-            NUM_DIGITAL_INPUTS,
+    gpio::GpioClient<NUM_DIGITAL_INPUTS,
+            NUM_DIGITAL_OUTPUTS,
             NUM_ANALOG_INPUTS,
             ADC_RES_IN_BITS> _gpio_client;
 
