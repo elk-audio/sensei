@@ -287,8 +287,6 @@ bool ShiftregGpio::receive_gpio_packet(gpio::GpioPacket &rx_gpio_packet)
 
 void ShiftregGpio::rt_shiftreg_gpio_task()
 {
-    _gpio_client.reset();
-
     _pre_config_rt_loop();
 
     // set driver tick period after gpio client has been configured
