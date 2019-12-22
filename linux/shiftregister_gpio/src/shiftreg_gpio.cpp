@@ -519,23 +519,20 @@ inline void ShiftregGpio::_handle_rx_packets()
 
 inline void ShiftregGpio::_handle_tx_packets()
 {
-    int num_tx_packets = 0;
-    while (_gpio_client.has_new_tx_packet() &&
-           num_tx_packets < MAX_LOG_MSGS_SENT_PER_TICK)
+    gpio::GpioPacket* gpio_packet_from_client = nullptr;
+    while (_gpio_client.get_tx_packet(&gpio_packet_from_client))
     {
-        auto packet = _gpio_client.get_next_tx_packet();
-        _from_rt_thread_packet_fifo.push(*packet);
-        num_tx_packets++;
+        _from_rt_thread_packet_fifo.push(*gpio_packet_from_client);
     }
 }
 
 void ShiftregGpio::_handle_log_msgs()
 {
     int num_log_msg = 0;
-    while (_gpio_client.has_new_log_msg() &&
+    gpio::GpioLogMsg* log_msg = nullptr;
+    while (_gpio_client.get_log_msg(&log_msg) &&
            num_log_msg < MAX_LOG_MSGS_SENT_PER_TICK)
     {
-        auto log_msg = _gpio_client.get_log_msg();
         _from_rt_thread_log_msg_fifo.push(*log_msg);
         num_log_msg++;
     }
