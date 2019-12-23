@@ -1,6 +1,21 @@
+/*
+ * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ *
+ * SENSEI is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * SENSEI is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with
+ * SENSEI.  If not, see http://www.gnu.org/licenses/
+ */
+
 /**
  * @brief Contains the shiftreg hw backend for controlling shift register gpios.
- * @copyright Modern Ancient Instruments Networked AB, Stockholm
+ * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
  *
  * File contains definition for the shiftreg gpio hw backend, which runs the
  * GpioClient in a xenomai real time task to control the gpios.
@@ -253,9 +268,9 @@ private:
     int _num_recv_retries;
 };
 
-} // shiftregister_gpio
-} // hw_backend
-} // sensei
+} // namespace shiftregister_gpio
+} // namespace hw_backend
+} // namespace sensei
 
 // Dummy ShiftregGpio when WITH_GPIO_LOGIC is not defined
 #else
@@ -294,9 +309,9 @@ public:
     }
 };
 
-} // shiftregister_gpio
-} // hw_backend
-} // sensei
+} // namespace shiftregister_gpio
+} // namespace hw_backend
+} // namespace sensei
 
 #endif // WITH_GPIO_LOGIC
 

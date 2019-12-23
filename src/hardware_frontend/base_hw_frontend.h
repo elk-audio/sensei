@@ -1,3 +1,23 @@
+/*
+ * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ *
+ * SENSEI is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * SENSEI is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with
+ * SENSEI.  If not, see http://www.gnu.org/licenses/
+ */
+
+/**
+ * @brief Base interface for SENSEI to perform the logic of the GPIO PROTOCOL
+ *        master.
+ * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ */
 #ifndef SENSEI_BASE_HW_FRONTEND_H
 #define SENSEI_BASE_HW_FRONTEND_H
 
@@ -6,7 +26,6 @@
 #include "synchronized_queue.h"
 #include "message/base_message.h"
 #include "message/base_command.h"
-
 
 namespace sensei {
 namespace hw_frontend {
@@ -74,6 +93,5 @@ public:
 
 }; // namespace hw_frontend
 }; // namespace sensei
-
 
 #endif //SENSEI_BASE_HW_FRONTEND_H

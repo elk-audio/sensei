@@ -1,8 +1,29 @@
+/*
+ * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ *
+ * SENSEI is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * SENSEI is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with
+ * SENSEI.  If not, see http://www.gnu.org/licenses/
+ */
+
+/**
+ * @brief Class for keeping track of sent messages and their respective acks.
+ * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ *
+ * A helper class to keep track of sent messages and acknowledgements to identify
+ * message timeouts.
+ */
 #include "message_tracker.h"
 
 namespace sensei {
 namespace hw_frontend {
-
 
 MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries) :
         _timeout(timeout),
@@ -87,5 +108,5 @@ void MessageTracker::update_time()
     _current_time = std::chrono::steady_clock::now();
 };
 
-}; // end namespace hw_frontend
-}; // end namespace sensei
+}; // namespace hw_frontend
+}; // namespace sensei
