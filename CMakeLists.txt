@@ -113,7 +113,7 @@ endif()
 #################################
 #  Statically linked libraries  #
 #################################
-add_subdirectory(gpio_protocol)
+add_subdirectory(elk-gpio-protocol)
 add_subdirectory(shiftregister_gpio)
 set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread jsoncpp lo)
 
