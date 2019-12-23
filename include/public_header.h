@@ -1,8 +1,0 @@
-//
-// Created by gustav on 2/26/16.
-//
-
-#ifndef DEFAULT_PROJECT_PUBLIC_HEADER_H_H
-#define DEFAULT_PROJECT_PUBLIC_HEADER_H_H
-
-#endif //DEFAULT_PROJECT_PUBLIC_HEADER_H_H
