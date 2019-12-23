@@ -1,7 +1,0 @@
-Simple example to test Liblo linking with C++ bindings.
-
-Test it by running e.g.
-
-oscdump 9999
-
-you should receive three messages with types "i", "f", "ifs".
