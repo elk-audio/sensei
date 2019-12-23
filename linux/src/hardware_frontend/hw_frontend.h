@@ -1,86 +1,112 @@
-#ifndef SENSEI_INPUTFRONTEN_H
-#define SENSEI_INPUTFRONTEN_H
+/**
+ * @brief Class handling communication using gpio protocol using the hardware backend
+ * @copyright MIND Music Labs AB, Stockholm
+ *
+ */
 
-#include <memory>
+#ifndef SENSEI_HW_FRONTEND_H
+#define SENSEI_HW_FRONTEND_H
 
-#include "synchronized_queue.h"
+#include <thread>
+#include <condition_variable>
+#include <mutex>
+#include <atomic>
+#include <cassert>
+#include <utility>
+#include <optional>
+
+#include "base_hw_frontend.h"
+#include "hardware_backend/base_hw_backend.h"
+#include "message_tracker.h"
 #include "message/base_message.h"
 #include "message/base_command.h"
-
+#include "message/message_factory.h"
+#include "gpio_command_creator.h"
 
 namespace sensei {
 namespace hw_frontend {
 
-/**
- * @brief Base class for frontends connecting to HW
- */
-class HwFrontend
+class HwFrontend : public BaseHwFrontend
 {
 public:
     /**
-     * @brief Class constructor
-     * @param [in] in_queue Output queue where incoming messages go
-     * @param [in] out_queue Queue for messages to be sent to HW
+    * @brief Class constructor
+    *
+    * @param [in] in_queue Output queue where decoded messages go
+    * @param [in] out_queue Queue for messages to be sent to the board
     */
     HwFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
-               SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue)
-    {
-        _in_queue = in_queue;
-        _out_queue = out_queue;
-    }
+               SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue,
+               hw_backend::BaseHwBackend* hw_backend);
 
-    virtual ~HwFrontend() = default;
+    ~HwFrontend()
+    {}
 
     /**
-     * @brief Returns true if connection to the HW is ok and ready to send
-     * @return State of hw frontend connection
-     */
-    virtual bool connected() = 0;
+    * @brief Start the frontend
+    */
+    void run() override;
 
     /**
-     * @brief Spawn new threads for reading continuously from the port and in_queue
-     */
-    virtual void run() = 0;
+    * @brief Stops the frontend if it is running
+    */
+    void stop() override;
 
     /**
-     * @brief Stops the read and write threads if they are running
-     */
-    virtual void stop() = 0;
-
-    /**
-     * @brief Stops the flow of messages. If set to true, incoming packets
-     * are silently dropped
+     * @brief Stops the flow of messages. If enabled, incoming packets are silently dropped.
+     *
      * @param [in] enabled Sets mute enabled/disabled
      */
-    virtual void mute(bool enabled) = 0;
+    void mute(bool enabled) override;
 
     /**
-     * @brief Enables tracking and verification of packets sent
+     * @brief Enables tracking and verification of packets ent
+     *
      * @param [in] enabled Sets ack verification enabled/disabled
      */
-    virtual void verify_acks(bool enabled) = 0;
+    void verify_acks(bool enabled) override;
 
-protected:
-    SynchronizedQueue<std::unique_ptr<Command>>*_in_queue;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>*_out_queue;
+private:
+    enum class ThreadState : int
+    {
+        RUNNING,
+        STOPPING,
+        STOPPED,
+    };
+
+    void read_loop();
+    void write_loop();
+
+    void _handle_timeouts();
+    void _handle_gpio_packet(const gpio::GpioPacket& packet);
+    void _handle_ack(const gpio::GpioPacket& ack);
+    void _handle_value(const gpio::GpioPacket& packet);
+    void _handle_board_info(const gpio::GpioPacket& packet);
+    void _process_sensei_command(const Command*message);
+
+    MessageFactory   _message_factory;
+    GpioCommandCreator _packet_factory;
+    MessageTracker     _message_tracker;
+    std::deque<gpio::GpioPacket>  _send_list;
+    hw_backend::BaseHwBackend* _hw_backend;
+
+    std::atomic<ThreadState> _state;
+    std::thread     _read_thread;
+    std::thread     _write_thread;
+
+    std::mutex      _send_mutex;
+    std::condition_variable _ready_to_send_notifier;
+
+    bool            _ready_to_send;
+    bool            _muted;
+    bool            _verify_acks;
+    gpio::GpioBoardInfoData _board_info;
 };
 
+std::optional<uint8_t> to_gpio_hw_type(SensorHwType type);
+std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode);
 
-class NoOpFrontend : public HwFrontend
-{
-public:
-    NoOpFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
-                 SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue) : HwFrontend(in_queue, out_queue)
-    {}
-    virtual bool connected() {return false;}
-    virtual void run() {}
-    virtual void stop() {}
-    virtual void mute(bool /*enabled*/) {}
-    virtual void verify_acks(bool /*enabled*/) {}
-};
+} // end namespace hw_frontend
+} // end namespace sensei
 
-}; // namespace hw_frontend
-}; // namespace sensei
-
-
-#endif //SENSEI_INPUTFRONTEN_H
+#endif //SENSEI_HW_FRONTEND_H

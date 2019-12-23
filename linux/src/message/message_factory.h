@@ -154,20 +154,12 @@ public:
         return std::unique_ptr<SetADCBitResolutionCommand>(msg);
     }
 
-    std::unique_ptr<BaseMessage> make_set_lowpass_filter_order_command(const int sensor_id,
-                                                                       const int order,
+    std::unique_ptr<BaseMessage> make_set_analog_time_constant_command(const int sensor_id,
+                                                                       const float time_constant,
                                                                        const uint32_t timestamp = 0)
     {
-        auto msg = new SetLowpassFilterOrderCommand(sensor_id, order, timestamp);
-        return std::unique_ptr<SetLowpassFilterOrderCommand>(msg);
-    }
-
-    std::unique_ptr<BaseMessage> make_set_lowpass_cutoff_command(const int sensor_id,
-                                                                 const float cutoff,
-                                                                 const uint32_t timestamp = 0)
-    {
-        auto msg = new SetLowpassCutoffCommand(sensor_id, cutoff, timestamp);
-        return std::unique_ptr<SetLowpassCutoffCommand>(msg);
+        auto msg = new SetADCFitlerTimeConstantCommand(sensor_id, time_constant, timestamp);
+        return std::unique_ptr<SetADCFitlerTimeConstantCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_set_slider_threshold_command(const int sensor_id,

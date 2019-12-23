@@ -22,6 +22,9 @@ configure_file(
         ${CMAKE_BINARY_DIR}/generated/version.h
 )
 
+# Enable
+option(WITH_GPIO_LOGIC "Perform gpio logic instead of a micro controller" OFF)
+
 ############################
 #  Main executable target  #
 ############################
@@ -32,9 +35,10 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/event_handler.cpp
                       src/output_backend/std_stream_backend.cpp
                       src/output_backend/osc_backend.cpp
-                      src/hardware_frontend/raspa_frontend.cpp
+                      src/hardware_frontend/hw_frontend.cpp
                       src/hardware_frontend/message_tracker.cpp
                       src/hardware_frontend/gpio_command_creator.cpp
+                      src/hardware_backend/gpio_hw_socket.cpp
                       src/main.cpp
                       src/logging.cpp
                       src/user_frontend/user_frontend.cpp src/user_frontend/osc_user_frontend.cpp)
@@ -56,10 +60,12 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/output_backend/output_backend.h
                         src/output_backend/std_stream_backend.h
                         src/output_backend/osc_backend.h
-                        src/hardware_frontend/hw_frontend.h
+                        src/hardware_frontend/base_hw_frontend.h
                         src/hardware_frontend/message_tracker.h
-                        src/hardware_frontend/raspa_frontend.h
+                        src/hardware_frontend/hw_frontend.h
                         src/hardware_frontend/gpio_command_creator.h
+                        src/hardware_backend/base_hw_backend.h
+                        src/hardware_backend/gpio_hw_socket.h
                         src/locked_queue.h
                         src/synchronized_queue.h
                         src/event_handler.h
@@ -78,6 +84,7 @@ add_executable(sensei ${SOURCE_FILES})
 
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
+                 "${PROJECT_SOURCE_DIR}/shiftregister_gpio/include"
                  "${CMAKE_BINARY_DIR}"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
                  "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
@@ -107,8 +114,9 @@ endif()
 #  Statically linked libraries  #
 #################################
 add_subdirectory(gpio_protocol)
+add_subdirectory(shiftregister_gpio)
+set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread jsoncpp lo)
 
-set(LINK_LIBRARIES gpio_protocol pthread jsoncpp lo)
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 
 ####################

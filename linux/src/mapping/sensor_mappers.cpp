@@ -17,8 +17,7 @@ namespace {
 
 static const int MAX_ADC_BIT_RESOLUTION = 16;
 static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
-static const float DEFAULT_LOWPASS_CUTOFF = 100.0f;
-static const int MAX_LOWPASS_FILTER_ORDER = 8;
+static const float DEFAULT_FILTER_TIME_CONSTANT = 0.020f; // 20 ms
 
 static const float PREVIOUS_VALUE_THRESHOLD = 1.0e-4f;
 
@@ -273,14 +272,14 @@ std::unique_ptr<Command> DigitalSensorMapper::process_set_value(Value*value)
 AnalogSensorMapper::AnalogSensorMapper(int index,
                                        float adc_sampling_rate) :
     BaseSensorMapper(SensorType::ANALOG_INPUT, index),
-    _lowpass_filter_order(4),
-    _lowpass_cutoff(DEFAULT_LOWPASS_CUTOFF),
+    _filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT),
     _slider_threshold(0),
     _input_scale_range_low(0),
     _input_scale_range_high((1<<DEFAULT_ADC_BIT_RESOLUTION)-1),
     _adc_sampling_rate(adc_sampling_rate)
 {
     _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
+    _set_adc_filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT);
 }
 
 CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
@@ -312,18 +311,11 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
         };
         break;
 
-    case CommandType::SET_LOWPASS_FILTER_ORDER:
+    case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
         {
-            const auto typed_cmd = static_cast<const SetLowpassFilterOrderCommand*>(cmd);
-            status = _set_lowpass_filter_order(typed_cmd->data());
-        };
-        break;
-
-    case CommandType::SET_LOWPASS_CUTOFF:
-        {
-            const auto typed_cmd = static_cast<const SetLowpassCutoffCommand*>(cmd);
-            status = _set_lowpass_cutoff(typed_cmd->data());
-        };
+            const auto typed_cmd = static_cast<const SetADCFitlerTimeConstantCommand*>(cmd);
+            status = _set_adc_filter_time_constant(typed_cmd->data());
+        }
         break;
 
     case CommandType::SET_SLIDER_THRESHOLD:
@@ -368,8 +360,7 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 
     MessageFactory factory;
     *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
-    *out_iterator = factory.make_set_lowpass_filter_order_command(_sensor_index, _lowpass_filter_order);
-    *out_iterator = factory.make_set_lowpass_cutoff_command(_sensor_index, _lowpass_cutoff);
+    *out_iterator = factory.make_set_analog_time_constant_command(_sensor_index, _filter_time_constant);
     *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
     *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
@@ -450,25 +441,15 @@ CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(int resolution)
     return CommandErrorCode::OK;
 }
 
-CommandErrorCode AnalogSensorMapper::_set_lowpass_filter_order(int value)
+
+CommandErrorCode AnalogSensorMapper::_set_adc_filter_time_constant(float value)
 {
-    if ((value < 1) || (value > MAX_LOWPASS_FILTER_ORDER))
+    if (value <= 0.0f)
     {
         return CommandErrorCode::INVALID_VALUE;
     }
 
-    _lowpass_filter_order = value;
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode AnalogSensorMapper::_set_lowpass_cutoff(float value)
-{
-    if ( (value <= 0.0f) || (value >= (0.5f * _adc_sampling_rate)) )
-    {
-        return CommandErrorCode::INVALID_VALUE;
-    }
-
-    _lowpass_cutoff = value;
+    _filter_time_constant = value;
     return CommandErrorCode::OK;
 }
 

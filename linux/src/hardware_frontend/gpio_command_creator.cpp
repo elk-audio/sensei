@@ -24,14 +24,6 @@ gpio::GpioPacket GpioCommandCreator::make_start_system_command()
     return packet;
 }
 
-gpio::GpioPacket GpioCommandCreator::make_stop_system_command()
-{
-    GpioPacket packet = _prepare_packet();
-    packet.command = GPIO_CMD_SYSTEM_CONTROL;
-    packet.sub_command = GPIO_SUB_CMD_STOP_SYSTEM;
-    return packet;
-}
-
 gpio::GpioPacket GpioCommandCreator::make_set_tick_rate_command(uint8_t tick_rate)
 {
     GpioPacket packet = _prepare_packet();
@@ -143,15 +135,6 @@ gpio::GpioPacket GpioCommandCreator::make_mute_controller_command(uint8_t contro
     return packet;
 }
 
-gpio::GpioPacket GpioCommandCreator::make_remove_controller_command(uint8_t controller_id)
-{
-    GpioPacket packet = _prepare_packet();
-    packet.command = GPIO_CMD_CONFIG_CONTROLLER;
-    packet.sub_command = GPIO_SUB_CMD_REMOVE_CONTROLLER;
-    packet.payload.remove_controller_data.controller_id = controller_id;
-    return packet;
-}
-
 gpio::GpioPacket GpioCommandCreator::make_set_analog_resolution_command(uint8_t controller_id, uint8_t adc_bits)
 {
     GpioPacket packet = _prepare_packet();
@@ -180,6 +163,16 @@ gpio::GpioPacket GpioCommandCreator::make_set_debounce_mode_command(uint8_t cont
     packet.sub_command = GPIO_SUB_CMD_SET_CONTROLLER_DEBOUNCE_MODE;
     packet.payload.controller_debounce_data.controller_id = controller_id;
     packet.payload.controller_debounce_data.controller_debounce_mode = debounce_mode;
+    return packet;
+}
+
+gpio::GpioPacket GpioCommandCreator::make_set_analog_time_constant_command(uint8_t controller_id, float time_constant)
+{
+    GpioPacket packet = _prepare_packet();
+    packet.command = GPIO_CMD_CONFIG_CONTROLLER;
+    packet.sub_command = GPIO_SUB_CMD_SET_ANALOG_TIME_CONSTANT;
+    packet.payload.time_constant_data.controller_id = controller_id;
+    packet.payload.time_constant_data.time_constant = time_constant;
     return packet;
 }
 
@@ -247,6 +240,8 @@ std::string gpio_status_to_string(uint8_t status)
             return "GPIO_PARAMETER_ERROR";
         case GpioReturnStatus::GPIO_INVALID_COMMAND_FOR_CONTROLLER:
             return "GPIO_INVALID_COMMAND_FOR_CONTROLLER";
+        case GpioReturnStatus::GPIO_INVALID_RUNTIME_CONFIG:
+            return "GPIO_INVALID_RUNTIME_CONFIG";
         default:
             return "";
     }
@@ -263,8 +258,6 @@ std::string gpio_packet_to_string(const gpio::GpioPacket& packet)
                     return "GPIO_SUB_CMD_STOP_RESET_SYSTEM";
                 case GPIO_SUB_CMD_START_SYSTEM:
                     return "GPIO_SUB_CMD_START_SYSTEM";
-                case GPIO_SUB_CMD_STOP_SYSTEM:
-                    return "GPIO_SUB_CMD_STOP_SYSTEM";
                 case GPIO_SUB_CMD_SET_SYSTEM_TICK_RATE:
                     return "GPIO_SUB_CMD_SET_TICK_RATE";
                 case GPIO_SUB_CMD_GET_BOARD_INFO:
@@ -293,12 +286,14 @@ std::string gpio_packet_to_string(const gpio::GpioPacket& packet)
                     return "GPIO_SUB_CMD_ADD_PINS_TO_CONTROLLER";
                 case GPIO_SUB_CMD_MUTE_UNMUTE_CONTROLLER:
                     return "GPIO_SUB_CMD_MUTE_UNMUTE_CONTROLLER";
-                case GPIO_SUB_CMD_REMOVE_CONTROLLER:
-                    return "GPIO_SUB_CMD_REMOVE_CONTROLLER";
                 case GPIO_SUB_CMD_SET_ANALOG_CONTROLLER_RES:
                     return "GPIO_SUB_CMD_SET_ANALOG_CONTROLLER_RES";
                 case GPIO_SUB_CMD_SET_CONTROLLER_RANGE:
                     return "GPIO_SUB_CMD_SET_CONTROLLER_RANGE";
+                case GPIO_SUB_CMD_SET_CONTROLLER_DEBOUNCE_MODE:
+                    return "GPIO_SUB_CMD_SET_CONTROLLER_DEBOUNCE_MODE";
+                case GPIO_SUB_CMD_SET_ANALOG_TIME_CONSTANT:
+                    return "GPIO_SUB_CMD_SET_ANALOG_TIME_CONSTANT";
                 default:
                     return "Unrecognised Gpio command";
             }

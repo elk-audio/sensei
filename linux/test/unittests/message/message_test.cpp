@@ -53,7 +53,7 @@ TEST(MessagesTest, test_external_command_creation)
     msg_queue.push_back(factory.make_set_sending_mode_command(4, SendingMode::ON_VALUE_CHANGED));
     msg_queue.push_back(factory.make_set_sending_delta_ticks_command(5, 10));
     msg_queue.push_back(factory.make_set_adc_bit_resolution_command(6, 12));
-    msg_queue.push_back(factory.make_set_lowpass_cutoff_command(7, 125.0f));
+    msg_queue.push_back(factory.make_set_analog_time_constant_command(7, 0.020f));
     msg_queue.push_back(factory.make_set_slider_threshold_command(9, 9));
     msg_queue.push_back(factory.make_set_fast_mode_command(10, true));
     msg_queue.push_back(factory.make_set_digital_output_command(11, true));
@@ -105,10 +105,10 @@ TEST(MessagesTest, test_external_command_creation)
             };
             break;
 
-        case CommandType::SET_LOWPASS_CUTOFF:
+        case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
             {
-                auto typed_cmd = static_cast<SetLowpassCutoffCommand *>(cmd_msg);
-                ASSERT_EQ(125.0f, typed_cmd->data());
+                auto typed_cmd = static_cast<SetADCFitlerTimeConstantCommand *>(cmd_msg);
+                ASSERT_EQ(0.020f, typed_cmd->data());
             };
             break;
 

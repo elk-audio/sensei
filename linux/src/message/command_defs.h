@@ -33,8 +33,7 @@ enum class CommandType
     SET_SENDING_MODE,
     SET_SENDING_DELTA_TICKS,
     SET_ADC_BIT_RESOLUTION,
-    SET_LOWPASS_FILTER_ORDER,
-    SET_LOWPASS_CUTOFF,
+    SET_ADC_FILTER_TIME_CONSTANT,
     SET_SLIDER_THRESHOLD,
     SET_MULTIPLEXED,
     SET_HW_POLARITY,
@@ -88,8 +87,7 @@ enum class SensorHwType
     ENCODER,
     N_WAY_SWITCH,
     STEPPED_OUTPUT,
-    MULTIPLEXER,
-    AUDIO_MUTE_BUTTON
+    MULTIPLEXER
 };
 
 /**
@@ -109,7 +107,8 @@ enum class BackendType
 enum class HwFrontendType
 {
     NONE,
-    RASPA_GPIO
+    RASPA_GPIO,
+    ELK_PI_GPIO
 };
 
 /**
@@ -215,16 +214,10 @@ SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
                        "Set ADC Bit Resolution",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
-SENSEI_DECLARE_COMMAND(SetLowpassFilterOrderCommand,
-                       CommandType::SET_LOWPASS_FILTER_ORDER,
-                       int,
-                       "Set Lowpass Filter order",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
-
-SENSEI_DECLARE_COMMAND(SetLowpassCutoffCommand,
-                       CommandType::SET_LOWPASS_CUTOFF,
+SENSEI_DECLARE_COMMAND(SetADCFitlerTimeConstantCommand,
+                       CommandType::SET_ADC_FILTER_TIME_CONSTANT,
                        float,
-                       "Set Lowpass Cutoff",
+                       "Set ADC Filter time constant",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
@@ -243,7 +236,7 @@ SENSEI_DECLARE_COMMAND(SetSensorHwPolarityCommand,
                        CommandType::SET_HW_POLARITY,
                        HwPolarity,
                        "Set polarity of hw sensor",
-                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+                       CommandDestination::HARDWARE_FRONTEND);
 
 SENSEI_DECLARE_COMMAND(SetFastModeCommand,
                        CommandType::SET_FAST_MODE,
