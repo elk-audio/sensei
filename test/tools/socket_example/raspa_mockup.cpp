@@ -52,7 +52,7 @@ void print_packet(const GpioPacket& packet)
 class RaspaMockup
 {
 public:
-    RaspaMockup() 
+    RaspaMockup()
     {
         _in_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
         _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
@@ -80,8 +80,8 @@ public:
         stop();
         unlink(RASPA_SOCKET);
     }
-    
-    void run() 
+
+    void run()
     {
         if (!_running)
         {
@@ -124,7 +124,7 @@ private:
             std::cout << "Failed to connect to sensei" << std::endl;
             _connected = false;
         }
-    }    
+    }
 
     void read_loop()
     {
@@ -198,17 +198,6 @@ private:
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
-                /*snprintf(buffer.data, sizeof(buffer), "Raspa, pkt: %x", _msg_count++);
-                buffer.data[19] = 0;
-                auto ret = send(_out_socket, &buffer, sizeof(RaspaPacket), 0);
-                if (ret < sizeof(RaspaPacket))
-                {
-                    std::cout << "Failed to send with error: " << ret << std::endl;
-                }
-                else
-                {
-                    std::cout << "Sent " << ret << " bytes, pkt: " << _msg_count << std::endl;
-                }*/
             }
             std::this_thread::sleep_for(PING_INTERVAL);
         }
@@ -225,7 +214,7 @@ private:
         _send_ack = true;
     }
 
-    
+
     bool            _running{false};
     bool            _connected{false};
     bool            _send_ack{false};

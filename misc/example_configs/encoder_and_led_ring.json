@@ -1,0 +1,48 @@
+{
+    "backends" : [
+      {
+        "id" : 0,
+        "enabled": true,
+        "raw_input_enabled": false,
+        "type" : "osc",
+        "host" : "localhost",
+        "port" : 23000,
+        "base_path" : "/sensors",
+        "base_raw_input_path" : "/raw_input"
+      }
+    ],
+
+      "hw_frontend" : {
+        "type" : "elk_pi"
+      },
+
+    "sensors" : [
+        {
+            "id" : 1,
+            "enabled": true,
+            "name" : "led_ring",
+            "sensor_type" : "analog_output",
+            "range" : [0, 8],
+            "hardware" :
+            {
+                "hardware_type" : "stepped_output",
+                "pins" : [0,1,2,3,4,5,6,7,8]
+            }
+        },
+        {
+            "id" : 2,
+            "enabled": true,
+            "name" : "rot_enc",
+            "sensor_type" : "analog_input",
+            "mode" : "on_value_changed",
+            "range" : [0, 8],
+            "hardware" :
+            {
+            "hardware_type" : "encoder",
+            "polarity" : "active_low",
+            "pins" : [0, 1],
+            "delta_ticks" : 1
+            }
+        }
+    ]
+}

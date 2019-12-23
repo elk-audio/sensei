@@ -1,0 +1,62 @@
+{
+  "backends" : [
+    {
+      "id" : 0,
+      "enabled": true,
+      "raw_input_enabled": false,
+      "type" : "osc",
+      "host" : "localhost",
+      "port" : 23000,
+      "base_path" : "/sensors",
+      "base_raw_input_path" : "/raw_input"
+    }
+  ],
+
+    "hw_frontend" : {
+      "type" : "elk_pi"
+    },
+
+  "sensors" : [
+    {
+      "id" : 1,
+      "enabled": true,
+      "name" : "led",
+      "sensor_type" : "digital_output",
+      "hardware" :
+      {
+        "hardware_type" : "digital_output_pin",
+        "pins" : [0]
+      }
+    },
+    {
+      "id" : 2,
+      "enabled": true,
+      "name" : "button",
+      "sensor_type" : "digital_input",
+      "inverted" : "true",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "digital_input_pin",
+        "polarity" : "active_low",
+        "pins" : [0],
+        "delta_ticks" : 1
+      }
+    },
+    {
+      "id" : 3,
+      "enabled": true,
+      "name" : "potentiometer",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pins" : [0],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8,
+        "filter_time_constant" : 0.020
+      }
+    }
+  ]
+}
