@@ -7,22 +7,22 @@
 #include "user_frontend/osc_user_frontend.h"
 #include "hardware_frontend/hw_frontend.h"
 #include "hardware_backend/gpio_hw_socket.h"
+#include "shiftreg_gpio/shiftreg_gpio.h"
 #include "utils.h"
 #include "logging.h"
 
 using namespace sensei;
 
+constexpr auto HWBACKEND_TIMEOUT = std::chrono::milliseconds(250);
+
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("eventhandler");
 
-void EventHandler::init(int max_n_input_pins,
+bool EventHandler::init(int max_n_input_pins,
                         int max_n_digital_out_pins,
                         const std::string& config_file)
 {
-    _processor = std::make_unique<mapping::MappingProcessor>(max_n_input_pins);
-    _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
-    _config_backend = std::make_unique<config::JsonConfiguration>(&_event_queue, config_file);
-    _user_frontend =  std::make_unique<user_frontend::OSCUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
     config::HwFrontendConfig hw_config;
+    _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
     auto ret = _config_backend->read(hw_config);
     if (ret != config::ConfigStatus::OK)
     {
@@ -49,20 +49,36 @@ void EventHandler::init(int max_n_input_pins,
     {
     case HwFrontendType::RASPA_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Hw Frontend with socket hw backend");
-        _hw_backend = std::make_unique<hw_backend::GpioHwSocket>("/tmp/raspa");
+        _hw_backend = std::make_unique<hw_backend::GpioHwSocket>("/tmp/raspa", HWBACKEND_TIMEOUT);
+        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(&_to_frontend_queue, &_event_queue, _hw_backend.get());
+        break;
+
+    case HwFrontendType::ELK_PI_GPIO:
+        SENSEI_LOG_INFO("Initializing Gpio Frontend with Elk Pi hw backend");
+        _hw_backend = std::make_unique<hw_backend::shiftregister_gpio::ShiftregGpio>(HWBACKEND_TIMEOUT);
         _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(&_to_frontend_queue, &_event_queue, _hw_backend.get());
         break;
 
     default:
-        _hw_backend = std::make_unique<hw_backend::NoOpHwBackend>();
+        _hw_backend = std::make_unique<hw_backend::NoOpHwBackend>(HWBACKEND_TIMEOUT);
         _hw_frontend = std::make_unique<hw_frontend::NoOpFrontend>(&_to_frontend_queue, &_event_queue);
         SENSEI_LOG_ERROR("No HW Frontend configured");
         break;
     }
 
-    _hw_backend->init();
+    if(!_hw_backend->init())
+    {
+        SENSEI_LOG_ERROR("Failed to initialize hw backend");
+        return false;
+    }
+
+    _processor = std::make_unique<mapping::MappingProcessor>(max_n_input_pins);
+    _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
+    _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
+
     _hw_frontend->verify_acks(true);
     _hw_frontend->run();
+    return true;
 }
 
 void EventHandler::deinit()
@@ -212,7 +228,6 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
                 break;
             }
         }
-
     }
 
     // At last, pass the message to serial receiver queue

@@ -106,7 +106,7 @@ TEST_F(TestDigitalSensorMapper, test_config_fail)
     auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, 12)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, 1000.0f)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_analog_time_constant_command(_sensor_idx, 0.020f)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
 }
 
@@ -194,8 +194,7 @@ protected:
                                                                                              _multiplexer_data.id,
                                                                                              _multiplexer_data.pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, _lowpass_filter_order))));
-        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_lowpass_cutoff_command(_sensor_idx, _lowpass_cutoff))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_time_constant_command(_sensor_idx, _filter_time_constant))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_range_command(_sensor_idx,
                                                                                       _input_scale_low,
@@ -226,8 +225,7 @@ protected:
     bool _inverted{true};
     int _delta_ticks{5};
     MultiplexerData _multiplexer_data{3,8};
-    int _lowpass_filter_order{4};
-    float _lowpass_cutoff{199.123f};
+    float _filter_time_constant{0.20f};
     int _adc_bit_resolution{12};
     int _slider_threshold{9};
     int _input_scale_low{22};
@@ -252,13 +250,9 @@ TEST_F(TestAnalogSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_SLIDER_THRESHOLD, cmd_slider_thr->type());
     ASSERT_EQ(_slider_threshold, cmd_slider_thr->data());
 
-    auto cmd_cutoff = extract_cmd_from<SetLowpassCutoffCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_LOWPASS_CUTOFF, cmd_cutoff->type());
-    ASSERT_EQ(_lowpass_cutoff, cmd_cutoff->data());
-
-    auto cmd_filt_ord = extract_cmd_from<SetLowpassFilterOrderCommand>(stored_cmds);
-    ASSERT_EQ(CommandType::SET_LOWPASS_FILTER_ORDER, cmd_filt_ord->type());
-    ASSERT_EQ(_lowpass_filter_order, cmd_filt_ord->data());
+    auto cmd_cutoff = extract_cmd_from<SetADCFitlerTimeConstantCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ADC_FILTER_TIME_CONSTANT, cmd_cutoff->type());
+    ASSERT_EQ(_filter_time_constant, cmd_cutoff->data());
 
     auto cmd_adc_res = extract_cmd_from<SetADCBitResolutionCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_ADC_BIT_RESOLUTION, cmd_adc_res->type());
@@ -320,9 +314,7 @@ TEST_F(TestAnalogSensorMapper, test_config_fail)
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_sending_delta_ticks_command(_sensor_idx, -23)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, 0)));
-    ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_lowpass_filter_order_command(_sensor_idx, 100)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_analog_time_constant_command(_sensor_idx, -1)));
     ASSERT_EQ(CommandErrorCode::INVALID_VALUE, ret);
 
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_input_range_command(_sensor_idx, -20, -10)));

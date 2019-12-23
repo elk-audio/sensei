@@ -49,10 +49,6 @@ TEST_F(TestGpioCommandCreator, test_command_creation)
     EXPECT_EQ(GPIO_CMD_SYSTEM_CONTROL, packet.command);
     EXPECT_EQ(GPIO_SUB_CMD_START_SYSTEM, packet.sub_command);
 
-    packet = _module_under_test.make_stop_system_command();
-    EXPECT_EQ(GPIO_CMD_SYSTEM_CONTROL, packet.command);
-    EXPECT_EQ(GPIO_SUB_CMD_STOP_SYSTEM, packet.sub_command);
-
     packet = _module_under_test.make_set_tick_rate_command(GPIO_SYSTEM_TICK_1000_HZ);
     EXPECT_EQ(GPIO_CMD_SYSTEM_CONTROL, packet.command);
     EXPECT_EQ(GPIO_SUB_CMD_SET_SYSTEM_TICK_RATE, packet.sub_command);
@@ -129,11 +125,6 @@ TEST_F(TestGpioCommandCreator, test_command_creation)
     EXPECT_EQ(GPIO_SUB_CMD_SET_CONTROLLER_DEBOUNCE_MODE, packet.sub_command);
     EXPECT_EQ(GPIO_CONTROLLER_DEBOUNCE_ENABLED, packet.payload.controller_debounce_data.controller_debounce_mode);
     EXPECT_EQ(15, packet.payload.controller_debounce_data.controller_id);
-
-    packet = _module_under_test.make_remove_controller_command(15);
-    EXPECT_EQ(GPIO_CMD_CONFIG_CONTROLLER, packet.command);
-    EXPECT_EQ(GPIO_SUB_CMD_REMOVE_CONTROLLER, packet.sub_command);
-    EXPECT_EQ(15, packet.payload.remove_controller_data.controller_id);
 
     packet = _module_under_test.make_set_analog_resolution_command(16, 8);
     EXPECT_EQ(GPIO_CMD_CONFIG_CONTROLLER, packet.command);

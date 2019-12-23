@@ -22,6 +22,9 @@ configure_file(
         ${CMAKE_BINARY_DIR}/generated/version.h
 )
 
+# Enable
+option(WITH_GPIO_LOGIC "Perform gpio logic instead of a micro controller" OFF)
+
 ############################
 #  Main executable target  #
 ############################
@@ -81,6 +84,7 @@ add_executable(sensei ${SOURCE_FILES})
 
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
+                 "${PROJECT_SOURCE_DIR}/shiftregister_gpio/include"
                  "${CMAKE_BINARY_DIR}"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
                  "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
@@ -110,8 +114,9 @@ endif()
 #  Statically linked libraries  #
 #################################
 add_subdirectory(gpio_protocol)
+add_subdirectory(shiftregister_gpio)
+set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread jsoncpp lo)
 
-set(LINK_LIBRARIES gpio_protocol pthread jsoncpp lo)
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 
 ####################
