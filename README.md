@@ -1,15 +1,21 @@
-SENSEI Linux Frontend
-==========================
-SEnsus SEnsors engIne Linux Frontend.
+# SENSEI
 
-Communicate with Teensy Sensors board via serial protocol, process raw data to map them in the range normalized range 0..1 and send them using one of the available backends (e.g. OSC).
+Control abstraction daemon for Elk Audio OS.
 
-Started 160304 by Gustav Andersson
+## Usage
 
-Build instructions:
--------------------
-The generate script creates a build folder and calls cmake to make a release folder and a debug folder. To rebuild, one can simply cd into build/release or build/debug and do "make".
+See `sensei -h` for a complete list of options.
 
+Common use case is just to pass a JSON configuration file:
+```
+$ sensei -f config.json
+```
 
-Copyright 2016 MIND Music Labs AB, Stockholm
+Check [Elk's official documentation](https://elk-audio.github.io/elk-docs/html/documents/sensei_configuration_format.html) for details on the JSON configuration format.
 
+## License
+
+SENSEI is licensed under Affero General Public License (“AGPLv3”). See [LICENSE](LICENSE.md) document for the full details of the license. For contributing code to SENSEI, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm, Sweden.
