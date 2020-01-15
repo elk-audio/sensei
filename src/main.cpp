@@ -52,8 +52,8 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 
 void print_headline()
 {
-    std::cout << "SENSEI - SEnsus SEnsor Interface" << std::endl;
-    std::cout << "Copyright 2016-2018 MIND Music Labs, Stockholm" << std::endl;
+    std::cout << "SENSEI - Copyright 2017-2019 Elk, Stockholm" << std::endl;
+    std::cout << "SENSEI is licensed under the Affero GPL 3.0. Source code is available at github.com/elk-audio" << std::endl;
 }
 
 void print_version_and_build_info()
