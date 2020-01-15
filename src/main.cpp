@@ -39,6 +39,8 @@
 #define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
+#define SENSEI_DEFAULT_LOG_FILENAME         "/tmp/sushi.log"
+#define SENSEI_DEFAULT_LOG_LEVEL            "info"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -47,6 +49,9 @@
 sensei::EventHandler event_handler;
 static volatile sig_atomic_t main_loop_running = 1;
 static volatile sig_atomic_t config_reload_pending = 0;
+
+std::string log_level = std::string(SENSEI_DEFAULT_LOG_LEVEL);
+std::string log_filename = std::string(SENSEI_DEFAULT_LOG_FILENAME);
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 
@@ -153,7 +158,9 @@ enum OptionIndex
     N_INPUT_PINS,
     N_OUTPUT_PINS,
     SLEEP_PERIOD,
-    CONFIG_FILENAME
+    CONFIG_FILENAME,
+    LOG_FILENAME,
+    LOG_LEVEL
 };
 
 const option::Descriptor usage[] =
@@ -214,6 +221,23 @@ const option::Descriptor usage[] =
         SenseiArg::NonEmpty,
         "\t\t-f <file>, --file=<file> \tSpecify JSON configuration file [default=" SENSEI_DEFAULT_CONFIG_FILENAME "]."
     },
+    {
+        LOG_FILENAME,
+        0,
+        "L",
+        "log-file",
+        SenseiArg::NonEmpty,
+        "\t\t-L <filename>, --log-file=<filename> \tSpecify logging file destination [default=" SENSEI_DEFAULT_LOG_FILENAME "]."
+    },
+    {
+        LOG_LEVEL,
+        0,
+        "l",
+        "log-level",
+        SenseiArg::NonEmpty,
+        "\t\t-l <level>, --log-level=<level> \tSpecify minimum logging level, from ('debug', 'info', 'warning', 'error')"
+    },
+
     { 0, 0, 0, 0, 0, 0}
 };
 
@@ -315,6 +339,14 @@ int main(int argc, char* argv[])
 
         case CONFIG_FILENAME:
             config_filename.assign(opt.arg);
+            break;
+
+        case LOG_FILENAME:
+            log_filename.assign(opt.arg);
+            break;
+
+        case LOG_LEVEL:
+            log_level.assign(opt.arg);
             break;
 
         default:
