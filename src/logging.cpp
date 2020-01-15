@@ -14,70 +14,115 @@
  */
 
 /**
- * @brief Singleton wrapper around spdlog and custom logging macros
+ * @brief Logging wrapper
  * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
- *
- * Currently all logs end up in log.txt in the same folder as the executable
- *
- * If -DDISABLE_LOGGING is passed as a compiler argument, all logging code
- * disappears without a trace. Useful for testing and outside releases.
- *
- * Usage:
- * Call SENSEI_GET_LOGGER before any code in each file.
- *
- * Write to the logger using the SENSEI_LOG_XXX macros with cppformat style
- * ie: SENSEI_LOG_INFO("Setting x to {} and y to {}", x, y);
- *
- * spdlog supports ostream style too, but that doesn't work with
- * -DDISABLE_MACROS unfortunately
  */
+
+#include <map>
+#include <algorithm>
+#include <iostream>
+
 #include "logging.h"
-#ifndef DISABLE_LOGGING
+#ifndef SENSEI_DISABLE_LOGGING
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/async.h"
 
-namespace sensei {
+namespace elk {
 
-std::shared_ptr<spdlog::logger> Logger::get_logger()
+// Static variable need to be initialized here
+// so that the linker can find them.
+//
+// See:
+// http://stackoverflow.com/questions/14808864/can-i-initialize-static-float-variable-during-runtime
+// answer from Edward A.
+
+std::string Logger::_logger_file_name = "/tmp/sensei.log";
+std::string Logger::_logger_name = "Sensei";
+spdlog::level::level_enum Logger::_min_log_level = spdlog::level::warn;
+std::shared_ptr<spdlog::logger> Logger::logger_instance{nullptr};
+
+SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string& file_name,
+                                         const std::string& logger_name,
+                                         const std::string& min_log_level,
+                                         const bool enable_flush_interval,
+                                         const std::chrono::seconds log_flush_interval)
 {
-    /*
-     * Note: A static function variable avoids all initialization
-     * order issues associated with a static member variable
-     */
-    static auto spdlog_instance = setup_logging();
-    if (!spdlog_instance)
+    SENSEI_LOG_ERROR_CODE ret = SENSEI_LOG_ERROR_CODE_OK;
+
+    std::map<std::string, spdlog::level::level_enum> level_map;
+    level_map["debug"] = spdlog::level::debug;
+    level_map["info"] = spdlog::level::info;
+    level_map["warning"] = spdlog::level::warn;
+    level_map["error"] = spdlog::level::err;
+    level_map["critical"] = spdlog::level::critical;
+   
+    std::string log_level_lowercase = min_log_level;
+    std::transform(min_log_level.begin(), min_log_level.end(), log_level_lowercase.begin(), ::tolower);
+    spdlog::set_pattern("[%Y-%m-%d %T.%e] [%l] %v");
+
+    Logger::_logger_file_name.assign(file_name);
+    Logger::_logger_name.assign(logger_name);
+
+    logger_instance = setup_logging();
+
+    if (enable_flush_interval)
     {
-        std::cerr << "Error, logger is not initialized properly!!! " << std::endl;
+        if (log_flush_interval.count() > 0)
+        {
+            spdlog::flush_every(log_flush_interval);
+        }
+        else
+        {
+            return SENSEI_LOG_ERROR_CODE_INVALID_FLUSH_INTERVAL;
+        }
+        
     }
-    return spdlog_instance;
+
+    if (logger_instance == nullptr)
+    {
+        ret = SENSEI_LOG_FAILED_TO_START_LOGGER;
+    }
+    if (level_map.count(log_level_lowercase) > 0)
+    {
+        spdlog::set_level(level_map[log_level_lowercase]);
+    }
+    else
+    {
+        ret = SENSEI_LOG_ERROR_CODE_INVALID_LOG_LEVEL;
+    }
+    return ret;
 }
 
-std::shared_ptr<spdlog::logger> setup_logging()
+std::string Logger::get_error_message(SENSEI_LOG_ERROR_CODE status)
 {
-    /*
-     * Note, configuration parameters are defined here to guarantee
-     * that they are defined before calling get_logger()
-     */
-    const size_t LOGGER_QUEUE_SIZE  = 4096;                  // Should be power of 2
-    const std::string LOGGER_FILE   = "log";
-    const std::string LOGGER_NAME   = "Sensei_logger";
-    const int  MAX_LOG_FILE_SIZE    = 10'000'000;            // In bytes
-    const auto MIN_FLUSH_LEVEL      = spdlog::level::err;    // Min level for automatic flush
-    const spdlog::level::level_enum MIN_LOG_LEVEL = spdlog::level::warn;
+    static std::string error_messages[] = 
+    {
+        "Ok",
+        "Invalid Log Level",
+        "Failed to start logger"
+    };
 
-    spdlog::set_level(MIN_LOG_LEVEL);
-    spdlog::set_pattern("[%Y-%m-%d %T.%e] [%l] %v");
-    spdlog::set_async_mode(LOGGER_QUEUE_SIZE);
-    auto async_file_logger = spdlog::rotating_logger_mt(LOGGER_NAME,
-                                                        LOGGER_FILE,
-                                                        MAX_LOG_FILE_SIZE,
-                                                        1);
+    return error_messages[status];
+}
+
+std::shared_ptr<spdlog::logger> Logger::setup_logging()
+{
+    const int  MAX_LOG_FILE_SIZE    = 10'000'000;           // In bytes
+    const auto MIN_FLUSH_LEVEL      = spdlog::level::err;   // Min level for automatic flush
+
+    spdlog::set_level(_min_log_level);
+    auto async_file_logger = spdlog::rotating_logger_mt<spdlog::async_factory>(_logger_name,
+                                                                               _logger_file_name,
+                                                                               MAX_LOG_FILE_SIZE,
+                                                                               1);
 
     async_file_logger->flush_on(MIN_FLUSH_LEVEL);
-    async_file_logger->info("#############################");
-    async_file_logger->info("   Started Sensei Logger!");
-    async_file_logger->info("#############################");
+    async_file_logger->warn("#############################");
+    async_file_logger->warn("   Started Sensei Logger!");
+    async_file_logger->warn("#############################");
     return async_file_logger;
 }
 
-} // namespace sensei
+} // end namespace elk
 
-#endif // DISABLE_LOGGING
+#endif // SENSEI_DISABLE_LOGGING

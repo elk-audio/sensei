@@ -21,6 +21,7 @@
 #include <fstream>
 #include <csignal>
 #include <cassert>
+#include <iostream>
 
 #include "optionparser.h"
 
@@ -52,8 +53,8 @@ static volatile sig_atomic_t config_reload_pending = 0;
 
 std::string log_level = std::string(SENSEI_DEFAULT_LOG_LEVEL);
 std::string log_filename = std::string(SENSEI_DEFAULT_LOG_FILENAME);
-
-SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
+std::chrono::seconds log_flush_interval = std::chrono::seconds(0);
+bool enable_flush_interval = false;
 
 void print_headline()
 {
@@ -160,7 +161,8 @@ enum OptionIndex
     SLEEP_PERIOD,
     CONFIG_FILENAME,
     LOG_FILENAME,
-    LOG_LEVEL
+    LOG_LEVEL,
+    LOG_FLUSH_INTERVAL
 };
 
 const option::Descriptor usage[] =
@@ -236,6 +238,14 @@ const option::Descriptor usage[] =
         "log-level",
         SenseiArg::NonEmpty,
         "\t\t-l <level>, --log-level=<level> \tSpecify minimum logging level, from ('debug', 'info', 'warning', 'error')"
+    },
+    {
+        LOG_FLUSH_INTERVAL,
+        0,
+        "",
+        "log-flush-interval",
+        SenseiArg::Numeric,
+        "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."
     },
 
     { 0, 0, 0, 0, 0, 0}
@@ -349,6 +359,11 @@ int main(int argc, char* argv[])
             log_level.assign(opt.arg);
             break;
 
+        case LOG_FLUSH_INTERVAL:
+            log_flush_interval = std::chrono::seconds(std::strtol(opt.arg, nullptr, 0));
+            enable_flush_interval = true;
+            break;
+
         default:
             SenseiArg::print_error("Unhandled option '", opt, "' \n");
             break;
@@ -379,6 +394,17 @@ int main(int argc, char* argv[])
         event_handler.deinit();
         return 1;
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Logger configuration
+    ////////////////////////////////////////////////////////////////////////////////
+    auto ret_code = SENSEI_INITIALIZE_LOGGER(log_filename, "Logger", log_level, enable_flush_interval, log_flush_interval);
+    if (ret_code != SENSEI_LOG_ERROR_CODE_OK)
+    {
+        std::cerr << SENSEI_LOG_GET_ERROR_MESSAGE(ret_code) << ", using default." << std::endl;
+    }
+
+    SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 
     ////////////////////////////////////////////////////////////////////////////////
     // Main loop
