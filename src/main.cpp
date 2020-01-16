@@ -40,7 +40,7 @@
 #define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
-#define SENSEI_DEFAULT_LOG_FILENAME         "/tmp/sushi.log"
+#define SENSEI_DEFAULT_LOG_FILENAME         "/tmp/sensei.log"
 #define SENSEI_DEFAULT_LOG_LEVEL            "info"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -380,6 +380,15 @@ int main(int argc, char* argv[])
     }
 
     ////////////////////////////////////////////////////////////////////////////////
+    // Logger configuration
+    ////////////////////////////////////////////////////////////////////////////////
+    auto ret_code = SENSEI_INITIALIZE_LOGGER(log_filename, "Logger", log_level, enable_flush_interval, log_flush_interval);
+    if (ret_code != SENSEI_LOG_ERROR_CODE_OK)
+    {
+        std::cerr << SENSEI_LOG_GET_ERROR_MESSAGE(ret_code) << ", using default." << std::endl;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
     // Initialization
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -395,14 +404,6 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Logger configuration
-    ////////////////////////////////////////////////////////////////////////////////
-    auto ret_code = SENSEI_INITIALIZE_LOGGER(log_filename, "Logger", log_level, enable_flush_interval, log_flush_interval);
-    if (ret_code != SENSEI_LOG_ERROR_CODE_OK)
-    {
-        std::cerr << SENSEI_LOG_GET_ERROR_MESSAGE(ret_code) << ", using default." << std::endl;
-    }
 
     SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 
