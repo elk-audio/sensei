@@ -120,6 +120,8 @@ public:
      * @param file_name Name of file used to append logs (without extension)
      * @param logger_name Internal name of the logger
      * @param min_log_level Minimum logging level, one of ('debug', 'info', 'warning', 'error', 'critical')
+     * @param enable_flush_interval Sets if periodic flushing is enabled
+     * @param log_flush_interval The interval of the periodic log flushing
      *
      * @returns Error code, use SENSEI_LOG_ERROR_MESSAGES to retrieve the message
      *

@@ -29,13 +29,6 @@
 
 namespace elk {
 
-// Static variable need to be initialized here
-// so that the linker can find them.
-//
-// See:
-// http://stackoverflow.com/questions/14808864/can-i-initialize-static-float-variable-during-runtime
-// answer from Edward A.
-
 std::string Logger::_logger_file_name = "/tmp/sensei.log";
 std::string Logger::_logger_name = "Sensei";
 spdlog::level::level_enum Logger::_min_log_level = spdlog::level::warn;
