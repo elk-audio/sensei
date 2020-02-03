@@ -21,6 +21,7 @@
 #include <fstream>
 #include <csignal>
 #include <cassert>
+#include <iostream>
 
 #include "optionparser.h"
 
@@ -39,6 +40,8 @@
 #define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
+#define SENSEI_DEFAULT_LOG_FILENAME         "/tmp/sensei.log"
+#define SENSEI_DEFAULT_LOG_LEVEL            "info"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -48,7 +51,10 @@ sensei::EventHandler event_handler;
 static volatile sig_atomic_t main_loop_running = 1;
 static volatile sig_atomic_t config_reload_pending = 0;
 
-SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
+std::string log_level = std::string(SENSEI_DEFAULT_LOG_LEVEL);
+std::string log_filename = std::string(SENSEI_DEFAULT_LOG_FILENAME);
+std::chrono::seconds log_flush_interval = std::chrono::seconds(0);
+bool enable_flush_interval = false;
 
 void print_headline()
 {
@@ -153,7 +159,10 @@ enum OptionIndex
     N_INPUT_PINS,
     N_OUTPUT_PINS,
     SLEEP_PERIOD,
-    CONFIG_FILENAME
+    CONFIG_FILENAME,
+    LOG_FILENAME,
+    LOG_LEVEL,
+    LOG_FLUSH_INTERVAL
 };
 
 const option::Descriptor usage[] =
@@ -214,6 +223,31 @@ const option::Descriptor usage[] =
         SenseiArg::NonEmpty,
         "\t\t-f <file>, --file=<file> \tSpecify JSON configuration file [default=" SENSEI_DEFAULT_CONFIG_FILENAME "]."
     },
+    {
+        LOG_FILENAME,
+        0,
+        "L",
+        "log-file",
+        SenseiArg::NonEmpty,
+        "\t\t-L <filename>, --log-file=<filename> \tSpecify logging file destination [default=" SENSEI_DEFAULT_LOG_FILENAME "]."
+    },
+    {
+        LOG_LEVEL,
+        0,
+        "l",
+        "log-level",
+        SenseiArg::NonEmpty,
+        "\t\t-l <level>, --log-level=<level> \tSpecify minimum logging level, from ('debug', 'info', 'warning', 'error')"
+    },
+    {
+        LOG_FLUSH_INTERVAL,
+        0,
+        "",
+        "log-flush-interval",
+        SenseiArg::Numeric,
+        "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."
+    },
+
     { 0, 0, 0, 0, 0, 0}
 };
 
@@ -317,6 +351,19 @@ int main(int argc, char* argv[])
             config_filename.assign(opt.arg);
             break;
 
+        case LOG_FILENAME:
+            log_filename.assign(opt.arg);
+            break;
+
+        case LOG_LEVEL:
+            log_level.assign(opt.arg);
+            break;
+
+        case LOG_FLUSH_INTERVAL:
+            log_flush_interval = std::chrono::seconds(std::strtol(opt.arg, nullptr, 0));
+            enable_flush_interval = true;
+            break;
+
         default:
             SenseiArg::print_error("Unhandled option '", opt, "' \n");
             break;
@@ -330,6 +377,15 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to open config file " << config_filename << std::endl;
         config_file.close();
         return 1;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Logger configuration
+    ////////////////////////////////////////////////////////////////////////////////
+    auto ret_code = SENSEI_INITIALIZE_LOGGER(log_filename, "Logger", log_level, enable_flush_interval, log_flush_interval);
+    if (ret_code != SENSEI_LOG_ERROR_CODE_OK)
+    {
+        std::cerr << SENSEI_LOG_GET_ERROR_MESSAGE(ret_code) << ", using default." << std::endl;
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +403,9 @@ int main(int argc, char* argv[])
         event_handler.deinit();
         return 1;
     }
+
+
+    SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 
     ////////////////////////////////////////////////////////////////////////////////
     // Main loop
