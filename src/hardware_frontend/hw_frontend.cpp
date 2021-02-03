@@ -76,7 +76,9 @@ void HwFrontend::stop()
     {
         return;
     }
+
     SENSEI_LOG_INFO("Stopping HwFrontend");
+
     _state.store(ThreadState::STOPPING);
     if (_read_thread.joinable())
     {
@@ -87,6 +89,10 @@ void HwFrontend::stop()
         _write_thread.join();
     }
     _state.store(ThreadState::STOPPED);
+
+    // attempt to send a stop msg to the gpio hw
+    _hw_backend->send_gpio_packet(_packet_factory.make_reset_system_command());
+
     SENSEI_LOG_INFO("Threads stopped");
 }
 

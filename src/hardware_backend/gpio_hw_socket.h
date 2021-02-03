@@ -49,7 +49,6 @@ public:
                                                 BaseHwBackend(recv_packet_timeout),
                                                 _in_socket(-1),
                                                 _out_socket(-1),
-                                                _connected(false),
                                                 _gpio_hw_socket_name(gpio_hw_socket_name)
     {}
 
@@ -98,8 +97,6 @@ private:
 
     int _in_socket;
     int _out_socket;
-
-    bool _connected;
 
     std::string _gpio_hw_socket_name;
 };
