@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 /**
  * @brief Concrete classes tags used for RTTI emulation

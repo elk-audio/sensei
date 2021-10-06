@@ -24,6 +24,7 @@
 #ifndef SENSEI_BASE_COMMAND_H
 #define SENSEI_BASE_COMMAND_H
 
+#include <string>
 #include <type_traits>
 
 #include "message/base_message.h"
