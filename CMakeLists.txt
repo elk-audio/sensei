@@ -107,9 +107,6 @@ endif()
 target_compile_features(sensei PRIVATE cxx_std_17)
 target_compile_options(sensei PRIVATE -Wall -Wextra -Wno-psabi -fno-rtti -ffast-math)
 
-# TODO(andrewmacp): fix the underlying causes of these and remove this line
-target_compile_options(sensei PRIVATE -Wno-unused-function -Wno-unused-private-field -Wno-unused-const-variable)
-
 if (APPLE)
     set_target_properties(sensei PROPERTIES LINK_FLAGS "-framework IOKit -framework CoreFoundation")
 endif()
