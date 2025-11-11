@@ -37,7 +37,7 @@ static void osc_error(int num, const char *msg, const char *path)
 }
 
 static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, lo_arg**argv, int /*argc*/,
-                                  void* /*data*/, void*user_data)
+                                  lo_message /*msg*/, void*user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
     int pin_idx = argv[0]->i;
@@ -48,7 +48,7 @@ static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, l
     return 0;
 }
 
-static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
+static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
     int id = argv[0]->i;
@@ -59,7 +59,7 @@ static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, l
     return 0;
 }
 
-static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
+static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
     int id = argv[0]->i;
@@ -70,7 +70,7 @@ static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/
     return 0;
 }
 
-static int osc_set_range_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, void* /*data*/, void *user_data)
+static int osc_set_range_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
     int id = argv[0]->i;

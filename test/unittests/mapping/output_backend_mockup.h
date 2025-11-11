@@ -26,7 +26,7 @@ public:
         return CommandErrorCode::OK;
     }
 
-    void send(const OutputValue* transformed_value, const Value* raw_input_value)
+    void send(const OutputValue* transformed_value, const Value* raw_input_value) override
     {
         _last_output_value = transformed_value->value();
         _last_timestamp = transformed_value->timestamp();

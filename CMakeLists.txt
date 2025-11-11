@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15..3.23)
 project(sensei)
 
 ##################################
@@ -41,7 +41,8 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/hardware_backend/gpio_hw_socket.cpp
                       src/main.cpp
                       src/logging.cpp
-                      src/user_frontend/user_frontend.cpp src/user_frontend/osc_user_frontend.cpp)
+                      src/user_frontend/user_frontend.cpp
+                      src/user_frontend/osc_user_frontend.cpp)
 
 
 # Enumerate all the headers separately so that CLion can index them
@@ -106,8 +107,11 @@ endif()
 target_compile_features(sensei PRIVATE cxx_std_17)
 target_compile_options(sensei PRIVATE -Wall -Wextra -Wno-psabi -fno-rtti -ffast-math)
 
+# TODO(andrewmacp): fix the underlying causes of these and remove this line
+target_compile_options(sensei PRIVATE -Wno-unused-function -Wno-deprecated-declarations -Wno-pessimizing-move -Wno-unused-private-field -Wno-unused-const-variable)
+
 if (APPLE)
-    set_target_properties(sensei LINK_FLAGS -framework IOKit -framework CoreFoundation)
+    set_target_properties(sensei PROPERTIES LINK_FLAGS "-framework IOKit -framework CoreFoundation")
 endif()
 
 #################################

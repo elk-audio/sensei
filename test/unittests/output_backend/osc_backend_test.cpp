@@ -19,16 +19,16 @@ void osc_error_handler(int /*num*/, const char* /*msg*/, const char* /*path*/)
 }
 
 int alice_values_handler(const char *path, const char *types, lo_arg **argv,
-                         int argc, void *data, void *user_data);
+                         int argc, lo_message msg, void *user_data);
 
 int bob_values_handler(const char *path, const char *types, lo_arg ** argv,
-                       int argc, void *data, void *user_data);
+                       int argc, lo_message msg, void *user_data);
 
 int alice_raw_handler(const char *path, const char *types, lo_arg **argv,
-                      int argc, void *data, void *user_data);
+                      int argc, lo_message msg, void *user_data);
 
 int bob_raw_handler(const char *path, const char *types, lo_arg **argv,
-                    int argc, void *data, void *user_data);
+                    int argc, lo_message msg, void *user_data);
 
 class TestOscBackend : public ::testing::Test
 {
@@ -100,7 +100,7 @@ protected:
 };
 
 int alice_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                         int /*argc*/, void* /*data*/, void *user_data)
+                         int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_alice_received = argv[0]->f;
@@ -109,7 +109,7 @@ int alice_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **a
 }
 
 int alice_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                      int /*argc*/, void* /*data*/, void *user_data)
+                      int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_raw_alice_received = argv[0]->i;
@@ -118,7 +118,7 @@ int alice_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv
 }
 
 int bob_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                       int /*argc*/, void* /*data*/, void *user_data)
+                       int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_bob_received = argv[0]->f;
@@ -127,7 +127,7 @@ int bob_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **arg
 }
 
 int bob_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                    int /*argc*/, void* /*data*/, void *user_data)
+                    int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_raw_bob_received = argv[0]->i;

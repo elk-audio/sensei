@@ -20,7 +20,7 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/user_frontend/osc_user_frontend_test.cpp)
 
 add_executable(unit_tests ${TEST_FILES})
-target_compile_definitions(unit_tests PRIVATE -DDISABLE_LOGGING)
+target_compile_definitions(unit_tests PRIVATE -DSENSEI_DISABLE_LOGGING)
 
 #########################
 #  Include directories  #
