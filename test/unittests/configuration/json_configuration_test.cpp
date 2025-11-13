@@ -11,7 +11,7 @@
 using namespace sensei;
 using namespace config;
 
-static const std::string test_file = "../../../test/unittests/configuration/test_configuration.json";
+static const std::string test_file = "../../test/unittests/configuration/test_configuration.json";
 
 /* Macro to reduce the footprint when verifying a single command */
 #define EXPECT_COMMAND(message, commandtype, commandclass, id, expected_value) { \
@@ -60,8 +60,8 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     EXPECT_TRUE(_queue.empty());
     HwFrontendConfig hw_frontend;
     ConfigStatus status = _module_under_test.read(hw_frontend);
-    EXPECT_EQ(ConfigStatus::OK, status);
-    EXPECT_FALSE(_queue.empty());
+    ASSERT_EQ(ConfigStatus::OK, status);
+    ASSERT_FALSE(_queue.empty());
 
     EXPECT_EQ(HwFrontendType::RASPA_GPIO, hw_frontend.type);
 

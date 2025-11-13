@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "user_frontend/user_frontend.cpp"
 #include "user_frontend/osc_user_frontend.cpp"

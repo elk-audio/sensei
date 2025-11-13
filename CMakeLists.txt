@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.15..3.23)
 project(sensei)
 
 ##################################
@@ -41,7 +41,8 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/hardware_backend/gpio_hw_socket.cpp
                       src/main.cpp
                       src/logging.cpp
-                      src/user_frontend/user_frontend.cpp src/user_frontend/osc_user_frontend.cpp)
+                      src/user_frontend/user_frontend.cpp
+                      src/user_frontend/osc_user_frontend.cpp)
 
 
 # Enumerate all the headers separately so that CLion can index them
@@ -107,7 +108,7 @@ target_compile_features(sensei PRIVATE cxx_std_17)
 target_compile_options(sensei PRIVATE -Wall -Wextra -Wno-psabi -fno-rtti -ffast-math)
 
 if (APPLE)
-    set_target_properties(sensei LINK_FLAGS -framework IOKit -framework CoreFoundation)
+    set_target_properties(sensei PROPERTIES LINK_FLAGS "-framework IOKit -framework CoreFoundation")
 endif()
 
 #################################
@@ -115,7 +116,9 @@ endif()
 #################################
 add_subdirectory(elk-gpio-protocol)
 add_subdirectory(shiftregister_gpio)
-set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread jsoncpp lo)
+find_package(jsoncpp CONFIG REQUIRED)
+find_package(liblo CONFIG REQUIRED)
+set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread JsonCpp::JsonCpp liblo::liblo)
 
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 

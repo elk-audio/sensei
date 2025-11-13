@@ -1,0 +1,10 @@
+{
+  "name": "sensei",
+  "version-string": "0.3.0",
+  "homepage": "https://github.com/elk-audio/sensei",
+  "description": "Control abstraction daemon for Elk Audio OS",
+  "dependencies": [
+    "jsoncpp",
+    "liblo"
+  ]
+}

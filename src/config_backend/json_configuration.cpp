@@ -53,14 +53,14 @@ ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
         SENSEI_LOG_ERROR("Couldn't open JSON configuration file: {}", _source);
         return ConfigStatus::IO_ERROR;
     }
-    Json::Value config = std::move(read_configuration(file));
+    Json::Value config = read_configuration(file);
     if (config.isNull())
     {
         return ConfigStatus::PARSING_ERROR;
     }
 
     /* Start by disabling all pins to mute the board while sending the configuration commands */
-    _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, false)));
+    _queue->push(_message_factory.make_enable_sending_packets_command(0, false));
     const Json::Value& hw_frontend = config["hw_frontend"];
     const Json::Value& backends = config["backends"];
     const Json::Value& sensors = config["sensors"];
@@ -96,7 +96,7 @@ ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
     }
 
     /* The last commands enables sending of packets */
-    _queue->push(std::move(_message_factory.make_enable_sending_packets_command(0, true)));
+    _queue->push(_message_factory.make_enable_sending_packets_command(0, true));
     return ConfigStatus::OK;
 }
 
