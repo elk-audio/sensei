@@ -116,7 +116,9 @@ endif()
 #################################
 add_subdirectory(elk-gpio-protocol)
 add_subdirectory(shiftregister_gpio)
-set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread jsoncpp lo)
+find_package(jsoncpp CONFIG REQUIRED)
+find_package(liblo CONFIG REQUIRED)
+set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread JsonCpp::JsonCpp liblo::liblo)
 
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 
