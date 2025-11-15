@@ -1,0 +1,3 @@
+python-osc
+ctypeslib2
+clang==17.0.6
