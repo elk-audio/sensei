@@ -116,9 +116,18 @@ endif()
 #################################
 add_subdirectory(elk-gpio-protocol)
 add_subdirectory(shiftregister_gpio)
-find_package(jsoncpp CONFIG REQUIRED)
-find_package(liblo CONFIG REQUIRED)
-set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread JsonCpp::JsonCpp liblo::liblo)
+
+# these libraries are taken from vcpkg when compiling locally, but are provided
+# in the sysroot when cross-compiling
+if (CMAKE_CROSSCOMPILING)
+    set(EXTRA_LIBRARIES jsoncpp lo)
+else()
+    find_package(jsoncpp CONFIG REQUIRED)
+    find_package(liblo CONFIG REQUIRED)
+    set(EXTRA_LIBRARIES JsonCpp::JsonCpp liblo::liblo)
+endif()
+
+set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread ${EXTRA_LIBRARIES})
 
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 
