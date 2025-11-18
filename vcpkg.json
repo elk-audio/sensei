@@ -4,6 +4,12 @@
   "homepage": "https://github.com/elk-audio/sensei",
   "description": "Control abstraction daemon for Elk Audio OS",
   "dependencies": [
+    {
+      "name": "grpc",
+      "features": [
+        "codegen"
+      ]
+    },
     "jsoncpp",
     "liblo"
   ]
