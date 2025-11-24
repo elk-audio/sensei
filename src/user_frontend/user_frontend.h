@@ -100,8 +100,8 @@ public:
 
 private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
-    int _max_n_input_pins;
-    int _max_n_out_pins;
+    [[maybe_unused]] int _max_n_input_pins;
+    [[maybe_unused]] int _max_n_out_pins;
 
     MessageFactory _factory;
 };

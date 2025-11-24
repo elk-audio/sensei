@@ -18,6 +18,7 @@
  * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
  */
 #include "osc_user_frontend.h"
+#include "elk-warning-suppressor/warning_suppressor.hpp"
 #include "logging.h"
 
 #include <sstream>
@@ -48,6 +49,8 @@ static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, l
     return 0;
 }
 
+ELK_PUSH_WARNING
+ELK_DISABLE_UNUSED_FUNCTION
 static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
@@ -58,6 +61,7 @@ static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, l
 
     return 0;
 }
+ELK_POP_WARNING
 
 static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
 {
@@ -70,6 +74,8 @@ static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/
     return 0;
 }
 
+ELK_PUSH_WARNING
+ELK_DISABLE_UNUSED_FUNCTION
 static int osc_set_range_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
@@ -80,6 +86,7 @@ static int osc_set_range_output(const char* /*path*/, const char* /*types*/, lo_
 
     return 0;
 }
+ELK_POP_WARNING
 
 }; // anonymous namespace
 

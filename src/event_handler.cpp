@@ -34,7 +34,10 @@ using namespace sensei;
 
 constexpr auto HWBACKEND_TIMEOUT = std::chrono::milliseconds(250);
 
+ELK_PUSH_WARNING
+ELK_DISABLE_UNUSED_CONST_VARIABLE
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("eventhandler");
+ELK_POP_WARNING
 
 bool EventHandler::init(int max_n_input_pins,
                         int max_n_digital_out_pins,

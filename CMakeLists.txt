@@ -86,6 +86,7 @@ add_executable(sensei ${SOURCE_FILES})
 set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/include"
                  "${PROJECT_SOURCE_DIR}/shiftregister_gpio/include"
+                 "${PROJECT_SOURCE_DIR}/elk-warning-suppressor/include"
                  "${CMAKE_BINARY_DIR}"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
                  "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
