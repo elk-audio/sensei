@@ -6,7 +6,7 @@
 	url = https://github.com/google/googletest.git
 [submodule "elk-gpio-protocol"]
 	path = elk-gpio-protocol
-	url = https://github.com/elk-audio/elk-gpio-protocol.git
+	url = git@bitbucket.org:mindswteam/gpio-protocol.git
 [submodule "third-party/vcpkg"]
 	path = third-party/vcpkg
 	url = https://github.com/Microsoft/vcpkg.git
