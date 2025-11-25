@@ -40,11 +40,26 @@ class EventBroadcastManager;
 class CallDataBase
 {
 public:
-    enum State { CREATE, PROCESSING, DONE };
+    CallDataBase(pin_proxy::PinProxyService::AsyncService *service,
+                 grpc::ServerCompletionQueue* cq) : 
+                 _state(State::CREATE),
+                 _service(service),
+                 _cq(cq) {}
 
     virtual ~CallDataBase() = default;
     virtual void proceed() = 0;
-    virtual void stop() {};
+    virtual void stop()
+    {
+        _state = State::DONE;
+    }
+
+protected:
+    enum class State { CREATE, PROCESSING, DONE };
+
+    State _state;
+    grpc::ServerContext _ctx;
+    pin_proxy::PinProxyService::AsyncService* _service;
+    grpc::ServerCompletionQueue* _cq;
 };
 
 /**
@@ -56,8 +71,7 @@ public:
     SubscribeCallData(
         pin_proxy::PinProxyService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
-        EventBroadcastManager* broadcast_mgr,
-        GrpcUserFrontend* frontend);
+        EventBroadcastManager* broadcast_mgr);
 
     void proceed() override;
 
@@ -76,15 +90,9 @@ private:
      */
     void _start_write();
 
-    State _state;
-    grpc::ServerContext _ctx;
     pin_proxy::SubscribeRequest _request;
     grpc::ServerAsyncWriter<pin_proxy::Event> _responder;
-
-    pin_proxy::PinProxyService::AsyncService* _service;
-    grpc::ServerCompletionQueue* _cq;
     EventBroadcastManager* _broadcast_mgr;
-    GrpcUserFrontend* _frontend;
 
     // Event queue and write serialization
     std::mutex _write_mutex;
@@ -107,14 +115,9 @@ public:
     void proceed() override;
 
 private:
-    State _state;
-    grpc::ServerContext _ctx;
     pin_proxy::UpdateLedRequest _request;
     pin_proxy::GenericVoidValue _response;
     grpc::ServerAsyncResponseWriter<pin_proxy::GenericVoidValue> _responder;
-
-    pin_proxy::PinProxyService::AsyncService* _service;
-    grpc::ServerCompletionQueue* _cq;
     GrpcUserFrontend* _frontend;
 };
 
@@ -126,21 +129,14 @@ class RefreshAllStatesCallData : public CallDataBase
 public:
     RefreshAllStatesCallData(
         pin_proxy::PinProxyService::AsyncService* service,
-        grpc::ServerCompletionQueue* cq,
-        GrpcUserFrontend* frontend);
+        grpc::ServerCompletionQueue* cq);
 
     void proceed() override;
 
 private:
-    State _state;
-    grpc::ServerContext _ctx;
     pin_proxy::RefreshAllStatesRequest _request;
     pin_proxy::RefreshAllStatesResponse _response;
     grpc::ServerAsyncResponseWriter<pin_proxy::RefreshAllStatesResponse> _responder;
-
-    pin_proxy::PinProxyService::AsyncService* _service;
-    grpc::ServerCompletionQueue* _cq;
-    GrpcUserFrontend* _frontend;
 };
 
 /**
@@ -176,6 +172,11 @@ public:
      * @brief Signal shutdown - prevents new broadcasts
      */
     void shutdown();
+
+    /**
+     * @brief Get the number of currently-connected subscribers
+     */
+    int num_subscribers();
 
 private:
     std::mutex _subscribers_mutex;

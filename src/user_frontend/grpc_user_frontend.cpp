@@ -76,13 +76,13 @@ void AsyncPinProxyServiceImpl::start(const std::string& server_address)
     _broadcast_manager = std::make_unique<EventBroadcastManager>();
 
     // Spawn initial call handlers (one for each RPC call)
-    new SubscribeCallData(_async_service.get(), _cq.get(), _broadcast_manager.get(), _frontend);
+    new SubscribeCallData(_async_service.get(), _cq.get(), _broadcast_manager.get());
     new UpdateLedCallData(_async_service.get(), _cq.get(), _frontend);
-    new RefreshAllStatesCallData(_async_service.get(), _cq.get(), _frontend);
-
-    _cq_thread = std::thread(&AsyncPinProxyServiceImpl::_handle_rpcs, this);
+    new RefreshAllStatesCallData(_async_service.get(), _cq.get());
 
     _running = true;
+    _cq_thread = std::thread(&AsyncPinProxyServiceImpl::_handle_rpcs, this);
+
     SENSEI_LOG_INFO("Spawned completion queue worker thread");
 }
 
@@ -96,15 +96,23 @@ void AsyncPinProxyServiceImpl::shutdown()
     SENSEI_LOG_INFO("Shutting down async gRPC service");
 
     _running = false;
-
+    _broadcast_manager->shutdown();
+    _server->Shutdown();
+    _cq->Shutdown();
     if (_cq_thread.joinable())
     {
         _cq_thread.join();
     }
 
-    _broadcast_manager->shutdown();
-    _server->Shutdown();
-    _cq->Shutdown();
+    // drain the queue, ensure that memory is cleaned up in DONE state
+    void* tag;
+    bool ok;
+    while (_cq->Next (&tag, &ok))
+    {
+        auto* call_data = static_cast<CallDataBase*>(tag);
+        call_data->stop();
+        call_data->proceed();
+    }
 
     SENSEI_LOG_INFO("Async gRPC service shutdown complete");
 }
@@ -214,4 +222,8 @@ void GrpcUserFrontend::broadcast_event(const pin_proxy::Event& event)
     {
         _service_impl->broadcast_event(event);
     }
+}
+
+int GrpcUserFrontend::num_subscribers() const {
+    return _service_impl->broadcast_manager()->num_subscribers();
 }

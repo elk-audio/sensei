@@ -35,14 +35,10 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("async_call_handlers");
 SubscribeCallData::SubscribeCallData(
     pin_proxy::PinProxyService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
-    EventBroadcastManager* broadcast_mgr,
-    GrpcUserFrontend* frontend)
-    : _state(CREATE),
+    EventBroadcastManager* broadcast_mgr)
+    : CallDataBase(service, cq),
       _responder(&_ctx),
-      _service(service),
-      _cq(cq),
       _broadcast_mgr(broadcast_mgr),
-      _frontend(frontend),
       _in_processing(false)
 {
     proceed();
@@ -50,43 +46,42 @@ SubscribeCallData::SubscribeCallData(
 
 void SubscribeCallData::proceed()
 {
-    if (_state == CREATE)
+    if (_state == State::CREATE)
     {
-        _state = PROCESSING;
+        _state = State::PROCESSING;
 
         // When a client calls SubscribeToEvents, this handler will be activated
         SENSEI_LOG_INFO("Subscribing to events");
         _service->RequestSubscribeToEvents(&_ctx, &_request, &_responder, _cq, _cq, this);
     }
-    else if (_state == PROCESSING)
+    else if (_state == State::PROCESSING)
     {
         // First time in PROCESSING: spawn new handler for next client
         if (!_in_processing)
         {
-            new SubscribeCallData(_service, _cq, _broadcast_mgr, _frontend);
+            new SubscribeCallData(_service, _cq, _broadcast_mgr);
             _broadcast_mgr->register_subscriber(this);
             _in_processing = true;
         }
 
-        // This proceed() was called because a Write completed
         std::lock_guard<std::mutex> lock(_write_mutex);
         _start_write();
     }
     else
     {
-        assert(_state == DONE);
+        assert(_state == State::DONE);
         delete this;
     }
 }
 
 void SubscribeCallData::stop() {
     _broadcast_mgr->unregister_subscriber(this);
-    _state = DONE;
+    _state = State::DONE;
 }
 
 void SubscribeCallData::enqueue_event(const pin_proxy::Event& event)
 {
-    if (_state != PROCESSING)
+    if (_state != State::PROCESSING)
     {
         return;
     }
@@ -119,10 +114,8 @@ UpdateLedCallData::UpdateLedCallData(
     pin_proxy::PinProxyService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     GrpcUserFrontend* frontend)
-    : _state(CREATE),
+    : CallDataBase(service, cq),
       _responder(&_ctx),
-      _service(service),
-      _cq(cq),
       _frontend(frontend)
 {
     proceed();
@@ -130,12 +123,12 @@ UpdateLedCallData::UpdateLedCallData(
 
 void UpdateLedCallData::proceed()
 {
-    if (_state == CREATE)
+    if (_state == State::CREATE)
     {
-        _state = PROCESSING;
+        _state = State::PROCESSING;
         _service->RequestUpdateLed(&_ctx, &_request, &_responder, _cq, _cq, this);
     }
-    else if (_state == PROCESSING)
+    else if (_state == State::PROCESSING)
     {
         new UpdateLedCallData(_service, _cq, _frontend);
 
@@ -146,7 +139,7 @@ void UpdateLedCallData::proceed()
 
         _frontend->set_digital_output(led_id, active);
 
-        _state = DONE;
+        _state = State::DONE;
         _responder.Finish(_response, grpc::Status::OK, this);
     }
     else
@@ -161,39 +154,35 @@ void UpdateLedCallData::proceed()
 
 RefreshAllStatesCallData::RefreshAllStatesCallData(
     pin_proxy::PinProxyService::AsyncService* service,
-    grpc::ServerCompletionQueue* cq,
-    GrpcUserFrontend* frontend)
-    : _state(CREATE),
-      _responder(&_ctx),
-      _service(service),
-      _cq(cq),
-      _frontend(frontend)
+    grpc::ServerCompletionQueue* cq)
+    : CallDataBase(service, cq),
+      _responder(&_ctx)
 {
     proceed();
 }
 
 void RefreshAllStatesCallData::proceed()
 {
-    if (_state == CREATE)
+    if (_state == State::CREATE)
     {
-        _state = PROCESSING;
+        _state = State::PROCESSING;
         _service->RequestRefreshAllStates(&_ctx, &_request, &_responder, _cq, _cq, this);
     }
-    else if (_state == PROCESSING)
+    else if (_state == State::PROCESSING)
     {
-        new RefreshAllStatesCallData(_service, _cq, _frontend);
+        new RefreshAllStatesCallData(_service, _cq);
 
         // TODO: Implement state query - for now return UNIMPLEMENTED
         SENSEI_LOG_WARNING("RefreshAllStates not implemented yet");
 
-        _state = DONE;
+        _state = State::DONE;
         _responder.Finish(_response,
                          grpc::Status(grpc::StatusCode::UNIMPLEMENTED, "RefreshAllStates not implemented"),
                          this);
     }
     else
     {
-        assert(_state == DONE);
+        assert(_state == State::DONE);
         delete this;
     }
 }
@@ -228,9 +217,8 @@ void EventBroadcastManager::broadcast_event(const pin_proxy::Event& event)
         return;
     }
 
-    std::lock_guard<std::mutex> lock(_subscribers_mutex);
-
     // Broadcast to all active subscribers
+    std::lock_guard<std::mutex> lock(_subscribers_mutex);
     for (auto* subscriber : _subscribers)
     {
         subscriber->enqueue_event(event);
@@ -241,6 +229,11 @@ void EventBroadcastManager::shutdown()
 {
     _shutting_down = true;
     SENSEI_LOG_INFO("EventBroadcastManager shutting down");
+}
+
+int EventBroadcastManager::num_subscribers() {
+    std::lock_guard<std::mutex> lock(_subscribers_mutex);
+    return _subscribers.size();
 }
 
 } // namespace user_frontend

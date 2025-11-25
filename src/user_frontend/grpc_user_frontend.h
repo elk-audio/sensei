@@ -126,6 +126,11 @@ public:
      */
     void broadcast_event(const pin_proxy::Event& event);
 
+    /**
+     * @brief Get the number of currently-connected subscribers, mostly for testing.
+     */
+    int num_subscribers() const;
+
 private:
     /**
      * @brief Start the gRPC async server
