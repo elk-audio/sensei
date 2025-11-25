@@ -25,12 +25,12 @@ configure_file(
 # Enable
 option(WITH_GPIO_LOGIC "Perform gpio logic instead of a micro controller" OFF)
 
-option(SENSEI_USE_GRPC "Use the gRPC backend, if disabled will use OSC" OFF)
+option(SENSEI_WITH_GRPC "Enable the gRPC backend" OFF)
 
 ################################
 #  gRPC / Protobuf generation  #
 ################################
-if (${SENSEI_USE_GRPC})
+if (${SENSEI_WITH_GRPC})
     find_package(gRPC REQUIRED)
 
     set(PROTOS pin-proxy/pin_events.proto)
@@ -63,7 +63,7 @@ if (${SENSEI_USE_GRPC})
         "protoc-gen-grpc=${_gRPC_CPP_PLUGIN}"
     )
 
-    set(BACKFRONTEND_SOURCE_FILES
+    set(GRPC_SOURCE_FILES
         src/output_backend/grpc_backend.cpp
         src/output_backend/grpc_backend.h
         src/user_frontend/grpc_user_frontend.cpp
@@ -71,20 +71,7 @@ if (${SENSEI_USE_GRPC})
         src/user_frontend/async_call_handlers.cpp
         src/user_frontend/async_call_handlers.h
     )
-    set(BACKFRONTEND_LIBRARIES protos-lib)
-else()
-    set(BACKFRONTEND_SOURCE_FILES
-        src/output_backend/osc_backend.cpp
-        src/output_backend/osc_backend.h
-        src/user_frontend/osc_user_frontend.cpp
-        src/user_frontend/osc_user_frontend.h
-    )
-    if (CMAKE_CROSSCOMPILING)
-        set(BACKFRONTEND_LIBRARIES lo)
-    else()
-        find_package(liblo CONFIG REQUIRED)
-        set(BACKFRONTEND_LIBRARIES liblo::liblo)
-    endif()
+    set(GRPC_LIBRARIES protos-lib)
 endif()
 
 ############################
@@ -95,6 +82,7 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/mapping/sensor_mappers.cpp
                       src/mapping/mapping_processor.cpp
                       src/event_handler.cpp
+                      src/output_backend/osc_backend.cpp
                       src/output_backend/std_stream_backend.cpp
                       src/hardware_frontend/hw_frontend.cpp
                       src/hardware_frontend/message_tracker.cpp
@@ -102,6 +90,7 @@ set(COMPILATION_UNITS src/config_backend/json_configuration.cpp
                       src/hardware_backend/gpio_hw_socket.cpp
                       src/main.cpp
                       src/logging.cpp
+                      src/user_frontend/osc_user_frontend.cpp
                       src/user_frontend/user_frontend.cpp)
 
 
@@ -119,6 +108,7 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/mapping/mapping_processor.h
                         src/mapping/sensor_mappers.h
                         src/output_backend/output_backend.h
+                        src/output_backend/osc_backend.h
                         src/output_backend/std_stream_backend.h
                         src/hardware_frontend/base_hw_frontend.h
                         src/hardware_frontend/message_tracker.h
@@ -131,14 +121,15 @@ set(EXTRA_CLION_SOURCES src/config_backend/base_configuration.h
                         src/event_handler.h
                         src/utils.h
                         src/logging.h
+                        src/user_frontend/osc_user_frontend.h
                         src/user_frontend/user_frontend.h)
 
-set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" "${BACKFRONTEND_SOURCE_FILES}")
+set(SOURCE_FILES "${COMPILATION_UNITS}" "${EXTRA_CLION_SOURCES}" "${GRPC_SOURCE_FILES}")
 
 add_executable(sensei ${SOURCE_FILES})
 
-if (${SENSEI_USE_GRPC})
-    target_compile_definitions(sensei PUBLIC -DSENSEI_USE_GRPC)
+if (${SENSEI_WITH_GRPC})
+    target_compile_definitions(sensei PUBLIC -DSENSEI_WITH_GRPC)
 endif()
 
 #########################
@@ -183,13 +174,14 @@ add_subdirectory(shiftregister_gpio)
 # these libraries are taken from vcpkg when compiling locally, but are provided
 # in the sysroot when cross-compiling
 if (CMAKE_CROSSCOMPILING)
-    set(EXTRA_LIBRARIES jsoncpp)
+    set(EXTRA_LIBRARIES jsoncpp lo)
 else()
     find_package(jsoncpp CONFIG REQUIRED)
-    set(EXTRA_LIBRARIES JsonCpp::JsonCpp)
+    find_package(liblo CONFIG REQUIRED)
+    set(EXTRA_LIBRARIES JsonCpp::JsonCpp liblo::liblo)
 endif()
 
-set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread ${BACKFRONTEND_LIBRARIES} ${EXTRA_LIBRARIES})
+set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread ${GRPC_LIBRARIES} ${EXTRA_LIBRARIES})
 
 target_link_libraries(sensei PRIVATE ${LINK_LIBRARIES})
 

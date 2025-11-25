@@ -17,7 +17,7 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/mapping/output_backend_mockup.h
                unittests/test_utils.h)
 
-if (${SENSEI_USE_GRPC})
+if (${SENSEI_WITH_GRPC})
 else()
     set(BACKFRONTEND_TEST_FILES
                unittests/output_backend/osc_backend_test.cpp

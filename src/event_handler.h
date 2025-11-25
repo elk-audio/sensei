@@ -50,8 +50,8 @@ public:
 
     void reload_config()
     {
-        config::HwFrontendConfig hwc;
-        _config_backend->read(hwc);
+        config::Config config;
+        _config_backend->read(config);
     }
 
 private:

@@ -112,6 +112,7 @@ enum class BackendType
     NONE,
     OSC,
     STD_STREAM,
+    GRPC,
     N_BACKEND_TYPES
 };
 

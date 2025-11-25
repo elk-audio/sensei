@@ -39,13 +39,13 @@ public:
     /*
      * Open file, parse json and put commands in queue
      */
-    ConfigStatus read(HwFrontendConfig& hw_config) override;
+    ConfigStatus read(Config& config) override;
 
 private:
     ConfigStatus handle_hw_config(const Json::Value& frontend, HwFrontendConfig& config);
     ConfigStatus handle_sensor(const Json::Value& sensor);
     ConfigStatus handle_sensor_hw(const Json::Value& hardware, int sensor_id);
-    ConfigStatus handle_backend(const Json::Value& backend);
+    ConfigStatus handle_backend(const Json::Value& backend, BackendConfig& backend_config);
     ConfigStatus handle_osc_backend(const Json::Value& backend, int id);
     ConfigStatus read_pins(const Json::Value& pins, int sensor_id);
 

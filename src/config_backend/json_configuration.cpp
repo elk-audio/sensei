@@ -44,7 +44,7 @@ Json::Value read_configuration(std::ifstream& file)
 /*
  * Open _source as a file and parse is as a json file
  */
-ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
+ConfigStatus JsonConfiguration::read(Config& config)
 {
     SENSEI_LOG_INFO("Reading configuration file");
     std::ifstream file(_source);
@@ -53,20 +53,20 @@ ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
         SENSEI_LOG_ERROR("Couldn't open JSON configuration file: {}", _source);
         return ConfigStatus::IO_ERROR;
     }
-    Json::Value config = read_configuration(file);
-    if (config.isNull())
+    Json::Value json_config = read_configuration(file);
+    if (json_config.isNull())
     {
         return ConfigStatus::PARSING_ERROR;
     }
 
     /* Start by disabling all pins to mute the board while sending the configuration commands */
     _queue->push(_message_factory.make_enable_sending_packets_command(0, false));
-    const Json::Value& hw_frontend = config["hw_frontend"];
-    const Json::Value& backends = config["backends"];
-    const Json::Value& sensors = config["sensors"];
+    const Json::Value& hw_frontend = json_config["hw_frontend"];
+    const Json::Value& backends = json_config["backends"];
+    const Json::Value& sensors = json_config["sensors"];
 
     /* Read the hw status, needs to be returned directly and not as an event */
-    ConfigStatus status = handle_hw_config(hw_frontend, hw_config);
+    ConfigStatus status = handle_hw_config(hw_frontend, config.hw_config);
     if (status != ConfigStatus::OK)
     {
         return status;
@@ -76,7 +76,7 @@ ConfigStatus JsonConfiguration::read(HwFrontendConfig& hw_config)
     {
         for(const Json::Value& backend : backends)
         {
-            status = handle_backend(backend);
+            status = handle_backend(backend, config.backend_config);
             if (status != ConfigStatus::OK)
             {
                 return status;
@@ -428,7 +428,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
 /*
  * Handle a backend configuration
  */
-ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend)
+ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend, BackendConfig &backend_config)
 {
     int backend_id;
     const Json::Value& id = backend["id"];
@@ -463,7 +463,12 @@ ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend)
         const std::string& backend_type_str = backend_type.asString();
         if (backend_type_str == "osc")
         {
+            backend_config.type = BackendType::OSC;
             return handle_osc_backend(backend, backend_id);
+        }
+        else if (backend_type_str == "grpc")
+        {
+            backend_config.type = BackendType::GRPC;
         }
     }
     return ConfigStatus::OK ;

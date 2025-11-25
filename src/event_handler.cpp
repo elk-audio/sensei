@@ -17,23 +17,21 @@
  * @brief Class which is responsible for creation and handling of all events
  * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
  */
-#include <iostream>
 #include <chrono>
 
 #include "event_handler.h"
 #include "config_backend/json_configuration.h"
 #include "hardware_frontend/hw_frontend.h"
 #include "hardware_backend/gpio_hw_socket.h"
+#include "output_backend/osc_backend.h"
 #include "shiftreg_gpio/shiftreg_gpio.h"
+#include "user_frontend/osc_user_frontend.h"
 #include "utils.h"
 #include "logging.h"
 
-#ifdef SENSEI_USE_GRPC
+#ifdef SENSEI_WITH_GRPC
 #include "output_backend/grpc_backend.h"
 #include "user_frontend/grpc_user_frontend.h"
-#else
-#include "output_backend/osc_backend.h"
-#include "user_frontend/osc_user_frontend.h"
 #endif
 
 using namespace sensei;
@@ -49,9 +47,9 @@ bool EventHandler::init(int max_n_input_pins,
                         int max_n_digital_out_pins,
                         const std::string& config_file)
 {
-    config::HwFrontendConfig hw_config;
+    config::Config config;
     _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
-    auto ret = _config_backend->read(hw_config);
+    auto ret = _config_backend->read(config);
     if (ret != config::ConfigStatus::OK)
     {
         switch (ret)
@@ -73,7 +71,7 @@ bool EventHandler::init(int max_n_input_pins,
     }
 
     // hw_frontend initialization
-    switch (hw_config.type)
+    switch (config.hw_config.type)
     {
     case HwFrontendType::RASPA_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Hw Frontend with socket hw backend");
@@ -101,20 +99,34 @@ bool EventHandler::init(int max_n_input_pins,
     }
 
     _processor = std::make_unique<mapping::MappingProcessor>(max_n_input_pins);
-#ifdef SENSEI_USE_GRPC
-    // The frontend runs the gRPC server where subscriptions are made so the
-    // backend needs to forward events to the frontend. If we decide to fully
-    // remove OSC support then this could be refactored.
-    auto grpc_backend = std::make_unique<output_backend::GrpcBackend>(max_n_input_pins);
-    auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
-    grpc_backend->set_user_frontend(grpc_frontend.get());
 
-    _output_backend = std::move(grpc_backend);
-    _user_frontend = std::move(grpc_frontend);
-#else
-    _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
-    _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
+    switch (config.backend_config.type)
+    {
+#ifdef SENSEI_WITH_GRPC
+    case BackendType::GRPC:
+    {
+        SENSEI_LOG_INFO("Initializing gRPC backend");
+
+        // The frontend runs the gRPC server where subscriptions are made so the
+        // backend needs to forward events to the frontend. If we decide to fully
+        // remove OSC support then this could be refactored.
+        auto grpc_backend = std::make_unique<output_backend::GrpcBackend>(max_n_input_pins);
+        auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
+        grpc_backend->set_user_frontend(grpc_frontend.get());
+
+        _output_backend = std::move(grpc_backend);
+        _user_frontend = std::move(grpc_frontend);
+        break;
+    }
 #endif
+
+    case BackendType::OSC:
+    default:
+        SENSEI_LOG_INFO("Initializing OSC backend");
+        _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
+        _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
+        break;
+    }
 
     _hw_frontend->verify_acks(true);
     _hw_frontend->run();
