@@ -99,6 +99,7 @@ private:
     std::queue<pin_proxy::Event> _pending_events;
     pin_proxy::Event _current_event;
     bool _in_processing;
+    bool _is_writing;
 };
 
 /**
@@ -154,7 +155,7 @@ public:
      * @brief Register a new subscriber
      * @param subscriber Non-owning pointer to SubscribeCallData
      */
-    void register_subscriber(SubscribeCallData* subscriber);
+    void register_subscriber(SubscribeCallData* subscriber, std::vector<int> &&controller_ids);
 
     /**
      * @brief Unregister a subscriber (called when client disconnects)
@@ -179,8 +180,14 @@ public:
     int num_subscribers();
 
 private:
+    struct SubscriberData
+    {
+        SubscribeCallData *subscriber; // non-owning pointer
+        std::vector<int> controller_ids;
+    };
+
     std::mutex _subscribers_mutex;
-    std::vector<SubscribeCallData*> _subscribers;  // Non-owning pointers
+    std::vector<SubscriberData> _subscribers;
     std::atomic<bool> _shutting_down;
 };
 

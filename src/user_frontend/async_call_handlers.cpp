@@ -39,7 +39,8 @@ SubscribeCallData::SubscribeCallData(
     : CallDataBase(service, cq),
       _responder(&_ctx),
       _broadcast_mgr(broadcast_mgr),
-      _in_processing(false)
+      _in_processing(false),
+      _is_writing(false)
 {
     proceed();
 }
@@ -56,11 +57,18 @@ void SubscribeCallData::proceed()
     }
     else if (_state == State::PROCESSING)
     {
+        // if we're getting a new process() call then we can't still be writing
+        _is_writing = false;
+
         // First time in PROCESSING: spawn new handler for next client
         if (!_in_processing)
         {
             new SubscribeCallData(_service, _cq, _broadcast_mgr);
-            _broadcast_mgr->register_subscriber(this);
+
+            const auto &ids = _request.controller_ids();
+            auto controller_ids = std::vector<int>(ids.begin(), ids.end());
+            _broadcast_mgr->register_subscriber(this, std::move(controller_ids));
+
             _in_processing = true;
         }
 
@@ -94,7 +102,9 @@ void SubscribeCallData::enqueue_event(const pin_proxy::Event& event)
 // Must be called with _write_mutex held
 void SubscribeCallData::_start_write()
 {
-    if (_pending_events.empty())
+    // if we haven't returned from our last Write yet then don't start another, can happen
+    // with multiple enqueue_event() in quick succession
+    if (_pending_events.empty() || _is_writing)
     {
         return;
     }
@@ -103,6 +113,7 @@ void SubscribeCallData::_start_write()
     _pending_events.pop();
 
     // Start async write - completion will trigger proceed()
+    _is_writing = true;
     _responder.Write(_current_event, this);
 }
 
@@ -187,7 +198,7 @@ void RefreshAllStatesCallData::proceed()
     }
 }
 
-void EventBroadcastManager::register_subscriber(SubscribeCallData* subscriber)
+void EventBroadcastManager::register_subscriber(SubscribeCallData* subscriber, std::vector<int> &&controller_ids)
 {
     if (_shutting_down)
     {
@@ -195,14 +206,16 @@ void EventBroadcastManager::register_subscriber(SubscribeCallData* subscriber)
     }
 
     std::lock_guard<std::mutex> lock(_subscribers_mutex);
-    _subscribers.push_back(subscriber);
+    _subscribers.push_back({subscriber, std::move(controller_ids)});
     SENSEI_LOG_INFO("Subscriber registered, total subscribers: {}", _subscribers.size());
 }
 
 void EventBroadcastManager::unregister_subscriber(SubscribeCallData* subscriber)
 {
     std::lock_guard<std::mutex> lock(_subscribers_mutex);
-    auto it = std::find(_subscribers.begin(), _subscribers.end(), subscriber);
+    auto it = std::find_if(_subscribers.begin(), _subscribers.end(), 
+        [&subscriber](const SubscriberData& s) { return s.subscriber == subscriber; });
+
     if (it != _subscribers.end())
     {
         _subscribers.erase(it);
@@ -217,11 +230,29 @@ void EventBroadcastManager::broadcast_event(const pin_proxy::Event& event)
         return;
     }
 
+    auto event_controller_id =
+        event.has_analog_ev() ? event.analog_ev().controller_id() :
+            event.has_range_ev() ? event.range_ev().controller_id() :
+                event.has_relative_ev() ? event.relative_ev().controller_id() :
+                    event.has_toggle_ev() ? event.toggle_ev().controller_id() :
+                        -1;
+
+    if (event_controller_id == -1)
+    {
+        SENSEI_LOG_WARNING("Proto Event with unexpected event case {}", static_cast<int>(event.event_case()));
+        return;
+    }
+
     // Broadcast to all active subscribers
     std::lock_guard<std::mutex> lock(_subscribers_mutex);
-    for (auto* subscriber : _subscribers)
+    for (auto& data : _subscribers)
     {
-        subscriber->enqueue_event(event);
+        auto &ids = data.controller_ids;
+        if (data.controller_ids.empty() ||
+            std::find(ids.begin(), ids.end(), event_controller_id) != ids.end())
+        {
+            data.subscriber->enqueue_event(event);
+        }
     }
 }
 

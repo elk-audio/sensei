@@ -290,8 +290,8 @@ TEST_F(TestGrpcBackend, test_send_flags)
     auto value = static_cast<OutputValue*>(value_msg.get());
     _backend.send(value, nullptr);
 
-    // should timeout as there should be no broadcast
-    ASSERT_FALSE(wait_for([&received]() { return received.load(); }, DEFAULT_TIMEOUT));
+    // should timeout as there should be no broadcast, use a shorter timeout
+    ASSERT_FALSE(wait_for([&received]() { return received.load(); }, std::chrono::seconds(1)));
 
     subscriber_thread.join();
 

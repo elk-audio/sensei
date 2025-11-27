@@ -381,3 +381,50 @@ TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
     // All 3 clients should have received all 5 events (15 total)
     ASSERT_EQ(15, total_received.load());
 }
+
+TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
+{
+    grpc::ClientContext context;
+    pin_proxy::SubscribeRequest request;
+
+    // only get events from controller_id 2 and 3
+    request.add_controller_ids(2);
+    request.add_controller_ids(3);
+
+    std::unique_ptr<grpc::ClientReader<pin_proxy::Event>> reader(
+        _stub->SubscribeToEvents(&context, request));
+
+    ASSERT_TRUE(wait_for([this]() {
+        return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
+
+    // Create and broadcast events for different controllers
+    for (int i=0; i<4; ++i)
+    {
+        pin_proxy::Event event;
+        auto* toggle_ev = event.mutable_toggle_ev();
+        toggle_ev->set_controller_id(i);
+        toggle_ev->set_timestamp(i);
+        toggle_ev->set_value(true);
+        _user_frontend->broadcast_event(event);
+    }
+
+    // Read event from stream with timeout
+    pin_proxy::Event event1, event2;
+    std::atomic<bool> received{false};
+    std::thread read_thread([&reader, &event1, &event2, &received]() {
+        ASSERT_TRUE(reader->Read(&event1));
+        ASSERT_TRUE(reader->Read(&event2));
+        received = true;
+    });
+
+    ASSERT_TRUE(wait_for([&received]() {
+        return received.load(); }, DEFAULT_TIMEOUT));
+
+    context.TryCancel();
+    read_thread.join();
+
+    // double check that the final events have expected controller ids
+    ASSERT_EQ(2, event1.toggle_ev().controller_id());
+    ASSERT_EQ(3, event2.toggle_ev().controller_id());
+}
+
