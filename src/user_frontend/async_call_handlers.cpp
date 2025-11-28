@@ -165,9 +165,11 @@ void UpdateLedCallData::proceed()
 
 RefreshAllStatesCallData::RefreshAllStatesCallData(
     pin_proxy::PinProxyService::AsyncService* service,
-    grpc::ServerCompletionQueue* cq)
+    grpc::ServerCompletionQueue* cq,
+    GrpcUserFrontend *frontend)
     : CallDataBase(service, cq),
-      _responder(&_ctx)
+      _responder(&_ctx),
+      _frontend(frontend)
 {
     proceed();
 }
@@ -181,15 +183,12 @@ void RefreshAllStatesCallData::proceed()
     }
     else if (_state == State::PROCESSING)
     {
-        new RefreshAllStatesCallData(_service, _cq);
+        new RefreshAllStatesCallData(_service, _cq, _frontend);
 
-        // TODO: Implement state query - for now return UNIMPLEMENTED
-        SENSEI_LOG_WARNING("RefreshAllStates not implemented yet");
+        _frontend->reset_system();
 
         _state = State::DONE;
-        _responder.Finish(_response,
-                         grpc::Status(grpc::StatusCode::UNIMPLEMENTED, "RefreshAllStates not implemented"),
-                         this);
+        _responder.Finish(_response, grpc::Status::OK, this);
     }
     else
     {

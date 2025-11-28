@@ -130,7 +130,8 @@ class RefreshAllStatesCallData : public CallDataBase
 public:
     RefreshAllStatesCallData(
         pin_proxy::PinProxyService::AsyncService* service,
-        grpc::ServerCompletionQueue* cq);
+        grpc::ServerCompletionQueue* cq,
+        GrpcUserFrontend* frontend);
 
     void proceed() override;
 
@@ -138,6 +139,7 @@ private:
     pin_proxy::RefreshAllStatesRequest _request;
     pin_proxy::RefreshAllStatesResponse _response;
     grpc::ServerAsyncResponseWriter<pin_proxy::RefreshAllStatesResponse> _responder;
+    GrpcUserFrontend* _frontend;
 };
 
 /**

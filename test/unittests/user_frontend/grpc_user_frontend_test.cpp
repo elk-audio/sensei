@@ -324,7 +324,30 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
     pin_proxy::RefreshAllStatesResponse response;
 
     grpc::Status status = _stub->RefreshAllStates(&context, request, &response);
-    ASSERT_EQ(status.error_code(), grpc::StatusCode::UNIMPLEMENTED);
+    ASSERT_TRUE(status.ok());
+
+    // Wait for message to be queued
+    _event_queue.wait_for_data(std::chrono::milliseconds(50));
+
+    // first check for a disable command
+    {
+        ASSERT_FALSE(_event_queue.empty());
+        std::unique_ptr<BaseMessage> event = _event_queue.pop();
+        ASSERT_EQ(MessageType::COMMAND, event->base_type());
+        auto val = static_unique_ptr_cast<EnableSendingPacketsCommand, BaseMessage>(std::move(event));
+        ASSERT_EQ(CommandType::ENABLE_SENDING_PACKETS, val->type());
+        ASSERT_EQ(false, val->data());
+    }
+
+    // then an enable
+    {
+        ASSERT_FALSE(_event_queue.empty());
+        std::unique_ptr<BaseMessage> event = _event_queue.pop();
+        ASSERT_EQ(MessageType::COMMAND, event->base_type());
+        auto val = static_unique_ptr_cast<EnableSendingPacketsCommand, BaseMessage>(std::move(event));
+        ASSERT_EQ(CommandType::ENABLE_SENDING_PACKETS, val->type());
+        ASSERT_EQ(true, val->data());
+    }
 }
 
 TEST_F(TestGrpcUserFrontend, test_concurrent_operations)

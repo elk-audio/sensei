@@ -78,7 +78,7 @@ void AsyncPinProxyServiceImpl::start(const std::string& server_address)
     // Spawn initial call handlers (one for each RPC call)
     new SubscribeCallData(_async_service.get(), _cq.get(), _broadcast_manager.get());
     new UpdateLedCallData(_async_service.get(), _cq.get(), _frontend);
-    new RefreshAllStatesCallData(_async_service.get(), _cq.get());
+    new RefreshAllStatesCallData(_async_service.get(), _cq.get(), _frontend);
 
     _running = true;
     _cq_thread = std::thread(&AsyncPinProxyServiceImpl::_handle_rpcs, this);
