@@ -122,11 +122,11 @@ def main():
     except Exception as e:
         logger.error(f"Fatal error: {e}")
     finally:
-        raspa_server.stop()
         sensei_client.close()
-        sensei_process.stop()
         grpc_receiver.stop()
         osc_receiver.stop()
+        sensei_process.stop()
+        raspa_server.stop()
         logger.info("Shutdown complete")
 
     return 0

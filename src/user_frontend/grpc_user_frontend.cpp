@@ -212,8 +212,52 @@ void GrpcUserFrontend::_stop_server()
 
 CommandErrorCode GrpcUserFrontend::apply_command(const Command* cmd)
 {
-    // no gRPC-specific commands at this time
-    return UserFrontend::apply_command(cmd);
+    CommandErrorCode status = CommandErrorCode::OK;
+
+    switch(cmd->type())
+    {
+    case CommandType::SET_GRPC_LISTEN_ADDRESS:
+        {
+            const auto typed_cmd = static_cast<const SetGrpcListenAddressCommand*>(cmd);
+            _listen_address = typed_cmd->data();
+            _stop_server();
+            _start_server();
+            SENSEI_LOG_INFO("gRPC listen address set to: {}", _listen_address);
+        }
+        break;
+
+    case CommandType::SET_GRPC_LISTEN_PORT:
+        {
+            const auto typed_cmd = static_cast<const SetGrpcListenPortCommand*>(cmd);
+            if ((_listen_port < 1000) || (_listen_port > 65535))
+            {
+                status = CommandErrorCode::INVALID_PORT_NUMBER;
+                SENSEI_LOG_ERROR("Invalid gRPC port number: {}", _listen_port);
+            }
+            else
+            {
+                _listen_port = typed_cmd->data();
+                _stop_server();
+                _start_server();
+                SENSEI_LOG_INFO("gRPC listen port set to: {}", _listen_port);
+            }
+        }
+        break;
+
+    default:
+        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+        break;
+    }
+
+    // If command was not handled, try in the parent class
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return UserFrontend::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
 }
 
 void GrpcUserFrontend::broadcast_event(const pin_proxy::Event& event)

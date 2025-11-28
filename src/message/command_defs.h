@@ -70,6 +70,9 @@ enum class CommandType
     SET_OSC_OUTPUT_HOST,
     SET_OSC_OUTPUT_PORT,
     SET_OSC_INPUT_PORT,
+    // gRPC User Frontend Commands
+    SET_GRPC_LISTEN_ADDRESS,
+    SET_GRPC_LISTEN_PORT,
     N_COMMAND_TAGS
 };
 
@@ -357,6 +360,18 @@ SENSEI_DECLARE_COMMAND(SetOSCInputPortCommand,
                        CommandType::SET_OSC_INPUT_PORT,
                        int,
                        "Set OSC input port",
+                       CommandDestination::USER_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetGrpcListenAddressCommand,
+                       CommandType::SET_GRPC_LISTEN_ADDRESS,
+                       std::string,
+                       "Set gRPC listen address",
+                       CommandDestination::USER_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetGrpcListenPortCommand,
+                       CommandType::SET_GRPC_LISTEN_PORT,
+                       int,
+                       "Set gRPC listen port",
                        CommandDestination::USER_FRONTEND);
 
 ////////////////////////////////////////////////////////////////////////////////

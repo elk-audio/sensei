@@ -297,6 +297,8 @@ TEST(MessagesTest, test_user_frontend_message_creation)
     std::vector<std::unique_ptr<BaseMessage>> msg_queue;
 
     msg_queue.push_back(factory.make_set_osc_input_port_command(0, 9999));
+    msg_queue.push_back(factory.make_set_grpc_listen_address_command(0, "0.0.0.0"));
+    msg_queue.push_back(factory.make_set_grpc_listen_port_command(0, 50051));
 
     for (auto const& msg : msg_queue)
     {
@@ -312,6 +314,20 @@ TEST(MessagesTest, test_user_frontend_message_creation)
             {
                 auto typed_cmd = static_cast<SetOSCInputPortCommand *>(cmd_msg);
                 ASSERT_EQ(9999, typed_cmd->data());
+            };
+            break;
+
+        case CommandType::SET_GRPC_LISTEN_ADDRESS:
+            {
+                auto typed_cmd = static_cast<SetGrpcListenAddressCommand *>(cmd_msg);
+                ASSERT_EQ("0.0.0.0", typed_cmd->data());
+            };
+            break;
+
+        case CommandType::SET_GRPC_LISTEN_PORT:
+            {
+                auto typed_cmd = static_cast<SetGrpcListenPortCommand *>(cmd_msg);
+                ASSERT_EQ(50051, typed_cmd->data());
             };
             break;
 

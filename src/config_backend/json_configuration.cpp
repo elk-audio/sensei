@@ -469,6 +469,7 @@ ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend, Backe
         else if (backend_type_str == "grpc")
         {
             backend_config.type = BackendType::GRPC;
+            return handle_grpc_backend(backend, backend_id);
         }
     }
     return ConfigStatus::OK ;
@@ -509,6 +510,27 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
         auto m = _message_factory.make_set_osc_output_raw_path_command(id, raw_path.asString());
         _queue->push(std::move(m));
     }
+    return ConfigStatus::OK;
+}
+
+ConfigStatus JsonConfiguration::handle_grpc_backend(const Json::Value& backend, int id)
+{
+    /* read listen address configuration */
+    const Json::Value& listen_address = backend["host"];
+    if (listen_address.isString())
+    {
+        auto m = _message_factory.make_set_grpc_listen_address_command(id, listen_address.asString());
+        _queue->push(std::move(m));
+    }
+
+    /* read listen port configuration */
+    const Json::Value& listen_port = backend["port"];
+    if (listen_port.isInt())
+    {
+        auto m = _message_factory.make_set_grpc_listen_port_command(id, listen_port.asInt());
+        _queue->push(std::move(m));
+    }
+
     return ConfigStatus::OK;
 }
 
