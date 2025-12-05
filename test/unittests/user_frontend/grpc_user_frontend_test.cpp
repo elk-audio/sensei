@@ -1,3 +1,4 @@
+#include "message/command_defs.h"
 #include "gtest/gtest.h"
 #include <grpcpp/support/status.h>
 
@@ -8,8 +9,8 @@
 #pragma GCC diagnostic pop
 
 #include <grpcpp/grpcpp.h>
-#include "pin-proxy/pin_events.pb.h"
-#include "pin-proxy/pin_events.grpc.pb.h"
+#include "sensei-grpc-api/sensei_rpc.pb.h"
+#include "sensei-grpc-api/sensei_rpc.grpc.pb.h"
 
 #include "../test_utils.h"
 
@@ -38,7 +39,7 @@ protected:
         _server_address = ss.str();
 
         _channel = grpc::CreateChannel(_server_address, grpc::InsecureChannelCredentials());
-        _stub = pin_proxy::PinProxyService::NewStub(_channel);
+        _stub = sensei_rpc::PinProxyService::NewStub(_channel);
     }
 
     void TearDown()
@@ -52,7 +53,7 @@ protected:
     std::string _server_address;
 
     std::shared_ptr<grpc::Channel> _channel;
-    std::unique_ptr<pin_proxy::PinProxyService::Stub> _stub;
+    std::unique_ptr<sensei_rpc::PinProxyService::Stub> _stub;
 };
 
 TEST_F(TestGrpcUserFrontend, test_server_startup)
@@ -66,25 +67,25 @@ TEST_F(TestGrpcUserFrontend, test_server_startup)
 TEST_F(TestGrpcUserFrontend, test_subscribe_single_client)
 {
     grpc::ClientContext context;
-    pin_proxy::SubscribeRequest request;
+    sensei_rpc::SubscribeRequest request;
 
-    std::unique_ptr<grpc::ClientReader<pin_proxy::Event>> reader(
+    std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
         _stub->SubscribeToEvents(&context, request));
 
     // Give subscription time to establish
     ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
 
     // Create and broadcast an event
-    pin_proxy::Event event;
+    sensei_rpc::Event event;
+    event.set_controller_id(5);
+    event.set_timestamp(12345);
     auto* toggle_ev = event.mutable_toggle_ev();
-    toggle_ev->set_controller_id(5);
-    toggle_ev->set_timestamp(12345);
     toggle_ev->set_value(true);
 
     _user_frontend->broadcast_event(event);
 
     // Read event from stream with timeout
-    pin_proxy::Event received_event;
+    sensei_rpc::Event received_event;
     std::atomic<bool> read_complete{false};
     std::thread read_thread([&reader, &received_event, &read_complete]() {
         if (reader->Read(&received_event)) {
@@ -100,8 +101,8 @@ TEST_F(TestGrpcUserFrontend, test_subscribe_single_client)
 
     ASSERT_TRUE(read_complete.load());
     ASSERT_TRUE(received_event.has_toggle_ev());
-    ASSERT_EQ(5, received_event.toggle_ev().controller_id());
-    ASSERT_EQ(12345, received_event.toggle_ev().timestamp());
+    ASSERT_EQ(5, received_event.controller_id());
+    ASSERT_EQ(12345, received_event.timestamp());
     ASSERT_TRUE(received_event.toggle_ev().value());
 }
 
@@ -110,27 +111,27 @@ TEST_F(TestGrpcUserFrontend, test_subscribe_multiple_clients)
     // Create two client subscriptions
     grpc::ClientContext context1;
     grpc::ClientContext context2;
-    pin_proxy::SubscribeRequest request;
+    sensei_rpc::SubscribeRequest request;
 
-    std::unique_ptr<grpc::ClientReader<pin_proxy::Event>> reader1(
+    std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader1(
         _stub->SubscribeToEvents(&context1, request));
-    std::unique_ptr<grpc::ClientReader<pin_proxy::Event>> reader2(
+    std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader2(
         _stub->SubscribeToEvents(&context2, request));
 
     ASSERT_TRUE(wait_for([this]() {
         return _user_frontend->num_subscribers() == 2; }, DEFAULT_TIMEOUT));
 
     // Broadcast event
-    pin_proxy::Event event;
+    sensei_rpc::Event event;
+    event.set_controller_id(7);
+    event.set_timestamp(54321);
     auto* analog_ev = event.mutable_analog_ev();
-    analog_ev->set_controller_id(7);
-    analog_ev->set_timestamp(54321);
     analog_ev->set_value(0.75f);
 
     _user_frontend->broadcast_event(event);
 
     // Read from both clients
-    pin_proxy::Event received_event1, received_event2;
+    sensei_rpc::Event received_event1, received_event2;
     std::atomic<int> reads_complete{0};
 
     std::thread read_thread1([&reader1, &received_event1, &reads_complete]() {
@@ -156,11 +157,11 @@ TEST_F(TestGrpcUserFrontend, test_subscribe_multiple_clients)
 
     // Verify both clients received the same event
     ASSERT_TRUE(received_event1.has_analog_ev());
-    ASSERT_EQ(7, received_event1.analog_ev().controller_id());
+    ASSERT_EQ(7, received_event1.controller_id());
     ASSERT_FLOAT_EQ(0.75f, received_event1.analog_ev().value());
 
     ASSERT_TRUE(received_event2.has_analog_ev());
-    ASSERT_EQ(7, received_event2.analog_ev().controller_id());
+    ASSERT_EQ(7, received_event2.controller_id());
     ASSERT_FLOAT_EQ(0.75f, received_event2.analog_ev().value());
 }
 
@@ -169,9 +170,9 @@ TEST_F(TestGrpcUserFrontend, test_client_disconnect)
     // Subscribe and then disconnect
     {
         grpc::ClientContext context;
-        pin_proxy::SubscribeRequest request;
+        sensei_rpc::SubscribeRequest request;
 
-        std::unique_ptr<grpc::ClientReader<pin_proxy::Event>> reader(
+        std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
             _stub->SubscribeToEvents(&context, request));
 
         ASSERT_TRUE(wait_for([this]() {
@@ -183,10 +184,10 @@ TEST_F(TestGrpcUserFrontend, test_client_disconnect)
     }
 
     // Broadcast event - should not crash even though client disconnected
-    pin_proxy::Event event;
+    sensei_rpc::Event event;
+    event.set_controller_id(1);
+    event.set_timestamp(999);
     auto* toggle_ev = event.mutable_toggle_ev();
-    toggle_ev->set_controller_id(1);
-    toggle_ev->set_timestamp(999);
     toggle_ev->set_value(false);
 
     _user_frontend->broadcast_event(event);
@@ -195,20 +196,20 @@ TEST_F(TestGrpcUserFrontend, test_client_disconnect)
 TEST_F(TestGrpcUserFrontend, test_event_type_streaming)
 {
     grpc::ClientContext context;
-    pin_proxy::SubscribeRequest request;
+    sensei_rpc::SubscribeRequest request;
 
-    std::unique_ptr<grpc::ClientReader<pin_proxy::Event>> reader(
+    std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
         _stub->SubscribeToEvents(&context, request));
 
     ASSERT_TRUE(wait_for([this]() {
         return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
 
-    std::vector<pin_proxy::Event> received_events;
+    std::vector<sensei_rpc::Event> received_events;
     std::mutex events_mutex;
     std::atomic<int> event_count{0};
 
     std::thread read_thread([&reader, &received_events, &events_mutex, &event_count]() {
-        pin_proxy::Event event;
+        sensei_rpc::Event event;
         while (reader->Read(&event) && event_count < 3) {
             {
                 std::lock_guard<std::mutex> lock(events_mutex);
@@ -219,28 +220,28 @@ TEST_F(TestGrpcUserFrontend, test_event_type_streaming)
     });
 
     // Broadcast ToggleEvent
-    pin_proxy::Event toggle_event;
+    sensei_rpc::Event toggle_event;
+    toggle_event.set_controller_id(0);
+    toggle_event.set_timestamp(111);
     auto* toggle_ev = toggle_event.mutable_toggle_ev();
-    toggle_ev->set_controller_id(0);
-    toggle_ev->set_timestamp(111);
     toggle_ev->set_value(true);
     _user_frontend->broadcast_event(toggle_event);
     ASSERT_TRUE(wait_for([&event_count]() { return event_count == 1; }, DEFAULT_TIMEOUT));
 
     // Broadcast AnalogEvent
-    pin_proxy::Event analog_event;
+    sensei_rpc::Event analog_event;
+    analog_event.set_controller_id(1);
+    analog_event.set_timestamp(222);
     auto* analog_ev = analog_event.mutable_analog_ev();
-    analog_ev->set_controller_id(1);
-    analog_ev->set_timestamp(222);
     analog_ev->set_value(0.5f);
     _user_frontend->broadcast_event(analog_event);
     ASSERT_TRUE(wait_for([&event_count]() { return event_count == 2; }, DEFAULT_TIMEOUT));
 
     // Broadcast RangeEvent
-    pin_proxy::Event range_event;
+    sensei_rpc::Event range_event;
+    range_event.set_controller_id(2);
+    range_event.set_timestamp(333);
     auto* range_ev = range_event.mutable_range_ev();
-    range_ev->set_controller_id(2);
-    range_ev->set_timestamp(333);
     range_ev->set_value(42);
     _user_frontend->broadcast_event(range_event);
     ASSERT_TRUE(wait_for([&event_count]() { return event_count == 3; }, DEFAULT_TIMEOUT));
@@ -253,27 +254,27 @@ TEST_F(TestGrpcUserFrontend, test_event_type_streaming)
 
     // Verify ToggleEvent
     ASSERT_TRUE(received_events[0].has_toggle_ev());
-    ASSERT_EQ(0, received_events[0].toggle_ev().controller_id());
+    ASSERT_EQ(0, received_events[0].controller_id());
     ASSERT_TRUE(received_events[0].toggle_ev().value());
 
     // Verify AnalogEvent
     ASSERT_TRUE(received_events[1].has_analog_ev());
-    ASSERT_EQ(1, received_events[1].analog_ev().controller_id());
+    ASSERT_EQ(1, received_events[1].controller_id());
     ASSERT_FLOAT_EQ(0.5f, received_events[1].analog_ev().value());
 
     // Verify RangeEvent
     ASSERT_TRUE(received_events[2].has_range_ev());
-    ASSERT_EQ(2, received_events[2].range_ev().controller_id());
+    ASSERT_EQ(2, received_events[2].controller_id());
     ASSERT_EQ(42, received_events[2].range_ev().value());
 }
 
 TEST_F(TestGrpcUserFrontend, test_update_led_rpc)
 {
     grpc::ClientContext context;
-    pin_proxy::UpdateLedRequest request;
-    pin_proxy::GenericVoidValue response;
+    sensei_rpc::UpdateLedRequest request;
+    sensei_rpc::GenericVoidValue response;
 
-    request.set_led_id(5);
+    request.set_controller_id(5);
     request.set_active(true);
 
     grpc::Status status = _stub->UpdateLed(&context, request, &response);
@@ -297,10 +298,10 @@ TEST_F(TestGrpcUserFrontend, test_update_led_rpc)
 TEST_F(TestGrpcUserFrontend, test_update_led_rpc_off)
 {
     grpc::ClientContext context;
-    pin_proxy::UpdateLedRequest request;
-    pin_proxy::GenericVoidValue response;
+    sensei_rpc::UpdateLedRequest request;
+    sensei_rpc::GenericVoidValue response;
 
-    request.set_led_id(3);
+    request.set_controller_id(3);
     request.set_active(false);
 
     grpc::Status status = _stub->UpdateLed(&context, request, &response);
@@ -320,8 +321,8 @@ TEST_F(TestGrpcUserFrontend, test_update_led_rpc_off)
 TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
 {
     grpc::ClientContext context;
-    pin_proxy::RefreshAllStatesRequest request;
-    pin_proxy::RefreshAllStatesResponse response;
+    sensei_rpc::GenericVoidValue request;
+    sensei_rpc::GenericVoidValue response;
 
     grpc::Status status = _stub->RefreshAllStates(&context, request, &response);
     ASSERT_TRUE(status.ok());
@@ -354,11 +355,11 @@ TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
 {
     // Start multiple subscriptions
     std::vector<std::unique_ptr<grpc::ClientContext>> contexts;
-    std::vector<std::unique_ptr<grpc::ClientReader<pin_proxy::Event>>> readers;
+    std::vector<std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>>> readers;
 
     for (int i = 0; i < 3; i++) {
         contexts.push_back(std::make_unique<grpc::ClientContext>());
-        pin_proxy::SubscribeRequest request;
+        sensei_rpc::SubscribeRequest request;
         readers.push_back(_stub->SubscribeToEvents(contexts.back().get(), request));
     }
 
@@ -371,7 +372,7 @@ TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
 
     for (size_t i = 0; i < readers.size(); i++) {
         read_threads.emplace_back([&readers, &total_received, i]() {
-            pin_proxy::Event event;
+            sensei_rpc::Event event;
             int count = 0;
             while (readers[i]->Read(&event) && count < 5) {
                 total_received++;
@@ -382,10 +383,10 @@ TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
 
     // Broadcast 5 events
     for (int i = 0; i < 5; i++) {
-        pin_proxy::Event event;
+        sensei_rpc::Event event;
+        event.set_controller_id(i);
+        event.set_timestamp(i * 1000);
         auto* analog_ev = event.mutable_analog_ev();
-        analog_ev->set_controller_id(i);
-        analog_ev->set_timestamp(i * 1000);
         analog_ev->set_value(i * 0.1f);
         _user_frontend->broadcast_event(event);
         ASSERT_TRUE(wait_for([&total_received, &readers, i]() {
@@ -408,13 +409,13 @@ TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
 TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
 {
     grpc::ClientContext context;
-    pin_proxy::SubscribeRequest request;
+    sensei_rpc::SubscribeRequest request;
 
     // only get events from controller_id 2 and 3
     request.add_controller_ids(2);
     request.add_controller_ids(3);
 
-    std::unique_ptr<grpc::ClientReader<pin_proxy::Event>> reader(
+    std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
         _stub->SubscribeToEvents(&context, request));
 
     ASSERT_TRUE(wait_for([this]() {
@@ -423,16 +424,16 @@ TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
     // Create and broadcast events for different controllers
     for (int i=0; i<4; ++i)
     {
-        pin_proxy::Event event;
+        sensei_rpc::Event event;
+        event.set_controller_id(i);
+        event.set_timestamp(i);
         auto* toggle_ev = event.mutable_toggle_ev();
-        toggle_ev->set_controller_id(i);
-        toggle_ev->set_timestamp(i);
         toggle_ev->set_value(true);
         _user_frontend->broadcast_event(event);
     }
 
     // Read event from stream with timeout
-    pin_proxy::Event event1, event2;
+    sensei_rpc::Event event1, event2;
     std::atomic<bool> received{false};
     std::thread read_thread([&reader, &event1, &event2, &received]() {
         ASSERT_TRUE(reader->Read(&event1));
@@ -447,7 +448,32 @@ TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
     read_thread.join();
 
     // double check that the final events have expected controller ids
-    ASSERT_EQ(2, event1.toggle_ev().controller_id());
-    ASSERT_EQ(3, event2.toggle_ev().controller_id());
+    ASSERT_EQ(2, event1.controller_id());
+    ASSERT_EQ(3, event2.controller_id());
 }
+
+TEST_F(TestGrpcUserFrontend, test_get_controller_map)
+{
+    grpc::ClientContext context;
+    sensei_rpc::GenericVoidValue request;
+    sensei_rpc::GetControllerMapResponse response;
+
+    _user_frontend->update_controller(0, "POT1", SensorType::ANALOG_INPUT);
+    _user_frontend->update_controller(1, "LED1", SensorType::DIGITAL_OUTPUT);
+    _user_frontend->update_controller(2, "SW1", SensorType::DIGITAL_INPUT);
+
+    grpc::Status status = _stub->GetControllerMap(&context, request, &response);
+    ASSERT_TRUE(status.ok());
+
+    ASSERT_EQ(response.pots_size(), 1);
+    ASSERT_EQ(response.pots().Get(0).id(), 0);
+    ASSERT_EQ(response.pots().Get(0).name(), "POT1");
+    ASSERT_EQ(response.leds_size(), 1);
+    ASSERT_EQ(response.leds().Get(0).id(), 1);
+    // ASSERT_EQ(response.leds().Get(0).name(), "LED1");
+    ASSERT_EQ(response.switches_size(), 1);
+    ASSERT_EQ(response.switches().Get(0).id(), 2);
+    ASSERT_EQ(response.switches().Get(0).name(), "SW1");
+}
+
 

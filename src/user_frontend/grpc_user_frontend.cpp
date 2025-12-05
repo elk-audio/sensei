@@ -20,6 +20,7 @@
 #include "grpc_user_frontend.h"
 #include "async_call_handlers.h"
 #include "logging.h"
+#include "message/command_defs.h"
 
 using namespace sensei;
 using namespace sensei::user_frontend;
@@ -59,7 +60,7 @@ void AsyncPinProxyServiceImpl::start(const std::string& server_address)
     grpc::ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
 
-    _async_service = std::make_unique<pin_proxy::PinProxyService::AsyncService>();
+    _async_service = std::make_unique<sensei_rpc::PinProxyService::AsyncService>();
     builder.RegisterService(_async_service.get());
 
     _cq = builder.AddCompletionQueue();
@@ -79,6 +80,7 @@ void AsyncPinProxyServiceImpl::start(const std::string& server_address)
     new SubscribeCallData(_async_service.get(), _cq.get(), _broadcast_manager.get());
     new UpdateLedCallData(_async_service.get(), _cq.get(), _frontend);
     new RefreshAllStatesCallData(_async_service.get(), _cq.get(), _frontend);
+    new GetControllerMapCallData(_async_service.get(), _cq.get(), _frontend);
 
     _running = true;
     _cq_thread = std::thread(&AsyncPinProxyServiceImpl::_handle_rpcs, this);
@@ -117,7 +119,7 @@ void AsyncPinProxyServiceImpl::shutdown()
     SENSEI_LOG_INFO("Async gRPC service shutdown complete");
 }
 
-void AsyncPinProxyServiceImpl::broadcast_event(const pin_proxy::Event& event)
+void AsyncPinProxyServiceImpl::broadcast_event(const sensei_rpc::Event& event)
 {
     if (_broadcast_manager && _running)
     {
@@ -159,6 +161,7 @@ GrpcUserFrontend::GrpcUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage
     _server_running(false)
 {
     SENSEI_LOG_INFO("GrpcUserFrontend created with async API");
+    _controller_map.resize(max_n_input_pins);
     _start_server();
 }
 
@@ -260,7 +263,7 @@ CommandErrorCode GrpcUserFrontend::apply_command(const Command* cmd)
     }
 }
 
-void GrpcUserFrontend::broadcast_event(const pin_proxy::Event& event)
+void GrpcUserFrontend::broadcast_event(const sensei_rpc::Event& event)
 {
     if (_service_impl)
     {
@@ -270,4 +273,61 @@ void GrpcUserFrontend::broadcast_event(const pin_proxy::Event& event)
 
 int GrpcUserFrontend::num_subscribers() const {
     return _service_impl->broadcast_manager()->num_subscribers();
+}
+
+void GrpcUserFrontend::update_controller(int controller_id, const std::string &name, SensorType type)
+{
+    _controller_map[controller_id] = {name, type};
+}
+
+void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapResponse* response) const
+{
+    SENSEI_LOG_INFO("GetControllerMap called");
+
+    response->clear_pots();
+    response->clear_switches();
+    response->clear_encoders();
+    response->clear_rotaries();
+    response->clear_leds();
+
+    for (size_t i=0; i < _controller_map.size(); ++i)
+    {
+        int controller_id = static_cast<int>(i);
+        const auto &name = _controller_map[i].name;
+        auto type = _controller_map[i].type;
+        if (name.empty() || type == SensorType::UNDEFINED)
+        {
+            continue;
+        }
+        switch (type)
+        {
+        case SensorType::ANALOG_INPUT:
+        {
+            auto controller = response->add_pots();
+            controller->set_id(controller_id);
+            controller->set_name(name);
+            break;
+        }
+
+        case SensorType::DIGITAL_INPUT:
+        {
+            auto controller = response->add_switches();
+            controller->set_id(controller_id);
+            controller->set_name(name);
+            break;
+        }
+
+        case SensorType::DIGITAL_OUTPUT:
+        {
+            auto controller = response->add_leds();
+            controller->set_id(controller_id);
+            // TODO: add set_name in API
+            break;
+        }
+
+        default:
+            SENSEI_LOG_ERROR("Unexpected sensor type ({}) for id={}", static_cast<int>(type), controller_id);
+            break;
+        }
+    }
 }

@@ -23,12 +23,12 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <vector>
 #include <grpcpp/grpcpp.h>
 
+#include "message/command_defs.h"
 #include "user_frontend.h"
-#include "pin-proxy/pin_events.pb.h"
-#include "pin-proxy/pin_events.grpc.pb.h"
+#include "sensei-grpc-api/sensei_rpc.pb.h"
+#include "sensei-grpc-api/sensei_rpc.grpc.pb.h"
 
 namespace sensei {
 namespace user_frontend {
@@ -38,6 +38,7 @@ class EventBroadcastManager;
 class SubscribeCallData;
 class UpdateLedCallData;
 class RefreshAllStatesCallData;
+class GetControllerMapCallData;
 
 /**
  * @brief Async gRPC service implementation for PinProxyService
@@ -65,22 +66,7 @@ public:
      * Called by GrpcBackend via GrpcUserFrontend
      * @param event The event to broadcast
      */
-    void broadcast_event(const pin_proxy::Event& event);
-
-    /**
-     * @brief Get the async service for handler registration
-     */
-    pin_proxy::PinProxyService::AsyncService* service() { return _async_service.get(); }
-
-    /**
-     * @brief Get the completion queue for handler registration
-     */
-    grpc::ServerCompletionQueue* cq() { return _cq.get(); }
-
-    /**
-     * @brief Get pointer to frontend for callbacks
-     */
-    GrpcUserFrontend* frontend() { return _frontend; }
+    void broadcast_event(const sensei_rpc::Event& event);
 
     /**
      * @brief Get broadcast manager for subscriber registration
@@ -96,7 +82,7 @@ private:
     GrpcUserFrontend* _frontend;
     std::unique_ptr<grpc::Server> _server;
     std::unique_ptr<grpc::ServerCompletionQueue> _cq;
-    std::unique_ptr<pin_proxy::PinProxyService::AsyncService> _async_service;
+    std::unique_ptr<sensei_rpc::PinProxyService::AsyncService> _async_service;
     std::unique_ptr<EventBroadcastManager> _broadcast_manager;
     std::thread _cq_thread;
     bool _running;
@@ -124,12 +110,26 @@ public:
      * @brief Forward event from GrpcBackend to service for broadcasting
      * @param event The sensor event to broadcast to subscribers
      */
-    void broadcast_event(const pin_proxy::Event& event);
+    void broadcast_event(const sensei_rpc::Event& event);
 
     /**
      * @brief Get the number of currently-connected subscribers, mostly for testing.
      */
     int num_subscribers() const;
+
+    /**
+     * @brief Update the sensor map with the name and type for this controller ID.
+     * @param controller_id The ID of the controller to update
+     * @param name The name of the controller
+     * @param sensor_type The type of the controller
+     */
+    void update_controller(int controller_id, const std::string &name, SensorType type);
+
+    /**
+     * @brief Populate the controller map response with current sensor configuration
+     * @param response The GetControllerMapResponse to populate
+     */
+    void populate_controller_map(sensei_rpc::GetControllerMapResponse* response) const;
 
 private:
     /**
@@ -149,6 +149,13 @@ private:
 
     bool _server_running;
     std::mutex _server_mutex;
+
+    struct Controller
+    {
+        std::string name;
+        SensorType type{SensorType::UNDEFINED};
+    };
+    std::vector<Controller> _controller_map;
 };
 
 } // namespace user_frontend

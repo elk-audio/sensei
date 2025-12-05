@@ -15,8 +15,8 @@ import gpio_protocol
 from pythonosc import dispatcher, osc_server
 
 import grpc
-import pin_events_pb2
-import pin_events_pb2_grpc
+import sensei_rpc_pb2
+import sensei_rpc_pb2_grpc
 
 # Configure logging
 logging.basicConfig(
@@ -107,23 +107,23 @@ class GrpcReceiver:
 
         if event_type == 'analog_ev':
             ev = event.analog_ev
-            logger.info(f"[gRPC] AnalogEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
-            self.last_message = (f"analog_{ev.controller_id}", ev.value)
+            logger.info(f"[gRPC] AnalogEvent controller_id={event.controller_id} timestamp={event.timestamp} value={ev.value}")
+            self.last_message = (f"analog_{event.controller_id}", ev.value)
 
         elif event_type == 'toggle_ev':
             ev = event.toggle_ev
-            logger.info(f"[gRPC] ToggleEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
-            self.last_message = (f"toggle_{ev.controller_id}", ev.value)
+            logger.info(f"[gRPC] ToggleEvent controller_id={event.controller_id} timestamp={event.timestamp} value={ev.value}")
+            self.last_message = (f"toggle_{event.controller_id}", ev.value)
 
         elif event_type == 'relative_ev':
             ev = event.relative_ev
-            logger.info(f"[gRPC] RelativeEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
-            self.last_message = (f"relative_{ev.controller_id}", ev.value)
+            logger.info(f"[gRPC] RelativeEvent controller_id={event.controller_id} timestamp={event.timestamp} value={ev.value}")
+            self.last_message = (f"relative_{event.controller_id}", ev.value)
 
         elif event_type == 'range_ev':
             ev = event.range_ev
-            logger.info(f"[gRPC] RangeEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
-            self.last_message = (f"range_{ev.controller_id}", ev.value)
+            logger.info(f"[gRPC] RangeEvent controller_id={event.controller_id} timestamp={event.timestamp} value={ev.value}")
+            self.last_message = (f"range_{event.controller_id}", ev.value)
 
         self.event.set()
 
@@ -131,7 +131,7 @@ class GrpcReceiver:
         """Background thread to receive events from gRPC stream."""
         try:
             # Create subscribe request (no filters = receive all events)
-            request = pin_events_pb2.SubscribeRequest()
+            request = sensei_rpc_pb2.SubscribeRequest()
 
             logger.info(f"Subscribing to gRPC events on {self.host}:{self.port}")
 
@@ -154,7 +154,7 @@ class GrpcReceiver:
         try:
             # Create channel and stub
             self.channel = grpc.insecure_channel(f'{self.host}:{self.port}')
-            self.stub = pin_events_pb2_grpc.PinProxyServiceStub(self.channel)
+            self.stub = sensei_rpc_pb2_grpc.PinProxyServiceStub(self.channel)
 
             logger.info(f"Connecting to gRPC server at {self.host}:{self.port}")
 

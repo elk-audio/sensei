@@ -24,8 +24,8 @@
 #include <queue>
 #include <grpcpp/grpcpp.h>
 
-#include "pin-proxy/pin_events.pb.h"
-#include "pin-proxy/pin_events.grpc.pb.h"
+#include "sensei-grpc-api/sensei_rpc.pb.h"
+#include "sensei-grpc-api/sensei_rpc.grpc.pb.h"
 
 namespace sensei {
 namespace user_frontend {
@@ -40,7 +40,7 @@ class EventBroadcastManager;
 class CallDataBase
 {
 public:
-    CallDataBase(pin_proxy::PinProxyService::AsyncService *service,
+    CallDataBase(sensei_rpc::PinProxyService::AsyncService *service,
                  grpc::ServerCompletionQueue* cq) : 
                  _state(State::CREATE),
                  _service(service),
@@ -58,7 +58,7 @@ protected:
 
     State _state;
     grpc::ServerContext _ctx;
-    pin_proxy::PinProxyService::AsyncService* _service;
+    sensei_rpc::PinProxyService::AsyncService* _service;
     grpc::ServerCompletionQueue* _cq;
 };
 
@@ -69,7 +69,7 @@ class SubscribeCallData : public CallDataBase
 {
 public:
     SubscribeCallData(
-        pin_proxy::PinProxyService::AsyncService* service,
+        sensei_rpc::PinProxyService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         EventBroadcastManager* broadcast_mgr);
 
@@ -81,7 +81,7 @@ public:
      * @brief Called by EventBroadcastManager to queue event for this subscriber
      * @param event The event to queue
      */
-    void enqueue_event(const pin_proxy::Event& event);
+    void enqueue_event(const sensei_rpc::Event& event);
 
 private:
     /**
@@ -90,14 +90,14 @@ private:
      */
     void _start_write();
 
-    pin_proxy::SubscribeRequest _request;
-    grpc::ServerAsyncWriter<pin_proxy::Event> _responder;
+    sensei_rpc::SubscribeRequest _request;
+    grpc::ServerAsyncWriter<sensei_rpc::Event> _responder;
     EventBroadcastManager* _broadcast_mgr;
 
     // Event queue and write serialization
     std::mutex _write_mutex;
-    std::queue<pin_proxy::Event> _pending_events;
-    pin_proxy::Event _current_event;
+    std::queue<sensei_rpc::Event> _pending_events;
+    sensei_rpc::Event _current_event;
     bool _in_processing;
     bool _is_writing;
 };
@@ -109,16 +109,16 @@ class UpdateLedCallData : public CallDataBase
 {
 public:
     UpdateLedCallData(
-        pin_proxy::PinProxyService::AsyncService* service,
+        sensei_rpc::PinProxyService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         GrpcUserFrontend* frontend);
 
     void proceed() override;
 
 private:
-    pin_proxy::UpdateLedRequest _request;
-    pin_proxy::GenericVoidValue _response;
-    grpc::ServerAsyncResponseWriter<pin_proxy::GenericVoidValue> _responder;
+    sensei_rpc::UpdateLedRequest _request;
+    sensei_rpc::GenericVoidValue _response;
+    grpc::ServerAsyncResponseWriter<sensei_rpc::GenericVoidValue> _responder;
     GrpcUserFrontend* _frontend;
 };
 
@@ -129,16 +129,36 @@ class RefreshAllStatesCallData : public CallDataBase
 {
 public:
     RefreshAllStatesCallData(
-        pin_proxy::PinProxyService::AsyncService* service,
+        sensei_rpc::PinProxyService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         GrpcUserFrontend* frontend);
 
     void proceed() override;
 
 private:
-    pin_proxy::RefreshAllStatesRequest _request;
-    pin_proxy::RefreshAllStatesResponse _response;
-    grpc::ServerAsyncResponseWriter<pin_proxy::RefreshAllStatesResponse> _responder;
+    sensei_rpc::GenericVoidValue _request;
+    sensei_rpc::GenericVoidValue _response;
+    grpc::ServerAsyncResponseWriter<sensei_rpc::GenericVoidValue> _responder;
+    GrpcUserFrontend* _frontend;
+};
+
+/**
+ * @brief Async handler for GetControllerMap unary RPC
+ */
+class GetControllerMapCallData : public CallDataBase
+{
+public:
+    GetControllerMapCallData(
+        sensei_rpc::PinProxyService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        GrpcUserFrontend* frontend);
+
+    void proceed() override;
+
+private:
+    sensei_rpc::GenericVoidValue _request;
+    sensei_rpc::GetControllerMapResponse _response;
+    grpc::ServerAsyncResponseWriter<sensei_rpc::GetControllerMapResponse> _responder;
     GrpcUserFrontend* _frontend;
 };
 
@@ -169,7 +189,7 @@ public:
      * @brief Broadcast event to all active subscribers
      * @param event The event to broadcast
      */
-    void broadcast_event(const pin_proxy::Event& event);
+    void broadcast_event(const sensei_rpc::Event& event);
 
     /**
      * @brief Signal shutdown - prevents new broadcasts
