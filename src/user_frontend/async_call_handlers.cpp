@@ -185,7 +185,7 @@ void RefreshAllStatesCallData::proceed()
     {
         new RefreshAllStatesCallData(_service, _cq, _frontend);
 
-        _frontend->reset_system();
+        _frontend->refresh_controller_values();
 
         _state = State::DONE;
         _responder.Finish(_response, grpc::Status::OK, this);

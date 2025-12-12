@@ -31,7 +31,7 @@ protected:
     void SetUp()
     {
         // Create user frontend (starts server on default port 50051)
-        _user_frontend.reset(new GrpcUserFrontend(&_event_queue, 64, 32));
+        _user_frontend.reset(new GrpcUserFrontend(&_event_queue, _max_controllers, 32));
 
         // Create gRPC client
         std::stringstream ss;
@@ -47,6 +47,7 @@ protected:
         _user_frontend.reset();
     }
 
+    static const int _max_controllers{64};
     std::unique_ptr<GrpcUserFrontend> _user_frontend;
     SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
     int _server_port{50051};
@@ -330,24 +331,15 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
     // Wait for message to be queued
     _event_queue.wait_for_data(std::chrono::milliseconds(50));
 
-    // first check for a disable command
+    // check for GET_VALUE commands for all controllers
+    for (int i=0; i<_max_controllers; ++i)
     {
         ASSERT_FALSE(_event_queue.empty());
         std::unique_ptr<BaseMessage> event = _event_queue.pop();
         ASSERT_EQ(MessageType::COMMAND, event->base_type());
-        auto val = static_unique_ptr_cast<EnableSendingPacketsCommand, BaseMessage>(std::move(event));
-        ASSERT_EQ(CommandType::ENABLE_SENDING_PACKETS, val->type());
-        ASSERT_EQ(false, val->data());
-    }
-
-    // then an enable
-    {
-        ASSERT_FALSE(_event_queue.empty());
-        std::unique_ptr<BaseMessage> event = _event_queue.pop();
-        ASSERT_EQ(MessageType::COMMAND, event->base_type());
-        auto val = static_unique_ptr_cast<EnableSendingPacketsCommand, BaseMessage>(std::move(event));
-        ASSERT_EQ(CommandType::ENABLE_SENDING_PACKETS, val->type());
-        ASSERT_EQ(true, val->data());
+        auto val = static_unique_ptr_cast<GetValueCommand, BaseMessage>(std::move(event));
+        ASSERT_EQ(CommandType::GET_VALUE, val->type());
+        ASSERT_EQ(val->index(), i);
     }
 }
 

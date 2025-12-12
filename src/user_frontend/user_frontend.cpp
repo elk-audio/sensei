@@ -55,8 +55,11 @@ void UserFrontend::set_range_output(int index, int value)
     _queue->push(std::move(msg));
 }
 
-void UserFrontend::reset_system()
+void UserFrontend::refresh_controller_values()
 {
-    _queue->push(_factory.make_enable_sending_packets_command(0, false));
-    _queue->push(_factory.make_enable_sending_packets_command(0, true));
+    // Request current values from all controllers
+    for (int i=0; i<_max_n_input_pins; ++i)
+    {
+        _queue->push(_factory.make_get_value_command(i));
+    }
 }

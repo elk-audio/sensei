@@ -99,10 +99,9 @@ public:
     void set_range_output(int index, int value);
 
     /**
-     * @brief Reset the system state, causing all controllers to re-send
-     *  their current values.
+     * @brief Trigger the MCU to re-send the values of all controllers.
      */
-    void reset_system();
+    void refresh_controller_values();
 
 private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;

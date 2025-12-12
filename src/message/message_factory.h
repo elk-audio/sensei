@@ -241,6 +241,13 @@ public:
         return std::unique_ptr<EnableSendingPacketsCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_get_value_command(const int controller_id,
+                                                         const uint32_t timestamp = 0)
+    {
+        auto msg = new GetValueCommand(controller_id, controller_id, timestamp);
+        return std::unique_ptr<GetValueCommand>(msg);
+    }
+
     // Internal commands
 
     std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int sensor_id,

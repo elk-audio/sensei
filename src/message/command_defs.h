@@ -56,6 +56,7 @@ enum class CommandType
     SET_CONTINUOUS_OUTPUT_VALUE,
     SET_ANALOG_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
+    GET_VALUE,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_RANGE,
@@ -284,6 +285,12 @@ SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
                        CommandType::ENABLE_SENDING_PACKETS,
                        bool,
                        "Enable Sending Packets",
+                       CommandDestination::HARDWARE_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(GetValueCommand,
+                       CommandType::GET_VALUE,
+                       int,
+                       "Get Value",
                        CommandDestination::HARDWARE_FRONTEND);
 
 // Internal commands
