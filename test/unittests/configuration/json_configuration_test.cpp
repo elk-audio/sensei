@@ -48,8 +48,8 @@ protected:
 TEST_F(JsonConfigurationTest, test_invalid_file)
 {
     JsonConfiguration test_module(&_queue, "/non/existing/file.json");
-    HwFrontendConfig hw_config;
-    EXPECT_EQ(ConfigStatus::IO_ERROR, test_module.read(hw_config));
+    Config config;
+    EXPECT_EQ(ConfigStatus::IO_ERROR, test_module.read(config));
 }
 
 /*
@@ -58,12 +58,12 @@ TEST_F(JsonConfigurationTest, test_invalid_file)
 TEST_F(JsonConfigurationTest, test_read_configuration)
 {
     EXPECT_TRUE(_queue.empty());
-    HwFrontendConfig hw_frontend;
-    ConfigStatus status = _module_under_test.read(hw_frontend);
+    Config config;
+    ConfigStatus status = _module_under_test.read(config);
     ASSERT_EQ(ConfigStatus::OK, status);
     ASSERT_FALSE(_queue.empty());
 
-    EXPECT_EQ(HwFrontendType::RASPA_GPIO, hw_frontend.type);
+    EXPECT_EQ(HwFrontendType::RASPA_GPIO, config.hw_config.type);
 
     /* Now verify the commands one by one */
     /* First we should receive the backend related commands */

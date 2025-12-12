@@ -38,6 +38,8 @@
 
 #include <string>
 
+#include "elk-warning-suppressor/warning_suppressor.hpp"
+
 /* Prevent name collisions with Xenomai that for some inexplicable reason
  * defines 'debug' as a macro */
 #ifdef debug
@@ -58,7 +60,10 @@ enum SENSEI_LOG_ERROR_CODE
 
 /* log macros */
 #ifndef SENSEI_DISABLE_LOGGING
+ELK_PUSH_WARNING
+ELK_DISABLE_NAN_INFINITY_DISABLED
 #include "spdlog/spdlog.h"
+ELK_POP_WARNING
 
 /* Add file and line numbers to debug prints, disabled by default */
 //#define SENSEI_ENABLE_DEBUG_FILE_AND_LINE_NUM

@@ -4,9 +4,9 @@
       "id" : 0,
       "enabled": true,
       "raw_input_enabled": false,
-      "type" : "osc",
+      "type" : "grpc",
       "host" : "localhost",
-      "port" : 23000,
+      "port" : 50051,
       "base_path" : "/sensors",
       "base_raw_input_path" : "/raw_input"
     }

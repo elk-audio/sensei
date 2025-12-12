@@ -157,8 +157,8 @@ private:
     CommandErrorCode _set_slider_threshold(int value);
 
     // External board config
-    int _delta_ticks_sending;
-    int _adc_bit_resolution;
+    [[maybe_unused]] int _delta_ticks_sending;
+    [[maybe_unused]] int _adc_bit_resolution;
     float _filter_time_constant;
     int _slider_threshold;
 
@@ -168,7 +168,7 @@ private:
 
     // Internal helper attributes
     int _max_allowed_input;
-    float _adc_sampling_rate;
+    [[maybe_unused]] float _adc_sampling_rate;
 };
 
 /**

@@ -24,6 +24,7 @@
 #define SENSEI_BASECONFIGURATION_H
 
 #include "message/base_message.h"
+#include "message/command_defs.h"
 #include "synchronized_queue.h"
 
 namespace sensei {
@@ -40,6 +41,16 @@ struct HwFrontendConfig
 {
     HwFrontendType type;
     std::string    port;
+};
+
+struct BackendConfig
+{
+    BackendType type;
+};
+
+struct Config {
+    HwFrontendConfig hw_config;
+    BackendConfig backend_config;
 };
 
 class BaseConfiguration
@@ -80,10 +91,11 @@ public:
     /**
      * @brief Read configuration and construct messages from it
      */
-    virtual ConfigStatus read(HwFrontendConfig& /*hw_config*/)
+    virtual ConfigStatus read(Config& /*config*/)
     {
         return ConfigStatus::OK;
     }
+
     /**
      * @brief Receive configuration data for exporting to file/socket/etc
      */

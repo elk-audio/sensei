@@ -98,10 +98,16 @@ public:
      */
     void set_range_output(int index, int value);
 
+    /**
+     * @brief Reset the system state, causing all controllers to re-send
+     *  their current values.
+     */
+    void reset_system();
+
 private:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
-    int _max_n_input_pins;
-    int _max_n_out_pins;
+    [[maybe_unused]] int _max_n_input_pins;
+    [[maybe_unused]] int _max_n_out_pins;
 
     MessageFactory _factory;
 };

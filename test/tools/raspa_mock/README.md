@@ -11,7 +11,7 @@ Then you'll need to:
 - create a Python venv
 - activate it
 - install the requirements
-- generate the `gpio_protocol` bindings
+- generate the `gpio_protocol` and gRPC bindings
 - and run the `main.py` script
 
 As commands:
@@ -19,7 +19,7 @@ As commands:
 $ python3 -m venv venv
 $ source venv/bin/activate
 $ pip install -r requirements.txt
-$ clang2py ../../../elk-gpio-protocol/include/gpio_protocol/gpio_protocol.h >gpio_protocol.py
+$ ./generate_bindings.sh
 $ python main.py
 ```
 

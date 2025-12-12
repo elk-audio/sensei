@@ -54,3 +54,9 @@ void UserFrontend::set_range_output(int index, int value)
     auto msg = _factory.make_integer_set_value(index, value);
     _queue->push(std::move(msg));
 }
+
+void UserFrontend::reset_system()
+{
+    _queue->push(_factory.make_enable_sending_packets_command(0, false));
+    _queue->push(_factory.make_enable_sending_packets_command(0, true));
+}

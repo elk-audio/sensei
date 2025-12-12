@@ -14,6 +14,10 @@ import subprocess
 import gpio_protocol
 from pythonosc import dispatcher, osc_server
 
+import grpc
+import pin_events_pb2
+import pin_events_pb2_grpc
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -81,6 +85,106 @@ class OscReceiver:
             if self.server_thread:
                 self.server_thread.join(timeout=2)
             logger.info("OSC server stopped")
+
+
+class GrpcReceiver:
+    """Receives gRPC messages from sensei."""
+
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.channel = None
+        self.stub = None
+        self.receiver_thread = None
+        self.running = False
+        self.last_message = (None, 0)
+        self.event = threading.Event()
+
+    def _grpc_event_handler(self, event):
+        """Handle incoming gRPC events."""
+        # Determine event type and extract data
+        event_type = event.WhichOneof('event')
+
+        if event_type == 'analog_ev':
+            ev = event.analog_ev
+            logger.info(f"[gRPC] AnalogEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
+            self.last_message = (f"analog_{ev.controller_id}", ev.value)
+
+        elif event_type == 'toggle_ev':
+            ev = event.toggle_ev
+            logger.info(f"[gRPC] ToggleEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
+            self.last_message = (f"toggle_{ev.controller_id}", ev.value)
+
+        elif event_type == 'relative_ev':
+            ev = event.relative_ev
+            logger.info(f"[gRPC] RelativeEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
+            self.last_message = (f"relative_{ev.controller_id}", ev.value)
+
+        elif event_type == 'range_ev':
+            ev = event.range_ev
+            logger.info(f"[gRPC] RangeEvent controller_id={ev.controller_id} timestamp={ev.timestamp} value={ev.value}")
+            self.last_message = (f"range_{ev.controller_id}", ev.value)
+
+        self.event.set()
+
+    def _receive_events(self):
+        """Background thread to receive events from gRPC stream."""
+        try:
+            # Create subscribe request (no filters = receive all events)
+            request = pin_events_pb2.SubscribeRequest()
+
+            logger.info(f"Subscribing to gRPC events on {self.host}:{self.port}")
+
+            # Start streaming - this blocks until stream ends
+            for event in self.stub.SubscribeToEvents(request):
+                if not self.running:
+                    break
+                self._grpc_event_handler(event)
+
+        except grpc.RpcError as e:
+            if self.running:  # Only log if we didn't intentionally stop
+                logger.error(f"gRPC error: {e.code()} - {e.details()}")
+        except Exception as e:
+            logger.error(f"Error receiving gRPC events: {e}")
+        finally:
+            logger.info("gRPC event receiver stopped")
+
+    def start(self):
+        """Start the gRPC client."""
+        try:
+            # Create channel and stub
+            self.channel = grpc.insecure_channel(f'{self.host}:{self.port}')
+            self.stub = pin_events_pb2_grpc.PinProxyServiceStub(self.channel)
+
+            logger.info(f"Connecting to gRPC server at {self.host}:{self.port}")
+
+            # Start receiver thread
+            self.running = True
+            self.receiver_thread = threading.Thread(
+                target=self._receive_events,
+                daemon=True
+            )
+            self.receiver_thread.start()
+
+            logger.info("gRPC receiver started")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to start gRPC receiver: {e}")
+            return False
+
+    def stop(self):
+        """Stop the gRPC client."""
+        logger.info("Stopping gRPC receiver...")
+        self.running = False
+
+        if self.channel:
+            self.channel.close()
+
+        if self.receiver_thread:
+            self.receiver_thread.join(timeout=2)
+
+        logger.info("gRPC receiver stopped")
 
 
 class SenseiProcess:
@@ -170,6 +274,7 @@ class SenseiClient:
         self.sock = None
         self.connected = False
         self.lock = threading.Lock()
+        self.connected_event = threading.Event()
 
     def connect(self):
         """Connect to sensei socket with retry logic."""
@@ -183,6 +288,7 @@ class SenseiClient:
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
                 self.sock.connect(self.socket_path)
                 self.connected = True
+                self.connected_event.set()
                 logger.info(f"Connected to {self.socket_path}")
                 return True
 

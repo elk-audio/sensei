@@ -342,6 +342,22 @@ public:
         return std::unique_ptr<SetOSCInputPortCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_grpc_listen_address_command(const int index,
+                                                                       const std::string address,
+                                                                       const uint32_t timestamp = 0)
+    {
+        auto msg = new SetGrpcListenAddressCommand(index, address, timestamp);
+        return std::unique_ptr<SetGrpcListenAddressCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_grpc_listen_port_command(const int index,
+                                                                    const int port,
+                                                                    const uint32_t timestamp = 0)
+    {
+        auto msg = new SetGrpcListenPortCommand(index, port, timestamp);
+        return std::unique_ptr<SetGrpcListenPortCommand>(msg);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     // Errors
     ////////////////////////////////////////////////////////////////////////////////
