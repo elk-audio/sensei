@@ -35,21 +35,21 @@ constexpr auto* DEFAULT_GRPC_ADDRESS = "0.0.0.0";
 } // anonymous namespace
 
 //==============================================================================
-// AsyncPinProxyServiceImpl Implementation
+// AsyncSenseiControllerImpl Implementation
 //==============================================================================
 
-AsyncPinProxyServiceImpl::AsyncPinProxyServiceImpl(GrpcUserFrontend* frontend)
+AsyncSenseiControllerImpl::AsyncSenseiControllerImpl(GrpcUserFrontend* frontend)
     : _frontend(frontend),
       _running(false)
 {
 }
 
-AsyncPinProxyServiceImpl::~AsyncPinProxyServiceImpl()
+AsyncSenseiControllerImpl::~AsyncSenseiControllerImpl()
 {
     shutdown();
 }
 
-void AsyncPinProxyServiceImpl::start(const std::string& server_address)
+void AsyncSenseiControllerImpl::start(const std::string& server_address)
 {
     if (_running)
     {
@@ -60,7 +60,7 @@ void AsyncPinProxyServiceImpl::start(const std::string& server_address)
     grpc::ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
 
-    _async_service = std::make_unique<sensei_rpc::PinProxyService::AsyncService>();
+    _async_service = std::make_unique<sensei_rpc::SenseiController::AsyncService>();
     builder.RegisterService(_async_service.get());
 
     _cq = builder.AddCompletionQueue();
@@ -83,12 +83,12 @@ void AsyncPinProxyServiceImpl::start(const std::string& server_address)
     new GetControllerMapCallData(_async_service.get(), _cq.get(), _frontend);
 
     _running = true;
-    _cq_thread = std::thread(&AsyncPinProxyServiceImpl::_handle_rpcs, this);
+    _cq_thread = std::thread(&AsyncSenseiControllerImpl::_handle_rpcs, this);
 
     SENSEI_LOG_INFO("Spawned completion queue worker thread");
 }
 
-void AsyncPinProxyServiceImpl::shutdown()
+void AsyncSenseiControllerImpl::shutdown()
 {
     if (!_running)
     {
@@ -119,7 +119,7 @@ void AsyncPinProxyServiceImpl::shutdown()
     SENSEI_LOG_INFO("Async gRPC service shutdown complete");
 }
 
-void AsyncPinProxyServiceImpl::broadcast_event(const sensei_rpc::Event& event)
+void AsyncSenseiControllerImpl::broadcast_event(const sensei_rpc::Event& event)
 {
     if (_broadcast_manager && _running)
     {
@@ -127,7 +127,7 @@ void AsyncPinProxyServiceImpl::broadcast_event(const sensei_rpc::Event& event)
     }
 }
 
-void AsyncPinProxyServiceImpl::_handle_rpcs()
+void AsyncSenseiControllerImpl::_handle_rpcs()
 {
     void* tag;
     bool ok;
@@ -180,7 +180,7 @@ void GrpcUserFrontend::_start_server()
     }
 
     // Create async service implementation
-    _service_impl = std::make_unique<AsyncPinProxyServiceImpl>(this);
+    _service_impl = std::make_unique<AsyncSenseiControllerImpl>(this);
 
     // Start the async service
     std::string server_address = _listen_address + ":" + std::to_string(_listen_port);
@@ -321,7 +321,7 @@ void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapRespo
         {
             auto controller = response->add_leds();
             controller->set_id(controller_id);
-            // TODO: add set_name in API
+            controller->set_name(name);
             break;
         }
 

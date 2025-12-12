@@ -140,9 +140,17 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
         case SensorType::ANALOG_INPUT:
         case SensorType::CONTINUOUS_INPUT:
         {
-            // Analog/Continuous/Default -> AnalogEvent
+            // Analog/Continuous -> AnalogEvent
             auto* analog_ev = event.mutable_analog_ev();
             analog_ev->set_value(value);
+            break;
+        }
+
+        case SensorType::DIGITAL_OUTPUT:
+        {
+            // Digital output -> LedEvent
+            auto* led_ev = event.mutable_led_ev();
+            led_ev->set_value(value > 0.5f);  // Convert float to bool
             break;
         }
 

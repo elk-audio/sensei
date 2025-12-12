@@ -23,8 +23,6 @@
 #include "output_backend.h"
 #include "sensei-grpc-api/sensei_rpc.pb.h"
 
-// TODO(andrewmacp): Is there really a circular dependency here if this is
-// is #included?
 namespace sensei {
 namespace user_frontend {
     class GrpcUserFrontend;

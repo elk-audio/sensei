@@ -62,7 +62,7 @@ protected:
         std::stringstream ss;
         ss << "localhost:" << _server_port;
         _channel = grpc::CreateChannel(ss.str(), grpc::InsecureChannelCredentials());
-        _stub = sensei_rpc::PinProxyService::NewStub(_channel);
+        _stub = sensei_rpc::SenseiController::NewStub(_channel);
     }
 
     void TearDown()
@@ -78,7 +78,7 @@ protected:
     int _server_port{50051};
 
     std::shared_ptr<grpc::Channel> _channel;
-    std::unique_ptr<sensei_rpc::PinProxyService::Stub> _stub;
+    std::unique_ptr<sensei_rpc::SenseiController::Stub> _stub;
 
     std::vector<sensei_rpc::Event> _received_events;
 };
@@ -329,5 +329,5 @@ TEST_F(TestGrpcBackend, test_populate_controller_map)
     ASSERT_EQ(response.pots().Get(0).name(), "POT1");
     ASSERT_EQ(response.leds_size(), 1);
     ASSERT_EQ(response.leds().Get(0).id(), 3);
-    // ASSERT_EQ(response.leds().Get(0).name(), "LED1");
+    ASSERT_EQ(response.leds().Get(0).name(), "LED1");
 }

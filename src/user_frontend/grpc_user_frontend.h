@@ -41,14 +41,14 @@ class RefreshAllStatesCallData;
 class GetControllerMapCallData;
 
 /**
- * @brief Async gRPC service implementation for PinProxyService
+ * @brief Async gRPC service implementation for SenseiController
  * Uses gRPC async API with completion queues for scalable concurrent connections
  */
-class AsyncPinProxyServiceImpl
+class AsyncSenseiControllerImpl
 {
 public:
-    AsyncPinProxyServiceImpl(GrpcUserFrontend* frontend);
-    ~AsyncPinProxyServiceImpl();
+    AsyncSenseiControllerImpl(GrpcUserFrontend* frontend);
+    ~AsyncSenseiControllerImpl();
 
     /**
      * @brief Start the async service and spawn worker threads
@@ -82,7 +82,7 @@ private:
     GrpcUserFrontend* _frontend;
     std::unique_ptr<grpc::Server> _server;
     std::unique_ptr<grpc::ServerCompletionQueue> _cq;
-    std::unique_ptr<sensei_rpc::PinProxyService::AsyncService> _async_service;
+    std::unique_ptr<sensei_rpc::SenseiController::AsyncService> _async_service;
     std::unique_ptr<EventBroadcastManager> _broadcast_manager;
     std::thread _cq_thread;
     bool _running;
@@ -145,7 +145,7 @@ private:
     std::string _listen_address;
     int _listen_port;
 
-    std::unique_ptr<AsyncPinProxyServiceImpl> _service_impl;
+    std::unique_ptr<AsyncSenseiControllerImpl> _service_impl;
 
     bool _server_running;
     std::mutex _server_mutex;

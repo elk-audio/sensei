@@ -14,7 +14,7 @@
  */
 
 /**
- * @brief Async gRPC call handlers for PinProxyService
+ * @brief Async gRPC call handlers for SenseiController
  * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
  */
 #ifndef SENSEI_ASYNC_CALL_HANDLERS_H
@@ -40,7 +40,7 @@ class EventBroadcastManager;
 class CallDataBase
 {
 public:
-    CallDataBase(sensei_rpc::PinProxyService::AsyncService *service,
+    CallDataBase(sensei_rpc::SenseiController::AsyncService *service,
                  grpc::ServerCompletionQueue* cq) : 
                  _state(State::CREATE),
                  _service(service),
@@ -58,7 +58,7 @@ protected:
 
     State _state;
     grpc::ServerContext _ctx;
-    sensei_rpc::PinProxyService::AsyncService* _service;
+    sensei_rpc::SenseiController::AsyncService* _service;
     grpc::ServerCompletionQueue* _cq;
 };
 
@@ -69,7 +69,7 @@ class SubscribeCallData : public CallDataBase
 {
 public:
     SubscribeCallData(
-        sensei_rpc::PinProxyService::AsyncService* service,
+        sensei_rpc::SenseiController::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         EventBroadcastManager* broadcast_mgr);
 
@@ -109,7 +109,7 @@ class UpdateLedCallData : public CallDataBase
 {
 public:
     UpdateLedCallData(
-        sensei_rpc::PinProxyService::AsyncService* service,
+        sensei_rpc::SenseiController::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         GrpcUserFrontend* frontend);
 
@@ -129,7 +129,7 @@ class RefreshAllStatesCallData : public CallDataBase
 {
 public:
     RefreshAllStatesCallData(
-        sensei_rpc::PinProxyService::AsyncService* service,
+        sensei_rpc::SenseiController::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         GrpcUserFrontend* frontend);
 
@@ -149,7 +149,7 @@ class GetControllerMapCallData : public CallDataBase
 {
 public:
     GetControllerMapCallData(
-        sensei_rpc::PinProxyService::AsyncService* service,
+        sensei_rpc::SenseiController::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         GrpcUserFrontend* frontend);
 

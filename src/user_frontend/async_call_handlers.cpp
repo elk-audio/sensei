@@ -33,7 +33,7 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("async_call_handlers");
 //==============================================================================
 
 SubscribeCallData::SubscribeCallData(
-    sensei_rpc::PinProxyService::AsyncService* service,
+    sensei_rpc::SenseiController::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     EventBroadcastManager* broadcast_mgr)
     : CallDataBase(service, cq),
@@ -122,7 +122,7 @@ void SubscribeCallData::_start_write()
 //==============================================================================
 
 UpdateLedCallData::UpdateLedCallData(
-    sensei_rpc::PinProxyService::AsyncService* service,
+    sensei_rpc::SenseiController::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     GrpcUserFrontend* frontend)
     : CallDataBase(service, cq),
@@ -164,7 +164,7 @@ void UpdateLedCallData::proceed()
 //==============================================================================
 
 RefreshAllStatesCallData::RefreshAllStatesCallData(
-    sensei_rpc::PinProxyService::AsyncService* service,
+    sensei_rpc::SenseiController::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     GrpcUserFrontend *frontend)
     : CallDataBase(service, cq),
@@ -202,7 +202,7 @@ void RefreshAllStatesCallData::proceed()
 //==============================================================================
 
 GetControllerMapCallData::GetControllerMapCallData(
-    sensei_rpc::PinProxyService::AsyncService* service,
+    sensei_rpc::SenseiController::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     GrpcUserFrontend* frontend)
     : CallDataBase(service, cq),
