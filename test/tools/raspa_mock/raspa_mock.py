@@ -154,7 +154,7 @@ class GrpcReceiver:
         try:
             # Create channel and stub
             self.channel = grpc.insecure_channel(f'{self.host}:{self.port}')
-            self.stub = sensei_rpc_pb2_grpc.PinProxyServiceStub(self.channel)
+            self.stub = sensei_rpc_pb2_grpc.SenseiControllerStub(self.channel)
 
             logger.info(f"Connecting to gRPC server at {self.host}:{self.port}")
 
