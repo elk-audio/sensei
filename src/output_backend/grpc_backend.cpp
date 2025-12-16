@@ -138,7 +138,6 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
         }
 
         case SensorType::ANALOG_INPUT:
-        case SensorType::CONTINUOUS_INPUT:
         {
             // Analog/Continuous -> AnalogEvent
             auto* analog_ev = event.mutable_analog_ev();
@@ -146,6 +145,7 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
             break;
         }
 
+        // This will only be sent following a RefreshAllStates.
         case SensorType::DIGITAL_OUTPUT:
         {
             // Digital output -> LedEvent

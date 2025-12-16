@@ -136,7 +136,7 @@ class GrpcReceiver:
             logger.info(f"Subscribing to gRPC events on {self.host}:{self.port}")
 
             # Start streaming - this blocks until stream ends
-            for event in self.stub.SubscribeToEvents(request):
+            for event in self.stub.SubscribeToEvents(request): # type: ignore
                 if not self.running:
                     break
                 self._grpc_event_handler(event)
@@ -386,7 +386,7 @@ class RaspaServer:
 
         except socket.timeout:
             # Timeout is normal, just continue the loop
-            logger.info("recv timeout...")
+            pass
         except OSError as e:
             if self.running:
                 logger.error(f"Error receiving datagram: {e}")

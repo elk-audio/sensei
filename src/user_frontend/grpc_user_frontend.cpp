@@ -325,6 +325,14 @@ void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapRespo
             break;
         }
 
+        case SensorType::RANGE_INPUT:
+        {
+            auto controller = response->add_rotaries();
+            controller->set_id(controller_id);
+            controller->set_name(name);
+            break;
+        }
+
         default:
             SENSEI_LOG_ERROR("Unexpected sensor type ({}) for id={}", static_cast<int>(type), controller_id);
             break;
