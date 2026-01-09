@@ -149,6 +149,21 @@ class GrpcReceiver:
         finally:
             logger.info("gRPC event receiver stopped")
 
+    def get_controller_map(self):
+        cmap = self.stub.GetControllerMap(sensei_rpc_pb2.GenericVoidValue()) # type: ignore
+        result = {}
+        for item in cmap.pots:
+            result[item.id] = item.name
+        for item in cmap.switches:
+            result[item.id] = item.name
+        for item in cmap.encoders:
+            result[item.id] = item.name
+        for item in cmap.rotaries:
+            result[item.id] = item.name
+        for item in cmap.leds:
+            result[item.id] = item.name
+        return result
+
     def start(self):
         """Start the gRPC client."""
         try:
