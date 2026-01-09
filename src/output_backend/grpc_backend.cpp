@@ -97,7 +97,7 @@ void GrpcBackend::send(const OutputValue* transformed_value, const Value* /*raw_
         // Forward event to user frontend for broadcasting
         _user_frontend->broadcast_event(event);
 
-        SENSEI_LOG_DEBUG("Forwarded gRPC event for sensor {} with value {}", sensor_index, value);
+        SENSEI_LOG_DEBUG("Sending: sensor={} value={}", _sensor_names[sensor_index], value);
     }
 
     // Raw input value sending - not implemented yet
