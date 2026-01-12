@@ -141,6 +141,13 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
         }
         break;
 
+    case CommandType::CLEAR_PREVIOUS_VALUE:
+        {
+            _previous_value = 0.0f;
+            SENSEI_LOG_INFO("Cleared previous value for sensor {}", _sensor_index);
+        }
+        break;
+
     default:
         status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
         break;
@@ -534,6 +541,14 @@ CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
             status = _set_input_scale_range(static_cast<int>(std::round(range.min)),
                                             static_cast<int>(std::round(range.max)));
         };
+        break;
+
+        case CommandType::CLEAR_PREVIOUS_VALUE:
+        {
+            _previous_int_value = -1; // Invalid value to force next send
+            // Chain to parent to also reset _previous_value
+            return BaseSensorMapper::apply_command(cmd);
+        }
         break;
 
         break;

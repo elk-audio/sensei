@@ -335,11 +335,20 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
     for (int i=0; i<_max_controllers; ++i)
     {
         ASSERT_FALSE(_event_queue.empty());
-        std::unique_ptr<BaseMessage> event = _event_queue.pop();
-        ASSERT_EQ(MessageType::COMMAND, event->base_type());
-        auto val = static_unique_ptr_cast<GetValueCommand, BaseMessage>(std::move(event));
-        ASSERT_EQ(CommandType::GET_VALUE, val->type());
-        ASSERT_EQ(val->index(), i);
+        {
+            std::unique_ptr<BaseMessage> event = _event_queue.pop();
+            ASSERT_EQ(MessageType::COMMAND, event->base_type());
+            auto val = static_unique_ptr_cast<ClearPreviousValueCommand, BaseMessage>(std::move(event));
+            ASSERT_EQ(CommandType::CLEAR_PREVIOUS_VALUE, val->type());
+            ASSERT_EQ(val->index(), i);
+        }
+        {
+            std::unique_ptr<BaseMessage> event = _event_queue.pop();
+            ASSERT_EQ(MessageType::COMMAND, event->base_type());
+            auto val = static_unique_ptr_cast<GetValueCommand, BaseMessage>(std::move(event));
+            ASSERT_EQ(CommandType::GET_VALUE, val->type());
+            ASSERT_EQ(val->index(), i);
+        }
     }
 }
 
