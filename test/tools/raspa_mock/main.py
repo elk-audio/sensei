@@ -87,32 +87,83 @@ def main():
             else:
                 return osc_receiver.last_message[1]
 
-        # this comes from sensei_config.json
-        controller_3_adc_resolution = 8
-        controller_3_denominator = pow(2, controller_3_adc_resolution) - 1
+        def check_value(controller_id, mcu_value, grpc_value):
+            event.clear()
+            send_value(controller_id, mcu_value)
+            event.wait()
+            assert(math.isclose(event_value(), grpc_value, abs_tol=1e-6))
 
-        # should receive the value from the backend
-        event.clear()
-        send_value(3, 128)
-        event.wait()
-        assert(math.isclose(event_value(), 128/controller_3_denominator, abs_tol=1e-6))
+        def check_no_value(controller_id, mcu_value):
+            event.clear()
+            send_value(controller_id, mcu_value)
+            assert(not event.wait(1.0))
 
-        # also this value
-        event.clear()
-        send_value(2, 0)
-        event.wait()
-        assert(math.isclose(event_value(), 0, abs_tol=1e-6))
+        def test_pots():
+            # from sensei_config.json
+            controller_id = 7
+            adc_resolution = 8
 
-        # this is the same value we had previously, no event and wait should timeout
-        event.clear()
-        send_value(3, 128)
-        assert(not event.wait(1.0))
+            max_value = pow(2, adc_resolution) - 1
 
-        # the new value should generate an event
-        event.clear()
-        send_value(3, 10)
-        event.wait()
-        assert(math.isclose(event_value(), 10/controller_3_denominator, abs_tol=1e-6))
+            # should receive the value from the backend
+            check_value(controller_id, 128, 128/max_value)
+
+            # this is the same value we had previously, no event and wait should timeout
+            check_no_value(controller_id, 128)
+
+            # the new value should generate an event
+            check_value(controller_id, 10, 10/max_value)
+
+        def test_buttons():
+            # from sensei_config.json
+            controller_id = 5
+
+            check_value(controller_id, 0, 0)
+            check_value(controller_id, 1, 1)
+            check_value(controller_id, -1, 0)
+            check_value(controller_id, 500, 1)
+
+        def test_switches():
+            # from sensei_config.json
+            controller_id = 13
+
+            # range is 1-4
+            check_value(controller_id, 0, 1)
+            check_no_value(controller_id, 1)
+            check_value(controller_id, 2, 2)
+            check_value(controller_id, 3, 3)
+            check_value(controller_id, 4, 4)
+            check_no_value(controller_id, 12)
+
+        def test_encoders():
+            # from sensei_config.json
+            analog_controller_id = 14
+            range_controller_id = 15
+
+            # range is 0-15 for both
+            max_value = 15
+
+            # this encoder is specified to use an analog_input sensor
+            check_value(analog_controller_id, 1, 1/max_value)
+            check_value(analog_controller_id, 0, 0)
+            check_value(analog_controller_id, 5, 5/max_value)
+            check_value(analog_controller_id, 250, 1)
+
+            # this encoder is specified to use a range_input sensor
+            check_value(range_controller_id, 1, 1)
+            check_value(range_controller_id, 0, 0)
+            check_value(range_controller_id, 5, 5)
+            check_value(range_controller_id, 250, 15)
+
+        test_pots()
+        test_buttons()
+        test_switches()
+        test_encoders()
+
+        logger.info(f"Controllers: {grpc_receiver.get_controller_map()}")
+
+        logger.info("------")
+        logger.info("Success, press Ctrl-C to quit...")
 
         while raspa_server.running:
             raspa_server.listen_once()
@@ -120,7 +171,7 @@ def main():
     except KeyboardInterrupt:
         logger.info("\nShutting down...")
     except Exception as e:
-        logger.error(f"Fatal error: {e}")
+        logger.error(f"Fatal error: {e}", exc_info=True)
     finally:
         sensei_client.close()
         grpc_receiver.stop()

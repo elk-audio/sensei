@@ -21,10 +21,8 @@
 #define SENSEI_GRPC_BACKEND_H
 
 #include "output_backend.h"
-#include "pin-proxy/pin_events.pb.h"
+#include "sensei-grpc-api/sensei_rpc.pb.h"
 
-// TODO(andrewmacp): Is there really a circular dependency here if this is
-// is #included?
 namespace sensei {
 namespace user_frontend {
     class GrpcUserFrontend;
@@ -70,10 +68,10 @@ private:
      * @param timestamp The timestamp in microseconds
      * @return A proto Event message
      */
-    pin_proxy::Event _create_proto_event(int sensor_index,
-                                         SensorType sensor_type,
-                                         float value,
-                                         uint32_t timestamp);
+    sensei_rpc::Event _create_proto_event(int sensor_index,
+                                          SensorType sensor_type,
+                                          float value,
+                                          uint32_t timestamp);
 
     user_frontend::GrpcUserFrontend* _user_frontend;  // Non-owning pointer
 };

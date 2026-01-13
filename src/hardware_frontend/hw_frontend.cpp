@@ -340,6 +340,12 @@ void HwFrontend::_process_sensei_command(const Command*message)
             }
             break;
         }
+        case CommandType::GET_VALUE:
+        {
+            auto cmd = static_cast<const GetValueCommand*>(message);
+            _send_list.push_back(_packet_factory.make_get_value_command(cmd->data()));
+            break;
+        }
         case CommandType::SET_INPUT_RANGE:
         {
             // TODO - maybe this should be reserved for encoders and led rings

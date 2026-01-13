@@ -18,6 +18,7 @@
  * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
  */
 #include "grpc_backend.h"
+#include "message/command_defs.h"
 #include "user_frontend/grpc_user_frontend.h"
 #include "logging.h"
 
@@ -54,9 +55,24 @@ void GrpcBackend::set_user_frontend(user_frontend::GrpcUserFrontend* frontend)
 
 CommandErrorCode GrpcBackend::apply_command(const Command* cmd)
 {
-    // For now, just pass all commands to base class
-    // gRPC-specific configuration is handled by the user frontend
-    return OutputBackend::apply_command(cmd);
+    auto status = OutputBackend::apply_command(cmd);
+
+    if (_user_frontend)
+    {
+        // the frontend needs a map of IDs to names and types so we forward this info
+        if (cmd->type() == CommandType::SET_SENSOR_NAME || cmd->type() == CommandType::SET_SENSOR_TYPE)
+        {
+            auto id= cmd->index();
+            _user_frontend->update_controller(id, _sensor_names[id], _pin_types[id]);
+        }
+    }
+    else
+    {
+        // this can happen in tests, otherwise shouldn't be possible
+        SENSEI_LOG_ERROR("gRPC user frontend not set, skipping controller update");
+    }
+
+    return status;
 }
 
 void GrpcBackend::send(const OutputValue* transformed_value, const Value* /*raw_input_value*/)
@@ -76,12 +92,12 @@ void GrpcBackend::send(const OutputValue* transformed_value, const Value* /*raw_
         float value = transformed_value->value();
         uint32_t timestamp = transformed_value->timestamp();
 
-        pin_proxy::Event event = _create_proto_event(sensor_index, sensor_type, value, timestamp);
+        sensei_rpc::Event event = _create_proto_event(sensor_index, sensor_type, value, timestamp);
 
         // Forward event to user frontend for broadcasting
         _user_frontend->broadcast_event(event);
 
-        SENSEI_LOG_DEBUG("Forwarded gRPC event for sensor {} with value {}", sensor_index, value);
+        SENSEI_LOG_DEBUG("Sending: sensor={} value={}", _sensor_names[sensor_index], value);
     }
 
     // Raw input value sending - not implemented yet
@@ -93,15 +109,14 @@ void GrpcBackend::send(const OutputValue* transformed_value, const Value* /*raw_
     }
 }
 
-pin_proxy::Event GrpcBackend::_create_proto_event(int sensor_index,
+sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
                                                   SensorType sensor_type,
                                                   float value,
                                                   uint32_t timestamp)
 {
-    pin_proxy::Event event;
-
-    // Convert timestamp from microseconds (SENSEI) to microseconds (proto expects int64)
-    int64_t timestamp_us = static_cast<int64_t>(timestamp);
+    sensei_rpc::Event event;
+    event.set_controller_id(sensor_index);
+    event.set_timestamp(static_cast<int64_t>(timestamp));
 
     // Map SENSEI sensor types to proto event types
     switch (sensor_type)
@@ -110,8 +125,6 @@ pin_proxy::Event GrpcBackend::_create_proto_event(int sensor_index,
         {
             // Digital sensor -> ToggleEvent
             auto* toggle_ev = event.mutable_toggle_ev();
-            toggle_ev->set_controller_id(sensor_index);
-            toggle_ev->set_timestamp(timestamp_us);
             toggle_ev->set_value(value > 0.5f);  // Convert float to bool
             break;
         }
@@ -120,20 +133,24 @@ pin_proxy::Event GrpcBackend::_create_proto_event(int sensor_index,
         {
             // Range sensor -> RangeEvent
             auto* range_ev = event.mutable_range_ev();
-            range_ev->set_controller_id(sensor_index);
-            range_ev->set_timestamp(timestamp_us);
             range_ev->set_value(static_cast<int32_t>(value));  // Convert float to int32
             break;
         }
 
         case SensorType::ANALOG_INPUT:
-        case SensorType::CONTINUOUS_INPUT:
         {
-            // Analog/Continuous/Default -> AnalogEvent
+            // Analog/Continuous -> AnalogEvent
             auto* analog_ev = event.mutable_analog_ev();
-            analog_ev->set_controller_id(sensor_index);
-            analog_ev->set_timestamp(timestamp_us);
             analog_ev->set_value(value);
+            break;
+        }
+
+        // This will only be sent following a RefreshAllStates.
+        case SensorType::DIGITAL_OUTPUT:
+        {
+            // Digital output -> LedEvent
+            auto* led_ev = event.mutable_led_ev();
+            led_ev->set_value(value > 0.5f);  // Convert float to bool
             break;
         }
 

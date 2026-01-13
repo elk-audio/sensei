@@ -7,11 +7,10 @@ clang2py \
     ${BASE_DIR}/elk-gpio-protocol/include/gpio_protocol/gpio_protocol.h \
     >gpio_protocol.py
 
-# generate pin-proxy gRPC bindings
-PIN_PROXY_DIR=../../../pin-proxy
+# generate sensei gRPC bindings
 python -m grpc_tools.protoc \
-    -I${BASE_DIR}/pin-proxy \
+    -I${BASE_DIR}/sensei-grpc-api \
     --python_out=. \
     --pyi_out=. \
     --grpc_python_out=. \
-    ${BASE_DIR}/pin-proxy/pin_events.proto
+    ${BASE_DIR}/sensei-grpc-api/sensei_rpc.proto

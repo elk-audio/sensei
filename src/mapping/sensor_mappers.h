@@ -23,6 +23,8 @@
 #ifndef SENSEI_SENSOR_MAPPERS_H
 #define SENSEI_SENSOR_MAPPERS_H
 
+#include <optional>
+
 #include "message/base_value.h"
 #include "message/value_defs.h"
 #include "output_backend/output_backend.h"
@@ -98,7 +100,7 @@ protected:
     SendingMode         _sending_mode;
     int                 _delta_ticks_sending;
 
-    float               _previous_value;
+    std::optional<float> _previous_value;
     bool                _invert_value;
     bool                _send_timestamp;
     bool                _fast_mode;
@@ -201,7 +203,7 @@ private:
     int _input_scale_range_high;
 
     // Internal helper attributes
-    int _previous_int_value;
+    std::optional<int> _previous_int_value;
 };
 
 /**

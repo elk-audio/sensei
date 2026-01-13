@@ -97,6 +97,8 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
         else
             lo_send(_address, _full_out_paths[sensor_index].c_str(), "ft",
                     transformed_value->value(), to_osc_timestamp(transformed_value->timestamp()));
+
+        SENSEI_LOG_DEBUG("Sending: sensor={} value={}", _sensor_names[sensor_index], transformed_value->value());
     }
 
     if (_send_raw_input_active)

@@ -56,6 +56,7 @@ enum class CommandType
     SET_CONTINUOUS_OUTPUT_VALUE,
     SET_ANALOG_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
+    GET_VALUE,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_RANGE,
@@ -73,6 +74,7 @@ enum class CommandType
     // gRPC User Frontend Commands
     SET_GRPC_LISTEN_ADDRESS,
     SET_GRPC_LISTEN_PORT,
+    CLEAR_PREVIOUS_VALUE,
     N_COMMAND_TAGS
 };
 
@@ -286,6 +288,12 @@ SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
                        "Enable Sending Packets",
                        CommandDestination::HARDWARE_FRONTEND);
 
+SENSEI_DECLARE_COMMAND(GetValueCommand,
+                       CommandType::GET_VALUE,
+                       int,
+                       "Get Value",
+                       CommandDestination::HARDWARE_FRONTEND);
+
 // Internal commands
 
 SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
@@ -304,6 +312,12 @@ SENSEI_DECLARE_COMMAND(SetSendTimestampEnabledCommand,
                        CommandType::SET_SEND_TIMESTAMP_ENABLED,
                        bool,
                        "Set Output Timestamp Enabled",
+                       CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(ClearPreviousValueCommand,
+                       CommandType::CLEAR_PREVIOUS_VALUE,
+                       bool,
+                       "Clear Previous Value",
                        CommandDestination::MAPPING_PROCESSOR);
 
 // Output Backend commands

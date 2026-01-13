@@ -33,7 +33,7 @@ option(SENSEI_WITH_GRPC "Enable the gRPC backend" OFF)
 if (${SENSEI_WITH_GRPC})
     find_package(gRPC REQUIRED)
 
-    set(PROTOS pin-proxy/pin_events.proto)
+    set(PROTOS sensei-grpc-api/sensei_rpc.proto)
 
     # In yocto environments, yocto grpc does not include gRPCPluginTargets.cmake
     # when find_package(gRPC REQUIRED) is called.

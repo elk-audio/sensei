@@ -241,6 +241,13 @@ public:
         return std::unique_ptr<EnableSendingPacketsCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_get_value_command(const int controller_id,
+                                                         const uint32_t timestamp = 0)
+    {
+        auto msg = new GetValueCommand(controller_id, controller_id, timestamp);
+        return std::unique_ptr<GetValueCommand>(msg);
+    }
+
     // Internal commands
 
     std::unique_ptr<BaseMessage> make_set_invert_enabled_command(const int sensor_id,
@@ -266,6 +273,13 @@ public:
     {
         auto msg = new SetSendTimestampEnabledCommand(index, enabled, timestamp);
         return std::unique_ptr<SetSendTimestampEnabledCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_clear_previous_value_command(const int sensor_id,
+                                                                   const uint32_t timestamp = 0)
+    {
+        auto msg = new ClearPreviousValueCommand(sensor_id, true, timestamp);
+        return std::unique_ptr<ClearPreviousValueCommand>(msg);
     }
 
     // Output Backend commands

@@ -13,6 +13,6 @@
 [submodule "elk-warning-suppressor"]
 	path = elk-warning-suppressor
 	url = ../elk-warning-suppressor.git
-[submodule "pin-proxy"]
-	path = pin-proxy
-	url = git@bitbucket.org:mindswteam/pin-proxy.git
+[submodule "sensei-grpc-api"]
+	path = sensei-grpc-api
+	url = ../sensei-grpc-api.git

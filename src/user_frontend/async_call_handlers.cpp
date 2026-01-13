@@ -33,7 +33,7 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("async_call_handlers");
 //==============================================================================
 
 SubscribeCallData::SubscribeCallData(
-    pin_proxy::PinProxyService::AsyncService* service,
+    sensei_rpc::SenseiController::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     EventBroadcastManager* broadcast_mgr)
     : CallDataBase(service, cq),
@@ -87,7 +87,7 @@ void SubscribeCallData::stop() {
     _state = State::DONE;
 }
 
-void SubscribeCallData::enqueue_event(const pin_proxy::Event& event)
+void SubscribeCallData::enqueue_event(const sensei_rpc::Event& event)
 {
     if (_state != State::PROCESSING)
     {
@@ -122,7 +122,7 @@ void SubscribeCallData::_start_write()
 //==============================================================================
 
 UpdateLedCallData::UpdateLedCallData(
-    pin_proxy::PinProxyService::AsyncService* service,
+    sensei_rpc::SenseiController::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     GrpcUserFrontend* frontend)
     : CallDataBase(service, cq),
@@ -143,12 +143,12 @@ void UpdateLedCallData::proceed()
     {
         new UpdateLedCallData(_service, _cq, _frontend);
 
-        int led_id = _request.led_id();
+        int controller_id = _request.controller_id();
         bool active = _request.active();
 
-        SENSEI_LOG_INFO("UpdateLed: led_id={}, active={}", led_id, active);
+        SENSEI_LOG_INFO("UpdateLed: controller_id={}, active={}", controller_id, active);
 
-        _frontend->set_digital_output(led_id, active);
+        _frontend->set_digital_output(controller_id, active);
 
         _state = State::DONE;
         _responder.Finish(_response, grpc::Status::OK, this);
@@ -164,7 +164,7 @@ void UpdateLedCallData::proceed()
 //==============================================================================
 
 RefreshAllStatesCallData::RefreshAllStatesCallData(
-    pin_proxy::PinProxyService::AsyncService* service,
+    sensei_rpc::SenseiController::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     GrpcUserFrontend *frontend)
     : CallDataBase(service, cq),
@@ -185,7 +185,45 @@ void RefreshAllStatesCallData::proceed()
     {
         new RefreshAllStatesCallData(_service, _cq, _frontend);
 
-        _frontend->reset_system();
+        _frontend->refresh_controller_values();
+
+        _state = State::DONE;
+        _responder.Finish(_response, grpc::Status::OK, this);
+    }
+    else
+    {
+        assert(_state == State::DONE);
+        delete this;
+    }
+}
+
+//==============================================================================
+// GetControllerMapCallData Implementation
+//==============================================================================
+
+GetControllerMapCallData::GetControllerMapCallData(
+    sensei_rpc::SenseiController::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    GrpcUserFrontend* frontend)
+    : CallDataBase(service, cq),
+      _responder(&_ctx),
+      _frontend(frontend)
+{
+    proceed();
+}
+
+void GetControllerMapCallData::proceed()
+{
+    if (_state == State::CREATE)
+    {
+        _state = State::PROCESSING;
+        _service->RequestGetControllerMap(&_ctx, &_request, &_responder, _cq, _cq, this);
+    }
+    else if (_state == State::PROCESSING)
+    {
+        new GetControllerMapCallData(_service, _cq, _frontend);
+
+        _frontend->populate_controller_map(&_response);
 
         _state = State::DONE;
         _responder.Finish(_response, grpc::Status::OK, this);
@@ -222,23 +260,10 @@ void EventBroadcastManager::unregister_subscriber(SubscribeCallData* subscriber)
     }
 }
 
-void EventBroadcastManager::broadcast_event(const pin_proxy::Event& event)
+void EventBroadcastManager::broadcast_event(const sensei_rpc::Event& event)
 {
     if (_shutting_down)
     {
-        return;
-    }
-
-    auto event_controller_id =
-        event.has_analog_ev() ? event.analog_ev().controller_id() :
-            event.has_range_ev() ? event.range_ev().controller_id() :
-                event.has_relative_ev() ? event.relative_ev().controller_id() :
-                    event.has_toggle_ev() ? event.toggle_ev().controller_id() :
-                        -1;
-
-    if (event_controller_id == -1)
-    {
-        SENSEI_LOG_WARNING("Proto Event with unexpected event case {}", static_cast<int>(event.event_case()));
         return;
     }
 
@@ -248,7 +273,7 @@ void EventBroadcastManager::broadcast_event(const pin_proxy::Event& event)
     {
         auto &ids = data.controller_ids;
         if (data.controller_ids.empty() ||
-            std::find(ids.begin(), ids.end(), event_controller_id) != ids.end())
+            std::find(ids.begin(), ids.end(), event.controller_id()) != ids.end())
         {
             data.subscriber->enqueue_event(event);
         }

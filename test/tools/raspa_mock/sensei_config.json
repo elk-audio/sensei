@@ -5,7 +5,7 @@
       "enabled": true,
       "raw_input_enabled": false,
       "type" : "grpc",
-      "host" : "localhost",
+      "host" : "0.0.0.0",
       "port" : 50051,
       "base_path" : "/sensors",
       "base_raw_input_path" : "/raw_input"
@@ -20,7 +20,7 @@
     {
       "id" : 1,
       "enabled": true,
-      "name" : "led_1",
+      "name" : "LED1",
       "sensor_type" : "digital_output",
       "hardware" :
       {
@@ -31,7 +31,40 @@
     {
       "id" : 2,
       "enabled": true,
-      "name" : "button_2",
+      "name" : "LED2",
+      "sensor_type" : "digital_output",
+      "hardware" :
+      {
+        "hardware_type" : "digital_output_pin",
+        "pins" : [1]
+      }
+    },
+    {
+      "id" : 3,
+      "enabled": true,
+      "name" : "DISABLE_BYPASS",
+      "sensor_type" : "digital_output",
+      "hardware" :
+      {
+        "hardware_type" : "digital_output_pin",
+        "pins" : [2]
+      }
+    },
+    {
+      "id" : 4,
+      "enabled": true,
+      "name" : "ENABLE_MUTE",
+      "sensor_type" : "digital_output",
+      "hardware" :
+      {
+        "hardware_type" : "digital_output_pin",
+        "pins" : [3]
+      }
+    },
+    {
+      "id" : 5,
+      "enabled": true,
+      "name" : "BUT1",
       "sensor_type" : "digital_input",
       "inverted" : "true",
       "mode" : "on_value_changed",
@@ -44,9 +77,24 @@
       }
     },
     {
-      "id" : 3,
+      "id" : 6,
       "enabled": true,
-      "name" : "potentiometer_3",
+      "name" : "BUT2",
+      "sensor_type" : "digital_input",
+      "inverted" : "true",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "digital_input_pin",
+        "polarity" : "active_low",
+        "pins" : [1],
+        "delta_ticks" : 1
+      }
+    },
+    {
+      "id" : 7,
+      "enabled": true,
+      "name" : "POT1",
       "sensor_type" : "analog_input",
       "mode" : "on_value_changed",
       "hardware" :
@@ -56,6 +104,155 @@
         "delta_ticks" : 1,
         "adc_resolution" : 8,
         "filter_time_constant" : 0.020
+      }
+    },
+    {
+      "id" : 8,
+      "enabled": true,
+      "name" : "POT2",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pins" : [1],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8,
+        "filter_time_constant" : 0.020
+      }
+    },
+    {
+      "id" : 9,
+      "enabled": true,
+      "name" : "POT3",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pins" : [2],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8,
+        "filter_time_constant" : 0.020
+      }
+    },
+    {
+      "id" : 10,
+      "enabled": true,
+      "name" : "POT4",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pins" : [3],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8,
+        "filter_time_constant" : 0.020
+      }
+    },
+    {
+      "id" : 11,
+      "enabled": true,
+      "name" : "POT5",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pins" : [4],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8,
+        "filter_time_constant" : 0.020
+      }
+    },
+    {
+      "id" : 12,
+      "enabled": true,
+      "name" : "POT6",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "hardware" :
+      {
+        "hardware_type" : "analog_input_pin",
+        "pins" : [5],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8,
+        "filter_time_constant" : 0.020
+      }
+    },
+    {
+      "id" : 13,
+      "enabled": true,
+      "name" : "SW1",
+      "sensor_type" : "range_input",
+      "mode" : "on_value_changed",
+      "range" : [1, 4],
+      "hardware" :
+      {
+          "hardware_type" : "n_way_switch",
+          "pins" : [4,5,6,7],
+          "delta_ticks" : 1
+      }
+    },
+    {
+      "id" : 14,
+      "enabled": true,
+      "name" : "ROT1",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "range" : [0, 15],
+      "hardware" :
+      {
+          "hardware_type" : "encoder",
+          "polarity" : "active_low",
+          "pins" : [1, 2],
+          "delta_ticks" : 1
+      }
+    },
+    {
+      "id" : 15,
+      "enabled": true,
+      "name" : "ROT2",
+      "sensor_type" : "range_input",
+      "mode" : "on_value_changed",
+      "range" : [0, 15],
+      "hardware" :
+      {
+          "hardware_type" : "encoder",
+          "polarity" : "active_low",
+          "pins" : [3, 4],
+          "delta_ticks" : 1
+      }
+    },
+    {
+      "id" : 16,
+      "enabled": true,
+      "name" : "ROT3",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "range" : [0, 15],
+      "hardware" :
+      {
+          "hardware_type" : "encoder",
+          "polarity" : "active_low",
+          "pins" : [5, 6],
+          "delta_ticks" : 1
+      }
+    },
+    {
+      "id" : 17,
+      "enabled": true,
+      "name" : "ROT4",
+      "sensor_type" : "analog_input",
+      "mode" : "on_value_changed",
+      "range" : [0, 15],
+      "hardware" :
+      {
+          "hardware_type" : "encoder",
+          "polarity" : "active_low",
+          "pins" : [7, 8],
+          "delta_ticks" : 1
       }
     }
   ]
