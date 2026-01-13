@@ -66,7 +66,6 @@
       "enabled": true,
       "name" : "BUT1",
       "sensor_type" : "digital_input",
-      "inverted" : "true",
       "mode" : "on_value_changed",
       "hardware" :
       {
@@ -81,7 +80,6 @@
       "enabled": true,
       "name" : "BUT2",
       "sensor_type" : "digital_input",
-      "inverted" : "true",
       "mode" : "on_value_changed",
       "hardware" :
       {

@@ -62,7 +62,7 @@ CommandErrorCode GrpcBackend::apply_command(const Command* cmd)
         // the frontend needs a map of IDs to names and types so we forward this info
         if (cmd->type() == CommandType::SET_SENSOR_NAME || cmd->type() == CommandType::SET_SENSOR_TYPE)
         {
-            auto id= cmd->index();
+            auto id = cmd->index();
             _user_frontend->update_controller(id, _sensor_names[id], _pin_types[id]);
         }
     }
