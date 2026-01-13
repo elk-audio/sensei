@@ -23,6 +23,8 @@
 #ifndef SENSEI_SENSOR_MAPPERS_H
 #define SENSEI_SENSOR_MAPPERS_H
 
+#include <optional>
+
 #include "message/base_value.h"
 #include "message/value_defs.h"
 #include "output_backend/output_backend.h"
