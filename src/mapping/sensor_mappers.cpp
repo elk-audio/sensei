@@ -55,7 +55,6 @@ BaseSensorMapper::BaseSensorMapper(SensorType type, int index) :
     _multiplexer_data{0,0},
     _sending_mode(SendingMode::OFF),
     _delta_ticks_sending(1),
-    _previous_value(0.0f),
     _invert_value(false),
     _send_timestamp(false)
 {}
@@ -138,6 +137,13 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
         {
             const auto typed_cmd = static_cast<const SetFastModeCommand*>(cmd);
             _fast_mode = typed_cmd->data();
+        }
+        break;
+
+    case CommandType::CLEAR_PREVIOUS_VALUE:
+        {
+            _previous_value.reset();
+            SENSEI_LOG_INFO("Cleared previous value for sensor {}", _sensor_index);
         }
         break;
 
@@ -395,7 +401,8 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
     {
         out_val = 1.0f - out_val;
     }
-    if ((_sending_mode == SendingMode::ON_VALUE_CHANGED) && (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD))
+    const auto has_new_value = !_previous_value || fabsf(out_val - *_previous_value) > PREVIOUS_VALUE_THRESHOLD;
+    if (_sending_mode == SendingMode::ON_VALUE_CHANGED && has_new_value)
     {
         MessageFactory factory;
         // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
@@ -536,6 +543,13 @@ CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
         };
         break;
 
+        case CommandType::CLEAR_PREVIOUS_VALUE:
+        {
+            _previous_int_value.reset();
+            return BaseSensorMapper::apply_command(cmd);
+        }
+        break;
+
         break;
 
         default:
@@ -578,7 +592,7 @@ void RangeSensorMapper::process(Value*value, output_backend::OutputBackend*backe
     {
         out_val = _input_scale_range_high - out_val + _input_scale_range_low;
     }
-    if (out_val != _previous_int_value)
+    if (!_previous_int_value || out_val != *_previous_int_value)
     {
         MessageFactory factory;
         // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression
@@ -713,7 +727,7 @@ void ContinuousSensorMapper::process(Value *value, output_backend::OutputBackend
     {
         out_val = 1.0f - out_val;
     }
-    if (fabsf(out_val - _previous_value) > PREVIOUS_VALUE_THRESHOLD)
+    if (!_previous_value || fabsf(out_val - *_previous_value) > PREVIOUS_VALUE_THRESHOLD)
     {
         MessageFactory factory;
         // Use temporary variable here, since if the factory method is created inside the temporary rvalue expression

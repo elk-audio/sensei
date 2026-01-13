@@ -74,6 +74,7 @@ enum class CommandType
     // gRPC User Frontend Commands
     SET_GRPC_LISTEN_ADDRESS,
     SET_GRPC_LISTEN_PORT,
+    CLEAR_PREVIOUS_VALUE,
     N_COMMAND_TAGS
 };
 
@@ -311,6 +312,12 @@ SENSEI_DECLARE_COMMAND(SetSendTimestampEnabledCommand,
                        CommandType::SET_SEND_TIMESTAMP_ENABLED,
                        bool,
                        "Set Output Timestamp Enabled",
+                       CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(ClearPreviousValueCommand,
+                       CommandType::CLEAR_PREVIOUS_VALUE,
+                       bool,
+                       "Clear Previous Value",
                        CommandDestination::MAPPING_PROCESSOR);
 
 // Output Backend commands
