@@ -160,6 +160,8 @@ def main():
         test_switches()
         test_encoders()
 
+        logger.info(f"Controllers: {grpc_receiver.get_controller_map()}")
+
         logger.info("------")
         logger.info("Success, press Ctrl-C to quit...")
 

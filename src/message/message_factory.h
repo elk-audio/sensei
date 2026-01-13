@@ -275,6 +275,13 @@ public:
         return std::unique_ptr<SetSendTimestampEnabledCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_clear_previous_value_command(const int sensor_id,
+                                                                   const uint32_t timestamp = 0)
+    {
+        auto msg = new ClearPreviousValueCommand(sensor_id, true, timestamp);
+        return std::unique_ptr<ClearPreviousValueCommand>(msg);
+    }
+
     // Output Backend commands
 
     std::unique_ptr<BaseMessage> make_set_backend_type_command(const int index,

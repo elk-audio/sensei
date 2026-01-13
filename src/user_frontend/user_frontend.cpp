@@ -60,6 +60,7 @@ void UserFrontend::refresh_controller_values()
     // Request current values from all controllers
     for (int i=0; i<_max_n_input_pins; ++i)
     {
+        _queue->push(_factory.make_clear_previous_value_command(i));
         _queue->push(_factory.make_get_value_command(i));
     }
 }

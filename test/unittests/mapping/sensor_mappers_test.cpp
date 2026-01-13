@@ -438,6 +438,25 @@ TEST_F(TestAnalogSensorMapper, test_same_value_not_sent_twice)
     ASSERT_EQ(first_message_time, _backend._last_timestamp);
 }
 
+TEST_F(TestAnalogSensorMapper, test_unchanged_value_sent_after_clear_previous)
+{
+    MessageFactory factory;
+    const float analog_value = 0.0f;
+    const uint32_t first_message_time = 100;
+    auto input_msg = factory.make_analog_value(_sensor_idx, analog_value, first_message_time);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+
+    _mapper.apply_command(CMD_PTR(factory.make_clear_previous_value_command(_sensor_idx)));
+
+    const uint32_t second_message_time = 101;
+    input_msg = factory.make_analog_value(_sensor_idx, analog_value, second_message_time);
+    input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+
+    ASSERT_EQ(second_message_time, _backend._last_timestamp);
+}
+
 TEST_F(TestAnalogSensorMapper, test_raw_input_send)
 {
     MessageFactory factory;

@@ -129,7 +129,7 @@ public:
      * @brief Populate the controller map response with current sensor configuration
      * @param response The GetControllerMapResponse to populate
      */
-    void populate_controller_map(sensei_rpc::GetControllerMapResponse* response) const;
+    void populate_controller_map(sensei_rpc::GetControllerMapResponse* response);
 
 private:
     /**
@@ -155,6 +155,7 @@ private:
         std::string name;
         SensorType type{SensorType::UNDEFINED};
     };
+    std::mutex _controller_map_mutex;
     std::vector<Controller> _controller_map;
 };
 

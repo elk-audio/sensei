@@ -161,7 +161,10 @@ GrpcUserFrontend::GrpcUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage
     _server_running(false)
 {
     SENSEI_LOG_INFO("GrpcUserFrontend created with async API");
-    _controller_map.resize(max_n_input_pins);
+    {
+        std::unique_lock<std::mutex> lock(_controller_map_mutex);
+        _controller_map.resize(max_n_input_pins);
+    }
     _start_server();
 }
 
@@ -277,10 +280,11 @@ int GrpcUserFrontend::num_subscribers() const {
 
 void GrpcUserFrontend::update_controller(int controller_id, const std::string &name, SensorType type)
 {
+    std::unique_lock<std::mutex> lock(_controller_map_mutex);
     _controller_map[controller_id] = {name, type};
 }
 
-void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapResponse* response) const
+void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapResponse* response)
 {
     SENSEI_LOG_INFO("GetControllerMap called");
 
@@ -290,6 +294,7 @@ void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapRespo
     response->clear_rotaries();
     response->clear_leds();
 
+    std::unique_lock<std::mutex> lock(_controller_map_mutex);
     for (size_t i=0; i < _controller_map.size(); ++i)
     {
         int controller_id = static_cast<int>(i);
