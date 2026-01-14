@@ -18,4 +18,4 @@ Check [Elk's official documentation](https://elk-audio.github.io/elk-docs/html/d
 SENSEI is licensed under Affero General Public License (“AGPLv3”). See [LICENSE](LICENSE.md) document for the full details of the license. For contributing code to SENSEI, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
-Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm, Sweden.
+Copyright 2017-2026 Elk Audio AB, Stockholm, Sweden.
