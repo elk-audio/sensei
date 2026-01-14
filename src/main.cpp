@@ -58,7 +58,7 @@ bool enable_flush_interval = false;
 
 void print_headline()
 {
-    std::cout << "SENSEI - Copyright 2017-2019 Elk, Stockholm" << std::endl;
+    std::cout << "SENSEI - 2017-2026 Elk Audio AB, Stockholm" << std::endl;
     std::cout << "SENSEI is licensed under the Affero GPL 3.0. Source code is available at github.com/elk-audio" << std::endl;
 }
 
