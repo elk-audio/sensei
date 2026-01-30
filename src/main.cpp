@@ -47,7 +47,6 @@
 // Global Variables
 ////////////////////////////////////////////////////////////////////////////////
 
-sensei::EventHandler event_handler;
 static volatile sig_atomic_t main_loop_running = 1;
 static volatile sig_atomic_t config_reload_pending = 0;
 
@@ -396,6 +395,7 @@ int main(int argc, char* argv[])
     signal(SIGTERM, kill_signal_handler);
     signal(SIGUSR1, user_signal_handler);
 
+    sensei::EventHandler event_handler;
     if(!event_handler.init(n_input_pins, n_output_pins, config_filename))
     {
         std::cerr << "Failed to initialize, check logs for details. Exiting..."
