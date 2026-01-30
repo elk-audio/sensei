@@ -54,13 +54,3 @@ void UserFrontend::set_range_output(int index, int value)
     auto msg = _factory.make_integer_set_value(index, value);
     _queue->push(std::move(msg));
 }
-
-void UserFrontend::refresh_controller_values()
-{
-    // Request current values from all controllers
-    for (int i=0; i<_max_n_input_pins; ++i)
-    {
-        _queue->push(_factory.make_clear_previous_value_command(i));
-        _queue->push(_factory.make_get_value_command(i));
-    }
-}

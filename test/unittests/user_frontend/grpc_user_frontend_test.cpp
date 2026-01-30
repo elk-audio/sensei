@@ -321,6 +321,13 @@ TEST_F(TestGrpcUserFrontend, test_update_led_rpc_off)
 
 TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
 {
+    // Register some known controllers first
+    std::vector<int> known_controllers = {0, 5, 10};
+    for (int id : known_controllers)
+    {
+        _user_frontend->update_controller(id, "controller_" + std::to_string(id), SensorType::ANALOG_INPUT);
+    }
+
     grpc::ClientContext context;
     sensei_rpc::GenericVoidValue request;
     sensei_rpc::GenericVoidValue response;
@@ -331,8 +338,8 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
     // Wait for message to be queued
     _event_queue.wait_for_data(std::chrono::milliseconds(50));
 
-    // check for GET_VALUE commands for all controllers
-    for (int i=0; i<_max_controllers; ++i)
+    // check for GET_VALUE commands only for known controllers
+    for (int id : known_controllers)
     {
         ASSERT_FALSE(_event_queue.empty());
         {
@@ -340,16 +347,19 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
             ASSERT_EQ(MessageType::COMMAND, event->base_type());
             auto val = static_unique_ptr_cast<ClearPreviousValueCommand, BaseMessage>(std::move(event));
             ASSERT_EQ(CommandType::CLEAR_PREVIOUS_VALUE, val->type());
-            ASSERT_EQ(val->index(), i);
+            ASSERT_EQ(val->index(), id);
         }
         {
             std::unique_ptr<BaseMessage> event = _event_queue.pop();
             ASSERT_EQ(MessageType::COMMAND, event->base_type());
             auto val = static_unique_ptr_cast<GetValueCommand, BaseMessage>(std::move(event));
             ASSERT_EQ(CommandType::GET_VALUE, val->type());
-            ASSERT_EQ(val->index(), i);
+            ASSERT_EQ(val->index(), id);
         }
     }
+
+    // Queue should be empty - no commands for unknown controllers
+    ASSERT_TRUE(_event_queue.empty());
 }
 
 TEST_F(TestGrpcUserFrontend, test_concurrent_operations)

@@ -344,3 +344,19 @@ void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapRespo
         }
     }
 }
+
+void GrpcUserFrontend::refresh_controller_values()
+{
+    std::unique_lock<std::mutex> lock(_controller_map_mutex);
+    for (size_t i = 0; i < _controller_map.size(); ++i)
+    {
+        const auto& name = _controller_map[i].name;
+        auto type = _controller_map[i].type;
+        if (!name.empty() && type != SensorType::UNDEFINED)
+        {
+            int controller_id = static_cast<int>(i);
+            _queue->push(_factory.make_clear_previous_value_command(controller_id));
+            _queue->push(_factory.make_get_value_command(controller_id));
+        }
+    }
+}
