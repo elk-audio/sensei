@@ -98,17 +98,13 @@ public:
      */
     void set_range_output(int index, int value);
 
-    /**
-     * @brief Trigger the MCU to re-send the values of all controllers.
-     */
-    void refresh_controller_values();
+protected:
+    SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
+    MessageFactory _factory;
 
 private:
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
     [[maybe_unused]] int _max_n_input_pins;
     [[maybe_unused]] int _max_n_out_pins;
-
-    MessageFactory _factory;
 };
 
 } // namespace user_frontend
