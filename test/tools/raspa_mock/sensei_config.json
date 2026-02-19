@@ -197,59 +197,12 @@
       "id" : 14,
       "enabled": true,
       "name" : "ROT1",
-      "sensor_type" : "analog_input",
-      "mode" : "on_value_changed",
-      "range" : [0, 15],
+      "sensor_type" : "relative_input",
       "hardware" :
       {
           "hardware_type" : "encoder",
           "polarity" : "active_low",
           "pins" : [1, 2],
-          "delta_ticks" : 1
-      }
-    },
-    {
-      "id" : 15,
-      "enabled": true,
-      "name" : "ROT2",
-      "sensor_type" : "range_input",
-      "mode" : "on_value_changed",
-      "range" : [0, 15],
-      "hardware" :
-      {
-          "hardware_type" : "encoder",
-          "polarity" : "active_low",
-          "pins" : [3, 4],
-          "delta_ticks" : 1
-      }
-    },
-    {
-      "id" : 16,
-      "enabled": true,
-      "name" : "ROT3",
-      "sensor_type" : "analog_input",
-      "mode" : "on_value_changed",
-      "range" : [0, 15],
-      "hardware" :
-      {
-          "hardware_type" : "encoder",
-          "polarity" : "active_low",
-          "pins" : [5, 6],
-          "delta_ticks" : 1
-      }
-    },
-    {
-      "id" : 17,
-      "enabled": true,
-      "name" : "ROT4",
-      "sensor_type" : "analog_input",
-      "mode" : "on_value_changed",
-      "range" : [0, 15],
-      "hardware" :
-      {
-          "hardware_type" : "encoder",
-          "polarity" : "active_low",
-          "pins" : [7, 8],
           "delta_ticks" : 1
       }
     }
