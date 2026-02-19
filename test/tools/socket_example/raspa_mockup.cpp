@@ -16,12 +16,12 @@
 #define le32toh(arg) htonl(arg)
 
 #include "gpio_protocol/gpio_protocol.h"
+#include "options.h"
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
 constexpr int  SOCKET_TIMEOUT_S = 2;
-constexpr auto PING_INTERVAL = std::chrono::milliseconds(25);
-constexpr auto SEND_EVERY_N_PING = 1;
+
 
 constexpr int  SILENT_THRESHOLD = 5;
 
@@ -58,7 +58,8 @@ void print_packet(const GpioPacket& packet)
 class RaspaMockup
 {
 public:
-    RaspaMockup()
+    RaspaMockup(std::chrono::milliseconds send_interval_ms, int sensor_id) : _send_interval(send_interval_ms),
+                                                                             _sensor_id(sensor_id)
     {
         _in_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
         _out_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
@@ -149,7 +150,7 @@ private:
                 handle_incoming_packet(buffer);
                 _silent_count = 0;
             }
-            else //if (bytes <= 0)
+            else
             {
                 std::cout << "Timeout on read: " << std::endl;
                 if (++_silent_count > SILENT_THRESHOLD)
@@ -168,31 +169,30 @@ private:
         {
             if (_connected)
             {
-                /* If we have queued acks, send one of them  */
+                /* If we have queued acks, send them */
                 if (!_ack_list.empty())
                 {
                     std::lock_guard lock(_ack_list_mutex);
-                    if (!_ack_list.empty())
+                    for (auto ack = _ack_list.rbegin(); ack != _ack_list.rend(); ++ack)
                     {
-                        auto ack = _ack_list.front();
-                        auto ret = send(_out_socket, &ack, sizeof(GpioPacket), 0);
+                        auto ret = send(_out_socket, &(*ack), sizeof(GpioPacket), 0);
                         if (ret < sizeof(GpioPacket))
                         {
                             std::cout << "Failed to send ack with error: " << ret << std::endl;
                         }
                         else
                         {
-                            std::cout << "Sent ack to msg: " << from_gpio_protocol_byteord(ack.payload.gpio_ack_data.returned_seq_no) << std::endl;
+                            std::cout << "Sent ack to msg: " << from_gpio_protocol_byteord(ack->payload.gpio_ack_data.returned_seq_no) << std::endl;
                         }
-                        _ack_list.pop_back();
                     }
+                    _ack_list.clear();
                 }
-                else if (_send_count++ > SEND_EVERY_N_PING)
+                else if (_send_count++ > _send_interval.count() / 5)
                 {
-                    /* Send a random value on a random controller */
+                    /* Send a random value on the configured sensor */
                     GpioPacket packet;
                     packet.command = GPIO_CMD_GET_VALUE;
-                    packet.payload.gpio_value_data.controller_id = rand() % 25;
+                    packet.payload.gpio_value_data.controller_id = _sensor_id;
                     packet.payload.gpio_value_data.controller_val = to_gpio_protocol_byteord(rand() % 128);
 
                     auto t = std::chrono::system_clock::now().time_since_epoch();
@@ -208,10 +208,10 @@ private:
                         std::cout << "Sent value msg: "  << packet.payload.gpio_value_data.controller_val << "on sensor" << packet.payload
                         .gpio_value_data.controller_id << std::endl;
                     }
-                    _send_count= 0;
+                    _send_count = 0;
                 }
             }
-            std::this_thread::sleep_for(PING_INTERVAL);
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
 
@@ -243,6 +243,9 @@ private:
     int             _msg_count{0};
     int             _silent_count{0};
     int             _send_count{0};
+
+    int             _sensor_id{0};
+    std::chrono::milliseconds _send_interval{500};
 };
 
 bool running(true);
@@ -252,10 +255,16 @@ static void signal_handler(int sig_number)
     running = false;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    auto options = parse_options(argc, argv);
+    if (!options)
+    {
+        return 1;
+    }
+
     signal(SIGINT, signal_handler);
-    RaspaMockup instance;
+    RaspaMockup instance(options->send_interval, options->sensor_id);
     instance.run();
     while(running)
     {
