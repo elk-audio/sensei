@@ -11,9 +11,11 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 
+#ifdef __APPLE__
 #include <machine/endian.h>
 #define htole32(arg) ntohl(arg)
 #define le32toh(arg) htonl(arg)
+#endif
 
 #include "gpio_protocol/gpio_protocol.h"
 #include "options.h"
@@ -27,12 +29,10 @@ constexpr int  SILENT_THRESHOLD = 5;
 
 using namespace gpio;
 
-/* Dummy task that can act as a stand in for raspalib
+/*
+ * Dummy task that can act as a stand in for raspalib
  * It claims a socket, prints what it receives on it
- * and sends some data to sensei if available 
- * 
- * build cmd: 
- * g++ raspa_mockup.cpp -g -o mockup -lpthread
+ * and sends some data to sensei if available
  */
 
 inline uint32_t to_gpio_protocol_byteord(uint32_t word)
