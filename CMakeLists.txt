@@ -158,7 +158,7 @@ endif()
 #  Compiler Flags and definitions  #
 ####################################
 
-target_compile_features(sensei PRIVATE cxx_std_17)
+target_compile_features(sensei PRIVATE cxx_std_20)
 target_compile_options(sensei PRIVATE -Wall -Wextra -Wno-psabi -fno-rtti -ffast-math)
 
 if (APPLE)

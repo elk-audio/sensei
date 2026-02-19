@@ -27,6 +27,7 @@ endif()
 
 add_executable(unit_tests ${TEST_FILES} ${GRPC_TEST_FILES})
 target_compile_definitions(unit_tests PRIVATE -DSENSEI_DISABLE_LOGGING)
+target_compile_features(unit_tests PRIVATE cxx_std_20)
 
 #########################
 #  Include directories  #

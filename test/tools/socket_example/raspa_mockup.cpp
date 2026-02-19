@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <thread>
+#include <deque>
 #include <cassert>
 #include <cerrno>
 #include <unistd.h>
@@ -10,12 +11,17 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 
+#include <machine/endian.h>
+#define htole32(arg) ntohl(arg)
+#define le32toh(arg) htonl(arg)
+
 #include "gpio_protocol/gpio_protocol.h"
 
 constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr char RASPA_SOCKET[] = "/tmp/raspa";
 constexpr int  SOCKET_TIMEOUT_S = 2;
-constexpr auto PING_INTERVAL = std::chrono::milliseconds(250);
+constexpr auto PING_INTERVAL = std::chrono::milliseconds(25);
+constexpr auto SEND_EVERY_N_PING = 1;
 
 constexpr int  SILENT_THRESHOLD = 5;
 
@@ -162,41 +168,47 @@ private:
         {
             if (_connected)
             {
-                /* If we have a queued ack, send it  */
-                if (_send_ack)
+                /* If we have queued acks, send one of them  */
+                if (!_ack_list.empty())
                 {
-                    auto ret = send(_out_socket, &_ack, sizeof(_ack), 0);
-                    if (ret < sizeof(_ack))
+                    std::lock_guard lock(_ack_list_mutex);
+                    if (!_ack_list.empty())
                     {
-                        std::cout << "Failed to send ack with error: " << ret << std::endl;
+                        auto ack = _ack_list.front();
+                        auto ret = send(_out_socket, &ack, sizeof(GpioPacket), 0);
+                        if (ret < sizeof(GpioPacket))
+                        {
+                            std::cout << "Failed to send ack with error: " << ret << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << "Sent ack to msg: " << from_gpio_protocol_byteord(ack.payload.gpio_ack_data.returned_seq_no) << std::endl;
+                        }
+                        _ack_list.pop_back();
                     }
-                    else
-                    {
-                        std::cout << "Sent ack to msg: " << from_gpio_protocol_byteord(_ack.payload.gpio_ack_data.returned_seq_no) << std::endl;
-                    }
-                    _send_ack = false;
                 }
-                else
+                else if (_send_count++ > SEND_EVERY_N_PING)
                 {
-                    /* Send a random value on controller 5 */
+                    /* Send a random value on a random controller */
                     GpioPacket packet;
                     packet.command = GPIO_CMD_GET_VALUE;
-                    packet.payload.gpio_value_data.controller_id = 5;
+                    packet.payload.gpio_value_data.controller_id = rand() % 25;
                     packet.payload.gpio_value_data.controller_val = to_gpio_protocol_byteord(rand() % 128);
 
                     auto t = std::chrono::system_clock::now().time_since_epoch();
                     packet.timestamp = std::chrono::duration_cast<std::chrono::microseconds>(t).count();  
 
                     auto ret = send(_out_socket, &packet, sizeof(packet), 0);
-                    if (ret < sizeof(_ack))
+                    if (ret < sizeof(GpioPacket))
                     {
                         std::cout << "Failed to send random value: " << ret << std::endl;
                     }
                     else
                     {
-                        std::cout << "Sent value msg: "  << std::endl;
+                        std::cout << "Sent value msg: "  << packet.payload.gpio_value_data.controller_val << "on sensor" << packet.payload
+                        .gpio_value_data.controller_id << std::endl;
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                    _send_count= 0;
                 }
             }
             std::this_thread::sleep_for(PING_INTERVAL);
@@ -210,15 +222,18 @@ private:
         ack.command = GPIO_ACK;
         ack.payload.gpio_ack_data.returned_seq_no = packet.sequence_no;
         /* Signal ok to send it */
-        _ack = ack;
-        _send_ack = true;
+        std::lock_guard lock(_ack_list_mutex);
+        {
+            _ack_list.push_back(ack);
+        }
     }
 
 
     bool            _running{false};
     bool            _connected{false};
-    bool            _send_ack{false};
-    GpioPacket  _ack;
+
+    std::deque<GpioPacket>  _ack_list;
+    std::mutex              _ack_list_mutex;
 
     std::thread     _read_thread;
     std::thread     _write_thread;
@@ -227,6 +242,7 @@ private:
     int             _out_socket{0}; 
     int             _msg_count{0};
     int             _silent_count{0};
+    int             _send_count{0};
 };
 
 bool running(true);
