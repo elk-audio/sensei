@@ -39,7 +39,7 @@ public:
      * @param recv_packet_timeout The blocking timeout for receiving packets
      */
     BaseHwBackend(std::chrono::milliseconds recv_packet_timeout) :
-            _recv_packet_timeout(recv_packet_timeout)
+                  _recv_packet_timeout(recv_packet_timeout)
     {}
 
     virtual ~BaseHwBackend() = default;

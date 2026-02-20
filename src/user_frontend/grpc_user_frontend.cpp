@@ -152,10 +152,10 @@ void AsyncSenseiControllerImpl::_handle_rpcs()
 // GrpcUserFrontend Implementation
 //==============================================================================
 
-GrpcUserFrontend::GrpcUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue,
+GrpcUserFrontend::GrpcUserFrontend(MessageHandler* handler,
                                    const int max_n_input_pins,
                                    const int max_n_digital_out_pins) :
-    UserFrontend(queue, max_n_input_pins, max_n_digital_out_pins),
+    UserFrontend(handler, max_n_input_pins, max_n_digital_out_pins),
     _listen_address(DEFAULT_GRPC_ADDRESS),
     _listen_port(DEFAULT_GRPC_PORT),
     _server_running(false)

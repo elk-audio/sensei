@@ -25,6 +25,7 @@
 
 #include "message/base_message.h"
 #include "message/command_defs.h"
+#include "handlers.h"
 #include "synchronized_queue.h"
 
 namespace sensei {
@@ -57,8 +58,9 @@ class BaseConfiguration
 {
 
 public:
-    BaseConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& source) :
-            _queue(queue),
+    BaseConfiguration(MessageHandler* handler, const std::string& source) :
+            _queue(handler->incoming_queue()),
+            _handler(handler),
             _source(source),
             _enabled(false)
     {
@@ -105,6 +107,7 @@ public:
 
 protected:
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
+    MessageHandler* _handler;
     std::string _source;
     bool _enabled;
 

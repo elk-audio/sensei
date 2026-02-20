@@ -38,10 +38,9 @@ constexpr int       MAX_RESEND_ATTEMPTS = 3;
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("gpio_hw_frontend");
 
-HwFrontend::HwFrontend(SynchronizedQueue <std::unique_ptr<sensei::Command>>*in_queue,
-                       SynchronizedQueue <std::unique_ptr<sensei::BaseMessage>>*out_queue,
-                       hw_backend::BaseHwBackend* hw_backend)
-                : BaseHwFrontend(in_queue, out_queue),
+HwFrontend::HwFrontend(hw_backend::BaseHwBackend* hw_backend,
+                       MessageHandler* handler)
+                : BaseHwFrontend(handler),
                 _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
                 _hw_backend(hw_backend),
                 _state(ThreadState::STOPPED),
@@ -420,9 +419,9 @@ void HwFrontend::_handle_ack(const GpioPacket& ack)
 void HwFrontend::_handle_value(const GpioPacket& packet)
 {
     auto& m = packet.payload.gpio_value_data;
-   _out_queue->push(_message_factory.make_analog_value(m.controller_id,
-                                                       from_gpio_protocol_byteord(m.controller_val),
-                                                       packet.timestamp));
+    _out_queue->push(_message_factory.make_analog_value(m.controller_id,
+                                                        from_gpio_protocol_byteord(m.controller_val),
+                                                        packet.timestamp));
     SENSEI_LOG_DEBUG("Got a value packet!");
 }
 

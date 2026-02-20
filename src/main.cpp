@@ -161,7 +161,8 @@ enum OptionIndex
     CONFIG_FILENAME,
     LOG_FILENAME,
     LOG_LEVEL,
-    LOG_FLUSH_INTERVAL
+    LOG_FLUSH_INTERVAL,
+    SYNCHRONOUS_MODE
 };
 
 const option::Descriptor usage[] =
@@ -246,6 +247,14 @@ const option::Descriptor usage[] =
         SenseiArg::Numeric,
         "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."
     },
+    {
+        SYNCHRONOUS_MODE,
+        0,
+        "x",
+        "synchronous",
+        SenseiArg::None,
+        "\t\t-x --synchronous \tSynchronous Mode. \tEvents are handled directly without queueing."
+    },
 
     { 0, 0, 0, 0, 0, 0}
 };
@@ -295,6 +304,7 @@ int main(int argc, char* argv[])
     int n_output_pins = SENSEI_DEFAULT_N_OUTPUT_PINS;
     std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
     std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
+    sensei::ThreadingMode threading_mode = sensei::ThreadingMode::ASYNCHRONOUS;
     for (int i=0; i<cl_parser.optionsCount(); i++)
     {
         option::Option& opt = cl_buffer[i];
@@ -363,6 +373,10 @@ int main(int argc, char* argv[])
             enable_flush_interval = true;
             break;
 
+        case SYNCHRONOUS_MODE:
+            threading_mode = sensei::ThreadingMode::SYNCHRONOUS;
+            break;
+
         default:
             SenseiArg::print_error("Unhandled option '", opt, "' \n");
             break;
@@ -396,7 +410,7 @@ int main(int argc, char* argv[])
     signal(SIGUSR1, user_signal_handler);
 
     sensei::EventHandler event_handler;
-    if(!event_handler.init(n_input_pins, n_output_pins, config_filename))
+    if(!event_handler.init(n_input_pins, n_output_pins, config_filename, threading_mode))
     {
         std::cerr << "Failed to initialize, check logs for details. Exiting..."
                   << std::endl;

@@ -24,8 +24,8 @@
 #define SENSEI_USER_FRONTEND_H
 
 #include <message/message_factory.h>
-#include "synchronized_queue.h"
 #include "message/message_factory.h"
+#include "handlers.h"
 
 namespace sensei {
 namespace user_frontend {
@@ -33,10 +33,11 @@ namespace user_frontend {
 class UserFrontend
 {
 public:
-    UserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue,
+    UserFrontend(MessageHandler* handler,
                  const int max_n_input_pins,
                  const int max_n_digital_out_pins) :
-            _queue(queue),
+            _handler(handler),
+            _queue(handler->incoming_queue()),
             _max_n_input_pins(max_n_input_pins),
             _max_n_out_pins(max_n_digital_out_pins)
     {}
@@ -104,7 +105,9 @@ public:
     void refresh_controller_values();
 
 private:
+    MessageHandler* _handler;
     SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
+
     [[maybe_unused]] int _max_n_input_pins;
     [[maybe_unused]] int _max_n_out_pins;
 

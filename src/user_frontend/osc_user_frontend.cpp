@@ -90,10 +90,10 @@ ELK_POP_WARNING
 
 }; // anonymous namespace
 
-OSCUserFrontend::OSCUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue,
+OSCUserFrontend::OSCUserFrontend(MessageHandler* handler,
                                  const int max_n_input_pins,
                                  const int max_n_digital_out_pins) :
-        UserFrontend(queue, max_n_input_pins, max_n_digital_out_pins),
+        UserFrontend(handler, max_n_input_pins, max_n_digital_out_pins),
             _osc_server(nullptr),
             _server_port(DEFAULT_SERVER_PORT)
 {

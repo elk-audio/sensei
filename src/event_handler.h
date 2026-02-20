@@ -32,21 +32,30 @@
 #include "output_backend/output_backend.h"
 #include "config_backend/base_configuration.h"
 #include "user_frontend/user_frontend.h"
+#include "handlers.h"
 
 namespace sensei {
 
-class EventHandler
+class EventHandler : public MessageHandler
 {
 public:
     EventHandler() = default;
 
     ~EventHandler() = default;
 
-    bool init(int max_n_input_pins, int max_n_digital_out_pins, const std::string& config_file);
+    bool init(int max_n_input_pins, int max_n_digital_out_pins, const std::string& config_file, ThreadingMode threading_mode);
 
     void handle_events(std::chrono::milliseconds wait_period);
 
     void deinit();
+
+    void handle_event(const BaseMessage* event) override;
+
+    void handle_command(const Command* command) override;
+
+    SynchronizedQueue<std::unique_ptr<Command>>* outgoing_queue() override;
+
+    SynchronizedQueue<std::unique_ptr<BaseMessage>>* incoming_queue() override;
 
     void reload_config()
     {
@@ -55,9 +64,15 @@ public:
     }
 
 private:
-    void _handle_value(std::unique_ptr<Value> value);
-    void _handle_command(std::unique_ptr<Command> cmd);
-    void _handle_error(std::unique_ptr<Error> error);
+    void _handle_event(BaseMessage* event);
+    void _handle_value(Value* value);
+
+    void _handle_hw_frontend_message(std::unique_ptr<BaseMessage> cmd);
+
+    void _handle_command(Command* cmd);
+    void _handle_error(Error* error);
+
+    std::mutex _sync_mutex;
 
     // Inter-modules communication queues
     SynchronizedQueue<std::unique_ptr<Command>> _to_frontend_queue;

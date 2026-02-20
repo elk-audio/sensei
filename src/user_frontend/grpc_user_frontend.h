@@ -95,7 +95,7 @@ private:
 class GrpcUserFrontend : public UserFrontend
 {
 public:
-    GrpcUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue,
+    GrpcUserFrontend(MessageHandler* handler,
                      const int max_n_input_pins,
                      const int max_n_digital_out_pins);
 

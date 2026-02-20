@@ -23,9 +23,8 @@
 
 #include <memory>
 
-#include "synchronized_queue.h"
-#include "message/base_message.h"
 #include "message/base_command.h"
+#include "handlers.h"
 
 namespace sensei {
 namespace hw_frontend {
@@ -38,14 +37,13 @@ class BaseHwFrontend
 public:
     /**
      * @brief Class constructor
-     * @param [in] in_queue Output queue where incoming messages go
-     * @param [in] out_queue Queue for messages to be sent to HW
+     * @param [in] handler MessageHandler for incoming and outgoing messages
     */
-    BaseHwFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
-                   SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue)
+    BaseHwFrontend(MessageHandler* handler)
     {
-        _in_queue = in_queue;
-        _out_queue = out_queue;
+        _handler = handler;
+        _in_queue = handler->outgoing_queue();
+        _out_queue = handler->incoming_queue();
     }
 
     virtual ~BaseHwFrontend() = default;
@@ -74,6 +72,7 @@ public:
     virtual void verify_acks(bool enabled) = 0;
 
 protected:
+    MessageHandler* _handler;
     SynchronizedQueue<std::unique_ptr<Command>>*_in_queue;
     SynchronizedQueue<std::unique_ptr<BaseMessage>>*_out_queue;
 };
@@ -82,9 +81,7 @@ protected:
 class NoOpFrontend : public BaseHwFrontend
 {
 public:
-    NoOpFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
-                 SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue) : BaseHwFrontend(in_queue, out_queue)
-    {}
+    NoOpFrontend(MessageHandler* handler) : BaseHwFrontend(handler) {}
     void run() {}
     void stop() {}
     void mute(bool /*enabled*/) {}
