@@ -234,6 +234,29 @@ private:
     float _input_scale_range_high;
 };
 
+/**
+ * @brief Mapper for sensors that produce a relative value of -1 or +1
+ *        (e.g. encoder increments). Every event is forwarded without
+ *        any previous-value check.
+ */
+class RelativeSensorMapper : public BaseSensorMapper
+{
+public:
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(RelativeSensorMapper)
+
+    explicit RelativeSensorMapper(int index = 0);
+
+    ~RelativeSensorMapper() = default;
+
+    CommandErrorCode apply_command(const Command *cmd) override;
+
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value *value, output_backend::OutputBackend *backend) override;
+
+    std::unique_ptr<Command> process_set_value(Value *value) override;
+};
+
 }; // namespace mapping
 }; // namespace sensei
 

@@ -91,6 +91,7 @@ enum class SensorType
     CONTINUOUS_OUTPUT,
     RANGE_INPUT,
     RANGE_OUTPUT,
+    RELATIVE_INPUT,
     UNDEFINED,
     NO_OUTPUT,
     N_PIN_TYPES

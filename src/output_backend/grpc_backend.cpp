@@ -154,6 +154,14 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
             break;
         }
 
+        case SensorType::RELATIVE_INPUT:
+        {
+            // Relative sensor -> RelativeEvent
+            auto* relative_ev = event.mutable_relative_ev();
+            relative_ev->set_value(static_cast<int32_t>(value));  // -1 or +1
+            break;
+        }
+
         default:
         {
             SENSEI_LOG_ERROR("Trying to create event for unexpected sensor_type: {}", static_cast<int>(sensor_type));

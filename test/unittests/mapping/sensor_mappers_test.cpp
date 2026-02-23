@@ -889,3 +889,116 @@ TEST_F(TestContinuousSensorMapper, test_disabled_process_dont_send_values)
     _mapper.process(input_val, &_backend);
     EXPECT_FLOAT_EQ(fake_reference_value, _backend._last_output_value);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// TestRelativeSensorMapper
+////////////////////////////////////////////////////////////////////////////////
+
+class TestRelativeSensorMapper : public ::testing::Test
+{
+protected:
+
+    TestRelativeSensorMapper()
+    {
+    }
+
+    ~TestRelativeSensorMapper()
+    {
+    }
+
+    void SetUp()
+    {
+        MessageFactory factory;
+        std::vector<std::unique_ptr<Command>> config_cmds;
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_enabled_command(_sensor_idx, _enabled))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
+
+        for (auto const& cmd : config_cmds)
+        {
+            auto status = _mapper.apply_command(cmd.get());
+            ASSERT_EQ(CommandErrorCode::OK, status);
+        }
+    }
+
+    void TearDown()
+    {
+    }
+
+protected:
+    int _sensor_idx{2};
+    bool _enabled{true};
+    std::vector<int> _hw_pin{5};
+    SensorHwType _hw_type{SensorHwType::ENCODER};
+
+    OutputBackendMockup _backend;
+    RelativeSensorMapper _mapper{_sensor_idx};
+};
+
+TEST_F(TestRelativeSensorMapper, test_process)
+{
+    MessageFactory factory;
+
+    auto input_msg = factory.make_analog_value(_sensor_idx, 1);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(1.0f, _backend._last_output_value);
+
+    input_msg = factory.make_analog_value(_sensor_idx, -1);
+    input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(-1.0f, _backend._last_output_value);
+}
+
+TEST_F(TestRelativeSensorMapper, test_every_event_forwarded)
+{
+    // Unlike analog/continuous mappers, relative input has no previous-value guard:
+    // every event must be forwarded regardless of whether the value changed.
+    MessageFactory factory;
+
+    auto input_msg = factory.make_analog_value(_sensor_idx, 1);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(1.0f, _backend._last_output_value);
+
+    // Replace the captured value with a sentinel - if the next process() call
+    // does NOT forward, the sentinel would survive.
+    float fake_reference_value = -123456.789f;
+    _backend._last_output_value = fake_reference_value;
+
+    // Same value again - must still be forwarded
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(1.0f, _backend._last_output_value);
+}
+
+TEST_F(TestRelativeSensorMapper, test_invert)
+{
+    MessageFactory factory;
+    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_invert_enabled_command(_sensor_idx, true)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    auto input_msg = factory.make_analog_value(_sensor_idx, 1);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(-1.0f, _backend._last_output_value);
+
+    input_msg = factory.make_analog_value(_sensor_idx, -1);
+    input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(1.0f, _backend._last_output_value);
+}
+
+TEST_F(TestRelativeSensorMapper, test_disabled_process_dont_send_values)
+{
+    MessageFactory factory;
+    auto ret = _mapper.apply_command(CMD_PTR(factory.make_set_enabled_command(_sensor_idx, false)));
+    ASSERT_EQ(CommandErrorCode::OK, ret);
+
+    float fake_reference_value = -123456.789f;
+    _backend._last_output_value = fake_reference_value;
+
+    auto input_msg = factory.make_analog_value(_sensor_idx, 1);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_FLOAT_EQ(fake_reference_value, _backend._last_output_value);
+}
