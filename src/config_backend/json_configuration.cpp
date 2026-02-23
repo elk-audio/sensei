@@ -194,6 +194,10 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::NO_OUTPUT);
         }
+        else if (sensor_type_str == "relative_input")
+        {
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::RELATIVE_INPUT);
+        }
         else
         {
             SENSEI_LOG_WARNING("\"{}\" is not a recognized sensor type", sensor_type_str);

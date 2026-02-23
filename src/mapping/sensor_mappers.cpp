@@ -779,3 +779,72 @@ CommandErrorCode ContinuousSensorMapper::_set_input_scale_range(float low, float
     _input_scale_range_high = high;
     return status;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// RelativeSensorMapper
+////////////////////////////////////////////////////////////////////////////////
+
+RelativeSensorMapper::RelativeSensorMapper(const int index) :
+    BaseSensorMapper(SensorType::RELATIVE_INPUT, index)
+{}
+
+CommandErrorCode RelativeSensorMapper::apply_command(const Command *cmd)
+{
+    CommandErrorCode status = CommandErrorCode::OK;
+    switch(cmd->type())
+    {
+    case CommandType::SET_SENSOR_TYPE:
+        {
+            assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::RELATIVE_INPUT);
+        };
+        break;
+
+    default:
+        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+        break;
+    }
+
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
+}
+
+void RelativeSensorMapper::put_config_commands_into(CommandIterator out_iterator)
+{
+    BaseSensorMapper::put_config_commands_into(out_iterator);
+}
+
+void RelativeSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
+{
+    if (!_enabled)
+    {
+        return;
+    }
+    assert(value->type() == ValueType::ANALOG);
+
+    int raw_val = static_cast<AnalogValue*>(value)->value();
+    float out_val = (raw_val >= 0) ? 1.0f : -1.0f;
+    if (_invert_value)
+    {
+        out_val = -out_val;
+    }
+
+    // No previous value check - always forward every event
+
+    MessageFactory factory;
+    auto temp_msg = factory.make_output_value(_sensor_index,
+                                              out_val,
+                                              _send_timestamp? value->timestamp() : 0);
+    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+    backend->send(transformed_value, value);
+}
+
+std::unique_ptr<Command> RelativeSensorMapper::process_set_value(Value* /*value*/)
+{
+    return nullptr;
+}

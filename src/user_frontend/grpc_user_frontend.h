@@ -132,6 +132,11 @@ public:
      */
     void populate_controller_map(sensei_rpc::GetControllerMapResponse* response);
 
+    /**
+     * @brief Trigger the MCU to re-send the values of all known controllers.
+     */
+    void refresh_controller_values();
+
 private:
     /**
      * @brief Start the gRPC async server

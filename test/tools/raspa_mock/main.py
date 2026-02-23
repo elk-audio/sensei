@@ -137,23 +137,13 @@ def main():
 
         def test_encoders():
             # from sensei_config.json
-            analog_controller_id = 14
-            range_controller_id = 15
+            controller_id = 14
 
-            # range is 0-15 for both
-            max_value = 15
-
-            # this encoder is specified to use an analog_input sensor
-            check_value(analog_controller_id, 1, 1/max_value)
-            check_value(analog_controller_id, 0, 0)
-            check_value(analog_controller_id, 5, 5/max_value)
-            check_value(analog_controller_id, 250, 1)
-
-            # this encoder is specified to use a range_input sensor
-            check_value(range_controller_id, 1, 1)
-            check_value(range_controller_id, 0, 0)
-            check_value(range_controller_id, 5, 5)
-            check_value(range_controller_id, 250, 15)
+            check_value(controller_id, 1, 1)
+            check_value(controller_id, 0, 1)
+            check_value(controller_id, 5, 1)
+            check_value(controller_id, -1, -1)
+            check_value(controller_id, -200, -1)
 
         test_pots()
         test_buttons()

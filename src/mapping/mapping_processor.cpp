@@ -75,6 +75,10 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
             _mappers[sensor_index].reset(new RangeSensorMapper(sensor_index));
             break;
 
+        case SensorType::RELATIVE_INPUT:
+            _mappers[sensor_index].reset(new RelativeSensorMapper(sensor_index));
+            break;
+
         default:
             status = CommandErrorCode::INVALID_VALUE;
 
