@@ -24,7 +24,7 @@ protected:
 
     void SetUp()
     {
-        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64, 32));
+        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64));
         MessageFactory factory;
 
         auto cmd = CMD_UPTR(factory.make_set_osc_input_port_command(0, _server_port));
@@ -82,7 +82,7 @@ class TestOSCUserFrontendSynchronous : public TestOSCUserFrontend
 {
     void SetUp() override
     {
-        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64, 32, ThreadingMode::SYNCHRONOUS));
+        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64, ThreadingMode::SYNCHRONOUS));
         MessageFactory factory;
 
         auto cmd = CMD_UPTR(factory.make_set_osc_input_port_command(0, _server_port));

@@ -34,12 +34,10 @@ class UserFrontend
 {
 public:
     UserFrontend(MessageHandler* handler,
-                 const int max_n_input_pins,
-                 const int max_n_digital_out_pins,
+                 const int max_n_sensors,
                  ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
             _handler(handler),
-            _max_n_input_pins(max_n_input_pins),
-            _max_n_out_pins(max_n_digital_out_pins),
+            _max_n_sensors(max_n_sensors),
             _threading_mode(threading_mode)
     {}
 
@@ -105,11 +103,10 @@ public:
      */
     void refresh_controller_values();
 
-private:
+protected:
     MessageHandler* _handler;
 
-    [[maybe_unused]] int _max_n_input_pins;
-    [[maybe_unused]] int _max_n_out_pins;
+    [[maybe_unused]] int _max_n_sensors;
     ThreadingMode _threading_mode;
 
     MessageFactory _factory;

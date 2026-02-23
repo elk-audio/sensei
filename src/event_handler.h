@@ -43,7 +43,7 @@ public:
 
     virtual ~EventHandler() = default;
 
-    bool init(int max_n_input_pins, int max_n_digital_out_pins, const std::string& config_file, ThreadingMode threading_mode);
+    bool init(int max_n_sensors, const std::string& config_file, ThreadingMode threading_mode);
 
     void handle_events(std::chrono::milliseconds wait_period);
 

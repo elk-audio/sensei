@@ -37,8 +37,7 @@ namespace user_frontend {
 class OSCUserFrontend : public UserFrontend
 {
 public:
-    OSCUserFrontend(MessageHandler* handler, const int max_n_input_pins,
-                        const int max_n_digital_out_pins,
+    OSCUserFrontend(MessageHandler* handler, const int max_n_sensors,
                         ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~OSCUserFrontend()

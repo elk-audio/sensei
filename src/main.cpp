@@ -35,8 +35,6 @@
 
 #define SENSEI_DEFAULT_N_INPUT_PINS         64
 #define SENSEI_DEFAULT_N_INPUT_PINS_STR     "64"
-#define SENSEI_DEFAULT_N_OUTPUT_PINS        32
-#define SENSEI_DEFAULT_N_OUTPUT_PINS_STR    "32"
 #define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
@@ -156,7 +154,6 @@ enum OptionIndex
     HELP,
     VERSION,
     N_INPUT_PINS,
-    N_OUTPUT_PINS,
     SLEEP_PERIOD,
     CONFIG_FILENAME,
     LOG_FILENAME,
@@ -198,14 +195,6 @@ const option::Descriptor usage[] =
         "input-pins",
         SenseiArg::Numeric,
         "\t\t-i <value>, --input-pins=<value> \tSpecify number of configurable pins [default=" SENSEI_DEFAULT_N_INPUT_PINS_STR "]."
-    },
-    {
-        N_OUTPUT_PINS,
-        0,
-        "o",
-        "output-pins",
-        SenseiArg::Numeric,
-        "\t\t-o <value>, --output-pins=<value> \tSpecify number of digital output pins [default=" SENSEI_DEFAULT_N_OUTPUT_PINS_STR "]."
     },
     {
         SLEEP_PERIOD,
@@ -301,7 +290,6 @@ int main(int argc, char* argv[])
     }
 
     int n_input_pins = SENSEI_DEFAULT_N_INPUT_PINS;
-    int n_output_pins = SENSEI_DEFAULT_N_OUTPUT_PINS;
     std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
     std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
     sensei::ThreadingMode threading_mode = sensei::ThreadingMode::ASYNCHRONOUS;
@@ -327,19 +315,6 @@ int main(int argc, char* argv[])
                     return 1;
                 }
                 n_input_pins = parsed_int;
-            }
-            break;
-
-        case N_OUTPUT_PINS:
-            {
-                int parsed_int = atoi(opt.arg);
-                // horrible, but that's how atoi works and std::stoi needs exceptions
-                if (parsed_int == 0)
-                {
-                    SenseiArg::print_error("Option '", opt, "' invalid number\n");
-                    return 1;
-                }
-                n_output_pins = parsed_int;
             }
             break;
 
@@ -410,7 +385,7 @@ int main(int argc, char* argv[])
     signal(SIGUSR1, user_signal_handler);
 
     sensei::EventHandler event_handler;
-    if(!event_handler.init(n_input_pins, n_output_pins, config_filename, threading_mode))
+    if(!event_handler.init(n_input_pins, config_filename, threading_mode))
     {
         std::cerr << "Failed to initialize, check logs for details. Exiting..."
                   << std::endl;

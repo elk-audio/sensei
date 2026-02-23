@@ -36,7 +36,7 @@ protected:
         MessageFactory factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
 
-        _user_frontend.reset(new GrpcUserFrontend(&_event_queue, 64, 32));
+        _user_frontend.reset(new GrpcUserFrontend(&_handler, 64));
         _backend.set_user_frontend(_user_frontend.get());
 
         // Some per-pin configs
@@ -74,7 +74,7 @@ protected:
     GrpcBackend _backend{_max_n_sensors};
 
     std::unique_ptr<GrpcUserFrontend> _user_frontend;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
+    MessageHandlerMock _handler;
     int _server_port{50051};
 
     std::shared_ptr<grpc::Channel> _channel;

@@ -31,7 +31,7 @@ protected:
     void SetUp()
     {
         // Create user frontend (starts server on default port 50051)
-        _user_frontend.reset(new GrpcUserFrontend(&_event_queue, _max_controllers, 32));
+        _user_frontend.reset(new GrpcUserFrontend(&_handler, _max_controllers, ThreadingMode::ASYNCHRONOUS));
 
         // Create gRPC client
         std::stringstream ss;
@@ -49,7 +49,7 @@ protected:
 
     static const int _max_controllers{64};
     std::unique_ptr<GrpcUserFrontend> _user_frontend;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
+    MessageHandlerMock _handler;
     int _server_port{50051};
     std::string _server_address;
 
@@ -283,11 +283,11 @@ TEST_F(TestGrpcUserFrontend, test_update_led_rpc)
     ASSERT_TRUE(status.ok());
 
     // Wait for message to be queued
-    _event_queue.wait_for_data(std::chrono::milliseconds(50));
-    ASSERT_FALSE(_event_queue.empty());
+    _handler.event_queue.wait_for_data(std::chrono::milliseconds(50));
+    ASSERT_FALSE(_handler.event_queue.empty());
 
     // Verify correct message was created
-    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    std::unique_ptr<BaseMessage> event = _handler.event_queue.pop();
     ASSERT_EQ(MessageType::VALUE, event->base_type());
 
     auto val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
@@ -309,10 +309,10 @@ TEST_F(TestGrpcUserFrontend, test_update_led_rpc_off)
 
     ASSERT_TRUE(status.ok());
 
-    _event_queue.wait_for_data(std::chrono::milliseconds(50));
-    ASSERT_FALSE(_event_queue.empty());
+    _handler.event_queue.wait_for_data(std::chrono::milliseconds(50));
+    ASSERT_FALSE(_handler.event_queue.empty());
 
-    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    std::unique_ptr<BaseMessage> event = _handler.event_queue.pop();
     auto val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
 
     ASSERT_EQ(3, val->index());
@@ -336,21 +336,21 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
     ASSERT_TRUE(status.ok());
 
     // Wait for message to be queued
-    _event_queue.wait_for_data(std::chrono::milliseconds(50));
+    _handler.event_queue.wait_for_data(std::chrono::milliseconds(50));
 
     // check for GET_VALUE commands only for known controllers
     for (int id : known_controllers)
     {
-        ASSERT_FALSE(_event_queue.empty());
+        ASSERT_FALSE(_handler.event_queue.empty());
         {
-            std::unique_ptr<BaseMessage> event = _event_queue.pop();
+            std::unique_ptr<BaseMessage> event = _handler.event_queue.pop();
             ASSERT_EQ(MessageType::COMMAND, event->base_type());
             auto val = static_unique_ptr_cast<ClearPreviousValueCommand, BaseMessage>(std::move(event));
             ASSERT_EQ(CommandType::CLEAR_PREVIOUS_VALUE, val->type());
             ASSERT_EQ(val->index(), id);
         }
         {
-            std::unique_ptr<BaseMessage> event = _event_queue.pop();
+            std::unique_ptr<BaseMessage> event = _handler.event_queue.pop();
             ASSERT_EQ(MessageType::COMMAND, event->base_type());
             auto val = static_unique_ptr_cast<GetValueCommand, BaseMessage>(std::move(event));
             ASSERT_EQ(CommandType::GET_VALUE, val->type());
@@ -359,7 +359,7 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
     }
 
     // Queue should be empty - no commands for unknown controllers
-    ASSERT_TRUE(_event_queue.empty());
+    ASSERT_TRUE(_handler.event_queue.empty());
 }
 
 TEST_F(TestGrpcUserFrontend, test_concurrent_operations)

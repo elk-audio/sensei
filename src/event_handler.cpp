@@ -43,8 +43,7 @@ ELK_DISABLE_UNUSED_CONST_VARIABLE
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("eventhandler");
 ELK_POP_WARNING
 
-bool EventHandler::init(int max_n_input_pins,
-                        int max_n_digital_out_pins,
+bool EventHandler::init(int max_n_sensors,
                         const std::string& config_file,
                         ThreadingMode threading_mode)
 {
@@ -100,7 +99,7 @@ bool EventHandler::init(int max_n_input_pins,
         return false;
     }
 
-    _processor = std::make_unique<mapping::MappingProcessor>(max_n_input_pins);
+    _processor = std::make_unique<mapping::MappingProcessor>(max_n_sensors);
 
     switch (config.backend_config.type)
     {
@@ -112,8 +111,8 @@ bool EventHandler::init(int max_n_input_pins,
         // The frontend runs the gRPC server where subscriptions are made so the
         // backend needs to forward events to the frontend. If we decide to fully
         // remove OSC support then this could be refactored.
-        auto grpc_backend = std::make_unique<output_backend::GrpcBackend>(max_n_input_pins);
-        auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(this, max_n_input_pins, max_n_digital_out_pins, threading_mode);
+        auto grpc_backend = std::make_unique<output_backend::GrpcBackend>(max_n_sensors);
+        auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(this, max_n_sensors, threading_mode);
         grpc_backend->set_user_frontend(grpc_frontend.get());
 
         _output_backend = std::move(grpc_backend);
@@ -125,8 +124,8 @@ bool EventHandler::init(int max_n_input_pins,
     case BackendType::OSC:
     default:
         SENSEI_LOG_INFO("Initializing OSC backend");
-        _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
-        _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(this, max_n_input_pins, max_n_digital_out_pins, threading_mode);
+        _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_sensors);
+        _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(this, max_n_sensors, threading_mode);
         break;
     }
 

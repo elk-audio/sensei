@@ -30,7 +30,6 @@ template <class T> class SynchronizedQueue
 public:
     void push(T const& message)
     {
-        assert(message);
         std::lock_guard<std::mutex> lock(_queue_mutex);
         _queue.push_front(message);
         _notifier.notify_one();

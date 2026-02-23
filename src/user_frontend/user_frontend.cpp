@@ -82,25 +82,3 @@ void UserFrontend::set_range_output(int index, int value)
         _handler->process_event(&e);
     }
 }
-
-void UserFrontend::refresh_controller_values()
-{
-    // Request current values from all controllers
-    for (int i=0; i<_max_n_input_pins; ++i)
-    {
-        if (_threading_mode == ThreadingMode::ASYNCHRONOUS)
-        {
-            {
-                _handler->post_event(_factory.make_clear_previous_value_command(i));
-                _handler->post_event(_factory.make_get_value_command(i));
-            }
-        }
-        else
-        {
-            auto clear_cmd = ClearPreviousValueCommand(i, true);
-            auto get_cmd = GetValueCommand(i, true);
-            _handler->process_event(&clear_cmd);
-            _handler->process_event(&get_cmd);
-        }
-    }
-}
