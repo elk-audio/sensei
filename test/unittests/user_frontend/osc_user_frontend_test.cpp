@@ -24,7 +24,7 @@ protected:
 
     void SetUp()
     {
-        _user_frontend.reset(new user_frontend::OSCUserFrontend(&_message_handler, 64, 32));
+        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64, 32));
         MessageFactory factory;
 
         auto cmd = CMD_UPTR(factory.make_set_osc_input_port_command(0, _server_port));
@@ -47,6 +47,7 @@ protected:
     int _server_port{25000};
     lo_address _address;
 };
+
 
 TEST_F(TestOSCUserFrontend, test_set_pin_enabled)
 {
@@ -75,4 +76,31 @@ TEST_F(TestOSCUserFrontend, test_set_output)
     ASSERT_EQ(5, val->index());
     ASSERT_FLOAT_EQ(12, val->value());
     ASSERT_TRUE(_message_handler.event_queue.empty());
+}
+
+class TestOSCUserFrontendSynchronous : public TestOSCUserFrontend
+{
+    void SetUp() override
+    {
+        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64, 32, ThreadingMode::SYNCHRONOUS));
+        MessageFactory factory;
+
+        auto cmd = CMD_UPTR(factory.make_set_osc_input_port_command(0, _server_port));
+        auto status = _user_frontend->apply_command(cmd.get());
+        ASSERT_EQ(CommandErrorCode::OK, status);
+
+        std::stringstream port_stream;
+        port_stream << _server_port;
+        auto port_str = port_stream.str();
+        _address = lo_address_new("localhost", port_str.c_str());
+    }
+};
+
+TEST_F(TestOSCUserFrontendSynchronous, test_synchronous_mode)
+{
+    lo_send(_address, "/set_enabled", "ii", 5, 1);
+    _message_handler.event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_message_handler.processed_events.empty());
+    auto event_reps = _message_handler.processed_events.front();
+    ASSERT_EQ("Set Enabled", event_reps);
 }

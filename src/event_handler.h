@@ -32,7 +32,7 @@
 #include "output_backend/output_backend.h"
 #include "config_backend/base_configuration.h"
 #include "user_frontend/user_frontend.h"
-#include "handlers.h"
+#include "handler_interface.h"
 
 namespace sensei {
 
@@ -41,7 +41,7 @@ class EventHandler : public MessageHandler
 public:
     EventHandler() = default;
 
-    ~EventHandler() = default;
+    virtual ~EventHandler() = default;
 
     bool init(int max_n_input_pins, int max_n_digital_out_pins, const std::string& config_file, ThreadingMode threading_mode);
 
@@ -49,13 +49,11 @@ public:
 
     void deinit();
 
-    void handle_event(const BaseMessage* event) override;
+    void process_event(const BaseMessage* event) override;
 
-    void handle_command(const Command* command) override;
+    void post_event(std::unique_ptr<BaseMessage> event) override;
 
     SynchronizedQueue<std::unique_ptr<Command>>* outgoing_queue() override;
-
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* incoming_queue() override;
 
     void reload_config()
     {
@@ -73,6 +71,7 @@ private:
     void _handle_error(Error* error);
 
     std::mutex _sync_mutex;
+    ThreadingMode _mode;
 
     // Inter-modules communication queues
     SynchronizedQueue<std::unique_ptr<Command>> _to_frontend_queue;

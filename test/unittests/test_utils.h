@@ -6,7 +6,7 @@
 
 #include "utils.h"
 #include "message/message_factory.h"
-#include "handlers.h"
+#include "handler_interface.h"
 
 #define CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
 #define CMD_PTR(msg) CMD_UPTR(msg).get()
@@ -46,19 +46,15 @@ inline bool operator==(const MultiplexerData& lhs, const MultiplexerData& rhs)
 class MessageHandlerMock : public MessageHandler
 {
 public:
-    void handle_event(const BaseMessage* event) override
+    void process_event(const BaseMessage* event) override
     {
-        rec_event = event;
+        // Events are stack objects and cant be saved, so just store their representation
+        processed_events.push_back(event->representation());
     }
 
-    void handle_command(const Command* command) override
+    virtual void post_event(std::unique_ptr<BaseMessage> event) override
     {
-        rec_command = command;
-    }
-
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* incoming_queue() override
-    {
-        return &event_queue;
+        event_queue.push(std::move(event));
     }
 
     SynchronizedQueue<std::unique_ptr<Command>>* outgoing_queue() override
@@ -68,6 +64,7 @@ public:
 
     SynchronizedQueue<std::unique_ptr<BaseMessage>> event_queue;
     SynchronizedQueue<std::unique_ptr<Command>> to_frontend_queue;
+    std::vector<std::string> processed_events;
 
     const BaseMessage* rec_event{nullptr};
     const Command* rec_command{nullptr};

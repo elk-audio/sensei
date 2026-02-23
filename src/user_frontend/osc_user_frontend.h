@@ -38,7 +38,8 @@ class OSCUserFrontend : public UserFrontend
 {
 public:
     OSCUserFrontend(MessageHandler* handler, const int max_n_input_pins,
-                        const int max_n_digital_out_pins);
+                        const int max_n_digital_out_pins,
+                        ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~OSCUserFrontend()
     {

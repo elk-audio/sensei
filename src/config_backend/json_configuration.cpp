@@ -60,7 +60,7 @@ ConfigStatus JsonConfiguration::read(Config& config)
     }
 
     /* Start by disabling all pins to mute the board while sending the configuration commands */
-    _queue->push(_message_factory.make_enable_sending_packets_command(0, false));
+    _handler->post_event(_message_factory.make_enable_sending_packets_command(0, false));
     const Json::Value& hw_frontend = json_config["hw_frontend"];
     const Json::Value& backends = json_config["backends"];
     const Json::Value& sensors = json_config["sensors"];
@@ -96,7 +96,7 @@ ConfigStatus JsonConfiguration::read(Config& config)
     }
 
     /* The last commands enables sending of packets */
-    _queue->push(_message_factory.make_enable_sending_packets_command(0, true));
+    _handler->post_event(_message_factory.make_enable_sending_packets_command(0, true));
     return ConfigStatus::OK;
 }
 
@@ -149,7 +149,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     if (name.isString())
     {
         auto m = _message_factory.make_set_sensor_name_command(sensor_id, name.asString());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read sensor type configuration */
@@ -199,7 +199,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
             SENSEI_LOG_WARNING("\"{}\" is not a recognized sensor type", sensor_type_str);
             return ConfigStatus::PARAMETER_ERROR;
         }
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     const Json::Value& hw_config = sensor["hardware"];
@@ -217,7 +217,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     if (enabled.isBool())
     {
         auto m = _message_factory.make_set_enabled_command(sensor_id, enabled.asBool());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read sending mode configuration */
@@ -228,12 +228,12 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
         if (mode_str == "continuous")
         {
             auto m = _message_factory.make_set_sending_mode_command(sensor_id, SendingMode::CONTINUOUS);
-            _queue->push(std::move(m));
+            _handler->post_event(std::move(m));
         }
         else if (mode_str == "on_value_changed")
         {
             auto m = _message_factory.make_set_sending_mode_command(sensor_id, SendingMode::ON_VALUE_CHANGED);
-            _queue->push(std::move(m));
+            _handler->post_event(std::move(m));
         }
         else
         {
@@ -247,7 +247,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     if (inverted.isBool())
     {
         auto m = _message_factory.make_set_invert_enabled_command(sensor_id, inverted.asBool());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read range configuration */
@@ -255,7 +255,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     if (range.isArray() && range.size() >= 2)
     {
         auto m = _message_factory.make_set_input_range_command(sensor_id, range[0].asFloat(), range[1].asFloat());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read sensor timestamp output configuration */
@@ -263,7 +263,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     if (enabled.isBool())
     {
         auto m = _message_factory.make_set_send_timestamp_enabled(sensor_id, timestamped.asBool());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     return ConfigStatus::OK ;
@@ -321,7 +321,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
             SENSEI_LOG_WARNING("\"{}\" is not a recognized sensor hardware type", hw_type_str);
             return ConfigStatus::PARAMETER_ERROR;
         }
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* For gpio protocol compliant configs, we need to set the hw type before assigning pins to it */
@@ -357,7 +357,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
             SENSEI_LOG_WARNING("Multiplexer pin is required");
             return ConfigStatus::PARAMETER_ERROR;
         }
-        _queue->push(_message_factory.make_set_multiplexed_sensor_command(sensor_id, id, pin));
+        _handler->post_event(_message_factory.make_set_multiplexed_sensor_command(sensor_id, id, pin));
     }
 
     /* read tick divisor configuration */
@@ -365,7 +365,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (ticks.isInt())
     {
         auto m = _message_factory.make_set_sending_delta_ticks_command(sensor_id, ticks.asInt());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read adc bit resolution configuration */
@@ -373,7 +373,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (res.isInt())
     {
         auto m = _message_factory.make_set_adc_bit_resolution_command(sensor_id, res.asInt());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read polarity configuration */
@@ -395,7 +395,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
             SENSEI_LOG_WARNING("Unrecognised polarity: \"{}\"", pol_str);
             return ConfigStatus::PARAMETER_ERROR;
         }
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read sensor filter time constant configuration */
@@ -403,7 +403,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (time_constant.isNumeric())
     {
         auto m = _message_factory.make_set_analog_time_constant_command(sensor_id, time_constant.asFloat());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read slider threshold configuration */
@@ -411,7 +411,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (threshold.isInt())
     {
         auto m = _message_factory.make_set_slider_threshold_command(sensor_id, threshold.asInt());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read fast mode configuration */
@@ -419,7 +419,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (fast_mode.isBool())
     {
         auto m = _message_factory.make_set_fast_mode_command(sensor_id, fast_mode.asBool());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     return ConfigStatus::OK;
@@ -447,13 +447,13 @@ ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend, Backe
     if (enabled.isBool())
     {
         auto m = _message_factory.make_set_send_output_enabled_command(backend_id, enabled.asBool());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
     const Json::Value& raw_input_enabled = backend["raw_input_enabled"];
     if (raw_input_enabled.isBool())
     {
         auto m = _message_factory.make_set_send_raw_input_enabled_command(backend_id, raw_input_enabled.asBool());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* Type specific configuration */
@@ -486,7 +486,7 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
     if (host.isString())
     {
         auto m = _message_factory.make_set_osc_output_host_command(id, host.asString());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read port number configuration */
@@ -494,21 +494,21 @@ ConfigStatus JsonConfiguration::handle_osc_backend(const Json::Value& backend, i
     if (port.isInt())
     {
         auto m = _message_factory.make_set_osc_output_port_command(id, port.asInt());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
     /* read base path configuration */
     const Json::Value& path = backend["base_path"];
     if (path.isString())
     {
         auto m = _message_factory.make_set_osc_output_base_path_command(id, path.asString());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
     /* read base path for raw inputs  */
     const Json::Value& raw_path = backend["base_raw_input_path"];
     if (raw_path.isString())
     {
         auto m = _message_factory.make_set_osc_output_raw_path_command(id, raw_path.asString());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
     return ConfigStatus::OK;
 }
@@ -520,7 +520,7 @@ ConfigStatus JsonConfiguration::handle_grpc_backend(const Json::Value& backend, 
     if (listen_address.isString())
     {
         auto m = _message_factory.make_set_grpc_listen_address_command(id, listen_address.asString());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     /* read listen port configuration */
@@ -528,7 +528,7 @@ ConfigStatus JsonConfiguration::handle_grpc_backend(const Json::Value& backend, 
     if (listen_port.isInt())
     {
         auto m = _message_factory.make_set_grpc_listen_port_command(id, listen_port.asInt());
-        _queue->push(std::move(m));
+        _handler->post_event(std::move(m));
     }
 
     return ConfigStatus::OK;
@@ -543,7 +543,7 @@ ConfigStatus JsonConfiguration::read_pins(const Json::Value& pin_list, int senso
         {
             pins.push_back(p.asInt());
         }
-        _queue->push(_message_factory.make_set_hw_pins_command(sensor_id, pins));
+        _handler->post_event(_message_factory.make_set_hw_pins_command(sensor_id, pins));
     }
     /* Pins is not a mandatory configuration parameter */
     return ConfigStatus::OK;

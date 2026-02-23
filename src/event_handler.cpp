@@ -49,7 +49,8 @@ bool EventHandler::init(int max_n_input_pins,
                         ThreadingMode threading_mode)
 {
     config::Config config;
-    _config_backend.reset(new config::JsonConfiguration(this, config_file));
+    _mode = threading_mode;
+    _config_backend.reset(new config::JsonConfiguration(this, config_file, threading_mode));
     auto ret = _config_backend->read(config);
     if (ret != config::ConfigStatus::OK)
     {
@@ -76,19 +77,19 @@ bool EventHandler::init(int max_n_input_pins,
     {
     case HwFrontendType::RASPA_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Hw Frontend with socket hw backend");
-        _hw_backend = std::make_unique<hw_backend::GpioHwSocket>("/tmp/raspa", HWBACKEND_TIMEOUT);
-        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(_hw_backend.get(), this);
+        _hw_backend = std::make_unique<hw_backend::GpioHwSocket>("/tmp/raspa", HWBACKEND_TIMEOUT, threading_mode);
+        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(_hw_backend.get(), this, threading_mode);
         break;
 
     case HwFrontendType::ELK_PI_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Frontend with Elk Pi hw backend");
         _hw_backend = std::make_unique<hw_backend::shiftregister_gpio::ShiftregGpio>(HWBACKEND_TIMEOUT);
-        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(_hw_backend.get(), this);
+        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(_hw_backend.get(), this, threading_mode);
         break;
 
     default:
-        _hw_backend = std::make_unique<hw_backend::NoOpHwBackend>(HWBACKEND_TIMEOUT);
-        _hw_frontend = std::make_unique<hw_frontend::NoOpFrontend>(this);
+        _hw_backend = std::make_unique<hw_backend::NoOpHwBackend>(HWBACKEND_TIMEOUT, threading_mode);
+        _hw_frontend = std::make_unique<hw_frontend::NoOpFrontend>(this, threading_mode);
         SENSEI_LOG_ERROR("No HW Frontend configured");
         break;
     }
@@ -112,7 +113,7 @@ bool EventHandler::init(int max_n_input_pins,
         // backend needs to forward events to the frontend. If we decide to fully
         // remove OSC support then this could be refactored.
         auto grpc_backend = std::make_unique<output_backend::GrpcBackend>(max_n_input_pins);
-        auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(this, max_n_input_pins, max_n_digital_out_pins);
+        auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(this, max_n_input_pins, max_n_digital_out_pins, threading_mode);
         grpc_backend->set_user_frontend(grpc_frontend.get());
 
         _output_backend = std::move(grpc_backend);
@@ -125,7 +126,7 @@ bool EventHandler::init(int max_n_input_pins,
     default:
         SENSEI_LOG_INFO("Initializing OSC backend");
         _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
-        _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(this, max_n_input_pins, max_n_digital_out_pins);
+        _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(this, max_n_input_pins, max_n_digital_out_pins, threading_mode);
         break;
     }
 
@@ -309,12 +310,19 @@ void EventHandler::_handle_error(Error* error)
     SENSEI_LOG_ERROR("Hardware Error: {}", error->representation());
 }
 
-void EventHandler::handle_event(const BaseMessage* event)
+void EventHandler::process_event(const BaseMessage* event)
 {
     std::scoped_lock lock(_sync_mutex);
     // TODO - Fix without casting away constness
     _handle_event(const_cast<BaseMessage*>(event));
-    // Todo - handle passed on messages directly
+    if (event->base_type() == MessageType::COMMAND)
+    {
+        auto typed_cmd = static_cast<const Command*>(event);
+        if (typed_cmd->destination() & CommandDestination::HARDWARE_FRONTEND)
+        {
+            _hw_frontend->process_command(typed_cmd);
+        }
+    }
 }
 
 SynchronizedQueue<std::unique_ptr<Command>>* EventHandler::outgoing_queue()
@@ -322,11 +330,7 @@ SynchronizedQueue<std::unique_ptr<Command>>* EventHandler::outgoing_queue()
     return &_to_frontend_queue;
 }
 
-void EventHandler::handle_command(const Command* command)
+void EventHandler::post_event(std::unique_ptr<BaseMessage> event)
 {
-}
-
-SynchronizedQueue<std::unique_ptr<BaseMessage>>* EventHandler::incoming_queue()
-{
-    return &_event_queue;
+    _event_queue.push(std::move(event));
 }

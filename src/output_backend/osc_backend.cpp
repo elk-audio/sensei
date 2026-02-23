@@ -89,7 +89,7 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
     // TODO: see if it's worth checking errors in lo_send calls
     int sensor_index = transformed_value->index();
 
-    SENSEI_LOG_INFO("OSC backend, got value to send");
+    SENSEI_LOG_DEBUG("OSC backend, got value to send");
     if (_send_output_active)
     {
         if (transformed_value->timestamp() == 0)

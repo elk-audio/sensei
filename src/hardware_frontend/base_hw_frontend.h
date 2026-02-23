@@ -24,7 +24,7 @@
 #include <memory>
 
 #include "message/base_command.h"
-#include "handlers.h"
+#include "handler_interface.h"
 
 namespace sensei {
 namespace hw_frontend {
@@ -39,11 +39,12 @@ public:
      * @brief Class constructor
      * @param [in] handler MessageHandler for incoming and outgoing messages
     */
-    BaseHwFrontend(MessageHandler* handler)
+    BaseHwFrontend(MessageHandler* handler,
+                   ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS)
     {
         _handler = handler;
         _in_queue = handler->outgoing_queue();
-        _out_queue = handler->incoming_queue();
+        _threading_mode = threading_mode;
     }
 
     virtual ~BaseHwFrontend() = default;
@@ -57,6 +58,12 @@ public:
      * @brief Stops the read and write threads if they are running
      */
     virtual void stop() = 0;
+
+    /**
+     * @brief Process a command directly in the calling thread instead of queueing it
+     * @param cmd The command to process
+     */
+    virtual void process_command(const Command* cmd) = 0;
 
     /**
      * @brief Stops the flow of messages. If set to true, incoming packets
@@ -74,16 +81,19 @@ public:
 protected:
     MessageHandler* _handler;
     SynchronizedQueue<std::unique_ptr<Command>>*_in_queue;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>*_out_queue;
+    ThreadingMode _threading_mode;
 };
+
 
 
 class NoOpFrontend : public BaseHwFrontend
 {
 public:
-    NoOpFrontend(MessageHandler* handler) : BaseHwFrontend(handler) {}
+    NoOpFrontend(MessageHandler* handler,
+                 ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) : BaseHwFrontend(handler, threading_mode) {}
     void run() {}
     void stop() {}
+    virtual void process_command(const Command* /*cmd*/) {}
     void mute(bool /*enabled*/) {}
     void verify_acks(bool /*enabled*/) {}
 };

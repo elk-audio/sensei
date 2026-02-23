@@ -92,8 +92,9 @@ ELK_POP_WARNING
 
 OSCUserFrontend::OSCUserFrontend(MessageHandler* handler,
                                  const int max_n_input_pins,
-                                 const int max_n_digital_out_pins) :
-        UserFrontend(handler, max_n_input_pins, max_n_digital_out_pins),
+                                 const int max_n_digital_out_pins,
+                                 ThreadingMode threading_mode) :
+        UserFrontend(handler, max_n_input_pins, max_n_digital_out_pins, threading_mode),
             _osc_server(nullptr),
             _server_port(DEFAULT_SERVER_PORT)
 {

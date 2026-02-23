@@ -30,8 +30,9 @@ namespace config {
 class JsonConfiguration : public BaseConfiguration
 {
 public:
-    JsonConfiguration(MessageHandler* handler, const std::string& file) :
-            BaseConfiguration(handler, file)
+    JsonConfiguration(MessageHandler* handler, const std::string& file,
+                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
+            BaseConfiguration(handler, file, threading_mode)
     {}
 
     ~JsonConfiguration() = default;

@@ -147,7 +147,7 @@ public: \
     {\
         return _data;\
     }\
-private:\
+/* private:\ */ \
     ClassName(const int sensor_index,\
               const InternalType data,\
               const uint32_t timestamp=0) :\

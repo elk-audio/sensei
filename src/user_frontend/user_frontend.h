@@ -25,7 +25,7 @@
 
 #include <message/message_factory.h>
 #include "message/message_factory.h"
-#include "handlers.h"
+#include "handler_interface.h"
 
 namespace sensei {
 namespace user_frontend {
@@ -35,11 +35,12 @@ class UserFrontend
 public:
     UserFrontend(MessageHandler* handler,
                  const int max_n_input_pins,
-                 const int max_n_digital_out_pins) :
+                 const int max_n_digital_out_pins,
+                 ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
             _handler(handler),
-            _queue(handler->incoming_queue()),
             _max_n_input_pins(max_n_input_pins),
-            _max_n_out_pins(max_n_digital_out_pins)
+            _max_n_out_pins(max_n_digital_out_pins),
+            _threading_mode(threading_mode)
     {}
 
     virtual ~UserFrontend()
@@ -106,10 +107,10 @@ public:
 
 private:
     MessageHandler* _handler;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
 
     [[maybe_unused]] int _max_n_input_pins;
     [[maybe_unused]] int _max_n_out_pins;
+    ThreadingMode _threading_mode;
 
     MessageFactory _factory;
 };

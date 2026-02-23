@@ -50,7 +50,8 @@ public:
     * @param [in] handler MessageHandler for incoming and outgoing messages
     */
     HwFrontend(hw_backend::BaseHwBackend* hw_backend,
-               MessageHandler* handler = nullptr);
+               MessageHandler* handler = nullptr,
+               ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~HwFrontend()
     {}
@@ -64,6 +65,8 @@ public:
     * @brief Stops the frontend if it is running
     */
     void stop() override;
+
+    void process_command(const Command* cmd) override;
 
     /**
      * @brief Stops the flow of messages. If enabled, incoming packets are silently dropped.
@@ -107,6 +110,7 @@ private:
     std::thread     _read_thread;
     std::thread     _write_thread;
 
+    std::mutex      _send_list_mutex;
     std::mutex      _send_mutex;
     std::condition_variable _ready_to_send_notifier;
 

@@ -39,8 +39,9 @@ constexpr int       MAX_RESEND_ATTEMPTS = 3;
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("gpio_hw_frontend");
 
 HwFrontend::HwFrontend(hw_backend::BaseHwBackend* hw_backend,
-                       MessageHandler* handler)
-                : BaseHwFrontend(handler),
+                       MessageHandler* handler,
+                       ThreadingMode threading_mode)
+                : BaseHwFrontend(handler, threading_mode),
                 _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
                 _hw_backend(hw_backend),
                 _state(ThreadState::STOPPED),
@@ -95,6 +96,12 @@ void HwFrontend::stop()
     SENSEI_LOG_INFO("Threads stopped");
 }
 
+void HwFrontend::process_command(const Command* cmd)
+{
+    // Todo - this doesn't actually send a message directly, it does the preprocessing and queus it for sending
+    _process_sensei_command(cmd);
+}
+
 void HwFrontend::mute(bool enabled)
 {
     _muted = enabled;
@@ -139,12 +146,15 @@ void HwFrontend::write_loop()
         while(!_send_list.empty() && _state.load() == ThreadState::RUNNING)
         {
             std::unique_lock<std::mutex> lock(_send_mutex);
+            std::unique_lock<std::mutex> list_lock(_send_list_mutex);
 
             SENSEI_LOG_DEBUG("Going through sendlist: {} packets", _send_list.size());
             if (_verify_acks && !_ready_to_send )
             {
                 SENSEI_LOG_DEBUG("Waiting for ack");
+                list_lock.unlock();
                 _ready_to_send_notifier.wait(lock);
+                list_lock.lock();
                 continue;
             }
 
@@ -207,6 +217,7 @@ void HwFrontend::_handle_timeouts()
 void HwFrontend::_process_sensei_command(const Command*message)
 {
     SENSEI_LOG_DEBUG("HwFrontend: got command: {}", message->representation());
+    std::scoped_lock lock(_send_list_mutex);
     switch (message->type())
     {
         case CommandType::SET_SENSOR_HW_TYPE:
@@ -419,9 +430,17 @@ void HwFrontend::_handle_ack(const GpioPacket& ack)
 void HwFrontend::_handle_value(const GpioPacket& packet)
 {
     auto& m = packet.payload.gpio_value_data;
-    _out_queue->push(_message_factory.make_analog_value(m.controller_id,
-                                                        from_gpio_protocol_byteord(m.controller_val),
-                                                        packet.timestamp));
+    if (_threading_mode == ThreadingMode::ASYNCHRONOUS)
+    {
+        _handler->post_event(_message_factory.make_analog_value(m.controller_id,
+                                                                from_gpio_protocol_byteord(m.controller_val),
+                                                                packet.timestamp));
+    }
+    else
+    {
+        AnalogValue value(m.controller_id, from_gpio_protocol_byteord(m.controller_val), packet.timestamp);
+        _handler->process_event(&value);
+    }
     SENSEI_LOG_DEBUG("Got a value packet!");
 }
 

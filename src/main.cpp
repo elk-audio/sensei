@@ -253,7 +253,7 @@ const option::Descriptor usage[] =
         "x",
         "synchronous",
         SenseiArg::None,
-        "\t\t-x --synchronous \tSynchronous Mode. \tEvents are handled directly without queueing."
+        "\t\t-x --synchronous \tSynchronous Mode - Events are handled directly without queueing."
     },
 
     { 0, 0, 0, 0, 0, 0}
@@ -417,7 +417,6 @@ int main(int argc, char* argv[])
         event_handler.deinit();
         return 1;
     }
-
 
     SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 
