@@ -35,8 +35,8 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("grpc_backend");
 // GrpcBackend Implementation
 //==============================================================================
 
-GrpcBackend::GrpcBackend(const int max_n_input_pins) :
-    OutputBackend(max_n_input_pins),
+GrpcBackend::GrpcBackend(const int max_n_sensors) :
+    OutputBackend(max_n_sensors),
     _user_frontend(nullptr)
 {
     SENSEI_LOG_INFO("GrpcBackend created");
@@ -63,7 +63,7 @@ CommandErrorCode GrpcBackend::apply_command(const Command* cmd)
         if (cmd->type() == CommandType::SET_SENSOR_NAME || cmd->type() == CommandType::SET_SENSOR_TYPE)
         {
             auto id = cmd->index();
-            _user_frontend->update_controller(id, _sensor_names[id], _pin_types[id]);
+            _user_frontend->update_controller(id, _sensor_names[id], _sensor_types[id]);
         }
     }
     else
@@ -88,7 +88,7 @@ void GrpcBackend::send(const OutputValue* transformed_value, const Value* /*raw_
     // Send transformed output value
     if (_send_output_active)
     {
-        SensorType sensor_type = _pin_types[sensor_index];
+        SensorType sensor_type = _sensor_types[sensor_index];
         float value = transformed_value->value();
         uint32_t timestamp = transformed_value->timestamp();
 

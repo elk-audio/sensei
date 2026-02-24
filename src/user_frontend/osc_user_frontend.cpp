@@ -41,10 +41,10 @@ static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, l
                                   lo_message /*msg*/, void*user_data)
 {
     OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
-    int pin_idx = argv[0]->i;
+    int sensor_idx = argv[0]->i;
     bool enabled = static_cast<bool>(argv[1]->i);
-    self->set_enabled(pin_idx, enabled);
-    SENSEI_LOG_DEBUG("Setting pin {} to enabled status {}", pin_idx, enabled);
+    self->set_enabled(sensor_idx, enabled);
+    SENSEI_LOG_DEBUG("Setting sensor {} to enabled status {}", sensor_idx, enabled);
 
     return 0;
 }

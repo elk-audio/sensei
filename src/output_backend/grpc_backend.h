@@ -38,7 +38,7 @@ namespace output_backend {
 class GrpcBackend : public OutputBackend
 {
 public:
-    GrpcBackend(const int max_n_input_pins = 64);
+    GrpcBackend(const int max_n_sensors = 64);
     ~GrpcBackend();
 
     /**

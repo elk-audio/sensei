@@ -25,8 +25,8 @@
 using namespace sensei;
 using namespace sensei::output_backend;
 
-StandardStreamBackend::StandardStreamBackend(const int max_n_input_pins) :
-        OutputBackend(max_n_input_pins)
+StandardStreamBackend::StandardStreamBackend(const int max_n_sensors) :
+        OutputBackend(max_n_sensors)
 {
 }
 
@@ -36,7 +36,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
 
     if (_send_output_active)
     {
-        printf("Pin: %d, name: %s, value: %f\n", sensor_index,
+        printf("Sensor: %d, name: %s, value: %f\n", sensor_index,
                                                  _sensor_names[sensor_index].c_str(),
                                                  transformed_value->value());
     }
@@ -49,7 +49,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
         case ValueType::ANALOG:
             {
                 auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
-                fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
+                fprintf(stderr, "--RAW INPUT-- Sensor: %d, name: %s, value: %d\n", sensor_index,
                                                                                 _sensor_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }
@@ -58,7 +58,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
         case ValueType::DIGITAL:
             {
                 auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
-                fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %d\n", sensor_index,
+                fprintf(stderr, "--RAW INPUT-- Sensor: %d, name: %s, value: %d\n", sensor_index,
                                                                                 _sensor_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }
@@ -67,7 +67,7 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
         case ValueType::CONTINUOUS:
             {
                 auto  typed_val = static_cast<const ContinuousValue*>(raw_input_value);
-                fprintf(stderr, "--RAW INPUT-- Pin: %d, name: %s, value: %f\n", sensor_index,
+                fprintf(stderr, "--RAW INPUT-- Sensor: %d, name: %s, value: %f\n", sensor_index,
                                                                                 _sensor_names[sensor_index].c_str(),
                                                                                 typed_val->value());
             }

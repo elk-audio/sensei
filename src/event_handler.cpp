@@ -231,7 +231,7 @@ void EventHandler::_handle_command(Command* cmd) // passed on only if addressed 
                 break;
 
             case CommandErrorCode::INVALID_SENSOR_INDEX:
-                SENSEI_LOG_ERROR("Invalid pin index {} for command: {}", cmd->index(), cmd->representation());
+                SENSEI_LOG_ERROR("Invalid sensor index {} for command: {}", cmd->index(), cmd->representation());
                 break;
 
             case CommandErrorCode::INVALID_RANGE:

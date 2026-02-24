@@ -85,11 +85,11 @@ protected:
 
 TEST_F(TestGrpcBackend, test_config)
 {
-    ASSERT_EQ(SensorType::DIGITAL_INPUT, _backend._pin_types[0]);
+    ASSERT_EQ(SensorType::DIGITAL_INPUT, _backend._sensor_types[0]);
     ASSERT_EQ("SW1", _backend._sensor_names[0]);
-    ASSERT_EQ(SensorType::ANALOG_INPUT, _backend._pin_types[1]);
+    ASSERT_EQ(SensorType::ANALOG_INPUT, _backend._sensor_types[1]);
     ASSERT_EQ("POT1", _backend._sensor_names[1]);
-    ASSERT_EQ(SensorType::RANGE_INPUT, _backend._pin_types[2]);
+    ASSERT_EQ(SensorType::RANGE_INPUT, _backend._sensor_types[2]);
     ASSERT_EQ("RANGE1", _backend._sensor_names[2]);
 }
 

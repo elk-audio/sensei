@@ -18,7 +18,7 @@
  * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * This module give run-time control from the user over some fast-changing configuration
- * parameters (e.g. sensors enabled/disabled) and access to digital output pins.
+ * parameters (e.g. sensors enabled/disabled) and access to output sensors.
  */
 #include "user_frontend.h"
 

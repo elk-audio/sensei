@@ -70,16 +70,16 @@ std::string concatenate_osc_paths(std::string a, std::string b)
 
 }; // anonymous namespace
 
-OSCBackend::OSCBackend(const int max_n_input_pins) :
-    OutputBackend(max_n_input_pins),
+OSCBackend::OSCBackend(const int max_n_sensors) :
+    OutputBackend(max_n_sensors),
     _base_path("sensors"),
     _base_raw_path("raw_input"),
     _host("localhost"),
     _port(23023)
 
 {
-    _full_out_paths.resize(static_cast<size_t>(max_n_input_pins));
-    _full_raw_paths.resize(static_cast<size_t>(max_n_input_pins));
+    _full_out_paths.resize(static_cast<size_t>(max_n_sensors));
+    _full_raw_paths.resize(static_cast<size_t>(max_n_sensors));
     _compute_full_paths();
     _compute_address();
 }
@@ -142,7 +142,7 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
 CommandErrorCode OSCBackend::apply_command(const Command *cmd)
 {
     CommandErrorCode status = CommandErrorCode::OK;
-    auto pin_idx = cmd->index();
+    auto sensor_idx = cmd->index();
 
     switch(cmd->type())
     {
@@ -150,7 +150,7 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
     case CommandType::SET_SENSOR_NAME:
         {
             const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
-            _sensor_names[pin_idx] = typed_cmd->data();
+            _sensor_names[sensor_idx] = typed_cmd->data();
             _compute_full_paths();
         };
         break;
@@ -158,7 +158,7 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
     case CommandType::SET_SENSOR_TYPE:
         {
             const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
-            _pin_types[pin_idx] = typed_cmd->data();
+            _sensor_types[sensor_idx] = typed_cmd->data();
             _compute_full_paths();
         };
         break;
@@ -227,7 +227,7 @@ void OSCBackend::_compute_full_paths()
         std::string cur_path = _base_path;
         std::string cur_raw_path = _base_raw_path;
         std::string cur_sensor_type;
-        switch (_pin_types[i])
+        switch (_sensor_types[i])
         {
         case SensorType::ANALOG_INPUT:
             cur_sensor_type = std::string("analog");
