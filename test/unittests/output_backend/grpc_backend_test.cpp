@@ -1,5 +1,9 @@
 #include "gtest/gtest.h"
 
+// These need to be included before the #define private public
+#include "sensei-grpc-api/sensei_rpc.pb.h"
+#include "sensei-grpc-api/sensei_rpc.grpc.pb.h"
+
 #define private public
 #define protected public
 #include "output_backend/grpc_backend.cpp"
@@ -10,8 +14,6 @@
 #include <chrono>
 #include <thread>
 #include <grpcpp/grpcpp.h>
-#include "sensei-grpc-api/sensei_rpc.pb.h"
-#include "sensei-grpc-api/sensei_rpc.grpc.pb.h"
 
 #include "../test_utils.h"
 
