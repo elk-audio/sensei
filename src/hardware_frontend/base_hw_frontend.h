@@ -23,9 +23,8 @@
 
 #include <memory>
 
-#include "synchronized_queue.h"
-#include "message/base_message.h"
 #include "message/base_command.h"
+#include "handler_interface.h"
 
 namespace sensei {
 namespace hw_frontend {
@@ -38,14 +37,14 @@ class BaseHwFrontend
 public:
     /**
      * @brief Class constructor
-     * @param [in] in_queue Output queue where incoming messages go
-     * @param [in] out_queue Queue for messages to be sent to HW
+     * @param [in] handler MessageHandler for incoming and outgoing messages
     */
-    BaseHwFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
-                   SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue)
+    BaseHwFrontend(MessageHandler* handler,
+                   ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS)
     {
-        _in_queue = in_queue;
-        _out_queue = out_queue;
+        _handler = handler;
+        _in_queue = handler->outgoing_queue();
+        _threading_mode = threading_mode;
     }
 
     virtual ~BaseHwFrontend() = default;
@@ -61,6 +60,12 @@ public:
     virtual void stop() = 0;
 
     /**
+     * @brief Process a command directly in the calling thread instead of queueing it
+     * @param cmd The command to process
+     */
+    virtual void process_command(const Command* cmd) = 0;
+
+    /**
      * @brief Stops the flow of messages. If set to true, incoming packets
      * are silently dropped
      * @param [in] enabled Sets mute enabled/disabled
@@ -74,19 +79,21 @@ public:
     virtual void verify_acks(bool enabled) = 0;
 
 protected:
+    MessageHandler* _handler;
     SynchronizedQueue<std::unique_ptr<Command>>*_in_queue;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>*_out_queue;
+    ThreadingMode _threading_mode;
 };
+
 
 
 class NoOpFrontend : public BaseHwFrontend
 {
 public:
-    NoOpFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
-                 SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue) : BaseHwFrontend(in_queue, out_queue)
-    {}
+    NoOpFrontend(MessageHandler* handler,
+                 ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) : BaseHwFrontend(handler, threading_mode) {}
     void run() {}
     void stop() {}
+    virtual void process_command(const Command* /*cmd*/) {}
     void mute(bool /*enabled*/) {}
     void verify_acks(bool /*enabled*/) {}
 };

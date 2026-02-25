@@ -79,7 +79,6 @@ public: \
     {\
         return _value;\
     }\
-private:\
     ClassName(const int sensor_index,\
               const InternalType value,\
               const uint32_t timestamp=0) :\

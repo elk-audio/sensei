@@ -23,6 +23,7 @@
 #define SENSEI_BASE_HW_BACKEND_H
 
 #include "gpio_protocol/gpio_protocol.h"
+#include "handler_interface.h"
 
 namespace sensei {
 namespace hw_backend {
@@ -38,8 +39,10 @@ public:
      * @brief Constructor for the base hw backend.
      * @param recv_packet_timeout The blocking timeout for receiving packets
      */
-    BaseHwBackend(std::chrono::milliseconds recv_packet_timeout) :
-            _recv_packet_timeout(recv_packet_timeout)
+    BaseHwBackend(std::chrono::milliseconds recv_packet_timeout,
+                  ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
+                  _recv_packet_timeout(recv_packet_timeout),
+                  _threading_mode(threading_mode)
     {}
 
     virtual ~BaseHwBackend() = default;
@@ -80,6 +83,7 @@ public:
 
 protected:
     std::chrono::milliseconds _recv_packet_timeout;
+    ThreadingMode _threading_mode;
 };
 
 /**
@@ -88,8 +92,9 @@ protected:
 class NoOpHwBackend : public BaseHwBackend
 {
 public:
-    NoOpHwBackend(std::chrono::milliseconds recv_packet_timeout) :
-                                BaseHwBackend(recv_packet_timeout)
+    NoOpHwBackend(std::chrono::milliseconds recv_packet_timeout,
+                  ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
+                                BaseHwBackend(recv_packet_timeout, threading_mode)
     {}
 
     bool init()

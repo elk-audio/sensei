@@ -6,6 +6,7 @@
 
 #include "utils.h"
 #include "message/message_factory.h"
+#include "handler_interface.h"
 
 #define CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
 #define CMD_PTR(msg) CMD_UPTR(msg).get()
@@ -41,5 +42,34 @@ inline bool operator==(const MultiplexerData& lhs, const MultiplexerData& rhs)
 {
     return lhs.id == rhs.id && lhs.pin == rhs.pin;
 }
+
+class MessageHandlerMock : public MessageHandler
+{
+public:
+    void process_event(const BaseMessage* event) override
+    {
+        // Events are stack objects and cant be saved, so just store their representation
+        processed_events.push_back(event->representation());
+    }
+
+    virtual void post_event(std::unique_ptr<BaseMessage> event) override
+    {
+        event_queue.push(std::move(event));
+    }
+
+    SynchronizedQueue<std::unique_ptr<Command>>* outgoing_queue() override
+    {
+        return &to_frontend_queue;
+    }
+
+    SynchronizedQueue<std::unique_ptr<BaseMessage>> event_queue;
+    SynchronizedQueue<std::unique_ptr<Command>> to_frontend_queue;
+    std::vector<std::string> processed_events;
+
+    const BaseMessage* rec_event{nullptr};
+    const Command* rec_command{nullptr};
+};
+
+
 }
 #endif //SENSEI_TEST_UTILS_H

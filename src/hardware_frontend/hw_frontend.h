@@ -32,10 +32,10 @@
 #include "base_hw_frontend.h"
 #include "hardware_backend/base_hw_backend.h"
 #include "message_tracker.h"
-#include "message/base_message.h"
 #include "message/base_command.h"
 #include "message/message_factory.h"
 #include "gpio_command_creator.h"
+#include "synchronized_queue.h"
 
 namespace sensei {
 namespace hw_frontend {
@@ -46,12 +46,12 @@ public:
     /**
     * @brief Class constructor
     *
-    * @param [in] in_queue Output queue where decoded messages go
-    * @param [in] out_queue Queue for messages to be sent to the board
+    * @param [in] hw_backend Hardware Backend implementation
+    * @param [in] handler MessageHandler for incoming and outgoing messages
     */
-    HwFrontend(SynchronizedQueue<std::unique_ptr<Command>>*in_queue,
-               SynchronizedQueue<std::unique_ptr<BaseMessage>>*out_queue,
-               hw_backend::BaseHwBackend* hw_backend);
+    HwFrontend(hw_backend::BaseHwBackend* hw_backend,
+               MessageHandler* handler = nullptr,
+               ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~HwFrontend()
     {}
@@ -65,6 +65,8 @@ public:
     * @brief Stops the frontend if it is running
     */
     void stop() override;
+
+    void process_command(const Command* cmd) override;
 
     /**
      * @brief Stops the flow of messages. If enabled, incoming packets are silently dropped.
@@ -108,6 +110,7 @@ private:
     std::thread     _read_thread;
     std::thread     _write_thread;
 
+    std::mutex      _send_list_mutex;
     std::mutex      _send_mutex;
     std::condition_variable _ready_to_send_notifier;
 

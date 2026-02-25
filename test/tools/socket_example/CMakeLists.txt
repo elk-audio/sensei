@@ -1,2 +1,3 @@
 add_executable(raspa_mockup raspa_mockup.cpp)
+target_compile_features(raspa_mockup PRIVATE cxx_std_17)
 target_link_libraries(raspa_mockup PRIVATE gpio_protocol pthread)

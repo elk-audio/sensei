@@ -30,8 +30,9 @@ namespace config {
 class JsonConfiguration : public BaseConfiguration
 {
 public:
-    JsonConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& file) :
-            BaseConfiguration(queue, file)
+    JsonConfiguration(MessageHandler* handler, const std::string& file,
+                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
+            BaseConfiguration(handler, file, threading_mode)
     {}
 
     ~JsonConfiguration() = default;

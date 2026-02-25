@@ -43,12 +43,13 @@ ELK_DISABLE_UNUSED_CONST_VARIABLE
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("eventhandler");
 ELK_POP_WARNING
 
-bool EventHandler::init(int max_n_input_pins,
-                        int max_n_digital_out_pins,
-                        const std::string& config_file)
+bool EventHandler::init(int max_n_sensors,
+                        const std::string& config_file,
+                        ThreadingMode threading_mode)
 {
     config::Config config;
-    _config_backend.reset(new config::JsonConfiguration(&_event_queue, config_file));
+    _mode = threading_mode;
+    _config_backend.reset(new config::JsonConfiguration(this, config_file, threading_mode));
     auto ret = _config_backend->read(config);
     if (ret != config::ConfigStatus::OK)
     {
@@ -75,19 +76,19 @@ bool EventHandler::init(int max_n_input_pins,
     {
     case HwFrontendType::RASPA_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Hw Frontend with socket hw backend");
-        _hw_backend = std::make_unique<hw_backend::GpioHwSocket>("/tmp/raspa", HWBACKEND_TIMEOUT);
-        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(&_to_frontend_queue, &_event_queue, _hw_backend.get());
+        _hw_backend = std::make_unique<hw_backend::GpioHwSocket>("/tmp/raspa", HWBACKEND_TIMEOUT, threading_mode);
+        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(_hw_backend.get(), this, threading_mode);
         break;
 
     case HwFrontendType::ELK_PI_GPIO:
         SENSEI_LOG_INFO("Initializing Gpio Frontend with Elk Pi hw backend");
         _hw_backend = std::make_unique<hw_backend::shiftregister_gpio::ShiftregGpio>(HWBACKEND_TIMEOUT);
-        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(&_to_frontend_queue, &_event_queue, _hw_backend.get());
+        _hw_frontend = std::make_unique<hw_frontend::HwFrontend>(_hw_backend.get(), this, threading_mode);
         break;
 
     default:
-        _hw_backend = std::make_unique<hw_backend::NoOpHwBackend>(HWBACKEND_TIMEOUT);
-        _hw_frontend = std::make_unique<hw_frontend::NoOpFrontend>(&_to_frontend_queue, &_event_queue);
+        _hw_backend = std::make_unique<hw_backend::NoOpHwBackend>(HWBACKEND_TIMEOUT, threading_mode);
+        _hw_frontend = std::make_unique<hw_frontend::NoOpFrontend>(this, threading_mode);
         SENSEI_LOG_ERROR("No HW Frontend configured");
         break;
     }
@@ -98,7 +99,7 @@ bool EventHandler::init(int max_n_input_pins,
         return false;
     }
 
-    _processor = std::make_unique<mapping::MappingProcessor>(max_n_input_pins);
+    _processor = std::make_unique<mapping::MappingProcessor>(max_n_sensors);
 
     switch (config.backend_config.type)
     {
@@ -110,8 +111,8 @@ bool EventHandler::init(int max_n_input_pins,
         // The frontend runs the gRPC server where subscriptions are made so the
         // backend needs to forward events to the frontend. If we decide to fully
         // remove OSC support then this could be refactored.
-        auto grpc_backend = std::make_unique<output_backend::GrpcBackend>(max_n_input_pins);
-        auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
+        auto grpc_backend = std::make_unique<output_backend::GrpcBackend>(max_n_sensors);
+        auto grpc_frontend = std::make_unique<user_frontend::GrpcUserFrontend>(this, max_n_sensors, threading_mode);
         grpc_backend->set_user_frontend(grpc_frontend.get());
 
         _output_backend = std::move(grpc_backend);
@@ -123,8 +124,8 @@ bool EventHandler::init(int max_n_input_pins,
     case BackendType::OSC:
     default:
         SENSEI_LOG_INFO("Initializing OSC backend");
-        _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_input_pins);
-        _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(&_event_queue, max_n_input_pins, max_n_digital_out_pins);
+        _output_backend = std::make_unique<output_backend::OSCBackend>(max_n_sensors);
+        _user_frontend = std::make_unique<user_frontend::OSCUserFrontend>(this, max_n_sensors, threading_mode);
         break;
     }
 
@@ -144,47 +145,54 @@ void EventHandler::deinit()
     _config_backend.reset(nullptr);
 }
 
+void EventHandler::_handle_event(BaseMessage* event)
+{
+    switch(event->base_type())
+    {
+        case MessageType::VALUE:
+        {
+            auto value = static_cast<Value*>(event);
+            _handle_value(value);
+        }
+        break;
+
+        case MessageType::COMMAND:
+        {
+            auto cmd = static_cast<Command*>(event);
+            _handle_command(std::move(cmd));
+        }
+        break;
+
+        case MessageType::ERROR:
+        {
+            auto error = static_cast<Error*>(event);
+            _handle_error(std::move(error));
+        }
+        break;
+    }
+}
+
 void EventHandler::handle_events(std::chrono::milliseconds wait_period)
 {
     _event_queue.wait_for_data(wait_period);
     while (! _event_queue.empty())
     {
         std::unique_ptr<BaseMessage> event = _event_queue.pop();
-        switch(event->base_type())
-        {
-        case MessageType::VALUE:
-            {
-                auto value = static_unique_ptr_cast<Value, BaseMessage>(std::move(event));
-                _handle_value(std::move(value));
-            }
-            break;
-
-        case MessageType::COMMAND:
-            {
-                auto cmd = static_unique_ptr_cast<Command, BaseMessage>(std::move(event));
-                _handle_command(std::move(cmd));
-            }
-            break;
-
-        case MessageType::ERROR:
-            {
-                auto error = static_unique_ptr_cast<Error, BaseMessage>(std::move(event));
-                _handle_error(std::move(error));
-            }
-            break;
-        }
+        _handle_event(event.get());
+        // At last handle the case where the message might be passed on to another queue
+        _handle_hw_frontend_message(std::move(event));
     }
 }
 
-void EventHandler::_handle_value(std::unique_ptr<Value> value)
+void EventHandler::_handle_value(Value* value) // value is not passed on
 {
-    if (is_output_value(value.get()))
+    if (is_output_value(value))
     {
-        _processor->process(value.get(), _output_backend.get());
+        _processor->process(value, _output_backend.get());
     }
-    else if (is_set_value(value.get()))
+    else if (is_set_value(value))
     {
-        auto cmd = _processor->process_set(value.get());
+        auto cmd = _processor->process_set(value);
         if (cmd != nullptr)
         {
             _to_frontend_queue.push(std::move(cmd));
@@ -192,7 +200,20 @@ void EventHandler::_handle_value(std::unique_ptr<Value> value)
     }
 }
 
-void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
+// This is the only handling function that takes ownership as it's the only one that might pass on the message
+void EventHandler::_handle_hw_frontend_message(std::unique_ptr<BaseMessage> cmd)
+{
+    if (cmd->base_type() == MessageType::COMMAND)
+    {
+        auto typed_cmd = static_unique_ptr_cast<Command, BaseMessage>(std::move(cmd));
+        if (typed_cmd->destination() & CommandDestination::HARDWARE_FRONTEND)
+        {
+            _to_frontend_queue.push(std::move(typed_cmd));
+        }
+    }
+}
+
+void EventHandler::_handle_command(Command* cmd) // passed on only if addressed to hw frontend
 {
     CommandDestination address = cmd->destination();
 
@@ -200,7 +221,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
     // using non-owning raw pointer
     if (address & CommandDestination::MAPPING_PROCESSOR)
     {
-        CommandErrorCode ret = _processor->apply_command(cmd.get());
+        CommandErrorCode ret = _processor->apply_command(cmd);
         if (ret != CommandErrorCode::OK)
         {
             switch (ret)
@@ -210,7 +231,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
                 break;
 
             case CommandErrorCode::INVALID_SENSOR_INDEX:
-                SENSEI_LOG_ERROR("Invalid pin index {} for command: {}", cmd->index(), cmd->representation());
+                SENSEI_LOG_ERROR("Invalid sensor index {} for command: {}", cmd->index(), cmd->representation());
                 break;
 
             case CommandErrorCode::INVALID_RANGE:
@@ -237,7 +258,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
     if (address & CommandDestination::OUTPUT_BACKEND)
     {
-        CommandErrorCode ret = _output_backend->apply_command(cmd.get());
+        CommandErrorCode ret = _output_backend->apply_command(cmd);
         if (ret != CommandErrorCode::OK)
         {
             switch (ret)
@@ -267,7 +288,7 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
 
     if (address & CommandDestination::USER_FRONTEND)
     {
-        CommandErrorCode ret = _user_frontend->apply_command(cmd.get());
+        CommandErrorCode ret = _user_frontend->apply_command(cmd);
         if (ret != CommandErrorCode::OK)
         {
             switch (ret)
@@ -281,17 +302,34 @@ void EventHandler::_handle_command(std::unique_ptr<Command> cmd)
             }
         }
     }
-
-    // At last, pass the message to serial receiver queue
-    // which is a owning sink
-    if (address & CommandDestination::HARDWARE_FRONTEND)
-    {
-        _to_frontend_queue.push(std::move(cmd));
-    }
-
 }
 
-void EventHandler::_handle_error(std::unique_ptr<Error> error)
+void EventHandler::_handle_error(Error* error)
 {
     SENSEI_LOG_ERROR("Hardware Error: {}", error->representation());
+}
+
+void EventHandler::process_event(const BaseMessage* event)
+{
+    std::scoped_lock lock(_sync_mutex);
+    // TODO - Fix without casting away constness
+    _handle_event(const_cast<BaseMessage*>(event));
+    if (event->base_type() == MessageType::COMMAND)
+    {
+        auto typed_cmd = static_cast<const Command*>(event);
+        if (typed_cmd->destination() & CommandDestination::HARDWARE_FRONTEND)
+        {
+            _hw_frontend->process_command(typed_cmd);
+        }
+    }
+}
+
+SynchronizedQueue<std::unique_ptr<Command>>* EventHandler::outgoing_queue()
+{
+    return &_to_frontend_queue;
+}
+
+void EventHandler::post_event(std::unique_ptr<BaseMessage> event)
+{
+    _event_queue.push(std::move(event));
 }

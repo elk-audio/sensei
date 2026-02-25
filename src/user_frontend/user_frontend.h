@@ -24,8 +24,8 @@
 #define SENSEI_USER_FRONTEND_H
 
 #include <message/message_factory.h>
-#include "synchronized_queue.h"
 #include "message/message_factory.h"
+#include "handler_interface.h"
 
 namespace sensei {
 namespace user_frontend {
@@ -33,12 +33,12 @@ namespace user_frontend {
 class UserFrontend
 {
 public:
-    UserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue,
-                 const int max_n_input_pins,
-                 const int max_n_digital_out_pins) :
-            _queue(queue),
-            _max_n_input_pins(max_n_input_pins),
-            _max_n_out_pins(max_n_digital_out_pins)
+    UserFrontend(MessageHandler* handler,
+                 const int max_n_sensors,
+                 ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
+            _handler(handler),
+            _max_n_sensors(max_n_sensors),
+            _threading_mode(threading_mode)
     {}
 
     virtual ~UserFrontend()
@@ -98,13 +98,18 @@ public:
      */
     void set_range_output(int index, int value);
 
-protected:
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
-    MessageFactory _factory;
+    /**
+     * @brief Trigger the MCU to re-send the values of all controllers.
+     */
+    void refresh_controller_values();
 
-private:
-    [[maybe_unused]] int _max_n_input_pins;
-    [[maybe_unused]] int _max_n_out_pins;
+protected:
+    MessageHandler* _handler;
+
+    [[maybe_unused]] int _max_n_sensors;
+    ThreadingMode _threading_mode;
+
+    MessageFactory _factory;
 };
 
 } // namespace user_frontend

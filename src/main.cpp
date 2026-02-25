@@ -33,11 +33,9 @@
 // Global constants
 ////////////////////////////////////////////////////////////////////////////////
 
-#define SENSEI_DEFAULT_N_INPUT_PINS         64
-#define SENSEI_DEFAULT_N_INPUT_PINS_STR     "64"
-#define SENSEI_DEFAULT_N_OUTPUT_PINS        32
-#define SENSEI_DEFAULT_N_OUTPUT_PINS_STR    "32"
-#define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
+#define SENSEI_DEFAULT_N_SENSORS             64
+#define SENSEI_DEFAULT_N_SENSORS_STR        "64"
+#define SENSEI_DEFAULT_WAIT_PERIOD_MS        10
 #define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
 #define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
 #define SENSEI_DEFAULT_LOG_FILENAME         "/tmp/sensei.log"
@@ -155,13 +153,13 @@ enum OptionIndex
     UNKNOWN,
     HELP,
     VERSION,
-    N_INPUT_PINS,
-    N_OUTPUT_PINS,
+    N_SENSORS,
     SLEEP_PERIOD,
     CONFIG_FILENAME,
     LOG_FILENAME,
     LOG_LEVEL,
-    LOG_FLUSH_INTERVAL
+    LOG_FLUSH_INTERVAL,
+    SYNCHRONOUS_MODE
 };
 
 const option::Descriptor usage[] =
@@ -191,20 +189,12 @@ const option::Descriptor usage[] =
         "\t\t-v --version \tPrint version and build info and exit."
     },
     {
-        N_INPUT_PINS,
+        N_SENSORS,
         0,
         "i",
-        "input-pins",
+        "sensors",
         SenseiArg::Numeric,
-        "\t\t-i <value>, --input-pins=<value> \tSpecify number of configurable pins [default=" SENSEI_DEFAULT_N_INPUT_PINS_STR "]."
-    },
-    {
-        N_OUTPUT_PINS,
-        0,
-        "o",
-        "output-pins",
-        SenseiArg::Numeric,
-        "\t\t-o <value>, --output-pins=<value> \tSpecify number of digital output pins [default=" SENSEI_DEFAULT_N_OUTPUT_PINS_STR "]."
+        "\t\t-i <value>, --sensors=<value> \tSpecify number of configurable sensors [default=" SENSEI_DEFAULT_N_SENSORS_STR "]."
     },
     {
         SLEEP_PERIOD,
@@ -245,6 +235,14 @@ const option::Descriptor usage[] =
         "log-flush-interval",
         SenseiArg::Numeric,
         "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."
+    },
+    {
+        SYNCHRONOUS_MODE,
+        0,
+        "x",
+        "synchronous",
+        SenseiArg::None,
+        "\t\t-x --synchronous \tSynchronous Mode - Events are handled directly without queueing."
     },
 
     { 0, 0, 0, 0, 0, 0}
@@ -291,10 +289,10 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    int n_input_pins = SENSEI_DEFAULT_N_INPUT_PINS;
-    int n_output_pins = SENSEI_DEFAULT_N_OUTPUT_PINS;
+    int n_sensors = SENSEI_DEFAULT_N_SENSORS;
     std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
     std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
+    sensei::ThreadingMode threading_mode = sensei::ThreadingMode::ASYNCHRONOUS;
     for (int i=0; i<cl_parser.optionsCount(); i++)
     {
         option::Option& opt = cl_buffer[i];
@@ -307,7 +305,7 @@ int main(int argc, char* argv[])
             assert(false);
             break;
 
-        case N_INPUT_PINS:
+        case N_SENSORS:
             {
                 int parsed_int = atoi(opt.arg);
                 // horrible, but that's how atoi works and std::stoi needs exceptions
@@ -316,20 +314,7 @@ int main(int argc, char* argv[])
                     SenseiArg::print_error("Option '", opt, "' invalid number\n");
                     return 1;
                 }
-                n_input_pins = parsed_int;
-            }
-            break;
-
-        case N_OUTPUT_PINS:
-            {
-                int parsed_int = atoi(opt.arg);
-                // horrible, but that's how atoi works and std::stoi needs exceptions
-                if (parsed_int == 0)
-                {
-                    SenseiArg::print_error("Option '", opt, "' invalid number\n");
-                    return 1;
-                }
-                n_output_pins = parsed_int;
+                n_sensors = parsed_int;
             }
             break;
 
@@ -361,6 +346,10 @@ int main(int argc, char* argv[])
         case LOG_FLUSH_INTERVAL:
             log_flush_interval = std::chrono::seconds(std::strtol(opt.arg, nullptr, 0));
             enable_flush_interval = true;
+            break;
+
+        case SYNCHRONOUS_MODE:
+            threading_mode = sensei::ThreadingMode::SYNCHRONOUS;
             break;
 
         default:
@@ -396,14 +385,13 @@ int main(int argc, char* argv[])
     signal(SIGUSR1, user_signal_handler);
 
     sensei::EventHandler event_handler;
-    if(!event_handler.init(n_input_pins, n_output_pins, config_filename))
+    if(!event_handler.init(n_sensors, config_filename, threading_mode))
     {
         std::cerr << "Failed to initialize, check logs for details. Exiting..."
                   << std::endl;
         event_handler.deinit();
         return 1;
     }
-
 
     SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 

@@ -24,7 +24,7 @@ protected:
 
     void SetUp()
     {
-        _user_frontend.reset(new user_frontend::OSCUserFrontend(&_event_queue, 64, 32));
+        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64));
         MessageFactory factory;
 
         auto cmd = CMD_UPTR(factory.make_set_osc_input_port_command(0, _server_port));
@@ -43,36 +43,64 @@ protected:
     }
 
     std::unique_ptr<OSCUserFrontend> _user_frontend;
-    SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
+    MessageHandlerMock _message_handler;
     int _server_port{25000};
     lo_address _address;
 };
 
+
 TEST_F(TestOSCUserFrontend, test_set_pin_enabled)
 {
     lo_send(_address, "/set_enabled", "ii", 5, 1);
-    _event_queue.wait_for_data(std::chrono::milliseconds(10));
-    ASSERT_FALSE(_event_queue.empty());
-    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    _message_handler.event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_message_handler.event_queue.empty());
+    std::unique_ptr<BaseMessage> event = _message_handler.event_queue.pop();
     ASSERT_EQ(MessageType::COMMAND, event->base_type());
     auto cmd = static_unique_ptr_cast<SetEnabledCommand, BaseMessage>(std::move(event));
 
     ASSERT_EQ(5, cmd->index());
     ASSERT_EQ(true, cmd->data());
-    ASSERT_TRUE(_event_queue.empty());
+    ASSERT_TRUE(_message_handler.event_queue.empty());
 }
 
 TEST_F(TestOSCUserFrontend, test_set_output)
 {
     lo_send(_address, "/set_output", "if", 5, 12.0f);
-    _event_queue.wait_for_data(std::chrono::milliseconds(10));
-    ASSERT_FALSE(_event_queue.empty());
-    std::unique_ptr<BaseMessage> event = _event_queue.pop();
+    _message_handler.event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_message_handler.event_queue.empty());
+    std::unique_ptr<BaseMessage> event = _message_handler.event_queue.pop();
     ASSERT_EQ(MessageType::VALUE, event->base_type());
     auto val = static_unique_ptr_cast<FloatSetValue, BaseMessage>(std::move(event));
 
     ASSERT_EQ(ValueType::FLOAT_SET, val->type());
     ASSERT_EQ(5, val->index());
     ASSERT_FLOAT_EQ(12, val->value());
-    ASSERT_TRUE(_event_queue.empty());
+    ASSERT_TRUE(_message_handler.event_queue.empty());
+}
+
+class TestOSCUserFrontendSynchronous : public TestOSCUserFrontend
+{
+    void SetUp() override
+    {
+        _user_frontend.reset(new OSCUserFrontend(&_message_handler, 64, ThreadingMode::SYNCHRONOUS));
+        MessageFactory factory;
+
+        auto cmd = CMD_UPTR(factory.make_set_osc_input_port_command(0, _server_port));
+        auto status = _user_frontend->apply_command(cmd.get());
+        ASSERT_EQ(CommandErrorCode::OK, status);
+
+        std::stringstream port_stream;
+        port_stream << _server_port;
+        auto port_str = port_stream.str();
+        _address = lo_address_new("localhost", port_str.c_str());
+    }
+};
+
+TEST_F(TestOSCUserFrontendSynchronous, test_synchronous_mode)
+{
+    lo_send(_address, "/set_enabled", "ii", 5, 1);
+    _message_handler.event_queue.wait_for_data(std::chrono::milliseconds(10));
+    ASSERT_FALSE(_message_handler.processed_events.empty());
+    auto event_reps = _message_handler.processed_events.front();
+    ASSERT_EQ("Set Enabled", event_reps);
 }

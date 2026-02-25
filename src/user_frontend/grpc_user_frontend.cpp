@@ -152,10 +152,10 @@ void AsyncSenseiControllerImpl::_handle_rpcs()
 // GrpcUserFrontend Implementation
 //==============================================================================
 
-GrpcUserFrontend::GrpcUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue,
-                                   const int max_n_input_pins,
-                                   const int max_n_digital_out_pins) :
-    UserFrontend(queue, max_n_input_pins, max_n_digital_out_pins),
+GrpcUserFrontend::GrpcUserFrontend(MessageHandler* handler,
+                                   const int max_n_sensors,
+                                   ThreadingMode threading_mode) :
+    UserFrontend(handler, max_n_sensors, threading_mode),
     _listen_address(DEFAULT_GRPC_ADDRESS),
     _listen_port(DEFAULT_GRPC_PORT),
     _server_running(false)
@@ -163,7 +163,7 @@ GrpcUserFrontend::GrpcUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage
     SENSEI_LOG_INFO("GrpcUserFrontend created with async API");
     {
         std::unique_lock<std::mutex> lock(_controller_map_mutex);
-        _controller_map.resize(max_n_input_pins);
+        _controller_map.resize(max_n_sensors);
     }
     _start_server();
 }
@@ -355,8 +355,8 @@ void GrpcUserFrontend::refresh_controller_values()
         if (!name.empty() && type != SensorType::UNDEFINED)
         {
             int controller_id = static_cast<int>(i);
-            _queue->push(_factory.make_clear_previous_value_command(controller_id));
-            _queue->push(_factory.make_get_value_command(controller_id));
+            _handler->post_event(_factory.make_clear_previous_value_command(controller_id));
+            _handler->post_event(_factory.make_get_value_command(controller_id));
         }
     }
 }

@@ -18,7 +18,7 @@
  * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * This module give run-time control from the user over some fast-changing configuration
- * parameters (e.g. sensors enabled/disabled) and access to digital output pins.
+ * parameters (e.g. sensors enabled/disabled) and access to output sensors.
  */
 #include "user_frontend.h"
 
@@ -33,24 +33,52 @@ CommandErrorCode UserFrontend::apply_command(const Command* /*cmd*/)
 
 void UserFrontend::set_enabled(int sensor_index, bool enabled)
 {
-    auto msg = _factory.make_set_enabled_command(sensor_index, enabled);
-    _queue->push(std::move(msg));
+    if (_threading_mode == ThreadingMode::ASYNCHRONOUS)
+    {
+        _handler->post_event(_factory.make_set_enabled_command(sensor_index, enabled));
+    }
+    else
+    {
+        auto m = SetEnabledCommand(sensor_index, enabled);
+        _handler->process_event(&m);
+    }
 }
 
 void UserFrontend::set_digital_output(int index, bool value)
 {
-    auto msg = _factory.make_integer_set_value(index, value? 1:0);
-    _queue->push(std::move(msg));
+    if (_threading_mode == ThreadingMode::ASYNCHRONOUS)
+    {
+        _handler->post_event(_factory.make_integer_set_value(index, value? 1:0));
+    }
+    else
+    {
+        auto e = IntegerSetValue(index, value? 1:0);
+        _handler->process_event(&e);
+    }
 }
 
 void UserFrontend::set_continuous_output(int index, float value)
 {
-    auto msg = _factory.make_float_set_value(index, value);
-    _queue->push(std::move(msg));
+    if (_threading_mode == ThreadingMode::ASYNCHRONOUS)
+    {
+        _handler->post_event(_factory.make_float_set_value(index, value));
+    }
+    else
+    {
+        auto e = FloatSetValue(index, value);
+        _handler->process_event(&e);
+    }
 }
 
 void UserFrontend::set_range_output(int index, int value)
 {
-    auto msg = _factory.make_integer_set_value(index, value);
-    _queue->push(std::move(msg));
+    if (_threading_mode == ThreadingMode::ASYNCHRONOUS)
+    {
+        _handler->post_event(_factory.make_integer_set_value(index, value));
+    }
+    else
+    {
+        auto e = IntegerSetValue(index, value);
+        _handler->process_event(&e);
+    }
 }

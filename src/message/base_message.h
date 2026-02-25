@@ -110,7 +110,7 @@ public:
         return _base_type;
     }
 
-protected:
+//protected:
     BaseMessage(const int sensor_index,
                 const unsigned int timestamp=0,
                 const MessageType msg_type=MessageType::VALUE) :

@@ -51,8 +51,8 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
         SENSEI_LOG_INFO("Setting up new mapper for sensor id: {}", sensor_index);
         CommandErrorCode status = CommandErrorCode::OK;
         const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
-        auto pin_type = typed_cmd->data();
-        switch(pin_type)
+        auto sensor_type = typed_cmd->data();
+        switch(sensor_type)
         {
         case SensorType::DIGITAL_INPUT:
         case SensorType::DIGITAL_OUTPUT:
@@ -87,7 +87,7 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
     }
     else
     {
-        // Apply command only to already initialized pins
+        // Apply command only to already initialized sensors
         if (_mappers[sensor_index] == nullptr)
         {
             return CommandErrorCode::UNINITIALIZED_SENSOR;
