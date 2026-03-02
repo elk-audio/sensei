@@ -17,8 +17,7 @@ pipelines:
           # Prepare system.
           - apt-get update -y
           - apt install build-essential -y
-          - apt-get install -y -q liblo-dev
-          - apt-get install -y -q cmake git make
+          - apt-get install -y -q cmake git make liblo-dev
           - apt-get install -y -q curl zip unzip tar
           - apt-get install -y -q libgrpc++-dev protobuf-compiler-grpc
           - apt-get install -y software-properties-common
@@ -29,8 +28,6 @@ pipelines:
           # Rewrite the relative submodule url as bitbucket doesn't handle relative paths correctly
           - sed -i 's/url = \.\.\(.*\)/url = git@bitbucket.org:'$BITBUCKET_TEAM'\1/g' .gitmodules
           - git submodule update --init --recursive
-          # Set test data dir (for running unit test manually)
-          - export SUSHI_TEST_DATA_DIR=$PWD/test/data
           # Set the number of cores to use when building
           - export BUILD_CORES=8
           # Boostrap vcpkg
@@ -38,9 +35,8 @@ pipelines:
           - ./third-party/vcpkg/bootstrap-vcpkg.sh
           - mkdir build
           - cd build
-          - cmake -DCMAKE_TOOLCHAIN_FILE=../third-party/vcpkg/scripts/buildsystems/vcpkg.cmake ..
-
-          # Build binary and run unit tests
+          - cmake -DCMAKE_TOOLCHAIN_FILE=../third-party/vcpkg/scripts/buildsystems/vcpkg.cmake -DSENSEI_WITH_GRPC=ON ..
+          # Build binary and unit tests
           - make sensei -j${BUILD_CORES}
           - make unit_tests -j${BUILD_CORES}
           # Run unit tests
