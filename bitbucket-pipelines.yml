@@ -1,0 +1,53 @@
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: ubuntu:24.04
+
+pipelines:
+  default:
+    - step:
+        name: Build sensei + tests
+
+        size: 4x
+
+        caches:
+          - vcpkg
+
+        script:
+          # Prepare system.
+          - apt-get update -y
+          - apt install build-essential -y
+          - apt-get install -y -q liblo-dev
+          - apt-get install -y -q cmake git make
+          - apt-get install -y -q curl zip unzip tar
+          - apt-get install -y -q libgrpc++-dev protobuf-compiler-grpc
+          - apt-get install -y software-properties-common
+          - add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          - export LV2_PATH=$HOME/.lv2:/usr/local/lib/lv2:/usr/lib/lv2
+
+          # Prepare dependencies
+          # Rewrite the relative submodule url as bitbucket doesn't handle relative paths correctly
+          - sed -i 's/url = \.\.\(.*\)/url = git@bitbucket.org:'$BITBUCKET_TEAM'\1/g' .gitmodules
+          - git submodule update --init --recursive
+          # Set test data dir (for running unit test manually)
+          - export SUSHI_TEST_DATA_DIR=$PWD/test/data
+          # Set the number of cores to use when building
+          - export BUILD_CORES=8
+          # Boostrap vcpkg
+          - export VCPKG_BINARY_SOURCES="clear;files,$(pwd)/vcpkgcache,readwrite"
+          - ./third-party/vcpkg/bootstrap-vcpkg.sh
+          - mkdir build
+          - cd build
+          - cmake -DCMAKE_TOOLCHAIN_FILE=../third-party/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+
+          # Build binary and run unit tests
+          - make sensei -j${BUILD_CORES}
+          - make unit_tests -j${BUILD_CORES}
+          # Run unit tests
+          - cd test
+          - ./unit_tests
+          - cd ..
+
+definitions:
+  caches:
+    vcpkg: vcpkgcache
