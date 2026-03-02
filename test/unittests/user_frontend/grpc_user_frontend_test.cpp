@@ -472,6 +472,7 @@ TEST_F(TestGrpcUserFrontend, test_get_controller_map)
     _user_frontend->update_controller(0, "POT1", SensorType::ANALOG_INPUT);
     _user_frontend->update_controller(1, "LED1", SensorType::DIGITAL_OUTPUT);
     _user_frontend->update_controller(2, "SW1", SensorType::DIGITAL_INPUT);
+    _user_frontend->update_controller(3, "ENC1", SensorType::RELATIVE_INPUT);
 
     grpc::Status status = _stub->GetControllerMap(&context, request, &response);
     ASSERT_TRUE(status.ok());
@@ -485,6 +486,9 @@ TEST_F(TestGrpcUserFrontend, test_get_controller_map)
     ASSERT_EQ(response.switches_size(), 1);
     ASSERT_EQ(response.switches().Get(0).id(), 2);
     ASSERT_EQ(response.switches().Get(0).name(), "SW1");
+    ASSERT_EQ(response.encoders_size(), 1);
+    ASSERT_EQ(response.encoders().Get(0).id(), 3);
+    ASSERT_EQ(response.encoders().Get(0).name(), "ENC1");
 }
 
 
