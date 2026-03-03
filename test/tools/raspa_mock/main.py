@@ -152,16 +152,11 @@ def main():
 
         logger.info(f"Controllers: {grpc_receiver.get_controller_map()}")
 
-        logger.info("------")
-        logger.info("Success, press Ctrl-C to quit...")
-
-        while raspa_server.running:
-            raspa_server.listen_once()
-
     except KeyboardInterrupt:
         logger.info("\nShutting down...")
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
+        return 1
     finally:
         sensei_client.close()
         grpc_receiver.stop()
