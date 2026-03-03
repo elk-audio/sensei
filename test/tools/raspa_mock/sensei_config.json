@@ -183,14 +183,20 @@
       "id" : 13,
       "enabled": true,
       "name" : "SW1",
-      "sensor_type" : "range_input",
+      "sensor_type" : "discrete_input",
       "mode" : "on_value_changed",
-      "range" : [1, 4],
+      "discrete_ranges" : [
+        [0.0, 0.1],
+        [0.1, 0.5],
+        [0.5, 1.0]
+      ],
       "hardware" :
       {
-          "hardware_type" : "n_way_switch",
-          "pins" : [4,5,6,7],
-          "delta_ticks" : 1
+        "hardware_type" : "analog_input_pin",
+        "pins" : [6],
+        "delta_ticks" : 1,
+        "adc_resolution" : 8,
+        "filter_time_constant" : 0.020
       }
     },
     {

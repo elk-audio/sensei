@@ -184,6 +184,14 @@ public:
         return std::unique_ptr<SetSliderThresholdCommand>(msg);
     }
 
+    std::unique_ptr<BaseMessage> make_set_discrete_ranges_command(const int                 sensor_id,
+                                                                  const std::vector<Range>& ranges,
+                                                                  const uint32_t            timestamp = 0)
+    {
+        auto msg = new SetDiscreteRangesCommand(sensor_id, ranges, timestamp);
+        return std::unique_ptr<SetDiscreteRangesCommand>(msg);
+    }
+
     std::unique_ptr<BaseMessage> make_set_multiplexed_sensor_command(const int      sensor_id,
                                                                      const int      multiplexer_id,
                                                                      const int      multiplexer_pin,

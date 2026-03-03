@@ -126,14 +126,15 @@ def main():
         def test_switches():
             # from sensei_config.json
             controller_id = 13
+            adc_resolution = 8
 
-            # range is 1-4
-            check_value(controller_id, 0, 1)
-            check_no_value(controller_id, 1)
-            check_value(controller_id, 2, 2)
-            check_value(controller_id, 3, 3)
-            check_value(controller_id, 4, 4)
-            check_no_value(controller_id, 12)
+            max_value = pow(2, adc_resolution) - 1
+
+            # ranges are [0.0, 0.1], [0.1, 0.5], [0.5, 1.0]
+            check_value(controller_id, 0, 0)
+            check_no_value(controller_id, int(0.05 * max_value))
+            check_value(controller_id, int(0.11 * max_value), 1)
+            check_value(controller_id, int(0.6 * max_value), 2)
 
         def test_encoders():
             # from sensei_config.json
@@ -150,7 +151,9 @@ def main():
         test_switches()
         test_encoders()
 
-        logger.info(f"Controllers: {grpc_receiver.get_controller_map()}")
+        controllers = grpc_receiver.get_controller_map()
+        logger.info(f"Controllers: {controllers}")
+        assert(len(controllers) == 14)
 
         logger.info("------")
         logger.info("Success, press Ctrl-C to quit...")
