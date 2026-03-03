@@ -55,11 +55,11 @@ public:
     }
 
 protected:
-    Value(const int sensor_index,
+    Value(const int       sensor_index,
           const ValueType type,
-          const uint32_t timestamp=0) :
-        BaseMessage(sensor_index, timestamp, MessageType::VALUE),
-        _type(type)
+          const uint32_t  timestamp = 0)
+        : BaseMessage(sensor_index, timestamp, MessageType::VALUE),
+          _type(type)
     {
     }
 
@@ -67,27 +67,27 @@ protected:
 };
 
 #define SENSEI_DECLARE_VALUE(ClassName, value_type, InternalType, representation_prefix) \
-class ClassName : public Value \
-{ \
-public: \
-    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() const override \
-    {\
-        return std::string(representation_prefix);\
-    }\
-    InternalType value() const\
-    {\
-        return _value;\
-    }\
-    ClassName(const int sensor_index,\
-              const InternalType value,\
-              const uint32_t timestamp=0) :\
-        Value(sensor_index, value_type, timestamp),\
-        _value(value)\
-    {\
-    }\
-    InternalType _value;\
-}
+    class ClassName : public Value \
+    { \
+    public: \
+        SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+        std::string representation() const override \
+        { \
+            return std::string(representation_prefix); \
+        } \
+        InternalType value() const \
+        { \
+            return _value; \
+        } \
+        ClassName(const int          sensor_index, \
+                  const InternalType value, \
+                  const uint32_t     timestamp = 0) \
+            : Value(sensor_index, value_type, timestamp), \
+              _value(value) \
+        { \
+        } \
+        InternalType _value; \
+    }
 
 }; // namespace sensei
 

@@ -32,7 +32,8 @@
 *.dSYM/
 
 # Hidden files
-.*
+.cache/
+.claude/
 !*/.gitkeep
 !.gitignore
 

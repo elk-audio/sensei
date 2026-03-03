@@ -40,11 +40,12 @@ class EventBroadcastManager;
 class CallDataBase
 {
 public:
-    CallDataBase(sensei_rpc::SenseiController::AsyncService *service,
-                 grpc::ServerCompletionQueue* cq) : 
-                 _state(State::CREATE),
-                 _service(service),
-                 _cq(cq) {}
+    CallDataBase(sensei_rpc::SenseiController::AsyncService* service,
+                 grpc::ServerCompletionQueue*                cq)
+        : _state(State::CREATE),
+          _service(service),
+          _cq(cq)
+    {}
 
     virtual ~CallDataBase() = default;
     virtual void proceed() = 0;
@@ -54,12 +55,17 @@ public:
     }
 
 protected:
-    enum class State { CREATE, PROCESSING, DONE };
+    enum class State
+    {
+        CREATE,
+        PROCESSING,
+        DONE
+    };
 
-    State _state;
-    grpc::ServerContext _ctx;
+    State                                       _state;
+    grpc::ServerContext                         _ctx;
     sensei_rpc::SenseiController::AsyncService* _service;
-    grpc::ServerCompletionQueue* _cq;
+    grpc::ServerCompletionQueue*                _cq;
 };
 
 /**
@@ -69,9 +75,9 @@ class SubscribeCallData : public CallDataBase
 {
 public:
     SubscribeCallData(
-        sensei_rpc::SenseiController::AsyncService* service,
-        grpc::ServerCompletionQueue* cq,
-        EventBroadcastManager* broadcast_mgr);
+            sensei_rpc::SenseiController::AsyncService* service,
+            grpc::ServerCompletionQueue*                cq,
+            EventBroadcastManager*                      broadcast_mgr);
 
     void proceed() override;
 
@@ -90,16 +96,16 @@ private:
      */
     void _start_write();
 
-    sensei_rpc::SubscribeRequest _request;
+    sensei_rpc::SubscribeRequest               _request;
     grpc::ServerAsyncWriter<sensei_rpc::Event> _responder;
-    EventBroadcastManager* _broadcast_mgr;
+    EventBroadcastManager*                     _broadcast_mgr;
 
     // Event queue and write serialization
-    std::mutex _write_mutex;
+    std::mutex                    _write_mutex;
     std::queue<sensei_rpc::Event> _pending_events;
-    sensei_rpc::Event _current_event;
-    bool _in_processing;
-    bool _is_writing;
+    sensei_rpc::Event             _current_event;
+    bool                          _in_processing;
+    bool                          _is_writing;
 };
 
 /**
@@ -109,17 +115,17 @@ class UpdateLedCallData : public CallDataBase
 {
 public:
     UpdateLedCallData(
-        sensei_rpc::SenseiController::AsyncService* service,
-        grpc::ServerCompletionQueue* cq,
-        GrpcUserFrontend* frontend);
+            sensei_rpc::SenseiController::AsyncService* service,
+            grpc::ServerCompletionQueue*                cq,
+            GrpcUserFrontend*                           frontend);
 
     void proceed() override;
 
 private:
-    sensei_rpc::UpdateLedRequest _request;
-    sensei_rpc::GenericVoidValue _response;
+    sensei_rpc::UpdateLedRequest                                  _request;
+    sensei_rpc::GenericVoidValue                                  _response;
     grpc::ServerAsyncResponseWriter<sensei_rpc::GenericVoidValue> _responder;
-    GrpcUserFrontend* _frontend;
+    GrpcUserFrontend*                                             _frontend;
 };
 
 /**
@@ -129,17 +135,17 @@ class RefreshAllStatesCallData : public CallDataBase
 {
 public:
     RefreshAllStatesCallData(
-        sensei_rpc::SenseiController::AsyncService* service,
-        grpc::ServerCompletionQueue* cq,
-        GrpcUserFrontend* frontend);
+            sensei_rpc::SenseiController::AsyncService* service,
+            grpc::ServerCompletionQueue*                cq,
+            GrpcUserFrontend*                           frontend);
 
     void proceed() override;
 
 private:
-    sensei_rpc::GenericVoidValue _request;
-    sensei_rpc::GenericVoidValue _response;
+    sensei_rpc::GenericVoidValue                                  _request;
+    sensei_rpc::GenericVoidValue                                  _response;
     grpc::ServerAsyncResponseWriter<sensei_rpc::GenericVoidValue> _responder;
-    GrpcUserFrontend* _frontend;
+    GrpcUserFrontend*                                             _frontend;
 };
 
 /**
@@ -149,17 +155,17 @@ class GetControllerMapCallData : public CallDataBase
 {
 public:
     GetControllerMapCallData(
-        sensei_rpc::SenseiController::AsyncService* service,
-        grpc::ServerCompletionQueue* cq,
-        GrpcUserFrontend* frontend);
+            sensei_rpc::SenseiController::AsyncService* service,
+            grpc::ServerCompletionQueue*                cq,
+            GrpcUserFrontend*                           frontend);
 
     void proceed() override;
 
 private:
-    sensei_rpc::GenericVoidValue _request;
-    sensei_rpc::GetControllerMapResponse _response;
+    sensei_rpc::GenericVoidValue                                          _request;
+    sensei_rpc::GetControllerMapResponse                                  _response;
     grpc::ServerAsyncResponseWriter<sensei_rpc::GetControllerMapResponse> _responder;
-    GrpcUserFrontend* _frontend;
+    GrpcUserFrontend*                                                     _frontend;
 };
 
 /**
@@ -170,14 +176,16 @@ private:
 class EventBroadcastManager
 {
 public:
-    EventBroadcastManager() : _shutting_down(false) {}
+    EventBroadcastManager()
+        : _shutting_down(false)
+    {}
     ~EventBroadcastManager() = default;
 
     /**
      * @brief Register a new subscriber
      * @param subscriber Non-owning pointer to SubscribeCallData
      */
-    void register_subscriber(SubscribeCallData* subscriber, std::vector<int> &&controller_ids);
+    void register_subscriber(SubscribeCallData* subscriber, std::vector<int>&& controller_ids);
 
     /**
      * @brief Unregister a subscriber (called when client disconnects)
@@ -204,13 +212,13 @@ public:
 private:
     struct SubscriberData
     {
-        SubscribeCallData *subscriber; // non-owning pointer
-        std::vector<int> controller_ids;
+        SubscribeCallData* subscriber; // non-owning pointer
+        std::vector<int>   controller_ids;
     };
 
-    std::mutex _subscribers_mutex;
+    std::mutex                  _subscribers_mutex;
     std::vector<SubscriberData> _subscribers;
-    std::atomic<bool> _shutting_down;
+    std::atomic<bool>           _shutting_down;
 };
 
 } // namespace user_frontend

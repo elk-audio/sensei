@@ -22,10 +22,12 @@ std::unique_ptr<DerivedCommand> extract_cmd_from(std::vector<std::unique_ptr<sen
     return std::move(tmp_msg);
 }
 
-inline bool wait_for(std::function<bool()> condition, std::chrono::seconds timeout) {
+inline bool wait_for(std::function<bool()> condition, std::chrono::seconds timeout)
+{
     auto start = std::chrono::steady_clock::now();
     while (!condition() &&
-        std::chrono::steady_clock::now() - start < std::chrono::seconds(timeout)) {
+           std::chrono::steady_clock::now() - start < std::chrono::seconds(timeout))
+    {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     return condition();
@@ -63,13 +65,13 @@ public:
     }
 
     SynchronizedQueue<std::unique_ptr<BaseMessage>> event_queue;
-    SynchronizedQueue<std::unique_ptr<Command>> to_frontend_queue;
-    std::vector<std::string> processed_events;
+    SynchronizedQueue<std::unique_ptr<Command>>     to_frontend_queue;
+    std::vector<std::string>                        processed_events;
 
     const BaseMessage* rec_event{nullptr};
-    const Command* rec_command{nullptr};
+    const Command*     rec_command{nullptr};
 };
 
 
-}
+} // namespace sensei
 #endif //SENSEI_TEST_UTILS_H

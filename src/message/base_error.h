@@ -50,11 +50,11 @@ public:
     }
 
 protected:
-    Error(const int sensor_index,
+    Error(const int       sensor_index,
           const ErrorType type,
-          const uint32_t timestamp = 0) :
-            BaseMessage(sensor_index, timestamp, MessageType::ERROR),
-            _type(type)
+          const uint32_t  timestamp = 0)
+        : BaseMessage(sensor_index, timestamp, MessageType::ERROR),
+          _type(type)
     {
     }
 
@@ -66,45 +66,47 @@ protected:
 //////////////////////////////////////////////////////////////////////////////////
 
 #define SENSEI_DECLARE_VOID_ERROR(ClassName, error_type, representation_prefix) \
-class ClassName : public Error \
-{ \
-public: \
-    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() const override \
-    {\
-        return std::string(representation_prefix);\
-    }\
-private:\
-    ClassName(const int sensor_index,\
-              const uint32_t timestamp=0) :\
-        Error(sensor_index, error_type, timestamp)\
-    {\
-    }\
-}
+    class ClassName : public Error \
+    { \
+    public: \
+        SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+        std::string representation() const override \
+        { \
+            return std::string(representation_prefix); \
+        } \
+\
+    private: \
+        ClassName(const int      sensor_index, \
+                  const uint32_t timestamp = 0) \
+            : Error(sensor_index, error_type, timestamp) \
+        { \
+        } \
+    }
 
 #define SENSEI_DECLARE_ERROR(ClassName, error_type, InternalType, representation_prefix) \
-class ClassName : public Error \
-{ \
-public: \
-    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() const override \
-    {\
-        return std::string(representation_prefix);\
-    }\
-    InternalType data() const\
-    {\
-        return _data;\
-    }\
-private:\
-    ClassName(const int sensor_index,\
-              const InternalType data,\
-              const uint32_t timestamp=0) :\
-        Error(sensor_index, error_type, timestamp),\
-        _data(data)\
-    {\
-    }\
-    InternalType _data;\
-}
+    class ClassName : public Error \
+    { \
+    public: \
+        SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+        std::string representation() const override \
+        { \
+            return std::string(representation_prefix); \
+        } \
+        InternalType data() const \
+        { \
+            return _data; \
+        } \
+\
+    private: \
+        ClassName(const int          sensor_index, \
+                  const InternalType data, \
+                  const uint32_t     timestamp = 0) \
+            : Error(sensor_index, error_type, timestamp), \
+              _data(data) \
+        { \
+        } \
+        InternalType _data; \
+    }
 
 }; // namespace sensei
 

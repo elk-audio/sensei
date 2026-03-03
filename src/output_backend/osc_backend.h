@@ -29,12 +29,12 @@ namespace output_backend {
 class OSCBackend : public OutputBackend
 {
 public:
-    OSCBackend(const int max_n_sensors=64);
+    OSCBackend(const int max_n_sensors = 64);
 
     ~OSCBackend()
     {}
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void send(const OutputValue* transformed_value, const Value* raw_input_value) override;
 
@@ -46,7 +46,7 @@ private:
     std::string _base_path;
     std::string _base_raw_path;
     std::string _host;
-    int _port;
+    int         _port;
     lo_address  _address;
 
     std::vector<std::string> _full_out_paths;

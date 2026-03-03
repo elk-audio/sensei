@@ -76,17 +76,16 @@ public:
 private:
     void update_time();
 
-    std::chrono::steady_clock::duration    _timeout;
-    std::chrono::steady_clock::time_point  _current_time;
-    std::chrono::steady_clock::time_point  _send_time;
+    std::chrono::steady_clock::duration   _timeout;
+    std::chrono::steady_clock::time_point _current_time;
+    std::chrono::steady_clock::time_point _send_time;
 
-    int                                    _max_retries;
-    int                                    _retries;
-    std::unique_ptr<Command>               _message_in_transit;
+    int                      _max_retries;
+    int                      _retries;
+    std::unique_ptr<Command> _message_in_transit;
 
-    uint64_t    _identifier;
-    std::mutex  _mutex;
-
+    uint64_t   _identifier;
+    std::mutex _mutex;
 };
 
 } // namespace hw_frontend

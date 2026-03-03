@@ -28,12 +28,12 @@ namespace output_backend {
 class StandardStreamBackend : public OutputBackend
 {
 public:
-    StandardStreamBackend(const int max_n_sensors=64);
+    StandardStreamBackend(const int max_n_sensors = 64);
 
     ~StandardStreamBackend()
     {}
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void send(const OutputValue* transformed_value, const Value* raw_input_value) override;
 };

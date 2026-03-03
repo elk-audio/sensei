@@ -50,8 +50,8 @@ public:
     * @param [in] handler MessageHandler for incoming and outgoing messages
     */
     HwFrontend(hw_backend::BaseHwBackend* hw_backend,
-               MessageHandler* handler = nullptr,
-               ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
+               MessageHandler*            handler = nullptr,
+               ThreadingMode              threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~HwFrontend()
     {}
@@ -98,25 +98,25 @@ private:
     void _handle_ack(const gpio::GpioPacket& ack);
     void _handle_value(const gpio::GpioPacket& packet);
     void _handle_board_info(const gpio::GpioPacket& packet);
-    void _process_sensei_command(const Command*message);
+    void _process_sensei_command(const Command* message);
 
-    MessageFactory   _message_factory;
-    GpioCommandCreator _packet_factory;
-    MessageTracker     _message_tracker;
-    std::deque<gpio::GpioPacket>  _send_list;
-    hw_backend::BaseHwBackend* _hw_backend;
+    MessageFactory               _message_factory;
+    GpioCommandCreator           _packet_factory;
+    MessageTracker               _message_tracker;
+    std::deque<gpio::GpioPacket> _send_list;
+    hw_backend::BaseHwBackend*   _hw_backend;
 
     std::atomic<ThreadState> _state;
-    std::thread     _read_thread;
-    std::thread     _write_thread;
+    std::thread              _read_thread;
+    std::thread              _write_thread;
 
-    std::mutex      _send_list_mutex;
-    std::mutex      _send_mutex;
+    std::mutex              _send_list_mutex;
+    std::mutex              _send_mutex;
     std::condition_variable _ready_to_send_notifier;
 
-    bool            _ready_to_send;
-    bool            _muted;
-    bool            _verify_acks;
+    bool                    _ready_to_send;
+    bool                    _muted;
+    bool                    _verify_acks;
     gpio::GpioBoardInfoData _board_info;
 };
 

@@ -31,8 +31,8 @@ class JsonConfiguration : public BaseConfiguration
 {
 public:
     JsonConfiguration(MessageHandler* handler, const std::string& file,
-                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
-            BaseConfiguration(handler, file, threading_mode)
+                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : BaseConfiguration(handler, file, threading_mode)
     {}
 
     ~JsonConfiguration() = default;

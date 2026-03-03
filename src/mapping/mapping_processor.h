@@ -35,7 +35,7 @@ public:
 
     MappingProcessor(int max_no_sensors = 64);
 
-    CommandErrorCode apply_command(const Command *cmd);
+    CommandErrorCode apply_command(const Command* cmd);
 
     void put_config_commands_into(CommandIterator out_iterator);
 
@@ -44,7 +44,7 @@ public:
     std::unique_ptr<Command> process_set(Value* value);
 
 private:
-    int _max_no_sensors;
+    int                                            _max_no_sensors;
     std::vector<std::unique_ptr<BaseSensorMapper>> _mappers;
 };
 

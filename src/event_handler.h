@@ -70,20 +70,20 @@ private:
     void _handle_command(Command* cmd);
     void _handle_error(Error* error);
 
-    std::mutex _sync_mutex;
+    std::mutex    _sync_mutex;
     ThreadingMode _mode;
 
     // Inter-modules communication queues
-    SynchronizedQueue<std::unique_ptr<Command>> _to_frontend_queue;
+    SynchronizedQueue<std::unique_ptr<Command>>     _to_frontend_queue;
     SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
 
     // Sub-components instances
-    std::unique_ptr<hw_frontend::BaseHwFrontend> _hw_frontend;
-    std::unique_ptr<hw_backend::BaseHwBackend> _hw_backend;
-    std::unique_ptr<mapping::MappingProcessor> _processor;
+    std::unique_ptr<hw_frontend::BaseHwFrontend>   _hw_frontend;
+    std::unique_ptr<hw_backend::BaseHwBackend>     _hw_backend;
+    std::unique_ptr<mapping::MappingProcessor>     _processor;
     std::unique_ptr<output_backend::OutputBackend> _output_backend;
-    std::unique_ptr<config::BaseConfiguration> _config_backend;
-    std::unique_ptr<user_frontend::UserFrontend> _user_frontend;
+    std::unique_ptr<config::BaseConfiguration>     _config_backend;
+    std::unique_ptr<user_frontend::UserFrontend>   _user_frontend;
 };
 
 } // namespace sensei

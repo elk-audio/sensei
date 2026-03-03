@@ -40,7 +40,7 @@ public:
      * @param [in] handler MessageHandler for incoming and outgoing messages
     */
     BaseHwFrontend(MessageHandler* handler,
-                   ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS)
+                   ThreadingMode   threading_mode = ThreadingMode::ASYNCHRONOUS)
     {
         _handler = handler;
         _in_queue = handler->outgoing_queue();
@@ -79,23 +79,24 @@ public:
     virtual void verify_acks(bool enabled) = 0;
 
 protected:
-    MessageHandler* _handler;
-    SynchronizedQueue<std::unique_ptr<Command>>*_in_queue;
-    ThreadingMode _threading_mode;
+    MessageHandler*                              _handler;
+    SynchronizedQueue<std::unique_ptr<Command>>* _in_queue;
+    ThreadingMode                                _threading_mode;
 };
-
 
 
 class NoOpFrontend : public BaseHwFrontend
 {
 public:
     NoOpFrontend(MessageHandler* handler,
-                 ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) : BaseHwFrontend(handler, threading_mode) {}
-    void run() {}
-    void stop() {}
+                 ThreadingMode   threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : BaseHwFrontend(handler, threading_mode)
+    {}
+    void         run() {}
+    void         stop() {}
     virtual void process_command(const Command* /*cmd*/) {}
-    void mute(bool /*enabled*/) {}
-    void verify_acks(bool /*enabled*/) {}
+    void         mute(bool /*enabled*/) {}
+    void         verify_acks(bool /*enabled*/) {}
 };
 
 }; // namespace hw_frontend

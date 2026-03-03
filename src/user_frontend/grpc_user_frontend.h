@@ -79,13 +79,13 @@ private:
      */
     void _handle_rpcs();
 
-    GrpcUserFrontend* _frontend;
-    std::unique_ptr<grpc::Server> _server;
-    std::unique_ptr<grpc::ServerCompletionQueue> _cq;
+    GrpcUserFrontend*                                           _frontend;
+    std::unique_ptr<grpc::Server>                               _server;
+    std::unique_ptr<grpc::ServerCompletionQueue>                _cq;
     std::unique_ptr<sensei_rpc::SenseiController::AsyncService> _async_service;
-    std::unique_ptr<EventBroadcastManager> _broadcast_manager;
-    std::thread _cq_thread;
-    bool _running;
+    std::unique_ptr<EventBroadcastManager>                      _broadcast_manager;
+    std::thread                                                 _cq_thread;
+    bool                                                        _running;
 };
 
 /**
@@ -96,8 +96,8 @@ class GrpcUserFrontend : public UserFrontend
 {
 public:
     GrpcUserFrontend(MessageHandler* handler,
-                     const int max_n_sensors,
-                     ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
+                     const int       max_n_sensors,
+                     ThreadingMode   threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~GrpcUserFrontend();
 
@@ -123,7 +123,7 @@ public:
      * @param name The name of the controller
      * @param sensor_type The type of the controller
      */
-    void update_controller(int controller_id, const std::string &name, SensorType type);
+    void update_controller(int controller_id, const std::string& name, SensorType type);
 
     /**
      * @brief Populate the controller map response with current sensor configuration
@@ -148,19 +148,19 @@ private:
     void _stop_server();
 
     std::string _listen_address;
-    int _listen_port;
+    int         _listen_port;
 
     std::unique_ptr<AsyncSenseiControllerImpl> _service_impl;
 
-    bool _server_running;
+    bool       _server_running;
     std::mutex _server_mutex;
 
     struct Controller
     {
         std::string name;
-        SensorType type{SensorType::UNDEFINED};
+        SensorType  type{SensorType::UNDEFINED};
     };
-    std::mutex _controller_map_mutex;
+    std::mutex              _controller_map_mutex;
     std::vector<Controller> _controller_map;
 };
 
