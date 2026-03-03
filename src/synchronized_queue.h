@@ -25,7 +25,8 @@
 #include "locked_queue.h"
 #include "cassert"
 
-template <class T> class SynchronizedQueue
+template<class T>
+class SynchronizedQueue
 {
 public:
     void push(T const& message)
@@ -46,7 +47,7 @@ public:
     T pop()
     {
         std::lock_guard<std::mutex> lock(_queue_mutex);
-        T message = std::move(_queue.back());
+        T                           message = std::move(_queue.back());
         _queue.pop_back();
         return std::move(message);
     }
@@ -64,6 +65,7 @@ public:
     {
         return _queue.empty();
     }
+
 private:
     std::deque<T>           _queue;
     std::mutex              _queue_mutex;

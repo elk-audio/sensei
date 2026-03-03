@@ -38,14 +38,14 @@ class OSCUserFrontend : public UserFrontend
 {
 public:
     OSCUserFrontend(MessageHandler* handler, const int max_n_sensors,
-                        ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
+                    ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~OSCUserFrontend()
     {
         _stop_server();
     }
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
 private:
     void _start_server();
@@ -53,7 +53,7 @@ private:
     void _stop_server();
 
     lo_server_thread _osc_server;
-    int _server_port;
+    int              _server_port;
 };
 
 } // namespace user_frontend

@@ -60,7 +60,7 @@ public:
      * or CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE
      * if command is not appropriate for configuring this sensor.
      */
-    virtual CommandErrorCode apply_command(const Command *cmd);
+    virtual CommandErrorCode apply_command(const Command* cmd);
 
     /**
      * @brief Fill the given container with a sequence of commands that match internal configuration.
@@ -78,7 +78,7 @@ public:
      * @param [in] value Input value coming from the gpio hw frontend
      * @param [out] out_iterator Iterator to a collection to which output values will be added
      */
-    virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
+    virtual void process(Value* value, output_backend::OutputBackend* backend) = 0;
 
     /**
      * @brief Process a given value coming from a user frontend and generate a set command
@@ -86,24 +86,24 @@ public:
      * @param [in] value Input value from a user fronted
      * @return A set value command to be sent to a hw frontend
      */
-    virtual std::unique_ptr<Command> process_set_value(Value *value) = 0;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) = 0;
 
 protected:
-    MessageFactory      _factory;
-    SensorType          _sensor_type;
-    SensorHwType        _hw_type;
-    int                 _sensor_index;
-    std::vector<int>    _hw_pins;
-    bool                _enabled;
-    bool                _multiplexed;
-    MultiplexerData     _multiplexer_data;
-    SendingMode         _sending_mode;
-    int                 _delta_ticks_sending;
+    MessageFactory   _factory;
+    SensorType       _sensor_type;
+    SensorHwType     _hw_type;
+    int              _sensor_index;
+    std::vector<int> _hw_pins;
+    bool             _enabled;
+    bool             _multiplexed;
+    MultiplexerData  _multiplexer_data;
+    SendingMode      _sending_mode;
+    int              _delta_ticks_sending;
 
     std::optional<float> _previous_value;
-    bool                _invert_value;
-    bool                _send_timestamp;
-    bool                _fast_mode;
+    bool                 _invert_value;
+    bool                 _send_timestamp;
+    bool                 _fast_mode;
 };
 
 /**
@@ -118,16 +118,15 @@ public:
 
     ~DigitalSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
-
 };
 
 /**
@@ -143,13 +142,13 @@ public:
 
     ~AnalogSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
@@ -161,15 +160,15 @@ private:
     // External board config
     [[maybe_unused]] int _delta_ticks_sending;
     [[maybe_unused]] int _adc_bit_resolution;
-    float _filter_time_constant;
-    int _slider_threshold;
+    float                _filter_time_constant;
+    int                  _slider_threshold;
 
     // Mapping parameters
     int _input_scale_range_low;
     int _input_scale_range_high;
 
     // Internal helper attributes
-    int _max_allowed_input;
+    int                    _max_allowed_input;
     [[maybe_unused]] float _adc_sampling_rate;
 };
 
@@ -186,13 +185,13 @@ public:
 
     ~RangeSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
@@ -218,13 +217,13 @@ public:
 
     ~ContinuousSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
     CommandErrorCode _set_input_scale_range(float low, float high);
@@ -248,13 +247,13 @@ public:
 
     ~RelativeSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    std::unique_ptr<Command> process_set_value(Value *value) override;
+    std::unique_ptr<Command> process_set_value(Value* value) override;
 };
 
 }; // namespace mapping

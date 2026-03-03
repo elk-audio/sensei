@@ -19,7 +19,7 @@ enum class ThreadingMode
 class MessageHandler
 {
 public:
-	virtual ~MessageHandler() = default;
+    virtual ~MessageHandler() = default;
 
     /**
      * @brief Process an event message immediately on the calling thread.
@@ -40,6 +40,6 @@ public:
     virtual SynchronizedQueue<std::unique_ptr<Command>>* outgoing_queue() = 0;
 };
 
-}
+} // namespace sensei
 
 #endif //SENSEI_HANDLERS_H

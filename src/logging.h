@@ -69,7 +69,7 @@ ELK_POP_WARNING
 //#define SENSEI_ENABLE_DEBUG_FILE_AND_LINE_NUM
 
 /* Use this macro  at the top of a source file to declare a local logger */
-#define SENSEI_GET_LOGGER_WITH_MODULE_NAME(prefix) constexpr char local_log_prefix[] = "[" prefix "] " ;
+#define SENSEI_GET_LOGGER_WITH_MODULE_NAME(prefix) constexpr char local_log_prefix[] = "[" prefix "] ";
 
 #define SENSEI_GET_LOGGER constexpr char local_log_prefix[] = "";
 
@@ -81,15 +81,16 @@ ELK_POP_WARNING
  * -DDISABLE_MACROS unfortunately
  */
 #ifdef SENSEI_ENABLE_DEBUG_FILE_AND_LINE_NUM
-#define SENSEI_LOG_DEBUG(msg, ...) spdlog_instance->debug("{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__ , __LINE__)
+#define SENSEI_LOG_DEBUG(msg, ...) spdlog_instance->debug("{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__, __LINE__)
 #else
-#define SENSEI_LOG_DEBUG(msg, ...)         elk::Logger::logger_instance->debug("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_DEBUG(msg, ...) elk::Logger::logger_instance->debug("{}" msg, local_log_prefix, ##__VA_ARGS__)
 #endif
-#define SENSEI_LOG_INFO(msg, ...)          elk::Logger::logger_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_WARNING(msg, ...)       elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_ERROR(msg, ...)         elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_CRITICAL(msg, ...)      elk::Logger::logger_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_INFO(msg, ...) elk::Logger::logger_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_WARNING(msg, ...) elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_ERROR(msg, ...) elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_CRITICAL(msg, ...) elk::Logger::logger_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__)
 
+// clang-format off
 #ifdef SENSEI_ENABLE_DEBUG_FILE_AND_LINE_NUM
 #define SENSEI_LOG_DEBUG_IF(condition, msg, ...) if (condition) { elk::Logger::logger_instance->debug_if(condition, "{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__ , __LINE__); }
 #else
@@ -99,6 +100,7 @@ ELK_POP_WARNING
 #define SENSEI_LOG_WARNING_IF(condition, msg, ...)  if (condition) { elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__); }
 #define SENSEI_LOG_ERROR_IF(condition, msg, ...)    if (condition) { elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__); }
 #define SENSEI_LOG_CRITICAL_IF(condition, msg, ...) if (condition) { elk::Logger::logger_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__); }
+// clang-format off
 
 /*
  * Call this _before_ instantiating any object that use SENSEI_GET_LOGGER

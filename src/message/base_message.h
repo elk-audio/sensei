@@ -42,8 +42,8 @@ enum class MessageType
  *        Put it at beginning of public: section.
  */
 #define SENSEI_MESSAGE_DECLARE_NON_COPYABLE(ClassName) \
-    ClassName (const ClassName&) = delete ;\
-    ClassName& operator= (const ClassName&) = delete;
+    ClassName(const ClassName&) = delete; \
+    ClassName& operator=(const ClassName&) = delete;
 
 /**
  * @brief Convenience macro for declaring non-copyable behaviour, factory friend and empty destructor.
@@ -80,7 +80,7 @@ public:
      * @return Index of the sensor
      */
     int index() const
-    {   
+    {
         return _index;
     }
 
@@ -110,20 +110,19 @@ public:
         return _base_type;
     }
 
-//protected:
-    BaseMessage(const int sensor_index,
-                const unsigned int timestamp=0,
-                const MessageType msg_type=MessageType::VALUE) :
-            _index(sensor_index),
-            _timestamp(timestamp),
-            _base_type(msg_type)
+    //protected:
+    BaseMessage(const int          sensor_index,
+                const unsigned int timestamp = 0,
+                const MessageType  msg_type = MessageType::VALUE)
+        : _index(sensor_index),
+          _timestamp(timestamp),
+          _base_type(msg_type)
     {
     }
 
-    int _index;
-    uint32_t _timestamp;
+    int         _index;
+    uint32_t    _timestamp;
     MessageType _base_type;
-
 };
 
 }; // namespace sensei

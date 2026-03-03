@@ -169,8 +169,8 @@ struct Range
  */
 struct MultiplexerData
 {
-    int  id;
-    int  pin;
+    int id;
+    int pin;
 };
 
 enum class CommandErrorCode

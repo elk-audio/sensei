@@ -31,7 +31,8 @@
 namespace sensei {
 namespace config {
 
-enum class ConfigStatus {
+enum class ConfigStatus
+{
     OK,
     IO_ERROR,
     PARSING_ERROR,
@@ -49,9 +50,10 @@ struct BackendConfig
     BackendType type;
 };
 
-struct Config {
+struct Config
+{
     HwFrontendConfig hw_config;
-    BackendConfig backend_config;
+    BackendConfig    backend_config;
 };
 
 class BaseConfiguration
@@ -59,11 +61,11 @@ class BaseConfiguration
 
 public:
     BaseConfiguration(MessageHandler* handler, const std::string& source,
-                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
-            _handler(handler),
-            _source(source),
-            _enabled(false),
-            _threading_mode(threading_mode)
+                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : _handler(handler),
+          _source(source),
+          _enabled(false),
+          _threading_mode(threading_mode)
     {
     }
 
@@ -108,13 +110,12 @@ public:
 
 protected:
     MessageHandler* _handler;
-    std::string _source;
-    bool _enabled;
-    ThreadingMode _threading_mode;
-
+    std::string     _source;
+    bool            _enabled;
+    ThreadingMode   _threading_mode;
 };
 
-}  // namespace config
-}  // namespace sensei
+} // namespace config
+} // namespace sensei
 
 #endif //SENSEI_BASECONFIGURATION_H

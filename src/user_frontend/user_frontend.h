@@ -34,11 +34,11 @@ class UserFrontend
 {
 public:
     UserFrontend(MessageHandler* handler,
-                 const int max_n_sensors,
-                 ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
-            _handler(handler),
-            _max_n_sensors(max_n_sensors),
-            _threading_mode(threading_mode)
+                 const int       max_n_sensors,
+                 ThreadingMode   threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : _handler(handler),
+          _max_n_sensors(max_n_sensors),
+          _threading_mode(threading_mode)
     {}
 
     virtual ~UserFrontend()
@@ -52,7 +52,7 @@ public:
      * @return CommandErrorCode::OK if command was succesful,
      *         other codes in case of error.
      */
-    virtual CommandErrorCode apply_command(const Command *cmd);
+    virtual CommandErrorCode apply_command(const Command* cmd);
 
     /**
      * @brief Put an enabled message in the shared queue.
@@ -107,7 +107,7 @@ protected:
     MessageHandler* _handler;
 
     [[maybe_unused]] int _max_n_sensors;
-    ThreadingMode _threading_mode;
+    ThreadingMode        _threading_mode;
 
     MessageFactory _factory;
 };

@@ -40,9 +40,9 @@ public:
      * @param recv_packet_timeout The blocking timeout for receiving packets
      */
     BaseHwBackend(std::chrono::milliseconds recv_packet_timeout,
-                  ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
-                  _recv_packet_timeout(recv_packet_timeout),
-                  _threading_mode(threading_mode)
+                  ThreadingMode             threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : _recv_packet_timeout(recv_packet_timeout),
+          _threading_mode(threading_mode)
     {}
 
     virtual ~BaseHwBackend() = default;
@@ -83,7 +83,7 @@ public:
 
 protected:
     std::chrono::milliseconds _recv_packet_timeout;
-    ThreadingMode _threading_mode;
+    ThreadingMode             _threading_mode;
 };
 
 /**
@@ -93,13 +93,13 @@ class NoOpHwBackend : public BaseHwBackend
 {
 public:
     NoOpHwBackend(std::chrono::milliseconds recv_packet_timeout,
-                  ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS) :
-                                BaseHwBackend(recv_packet_timeout, threading_mode)
+                  ThreadingMode             threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : BaseHwBackend(recv_packet_timeout, threading_mode)
     {}
 
     bool init()
     {
-        return  false;
+        return false;
     }
 
     void deinit() {}

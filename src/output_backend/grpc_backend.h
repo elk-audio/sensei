@@ -25,9 +25,9 @@
 
 namespace sensei {
 namespace user_frontend {
-    class GrpcUserFrontend;
+class GrpcUserFrontend;
 }
-}
+} // namespace sensei
 
 namespace sensei {
 namespace output_backend {
@@ -68,12 +68,12 @@ private:
      * @param timestamp The timestamp in microseconds
      * @return A proto Event message
      */
-    sensei_rpc::Event _create_proto_event(int sensor_index,
+    sensei_rpc::Event _create_proto_event(int        sensor_index,
                                           SensorType sensor_type,
-                                          float value,
-                                          uint32_t timestamp);
+                                          float      value,
+                                          uint32_t   timestamp);
 
-    user_frontend::GrpcUserFrontend* _user_frontend;  // Non-owning pointer
+    user_frontend::GrpcUserFrontend* _user_frontend; // Non-owning pointer
 };
 
 } // namespace output_backend

@@ -56,7 +56,7 @@ std::string gpio_packet_to_string(const gpio::GpioPacket& packet);
 
 struct Pinlist
 {
-    uint8_t pincount;
+    uint8_t                 pincount;
     std::array<uint8_t, 20> pins;
 };
 
@@ -86,7 +86,7 @@ public:
 private:
     gpio::GpioPacket _prepare_packet();
 
-    uint32_t _sequence_number() {return _sequence_count++;}
+    uint32_t _sequence_number() { return _sequence_count++; }
 
     uint32_t _sequence_count{1};
 };

@@ -11,11 +11,11 @@ using namespace sensei::output_backend;
 class OutputBackendMockup : public OutputBackend
 {
 public:
-    OutputBackendMockup() :
-            OutputBackend(64),
-            _last_output_value(0.0f),
-            _last_raw_analogue_input(0),
-            _last_raw_digital_input(false)
+    OutputBackendMockup()
+        : OutputBackend(64),
+          _last_output_value(0.0f),
+          _last_raw_analogue_input(0),
+          _last_raw_digital_input(false)
     {}
 
     ~OutputBackendMockup()
@@ -33,30 +33,27 @@ public:
 
         switch (raw_input_value->type())
         {
-        case ValueType::ANALOG:
-        {
-            auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
-            _last_raw_analogue_input = typed_val->value();
-        }
+            case ValueType::ANALOG: {
+                auto typed_val = static_cast<const AnalogValue*>(raw_input_value);
+                _last_raw_analogue_input = typed_val->value();
+            }
             break;
 
-        case ValueType::DIGITAL:
-        {
-            auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
-            _last_raw_digital_input = typed_val->value();
-        }
+            case ValueType::DIGITAL: {
+                auto typed_val = static_cast<const DigitalValue*>(raw_input_value);
+                _last_raw_digital_input = typed_val->value();
+            }
             break;
 
-        default:
-            break;
+            default:
+                break;
         }
-
     }
 
     uint32_t _last_timestamp;
-    float _last_output_value;
-    int   _last_raw_analogue_input;
-    bool  _last_raw_digital_input;
+    float    _last_output_value;
+    int      _last_raw_analogue_input;
+    bool     _last_raw_digital_input;
 };
 
 #endif //SENSEI_OUTPUT_BACKEND_MOCKUP_H_H
