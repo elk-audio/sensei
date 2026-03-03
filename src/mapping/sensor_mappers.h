@@ -256,6 +256,39 @@ public:
     std::unique_ptr<Command> process_set_value(Value* value) override;
 };
 
+/**
+ * @brief Mapper for sensors that map continuous analog input to discrete ranges
+ */
+class DiscreteSensorMapper : public BaseSensorMapper
+{
+public:
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DiscreteSensorMapper)
+
+    explicit DiscreteSensorMapper(int index = 0);
+
+    ~DiscreteSensorMapper() = default;
+
+    CommandErrorCode apply_command(const Command* cmd) override;
+
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value* value, output_backend::OutputBackend* backend) override;
+
+    std::unique_ptr<Command> process_set_value(Value* value) override;
+
+private:
+    CommandErrorCode   _set_adc_bit_resolution(int resolution);
+    CommandErrorCode   _set_discrete_ranges(const std::vector<Range>& ranges);
+    std::optional<int> _find_range_index(float normalized_value) const;
+
+    // Configuration
+    std::vector<Range> _discrete_ranges;
+    int                _adc_bit_resolution;
+
+    // State tracking
+    std::optional<int> _previous_discrete_index;
+};
+
 }; // namespace mapping
 }; // namespace sensei
 

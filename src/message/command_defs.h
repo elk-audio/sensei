@@ -49,6 +49,7 @@ enum class CommandType
     SET_ADC_BIT_RESOLUTION,
     SET_ADC_FILTER_TIME_CONSTANT,
     SET_SLIDER_THRESHOLD,
+    SET_DISCRETE_RANGES,
     SET_MULTIPLEXED,
     SET_HW_POLARITY,
     SET_FAST_MODE,
@@ -87,6 +88,7 @@ enum class SensorType
     DIGITAL_OUTPUT,
     ANALOG_INPUT,
     ANALOG_OUTPUT,
+    DISCRETE_INPUT,
     CONTINUOUS_INPUT,
     CONTINUOUS_OUTPUT,
     RANGE_INPUT,
@@ -246,6 +248,12 @@ SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
                        int,
                        "Set Slider Threshold",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetDiscreteRangesCommand,
+                       CommandType::SET_DISCRETE_RANGES,
+                       std::vector<Range>,
+                       "Set Discrete Ranges",
+                       CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetMultiplexedSensorCommand,
                        CommandType::SET_MULTIPLEXED,

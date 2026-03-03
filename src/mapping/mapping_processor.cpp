@@ -65,6 +65,10 @@ CommandErrorCode MappingProcessor::apply_command(const Command *cmd)
             _mappers[sensor_index].reset(new AnalogSensorMapper(sensor_index));
             break;
 
+        case SensorType::DISCRETE_INPUT:
+            _mappers[sensor_index].reset(new DiscreteSensorMapper(sensor_index));
+            break;
+
         case SensorType::CONTINUOUS_INPUT:
         case SensorType::CONTINUOUS_OUTPUT:
             _mappers[sensor_index].reset(new ContinuousSensorMapper(sensor_index));

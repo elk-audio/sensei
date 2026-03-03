@@ -330,6 +330,7 @@ void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapRespo
             break;
         }
 
+        case SensorType::DISCRETE_INPUT:
         case SensorType::RANGE_INPUT:
         {
             auto controller = response->add_rotaries();

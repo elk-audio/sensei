@@ -166,6 +166,10 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::ANALOG_OUTPUT);
         }
+        else if (sensor_type_str == "discrete_input")
+        {
+            m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::DISCRETE_INPUT);
+        }
         else if (sensor_type_str == "digital_input")
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::DIGITAL_INPUT);
@@ -259,6 +263,31 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     if (range.isArray() && range.size() >= 2)
     {
         auto m = _message_factory.make_set_input_range_command(sensor_id, range[0].asFloat(), range[1].asFloat());
+        _handler->post_event(std::move(m));
+    }
+
+    /* read discrete_ranges configuration for DISCRETE_INPUT sensors */
+    const Json::Value& discrete_ranges = sensor["discrete_ranges"];
+    if (discrete_ranges.isArray() && !discrete_ranges.empty())
+    {
+        std::vector<Range> ranges;
+        for (const auto& range_pair : discrete_ranges)
+        {
+            if (range_pair.isArray() && range_pair.size() == 2)
+            {
+                Range r;
+                r.min = range_pair[0].asFloat();
+                r.max = range_pair[1].asFloat();
+                ranges.push_back(r);
+            }
+            else
+            {
+                SENSEI_LOG_WARNING("Invalid discrete_range entry, expected array of 2 floats");
+                return ConfigStatus::PARAMETER_ERROR;
+            }
+        }
+
+        auto m = _message_factory.make_set_discrete_ranges_command(sensor_id, ranges);
         _handler->post_event(std::move(m));
     }
 

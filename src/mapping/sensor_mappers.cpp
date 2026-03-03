@@ -512,6 +512,8 @@ RangeSensorMapper::RangeSensorMapper(int index) : BaseSensorMapper(SensorType::A
                                                   _input_scale_range_high(100)
 {}
 
+
+
 CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
 {
     CommandErrorCode  status = CommandErrorCode::OK;
@@ -847,4 +849,176 @@ void RelativeSensorMapper::process(Value *value, output_backend::OutputBackend *
 std::unique_ptr<Command> RelativeSensorMapper::process_set_value(Value* /*value*/)
 {
     return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// DiscreteSensorMapper implementation
+////////////////////////////////////////////////////////////////////////////////
+
+DiscreteSensorMapper::DiscreteSensorMapper(int index) :
+    BaseSensorMapper(SensorType::DISCRETE_INPUT, index)
+{
+    // Default: no ranges configured
+    _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
+}
+
+CommandErrorCode DiscreteSensorMapper::apply_command(const Command *cmd)
+{
+    CommandErrorCode status = CommandErrorCode::OK;
+
+    switch(cmd->type())
+    {
+    case CommandType::SET_SENSOR_TYPE:
+        {
+            assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::DISCRETE_INPUT);
+        };
+        break;
+
+    case CommandType::SET_ADC_BIT_RESOLUTION:
+    {
+        const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
+        status = _set_adc_bit_resolution(typed_cmd->data());
+    };
+    break;
+
+    case CommandType::SET_DISCRETE_RANGES:
+        {
+            const auto typed_cmd = static_cast<const SetDiscreteRangesCommand*>(cmd);
+            status = _set_discrete_ranges(typed_cmd->data());
+        };
+        break;
+
+    default:
+        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+        break;
+    }
+
+    // If command was not handled, try parent
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
+}
+
+void DiscreteSensorMapper::put_config_commands_into(CommandIterator out_iterator)
+{
+    BaseSensorMapper::put_config_commands_into(out_iterator);
+
+    MessageFactory factory;
+    *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
+    *out_iterator = factory.make_set_discrete_ranges_command(_sensor_index, _discrete_ranges);
+}
+
+void DiscreteSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
+{
+    if (!_enabled)
+    {
+        return;
+    }
+
+    assert(value->type() == ValueType::ANALOG);
+
+    // Get raw integer value from hardware
+    auto analog_val = static_cast<AnalogValue*>(value);
+
+    const auto max_input_value = (1 << _adc_bit_resolution) - 1;
+
+    // Normalize to 0.0-1.0 (same logic as AnalogSensorMapper)
+    int clipped_val = clip<int>(analog_val->value(), 0, max_input_value);
+    float normalized_val = static_cast<float>(clipped_val)
+                         / static_cast<float>(max_input_value);
+
+    // Apply inversion if enabled
+    if (_invert_value)
+    {
+        normalized_val = 1.0f - normalized_val;
+    }
+
+    // Find which discrete range this normalized value falls into
+    auto discrete_index = _find_range_index(normalized_val);
+
+    // Send only if changed (for ON_VALUE_CHANGED mode)
+    if (_sending_mode == SendingMode::ON_VALUE_CHANGED &&
+        discrete_index &&
+        discrete_index != _previous_discrete_index)
+    {
+        MessageFactory factory;
+        auto temp_msg = factory.make_output_value(_sensor_index,
+                                                  static_cast<float>(*discrete_index),
+                                                  _send_timestamp ? value->timestamp() : 0);
+        auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+        backend->send(transformed_value, value);
+        _previous_discrete_index = discrete_index;
+    }
+}
+
+std::unique_ptr<Command> DiscreteSensorMapper::process_set_value(Value* /*value*/)
+{
+    return nullptr;
+}
+
+CommandErrorCode DiscreteSensorMapper::_set_discrete_ranges(const std::vector<Range>& ranges)
+{
+    if (ranges.empty())
+    {
+        SENSEI_LOG_WARNING("Discrete ranges cannot be empty");
+        return CommandErrorCode::INVALID_RANGE;
+    }
+
+    // Validate each range has min < max and ranges are ordered
+    for (size_t i = 0; i < ranges.size(); i++)
+    {
+        if (ranges[i].min < 0.0f || ranges[i].max > 1.0f)
+        {
+            SENSEI_LOG_WARNING("Invalid discrete range [{}, {}]: min < 0.0 or max > 1.0",
+                              ranges[i].min, ranges[i].max);
+            return CommandErrorCode::INVALID_RANGE;
+        }
+        else if (ranges[i].min >= ranges[i].max)
+        {
+            SENSEI_LOG_WARNING("Invalid discrete range [{}, {}]: min >= max",
+                              ranges[i].min, ranges[i].max);
+            return CommandErrorCode::INVALID_RANGE;
+        }
+
+        // No checking for gaps or overlap in the ranges. Values landing in a gap
+        // in the ranges return no value, and if ranges overlap then the first
+        // matching range is the one that returns its index.
+    }
+
+    _discrete_ranges = ranges;
+    return CommandErrorCode::OK;
+}
+
+std::optional<int> DiscreteSensorMapper::_find_range_index(float normalized_value) const
+{
+    // Find which range the normalized value falls into, we use >= and <= on both ends
+    // and let the first matching range return its index.
+    for (size_t i = 0; i < _discrete_ranges.size(); i++)
+    {
+        if (normalized_value >= _discrete_ranges[i].min &&
+            normalized_value <= _discrete_ranges[i].max)
+        {
+            return static_cast<int>(i);
+        }
+    }
+
+    // Value outside all ranges
+    return std::nullopt;
+}
+
+CommandErrorCode DiscreteSensorMapper::_set_adc_bit_resolution(int resolution)
+{
+    if ((resolution < 1) || (resolution > MAX_ADC_BIT_RESOLUTION))
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+
+    _adc_bit_resolution = resolution;
+
+    return CommandErrorCode::OK;
 }

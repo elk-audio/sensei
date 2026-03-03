@@ -129,9 +129,10 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
             break;
         }
 
+        case SensorType::DISCRETE_INPUT:
         case SensorType::RANGE_INPUT:
         {
-            // Range sensor -> RangeEvent
+            // Range or Discrete sensor -> RangeEvent
             auto* range_ev = event.mutable_range_ev();
             range_ev->set_value(static_cast<int32_t>(value));  // Convert float to int32
             break;
