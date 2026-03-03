@@ -33,9 +33,9 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("async_call_handlers");
 //==============================================================================
 
 SubscribeCallData::SubscribeCallData(
-    sensei_rpc::SenseiController::AsyncService* service,
-    grpc::ServerCompletionQueue* cq,
-    EventBroadcastManager* broadcast_mgr)
+        sensei_rpc::SenseiController::AsyncService* service,
+        grpc::ServerCompletionQueue*                cq,
+        EventBroadcastManager*                      broadcast_mgr)
     : CallDataBase(service, cq),
       _responder(&_ctx),
       _broadcast_mgr(broadcast_mgr),
@@ -65,8 +65,8 @@ void SubscribeCallData::proceed()
         {
             new SubscribeCallData(_service, _cq, _broadcast_mgr);
 
-            const auto &ids = _request.controller_ids();
-            auto controller_ids = std::vector<int>(ids.begin(), ids.end());
+            const auto& ids = _request.controller_ids();
+            auto        controller_ids = std::vector<int>(ids.begin(), ids.end());
             _broadcast_mgr->register_subscriber(this, std::move(controller_ids));
 
             _in_processing = true;
@@ -82,7 +82,8 @@ void SubscribeCallData::proceed()
     }
 }
 
-void SubscribeCallData::stop() {
+void SubscribeCallData::stop()
+{
     _broadcast_mgr->unregister_subscriber(this);
     _state = State::DONE;
 }
@@ -122,9 +123,9 @@ void SubscribeCallData::_start_write()
 //==============================================================================
 
 UpdateLedCallData::UpdateLedCallData(
-    sensei_rpc::SenseiController::AsyncService* service,
-    grpc::ServerCompletionQueue* cq,
-    GrpcUserFrontend* frontend)
+        sensei_rpc::SenseiController::AsyncService* service,
+        grpc::ServerCompletionQueue*                cq,
+        GrpcUserFrontend*                           frontend)
     : CallDataBase(service, cq),
       _responder(&_ctx),
       _frontend(frontend)
@@ -143,7 +144,7 @@ void UpdateLedCallData::proceed()
     {
         new UpdateLedCallData(_service, _cq, _frontend);
 
-        int controller_id = _request.controller_id();
+        int  controller_id = _request.controller_id();
         bool active = _request.active();
 
         SENSEI_LOG_INFO("UpdateLed: controller_id={}, active={}", controller_id, active);
@@ -164,9 +165,9 @@ void UpdateLedCallData::proceed()
 //==============================================================================
 
 RefreshAllStatesCallData::RefreshAllStatesCallData(
-    sensei_rpc::SenseiController::AsyncService* service,
-    grpc::ServerCompletionQueue* cq,
-    GrpcUserFrontend *frontend)
+        sensei_rpc::SenseiController::AsyncService* service,
+        grpc::ServerCompletionQueue*                cq,
+        GrpcUserFrontend*                           frontend)
     : CallDataBase(service, cq),
       _responder(&_ctx),
       _frontend(frontend)
@@ -202,9 +203,9 @@ void RefreshAllStatesCallData::proceed()
 //==============================================================================
 
 GetControllerMapCallData::GetControllerMapCallData(
-    sensei_rpc::SenseiController::AsyncService* service,
-    grpc::ServerCompletionQueue* cq,
-    GrpcUserFrontend* frontend)
+        sensei_rpc::SenseiController::AsyncService* service,
+        grpc::ServerCompletionQueue*                cq,
+        GrpcUserFrontend*                           frontend)
     : CallDataBase(service, cq),
       _responder(&_ctx),
       _frontend(frontend)
@@ -235,7 +236,7 @@ void GetControllerMapCallData::proceed()
     }
 }
 
-void EventBroadcastManager::register_subscriber(SubscribeCallData* subscriber, std::vector<int> &&controller_ids)
+void EventBroadcastManager::register_subscriber(SubscribeCallData* subscriber, std::vector<int>&& controller_ids)
 {
     if (_shutting_down)
     {
@@ -250,8 +251,8 @@ void EventBroadcastManager::register_subscriber(SubscribeCallData* subscriber, s
 void EventBroadcastManager::unregister_subscriber(SubscribeCallData* subscriber)
 {
     std::lock_guard<std::mutex> lock(_subscribers_mutex);
-    auto it = std::find_if(_subscribers.begin(), _subscribers.end(), 
-        [&subscriber](const SubscriberData& s) { return s.subscriber == subscriber; });
+    auto                        it = std::find_if(_subscribers.begin(), _subscribers.end(),
+                                                  [&subscriber](const SubscriberData& s) { return s.subscriber == subscriber; });
 
     if (it != _subscribers.end())
     {
@@ -271,7 +272,7 @@ void EventBroadcastManager::broadcast_event(const sensei_rpc::Event& event)
     std::lock_guard<std::mutex> lock(_subscribers_mutex);
     for (auto& data : _subscribers)
     {
-        auto &ids = data.controller_ids;
+        auto& ids = data.controller_ids;
         if (data.controller_ids.empty() ||
             std::find(ids.begin(), ids.end(), event.controller_id()) != ids.end())
         {
@@ -286,7 +287,8 @@ void EventBroadcastManager::shutdown()
     SENSEI_LOG_INFO("EventBroadcastManager shutting down");
 }
 
-int EventBroadcastManager::num_subscribers() {
+int EventBroadcastManager::num_subscribers()
+{
     std::lock_guard<std::mutex> lock(_subscribers_mutex);
     return _subscribers.size();
 }

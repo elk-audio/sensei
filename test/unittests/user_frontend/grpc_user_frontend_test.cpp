@@ -47,13 +47,13 @@ protected:
         _user_frontend.reset();
     }
 
-    static const int _max_controllers{64};
+    static const int                  _max_controllers{64};
     std::unique_ptr<GrpcUserFrontend> _user_frontend;
-    MessageHandlerMock _handler;
-    int _server_port{50051};
-    std::string _server_address;
+    MessageHandlerMock                _handler;
+    int                               _server_port{50051};
+    std::string                       _server_address;
 
-    std::shared_ptr<grpc::Channel> _channel;
+    std::shared_ptr<grpc::Channel>                      _channel;
     std::unique_ptr<sensei_rpc::SenseiController::Stub> _stub;
 };
 
@@ -67,11 +67,11 @@ TEST_F(TestGrpcUserFrontend, test_server_startup)
 
 TEST_F(TestGrpcUserFrontend, test_subscribe_single_client)
 {
-    grpc::ClientContext context;
+    grpc::ClientContext          context;
     sensei_rpc::SubscribeRequest request;
 
     std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
-        _stub->SubscribeToEvents(&context, request));
+            _stub->SubscribeToEvents(&context, request));
 
     // Give subscription time to establish
     ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
@@ -88,14 +88,14 @@ TEST_F(TestGrpcUserFrontend, test_subscribe_single_client)
     // Read event from stream with timeout
     sensei_rpc::Event received_event;
     std::atomic<bool> read_complete{false};
-    std::thread read_thread([&reader, &received_event, &read_complete]() {
-        if (reader->Read(&received_event)) {
+    std::thread       read_thread([&reader, &received_event, &read_complete]() {
+        if (reader->Read(&received_event))
+        {
             read_complete.store(true);
         }
     });
 
-    ASSERT_TRUE(wait_for([&read_complete]() {
-        return read_complete.load(); }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([&read_complete]() { return read_complete.load(); }, DEFAULT_TIMEOUT));
 
     context.TryCancel();
     read_thread.join();
@@ -110,17 +110,16 @@ TEST_F(TestGrpcUserFrontend, test_subscribe_single_client)
 TEST_F(TestGrpcUserFrontend, test_subscribe_multiple_clients)
 {
     // Create two client subscriptions
-    grpc::ClientContext context1;
-    grpc::ClientContext context2;
+    grpc::ClientContext          context1;
+    grpc::ClientContext          context2;
     sensei_rpc::SubscribeRequest request;
 
     std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader1(
-        _stub->SubscribeToEvents(&context1, request));
+            _stub->SubscribeToEvents(&context1, request));
     std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader2(
-        _stub->SubscribeToEvents(&context2, request));
+            _stub->SubscribeToEvents(&context2, request));
 
-    ASSERT_TRUE(wait_for([this]() {
-        return _user_frontend->num_subscribers() == 2; }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 2; }, DEFAULT_TIMEOUT));
 
     // Broadcast event
     sensei_rpc::Event event;
@@ -133,16 +132,18 @@ TEST_F(TestGrpcUserFrontend, test_subscribe_multiple_clients)
 
     // Read from both clients
     sensei_rpc::Event received_event1, received_event2;
-    std::atomic<int> reads_complete{0};
+    std::atomic<int>  reads_complete{0};
 
     std::thread read_thread1([&reader1, &received_event1, &reads_complete]() {
-        if (reader1->Read(&received_event1)) {
+        if (reader1->Read(&received_event1))
+        {
             reads_complete++;
         }
     });
 
     std::thread read_thread2([&reader2, &received_event2, &reads_complete]() {
-        if (reader2->Read(&received_event2)) {
+        if (reader2->Read(&received_event2))
+        {
             reads_complete++;
         }
     });
@@ -170,14 +171,13 @@ TEST_F(TestGrpcUserFrontend, test_client_disconnect)
 {
     // Subscribe and then disconnect
     {
-        grpc::ClientContext context;
+        grpc::ClientContext          context;
         sensei_rpc::SubscribeRequest request;
 
         std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
-            _stub->SubscribeToEvents(&context, request));
+                _stub->SubscribeToEvents(&context, request));
 
-        ASSERT_TRUE(wait_for([this]() {
-            return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
+        ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
 
         context.TryCancel();
 
@@ -196,22 +196,22 @@ TEST_F(TestGrpcUserFrontend, test_client_disconnect)
 
 TEST_F(TestGrpcUserFrontend, test_event_type_streaming)
 {
-    grpc::ClientContext context;
+    grpc::ClientContext          context;
     sensei_rpc::SubscribeRequest request;
 
     std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
-        _stub->SubscribeToEvents(&context, request));
+            _stub->SubscribeToEvents(&context, request));
 
-    ASSERT_TRUE(wait_for([this]() {
-        return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
 
     std::vector<sensei_rpc::Event> received_events;
-    std::mutex events_mutex;
-    std::atomic<int> event_count{0};
+    std::mutex                     events_mutex;
+    std::atomic<int>               event_count{0};
 
     std::thread read_thread([&reader, &received_events, &events_mutex, &event_count]() {
         sensei_rpc::Event event;
-        while (reader->Read(&event) && event_count < 3) {
+        while (reader->Read(&event) && event_count < 3)
+        {
             {
                 std::lock_guard<std::mutex> lock(events_mutex);
                 received_events.push_back(event);
@@ -271,7 +271,7 @@ TEST_F(TestGrpcUserFrontend, test_event_type_streaming)
 
 TEST_F(TestGrpcUserFrontend, test_update_led_rpc)
 {
-    grpc::ClientContext context;
+    grpc::ClientContext          context;
     sensei_rpc::UpdateLedRequest request;
     sensei_rpc::GenericVoidValue response;
 
@@ -298,7 +298,7 @@ TEST_F(TestGrpcUserFrontend, test_update_led_rpc)
 
 TEST_F(TestGrpcUserFrontend, test_update_led_rpc_off)
 {
-    grpc::ClientContext context;
+    grpc::ClientContext          context;
     sensei_rpc::UpdateLedRequest request;
     sensei_rpc::GenericVoidValue response;
 
@@ -313,7 +313,7 @@ TEST_F(TestGrpcUserFrontend, test_update_led_rpc_off)
     ASSERT_FALSE(_handler.event_queue.empty());
 
     std::unique_ptr<BaseMessage> event = _handler.event_queue.pop();
-    auto val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
+    auto                         val = static_unique_ptr_cast<IntegerSetValue, BaseMessage>(std::move(event));
 
     ASSERT_EQ(3, val->index());
     ASSERT_EQ(0, val->value());
@@ -328,7 +328,7 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
         _user_frontend->update_controller(id, "controller_" + std::to_string(id), SensorType::ANALOG_INPUT);
     }
 
-    grpc::ClientContext context;
+    grpc::ClientContext          context;
     sensei_rpc::GenericVoidValue request;
     sensei_rpc::GenericVoidValue response;
 
@@ -365,27 +365,29 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
 TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
 {
     // Start multiple subscriptions
-    std::vector<std::unique_ptr<grpc::ClientContext>> contexts;
+    std::vector<std::unique_ptr<grpc::ClientContext>>                   contexts;
     std::vector<std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>>> readers;
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         contexts.push_back(std::make_unique<grpc::ClientContext>());
         sensei_rpc::SubscribeRequest request;
         readers.push_back(_stub->SubscribeToEvents(contexts.back().get(), request));
     }
 
-    ASSERT_TRUE(wait_for([this]() {
-        return _user_frontend->num_subscribers() == 3; }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 3; }, DEFAULT_TIMEOUT));
 
     // Broadcast multiple events rapidly
-    std::atomic<int> total_received{0};
+    std::atomic<int>         total_received{0};
     std::vector<std::thread> read_threads;
 
-    for (size_t i = 0; i < readers.size(); i++) {
+    for (size_t i = 0; i < readers.size(); i++)
+    {
         read_threads.emplace_back([&readers, &total_received, i]() {
             sensei_rpc::Event event;
-            int count = 0;
-            while (readers[i]->Read(&event) && count < 5) {
+            int               count = 0;
+            while (readers[i]->Read(&event) && count < 5)
+            {
                 total_received++;
                 count++;
             }
@@ -393,23 +395,25 @@ TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
     }
 
     // Broadcast 5 events
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++)
+    {
         sensei_rpc::Event event;
         event.set_controller_id(i);
         event.set_timestamp(i * 1000);
         auto* analog_ev = event.mutable_analog_ev();
         analog_ev->set_value(i * 0.1f);
         _user_frontend->broadcast_event(event);
-        ASSERT_TRUE(wait_for([&total_received, &readers, i]() {
-            return total_received == (i+1)*readers.size(); }, DEFAULT_TIMEOUT));
+        ASSERT_TRUE(wait_for([&total_received, &readers, i]() { return total_received == (i + 1) * readers.size(); }, DEFAULT_TIMEOUT));
     }
 
     // Cancel all contexts
-    for (auto& ctx : contexts) {
+    for (auto& ctx : contexts)
+    {
         ctx->TryCancel();
     }
 
-    for (auto& thread : read_threads) {
+    for (auto& thread : read_threads)
+    {
         thread.join();
     }
 
@@ -419,7 +423,7 @@ TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
 
 TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
 {
-    grpc::ClientContext context;
+    grpc::ClientContext          context;
     sensei_rpc::SubscribeRequest request;
 
     // only get events from controller_id 2 and 3
@@ -427,13 +431,12 @@ TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
     request.add_controller_ids(3);
 
     std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
-        _stub->SubscribeToEvents(&context, request));
+            _stub->SubscribeToEvents(&context, request));
 
-    ASSERT_TRUE(wait_for([this]() {
-        return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
 
     // Create and broadcast events for different controllers
-    for (int i=0; i<4; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         sensei_rpc::Event event;
         event.set_controller_id(i);
@@ -446,14 +449,13 @@ TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
     // Read event from stream with timeout
     sensei_rpc::Event event1, event2;
     std::atomic<bool> received{false};
-    std::thread read_thread([&reader, &event1, &event2, &received]() {
+    std::thread       read_thread([&reader, &event1, &event2, &received]() {
         ASSERT_TRUE(reader->Read(&event1));
         ASSERT_TRUE(reader->Read(&event2));
         received = true;
     });
 
-    ASSERT_TRUE(wait_for([&received]() {
-        return received.load(); }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([&received]() { return received.load(); }, DEFAULT_TIMEOUT));
 
     context.TryCancel();
     read_thread.join();
@@ -465,8 +467,8 @@ TEST_F(TestGrpcUserFrontend, test_only_subscribed_controllers)
 
 TEST_F(TestGrpcUserFrontend, test_get_controller_map)
 {
-    grpc::ClientContext context;
-    sensei_rpc::GenericVoidValue request;
+    grpc::ClientContext                  context;
+    sensei_rpc::GenericVoidValue         request;
     sensei_rpc::GetControllerMapResponse response;
 
     _user_frontend->update_controller(0, "POT1", SensorType::ANALOG_INPUT);
@@ -490,5 +492,3 @@ TEST_F(TestGrpcUserFrontend, test_get_controller_map)
     ASSERT_EQ(response.encoders().Get(0).id(), 3);
     ASSERT_EQ(response.encoders().Get(0).name(), "ENC1");
 }
-
-

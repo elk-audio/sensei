@@ -85,9 +85,9 @@ ELK_POP_WARNING
 #else
 #define SENSEI_LOG_DEBUG(msg, ...) elk::Logger::logger_instance->debug("{}" msg, local_log_prefix, ##__VA_ARGS__)
 #endif
-#define SENSEI_LOG_INFO(msg, ...) elk::Logger::logger_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_WARNING(msg, ...) elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_ERROR(msg, ...) elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_INFO(msg, ...)     elk::Logger::logger_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_WARNING(msg, ...)  elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_ERROR(msg, ...)    elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__)
 #define SENSEI_LOG_CRITICAL(msg, ...) elk::Logger::logger_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__)
 
 // clang-format off

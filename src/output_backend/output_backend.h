@@ -50,25 +50,29 @@ public:
 
         switch (cmd->type())
         {
-            case CommandType::SET_SENSOR_NAME: {
+            case CommandType::SET_SENSOR_NAME:
+            {
                 const auto typed_cmd = static_cast<const SetPinNameCommand*>(cmd);
                 _sensor_names[pin_idx] = typed_cmd->data();
             };
             break;
 
-            case CommandType::SET_SENSOR_TYPE: {
+            case CommandType::SET_SENSOR_TYPE:
+            {
                 const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
                 _sensor_types[pin_idx] = typed_cmd->data();
             };
             break;
 
-            case CommandType::SET_SEND_OUTPUT_ENABLED: {
+            case CommandType::SET_SEND_OUTPUT_ENABLED:
+            {
                 const auto typed_cmd = static_cast<const SetSendOutputEnabledCommand*>(cmd);
                 _send_output_active = typed_cmd->data();
             };
             break;
 
-            case CommandType::SET_SEND_RAW_INPUT_ENABLED: {
+            case CommandType::SET_SEND_RAW_INPUT_ENABLED:
+            {
                 const auto typed_cmd = static_cast<const SetSendRawInputEnabledCommand*>(cmd);
                 _send_raw_input_active = typed_cmd->data();
             };

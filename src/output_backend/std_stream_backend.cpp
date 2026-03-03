@@ -25,8 +25,8 @@
 using namespace sensei;
 using namespace sensei::output_backend;
 
-StandardStreamBackend::StandardStreamBackend(const int max_n_sensors) :
-        OutputBackend(max_n_sensors)
+StandardStreamBackend::StandardStreamBackend(const int max_n_sensors)
+    : OutputBackend(max_n_sensors)
 {
 }
 
@@ -37,8 +37,8 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
     if (_send_output_active)
     {
         printf("Sensor: %d, name: %s, value: %f\n", sensor_index,
-                                                 _sensor_names[sensor_index].c_str(),
-                                                 transformed_value->value());
+               _sensor_names[sensor_index].c_str(),
+               transformed_value->value());
     }
 
     if (_send_raw_input_active)
@@ -46,44 +46,42 @@ void StandardStreamBackend::send(const OutputValue* transformed_value, const Val
         assert(raw_input_value != nullptr);
         switch (raw_input_value->type())
         {
-        case ValueType::ANALOG:
+            case ValueType::ANALOG:
             {
-                auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
+                auto typed_val = static_cast<const AnalogValue*>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Sensor: %d, name: %s, value: %d\n", sensor_index,
-                                                                                _sensor_names[sensor_index].c_str(),
-                                                                                typed_val->value());
+                        _sensor_names[sensor_index].c_str(),
+                        typed_val->value());
             }
             break;
 
-        case ValueType::DIGITAL:
+            case ValueType::DIGITAL:
             {
-                auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
+                auto typed_val = static_cast<const DigitalValue*>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Sensor: %d, name: %s, value: %d\n", sensor_index,
-                                                                                _sensor_names[sensor_index].c_str(),
-                                                                                typed_val->value());
+                        _sensor_names[sensor_index].c_str(),
+                        typed_val->value());
             }
             break;
 
-        case ValueType::CONTINUOUS:
+            case ValueType::CONTINUOUS:
             {
-                auto  typed_val = static_cast<const ContinuousValue*>(raw_input_value);
+                auto typed_val = static_cast<const ContinuousValue*>(raw_input_value);
                 fprintf(stderr, "--RAW INPUT-- Sensor: %d, name: %s, value: %f\n", sensor_index,
-                                                                                _sensor_names[sensor_index].c_str(),
-                                                                                typed_val->value());
+                        _sensor_names[sensor_index].c_str(),
+                        typed_val->value());
             }
             break;
 
-        default:
-            break;
+            default:
+                break;
         }
     }
-
 }
 
-CommandErrorCode StandardStreamBackend::apply_command(const Command *cmd)
+CommandErrorCode StandardStreamBackend::apply_command(const Command* cmd)
 {
     // no specific commands for this subclass
 
     return OutputBackend::apply_command(cmd);
-
 }

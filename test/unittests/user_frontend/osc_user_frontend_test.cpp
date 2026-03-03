@@ -43,9 +43,9 @@ protected:
     }
 
     std::unique_ptr<OSCUserFrontend> _user_frontend;
-    MessageHandlerMock _message_handler;
-    int _server_port{25000};
-    lo_address _address;
+    MessageHandlerMock               _message_handler;
+    int                              _server_port{25000};
+    lo_address                       _address;
 };
 
 

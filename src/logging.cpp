@@ -29,16 +29,16 @@
 
 namespace elk {
 
-std::string Logger::_logger_file_name = "/tmp/sensei.log";
-std::string Logger::_logger_name = "Sensei";
-spdlog::level::level_enum Logger::_min_log_level = spdlog::level::warn;
+std::string                     Logger::_logger_file_name = "/tmp/sensei.log";
+std::string                     Logger::_logger_name = "Sensei";
+spdlog::level::level_enum       Logger::_min_log_level = spdlog::level::warn;
 std::shared_ptr<spdlog::logger> Logger::logger_instance{nullptr};
 
-SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string& file_name,
-                                         const std::string& logger_name,
-                                         const std::string& min_log_level,
-                                         const bool enable_flush_interval,
-                                         const std::chrono::seconds log_flush_interval)
+SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string&         file_name,
+                                          const std::string&         logger_name,
+                                          const std::string&         min_log_level,
+                                          const bool                 enable_flush_interval,
+                                          const std::chrono::seconds log_flush_interval)
 {
     SENSEI_LOG_ERROR_CODE ret = SENSEI_LOG_ERROR_CODE_OK;
 
@@ -48,7 +48,7 @@ SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string& file_name,
     level_map["warning"] = spdlog::level::warn;
     level_map["error"] = spdlog::level::err;
     level_map["critical"] = spdlog::level::critical;
-   
+
     std::string log_level_lowercase = min_log_level;
     std::transform(min_log_level.begin(), min_log_level.end(), log_level_lowercase.begin(), ::tolower);
     spdlog::set_pattern("[%Y-%m-%d %T.%e] [%l] %v");
@@ -68,7 +68,6 @@ SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string& file_name,
         {
             return SENSEI_LOG_ERROR_CODE_INVALID_FLUSH_INTERVAL;
         }
-        
     }
 
     if (logger_instance == nullptr)
@@ -88,20 +87,20 @@ SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string& file_name,
 
 std::string Logger::get_error_message(SENSEI_LOG_ERROR_CODE status)
 {
-    static std::string error_messages[] = 
-    {
-        "Ok",
-        "Invalid Log Level",
-        "Failed to start logger"
-    };
+    static std::string error_messages[] =
+            {
+                    "Ok",
+                    "Invalid Log Level",
+                    "Failed to start logger"
+            };
 
     return error_messages[status];
 }
 
 std::shared_ptr<spdlog::logger> Logger::setup_logging()
 {
-    const int  MAX_LOG_FILE_SIZE    = 10'000'000;           // In bytes
-    const auto MIN_FLUSH_LEVEL      = spdlog::level::err;   // Min level for automatic flush
+    const int  MAX_LOG_FILE_SIZE = 10'000'000;       // In bytes
+    const auto MIN_FLUSH_LEVEL = spdlog::level::err; // Min level for automatic flush
 
     spdlog::set_level(_min_log_level);
     auto async_file_logger = spdlog::rotating_logger_mt<spdlog::async_factory>(_logger_name,

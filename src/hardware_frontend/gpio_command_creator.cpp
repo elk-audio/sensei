@@ -109,7 +109,7 @@ gpio::GpioPacket GpioCommandCreator::make_set_polarity_command(uint8_t controlle
 }
 
 gpio::GpioPacket GpioCommandCreator::make_set_controller_tick_rate_command(uint8_t controller_id,
-                                                                         uint8_t tick_rate_divisor)
+                                                                           uint8_t tick_rate_divisor)
 {
     GpioPacket packet = _prepare_packet();
     packet.command = GPIO_CMD_CONFIG_CONTROLLER;
@@ -142,7 +142,8 @@ gpio::GpioPacket GpioCommandCreator::make_add_pins_to_controller_command(uint8_t
     {
         data.pins[i] = pins.pins[i];
     }
-    return packet;}
+    return packet;
+}
 
 gpio::GpioPacket GpioCommandCreator::make_mute_controller_command(uint8_t controller_id, uint8_t mute_status)
 {
@@ -223,7 +224,7 @@ gpio::GpioPacket GpioCommandCreator::_prepare_packet()
 
 std::string gpio_status_to_string(uint8_t status)
 {
-    switch(status)
+    switch (status)
     {
         case GpioReturnStatus::GPIO_OK:
             return "OK";
@@ -271,7 +272,7 @@ std::string gpio_packet_to_string(const gpio::GpioPacket& packet)
     switch (packet.command)
     {
         case GPIO_CMD_SYSTEM_CONTROL:
-            switch(packet.sub_command)
+            switch (packet.sub_command)
             {
                 case GPIO_SUB_CMD_STOP_RESET_SYSTEM:
                     return "GPIO_SUB_CMD_STOP_RESET_SYSTEM";
@@ -285,7 +286,7 @@ std::string gpio_packet_to_string(const gpio::GpioPacket& packet)
                     return "Unrecognised Gpio command";
             }
         case GPIO_CMD_CONFIG_CONTROLLER:
-            switch(packet.sub_command)
+            switch (packet.sub_command)
             {
                 case GPIO_SUB_CMD_RESET_ALL_CONTROLLERS:
                     return "GPIO_SUB_CMD_RESET_ALL_CONTROLLERS";
