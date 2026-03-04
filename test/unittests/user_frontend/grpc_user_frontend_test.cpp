@@ -42,11 +42,6 @@ protected:
         _stub = sensei_rpc::SenseiController::NewStub(_channel);
     }
 
-    void TearDown()
-    {
-        _user_frontend.reset();
-    }
-
     static const int                  _max_controllers{64};
     std::unique_ptr<GrpcUserFrontend> _user_frontend;
     MessageHandlerMock                _handler;
@@ -491,4 +486,19 @@ TEST_F(TestGrpcUserFrontend, test_get_controller_map)
     ASSERT_EQ(response.encoders_size(), 1);
     ASSERT_EQ(response.encoders().Get(0).id(), 3);
     ASSERT_EQ(response.encoders().Get(0).name(), "ENC1");
+}
+
+TEST_F(TestGrpcUserFrontend, test_shutdown_with_outstanding_connection)
+{
+    grpc::ClientContext          context;
+    sensei_rpc::SubscribeRequest request;
+
+    std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
+            _stub->SubscribeToEvents(&context, request));
+
+    // Give subscription time to establish
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() == 1; }, DEFAULT_TIMEOUT));
+
+    // test shutting down the server while the connection is still active
+    _user_frontend.reset();
 }
