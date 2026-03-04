@@ -21,6 +21,7 @@
 #include "async_call_handlers.h"
 #include "logging.h"
 #include "message/command_defs.h"
+#include <chrono>
 
 using namespace sensei;
 using namespace sensei::user_frontend;
@@ -31,6 +32,7 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("grpc_user_frontend");
 
 constexpr int   DEFAULT_GRPC_PORT = 50051;
 constexpr auto* DEFAULT_GRPC_ADDRESS = "0.0.0.0";
+constexpr auto  SHUTDOWN_TIMEOUT = std::chrono::milliseconds(200);
 
 } // anonymous namespace
 
@@ -99,7 +101,7 @@ void AsyncSenseiControllerImpl::shutdown()
 
     _running = false;
     _broadcast_manager->shutdown();
-    _server->Shutdown();
+    _server->Shutdown(std::chrono::system_clock::now() + SHUTDOWN_TIMEOUT);
     _cq->Shutdown();
     if (_cq_thread.joinable())
     {
