@@ -29,7 +29,7 @@ namespace {
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("grpc_user_frontend");
 
-constexpr int DEFAULT_GRPC_PORT = 50051;
+constexpr int   DEFAULT_GRPC_PORT = 50051;
 constexpr auto* DEFAULT_GRPC_ADDRESS = "0.0.0.0";
 
 } // anonymous namespace
@@ -108,8 +108,8 @@ void AsyncSenseiControllerImpl::shutdown()
 
     // drain the queue, ensure that memory is cleaned up in DONE state
     void* tag;
-    bool ok;
-    while (_cq->Next (&tag, &ok))
+    bool  ok;
+    while (_cq->Next(&tag, &ok))
     {
         auto* call_data = static_cast<CallDataBase*>(tag);
         call_data->stop();
@@ -130,7 +130,7 @@ void AsyncSenseiControllerImpl::broadcast_event(const sensei_rpc::Event& event)
 void AsyncSenseiControllerImpl::_handle_rpcs()
 {
     void* tag;
-    bool ok;
+    bool  ok;
 
     SENSEI_LOG_INFO("Completion queue worker thread started");
 
@@ -153,12 +153,12 @@ void AsyncSenseiControllerImpl::_handle_rpcs()
 //==============================================================================
 
 GrpcUserFrontend::GrpcUserFrontend(MessageHandler* handler,
-                                   const int max_n_sensors,
-                                   ThreadingMode threading_mode) :
-    UserFrontend(handler, max_n_sensors, threading_mode),
-    _listen_address(DEFAULT_GRPC_ADDRESS),
-    _listen_port(DEFAULT_GRPC_PORT),
-    _server_running(false)
+                                   const int       max_n_sensors,
+                                   ThreadingMode   threading_mode)
+    : UserFrontend(handler, max_n_sensors, threading_mode),
+      _listen_address(DEFAULT_GRPC_ADDRESS),
+      _listen_port(DEFAULT_GRPC_PORT),
+      _server_running(false)
 {
     SENSEI_LOG_INFO("GrpcUserFrontend created with async API");
     {
@@ -220,9 +220,9 @@ CommandErrorCode GrpcUserFrontend::apply_command(const Command* cmd)
 {
     CommandErrorCode status = CommandErrorCode::OK;
 
-    switch(cmd->type())
+    switch (cmd->type())
     {
-    case CommandType::SET_GRPC_LISTEN_ADDRESS:
+        case CommandType::SET_GRPC_LISTEN_ADDRESS:
         {
             const auto typed_cmd = static_cast<const SetGrpcListenAddressCommand*>(cmd);
             _listen_address = typed_cmd->data();
@@ -232,7 +232,7 @@ CommandErrorCode GrpcUserFrontend::apply_command(const Command* cmd)
         }
         break;
 
-    case CommandType::SET_GRPC_LISTEN_PORT:
+        case CommandType::SET_GRPC_LISTEN_PORT:
         {
             const auto typed_cmd = static_cast<const SetGrpcListenPortCommand*>(cmd);
             if ((_listen_port < 1000) || (_listen_port > 65535))
@@ -250,9 +250,9 @@ CommandErrorCode GrpcUserFrontend::apply_command(const Command* cmd)
         }
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     // If command was not handled, try in the parent class
@@ -274,11 +274,12 @@ void GrpcUserFrontend::broadcast_event(const sensei_rpc::Event& event)
     }
 }
 
-int GrpcUserFrontend::num_subscribers() const {
+int GrpcUserFrontend::num_subscribers() const
+{
     return _service_impl->broadcast_manager()->num_subscribers();
 }
 
-void GrpcUserFrontend::update_controller(int controller_id, const std::string &name, SensorType type)
+void GrpcUserFrontend::update_controller(int controller_id, const std::string& name, SensorType type)
 {
     std::unique_lock<std::mutex> lock(_controller_map_mutex);
     _controller_map[controller_id] = {name, type};
@@ -295,61 +296,61 @@ void GrpcUserFrontend::populate_controller_map(sensei_rpc::GetControllerMapRespo
     response->clear_leds();
 
     std::unique_lock<std::mutex> lock(_controller_map_mutex);
-    for (size_t i=0; i < _controller_map.size(); ++i)
+    for (size_t i = 0; i < _controller_map.size(); ++i)
     {
-        int controller_id = static_cast<int>(i);
-        const auto &name = _controller_map[i].name;
-        auto type = _controller_map[i].type;
+        int         controller_id = static_cast<int>(i);
+        const auto& name = _controller_map[i].name;
+        auto        type = _controller_map[i].type;
         if (name.empty() || type == SensorType::UNDEFINED)
         {
             continue;
         }
         switch (type)
         {
-        case SensorType::ANALOG_INPUT:
-        {
-            auto controller = response->add_pots();
-            controller->set_id(controller_id);
-            controller->set_name(name);
-            break;
-        }
+            case SensorType::ANALOG_INPUT:
+            {
+                auto controller = response->add_pots();
+                controller->set_id(controller_id);
+                controller->set_name(name);
+                break;
+            }
 
-        case SensorType::DIGITAL_INPUT:
-        {
-            auto controller = response->add_switches();
-            controller->set_id(controller_id);
-            controller->set_name(name);
-            break;
-        }
+            case SensorType::DIGITAL_INPUT:
+            {
+                auto controller = response->add_switches();
+                controller->set_id(controller_id);
+                controller->set_name(name);
+                break;
+            }
 
-        case SensorType::DIGITAL_OUTPUT:
-        {
-            auto controller = response->add_leds();
-            controller->set_id(controller_id);
-            controller->set_name(name);
-            break;
-        }
+            case SensorType::DIGITAL_OUTPUT:
+            {
+                auto controller = response->add_leds();
+                controller->set_id(controller_id);
+                controller->set_name(name);
+                break;
+            }
 
-        case SensorType::DISCRETE_INPUT:
-        case SensorType::RANGE_INPUT:
-        {
-            auto controller = response->add_rotaries();
-            controller->set_id(controller_id);
-            controller->set_name(name);
-            break;
-        }
+            case SensorType::DISCRETE_INPUT:
+            case SensorType::RANGE_INPUT:
+            {
+                auto controller = response->add_rotaries();
+                controller->set_id(controller_id);
+                controller->set_name(name);
+                break;
+            }
 
-        case SensorType::RELATIVE_INPUT:
-        {
-            auto controller = response->add_encoders();
-            controller->set_id(controller_id);
-            controller->set_name(name);
-            break;
-        }
+            case SensorType::RELATIVE_INPUT:
+            {
+                auto controller = response->add_encoders();
+                controller->set_id(controller_id);
+                controller->set_name(name);
+                break;
+            }
 
-        default:
-            SENSEI_LOG_ERROR("Unexpected sensor type ({}) for id={}", static_cast<int>(type), controller_id);
-            break;
+            default:
+                SENSEI_LOG_ERROR("Unexpected sensor type ({}) for id={}", static_cast<int>(type), controller_id);
+                break;
         }
     }
 }
@@ -360,7 +361,7 @@ void GrpcUserFrontend::refresh_controller_values()
     for (size_t i = 0; i < _controller_map.size(); ++i)
     {
         const auto& name = _controller_map[i].name;
-        auto type = _controller_map[i].type;
+        auto        type = _controller_map[i].type;
         if (!name.empty() && type != SensorType::UNDEFINED)
         {
             int controller_id = static_cast<int>(i);

@@ -9,7 +9,7 @@
 #include "handler_interface.h"
 
 #define CMD_UPTR(msg) static_unique_ptr_cast<Command, BaseMessage>(msg)
-#define CMD_PTR(msg) CMD_UPTR(msg).get()
+#define CMD_PTR(msg)  CMD_UPTR(msg).get()
 
 constexpr auto DEFAULT_TIMEOUT = std::chrono::seconds(2);
 

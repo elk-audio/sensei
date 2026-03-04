@@ -30,24 +30,24 @@ namespace hw_frontend {
 
 using namespace gpio;
 
-constexpr uint8_t   DEFAULT_TICK_RATE = GPIO_SYSTEM_TICK_1000_HZ;
-constexpr auto      READ_WRITE_TIMEOUT = std::chrono::milliseconds(20);
-constexpr auto      HW_BACKEND_CON_TIMEOUT = std::chrono::milliseconds(250);
-constexpr auto      ACK_TIMEOUT = std::chrono::milliseconds(1000);
-constexpr int       MAX_RESEND_ATTEMPTS = 3;
+constexpr uint8_t DEFAULT_TICK_RATE = GPIO_SYSTEM_TICK_1000_HZ;
+constexpr auto    READ_WRITE_TIMEOUT = std::chrono::milliseconds(20);
+constexpr auto    HW_BACKEND_CON_TIMEOUT = std::chrono::milliseconds(250);
+constexpr auto    ACK_TIMEOUT = std::chrono::milliseconds(1000);
+constexpr int     MAX_RESEND_ATTEMPTS = 3;
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("gpio_hw_frontend");
 
 HwFrontend::HwFrontend(hw_backend::BaseHwBackend* hw_backend,
-                       MessageHandler* handler,
-                       ThreadingMode threading_mode)
-                : BaseHwFrontend(handler, threading_mode),
-                _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
-                _hw_backend(hw_backend),
-                _state(ThreadState::STOPPED),
-                _ready_to_send{true},
-                _muted(false),
-                _verify_acks(true)
+                       MessageHandler*            handler,
+                       ThreadingMode              threading_mode)
+    : BaseHwFrontend(handler, threading_mode),
+      _message_tracker(ACK_TIMEOUT, MAX_RESEND_ATTEMPTS),
+      _hw_backend(hw_backend),
+      _state(ThreadState::STOPPED),
+      _ready_to_send{true},
+      _muted(false),
+      _verify_acks(true)
 {
     /* Prepare the setup and query hw commands to be the first to send */
     _send_list.push_back(_packet_factory.make_reset_system_command());
@@ -118,7 +118,7 @@ void HwFrontend::read_loop()
     while (_state.load() == ThreadState::RUNNING)
     {
         const auto recv_msg = _hw_backend->receive_gpio_packet(buffer);
-        if(!_muted && recv_msg)
+        if (!_muted && recv_msg)
         {
             _handle_gpio_packet(buffer);
         }
@@ -137,19 +137,19 @@ void HwFrontend::write_loop()
     while (_state.load() == ThreadState::RUNNING)
     {
         _in_queue->wait_for_data(std::chrono::milliseconds(READ_WRITE_TIMEOUT));
-        while(!_in_queue->empty())
+        while (!_in_queue->empty())
         {
             std::unique_ptr<Command> message = _in_queue->pop();
             _process_sensei_command(message.get());
         }
 
-        while(!_send_list.empty() && _state.load() == ThreadState::RUNNING)
+        while (!_send_list.empty() && _state.load() == ThreadState::RUNNING)
         {
             std::unique_lock<std::mutex> lock(_send_mutex);
             std::unique_lock<std::mutex> list_lock(_send_list_mutex);
 
             SENSEI_LOG_DEBUG("Going through sendlist: {} packets", _send_list.size());
-            if (_verify_acks && !_ready_to_send )
+            if (_verify_acks && !_ready_to_send)
             {
                 SENSEI_LOG_DEBUG("Waiting for ack");
                 list_lock.unlock();
@@ -161,7 +161,7 @@ void HwFrontend::write_loop()
             auto& packet = _send_list.front();
 
             // attempt to send packets.
-            if(!_hw_backend->send_gpio_packet(packet))
+            if (!_hw_backend->send_gpio_packet(packet))
             {
                 SENSEI_LOG_WARNING("Failed sending packet to hw backend");
                 std::this_thread::sleep_for(std::chrono::milliseconds(HW_BACKEND_CON_TIMEOUT));
@@ -171,7 +171,7 @@ void HwFrontend::write_loop()
             if (_verify_acks)
             {
                 SENSEI_LOG_DEBUG("Sent Gpio packet: {}, id: {}", gpio_packet_to_string(packet),
-                                                                 static_cast<int>(from_gpio_protocol_byteord(packet.sequence_no)));
+                                 static_cast<int>(from_gpio_protocol_byteord(packet.sequence_no)));
                 _message_tracker.store(nullptr, from_gpio_protocol_byteord(packet.sequence_no));
                 _ready_to_send = false;
             }
@@ -214,7 +214,7 @@ void HwFrontend::_handle_timeouts()
     }
 }
 
-void HwFrontend::_process_sensei_command(const Command*message)
+void HwFrontend::_process_sensei_command(const Command* message)
 {
     SENSEI_LOG_DEBUG("HwFrontend: got command: {}", message->representation());
     std::scoped_lock lock(_send_list_mutex);
@@ -232,9 +232,9 @@ void HwFrontend::_process_sensei_command(const Command*message)
         }
         case CommandType::SET_HW_PINS:
         {
-            auto cmd = static_cast<const SetHwPinsCommand*>(message);
-            Pinlist list;
-            auto setpins = cmd->data();
+            auto         cmd = static_cast<const SetHwPinsCommand*>(message);
+            Pinlist      list;
+            auto         setpins = cmd->data();
             unsigned int i = 0;
             unsigned int i_mod = 0;
             /* Split into more than 1 Gpio packet if neccesary */
@@ -252,8 +252,8 @@ void HwFrontend::_process_sensei_command(const Command*message)
         }
         case CommandType::SET_ENABLED:
         {
-            auto cmd = static_cast<const SetEnabledCommand*>(message);
-            uint8_t muted = cmd->data()? GPIO_CONTROLLER_UNMUTED : GPIO_CONTROLLER_MUTED;
+            auto    cmd = static_cast<const SetEnabledCommand*>(message);
+            uint8_t muted = cmd->data() ? GPIO_CONTROLLER_UNMUTED : GPIO_CONTROLLER_MUTED;
             _send_list.push_back(_packet_factory.make_mute_controller_command(cmd->index(), muted));
             break;
         }
@@ -295,7 +295,7 @@ void HwFrontend::_process_sensei_command(const Command*message)
         }
         case CommandType::SET_HW_POLARITY:
         {
-            auto cmd = static_cast<const SetSensorHwPolarityCommand*>(message);
+            auto    cmd = static_cast<const SetSensorHwPolarityCommand*>(message);
             uint8_t polarity = 0;
             switch (cmd->data())
             {
@@ -313,15 +313,14 @@ void HwFrontend::_process_sensei_command(const Command*message)
         {
             auto cmd = static_cast<const SetFastModeCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_debounce_mode_command(cmd->index(),
-                                                                                cmd->data()? GPIO_CONTROLLER_DEBOUNCE_ENABLED :
-                                                                                             GPIO_CONTROLLER_DEBOUNCE_DISABLED));
+                                                                                cmd->data() ? GPIO_CONTROLLER_DEBOUNCE_ENABLED : GPIO_CONTROLLER_DEBOUNCE_DISABLED));
             break;
         }
 
         case CommandType::SET_DIGITAL_OUTPUT_VALUE:
         {
             auto cmd = static_cast<const SetDigitalOutputValueCommand*>(message);
-            _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), cmd->data()? 1 : 0));
+            _send_list.push_back(_packet_factory.make_set_value_command(cmd->index(), cmd->data() ? 1 : 0));
             break;
         }
         case CommandType::SET_CONTINUOUS_OUTPUT_VALUE:
@@ -394,7 +393,7 @@ void HwFrontend::_handle_gpio_packet(const GpioPacket& packet)
             break;
 
         default:
-            SENSEI_LOG_WARNING("Unhandled command type: {}", (int)packet.command);
+            SENSEI_LOG_WARNING("Unhandled command type: {}", (int) packet.command);
     }
 }
 
@@ -423,7 +422,7 @@ void HwFrontend::_handle_ack(const GpioPacket& ack)
     if (status != gpio::GpioReturnStatus::GPIO_OK)
     {
         SENSEI_LOG_WARNING("Received bad ack from cmd {}, status: {}", from_gpio_protocol_byteord(ack.payload.gpio_ack_data.returned_seq_no),
-                                                                       gpio_status_to_string(status));
+                           gpio_status_to_string(status));
     }
 }
 
@@ -447,8 +446,8 @@ void HwFrontend::_handle_value(const GpioPacket& packet)
 void HwFrontend::_handle_board_info(const gpio::GpioPacket& packet)
 {
     _board_info = packet.payload.gpio_board_info_data;
-    SENSEI_LOG_INFO("Received board info: No of digital input pins: {}",_board_info.num_digital_input_pins);
-    SENSEI_LOG_INFO("No of digital output pins: {}",_board_info.num_digital_output_pins);
+    SENSEI_LOG_INFO("Received board info: No of digital input pins: {}", _board_info.num_digital_input_pins);
+    SENSEI_LOG_INFO("No of digital output pins: {}", _board_info.num_digital_output_pins);
     SENSEI_LOG_INFO("No of analog input pins: {}", _board_info.num_analog_input_pins);
     SENSEI_LOG_INFO("ADC bit resolution: {}", _board_info.adc_res_in_bits);
 }

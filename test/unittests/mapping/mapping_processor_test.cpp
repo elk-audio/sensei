@@ -13,7 +13,6 @@ using namespace sensei::mapping;
 class TestMappingProcessor : public ::testing::Test
 {
 protected:
-
     TestMappingProcessor()
     {
     }
@@ -24,7 +23,7 @@ protected:
 
     void SetUp()
     {
-        MessageFactory factory;
+        MessageFactory                        factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
 
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_type_command(0, SensorType::DIGITAL_INPUT))));
@@ -34,7 +33,6 @@ protected:
         {
             _processor.apply_command(c.get());
         }
-
     }
 
     void TearDown()
@@ -55,20 +53,20 @@ protected:
             {
                 continue;
             }
-            auto cmd_msg = static_cast<Command *>(msg.get());
+            auto cmd_msg = static_cast<Command*>(msg.get());
 
             CommandType cmd_type = cmd_msg->type();
             switch (cmd_type)
             {
-            case CommandType::SET_SENSOR_TYPE:
-            {
-                auto typed_cmd = static_cast<SetSensorTypeCommand*>(cmd_msg);
-                pin_type = typed_cmd->data();
-            };
+                case CommandType::SET_SENSOR_TYPE:
+                {
+                    auto typed_cmd = static_cast<SetSensorTypeCommand*>(cmd_msg);
+                    pin_type = typed_cmd->data();
+                };
                 break;
 
-            default:
-                break;
+                default:
+                    break;
             }
         }
 
@@ -90,7 +88,7 @@ TEST_F(TestMappingProcessor, test_get_config)
 
 TEST_F(TestMappingProcessor, undefined_mappers_return_empty_process)
 {
-    MessageFactory factory;
+    MessageFactory      factory;
     OutputBackendMockup backend;
 
     auto input_msg = factory.make_digital_value(2, false);
@@ -102,4 +100,3 @@ TEST_F(TestMappingProcessor, undefined_mappers_return_empty_process)
     _processor.process(input_val, &backend);
     ASSERT_FLOAT_EQ(fake_reference_value, backend._last_output_value);
 }
-

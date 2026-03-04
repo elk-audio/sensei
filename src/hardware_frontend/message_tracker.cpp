@@ -25,17 +25,16 @@
 namespace sensei {
 namespace hw_frontend {
 
-MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries) :
-        _timeout(timeout),
-        _max_retries(max_retries),
-        _retries(0),
-        _identifier(0)
+MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries)
+    : _timeout(timeout),
+      _max_retries(max_retries),
+      _retries(0),
+      _identifier(0)
 {
 }
 
 MessageTracker::~MessageTracker()
 {
-
 }
 
 void MessageTracker::store(std::unique_ptr<Command>&& message, uint64_t uuid)
@@ -70,7 +69,7 @@ bool MessageTracker::ack(uint64_t identifier)
 timeout MessageTracker::timed_out()
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    if (_identifier == 0 &&  _message_in_transit == nullptr)
+    if (_identifier == 0 && _message_in_transit == nullptr)
     {
         return timeout::NO_MESSAGE;
     }

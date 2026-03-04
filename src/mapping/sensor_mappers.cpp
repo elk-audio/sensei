@@ -29,8 +29,8 @@
 
 namespace {
 
-static const int MAX_ADC_BIT_RESOLUTION = 16;
-static const int DEFAULT_ADC_BIT_RESOLUTION = 12;
+static const int   MAX_ADC_BIT_RESOLUTION = 16;
+static const int   DEFAULT_ADC_BIT_RESOLUTION = 12;
 static const float DEFAULT_FILTER_TIME_CONSTANT = 0.020f; // 20 ms
 
 static const float PREVIOUS_VALUE_THRESHOLD = 1.0e-4f;
@@ -47,63 +47,63 @@ using namespace sensei::mapping;
 // BaseSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-BaseSensorMapper::BaseSensorMapper(SensorType type, int index) :
-    _sensor_type(type),
-    _sensor_index(index),
-    _enabled(false),
-    _multiplexed(false),
-    _multiplexer_data{0,0},
-    _sending_mode(SendingMode::OFF),
-    _delta_ticks_sending(1),
-    _invert_value(false),
-    _send_timestamp(false)
+BaseSensorMapper::BaseSensorMapper(SensorType type, int index)
+    : _sensor_type(type),
+      _sensor_index(index),
+      _enabled(false),
+      _multiplexed(false),
+      _multiplexer_data{0, 0},
+      _sending_mode(SendingMode::OFF),
+      _delta_ticks_sending(1),
+      _invert_value(false),
+      _send_timestamp(false)
 {}
 
-CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
+CommandErrorCode BaseSensorMapper::apply_command(const Command* cmd)
 {
     assert(cmd->index() == _sensor_index);
 
     CommandErrorCode status = CommandErrorCode::OK;
 
     // Handle here per-sensor configuration common between sensor types
-    switch(cmd->type())
+    switch (cmd->type())
     {
-    case CommandType::SET_ENABLED:
+        case CommandType::SET_ENABLED:
         {
             const auto typed_cmd = static_cast<const SetEnabledCommand*>(cmd);
             _enabled = typed_cmd->data();
         };
         break;
 
-    case CommandType::SET_SENSOR_HW_TYPE:
+        case CommandType::SET_SENSOR_HW_TYPE:
         {
             const auto typed_cmd = static_cast<const SetSensorHwTypeCommand*>(cmd);
             _hw_type = typed_cmd->data();
         };
         break;
 
-    case CommandType::SET_HW_PINS:
+        case CommandType::SET_HW_PINS:
         {
             const auto typed_cmd = static_cast<const SetHwPinsCommand*>(cmd);
             _hw_pins = typed_cmd->data();
         };
         break;
 
-    case CommandType::SET_SENDING_MODE:
+        case CommandType::SET_SENDING_MODE:
         {
             const auto typed_cmd = static_cast<const SetSendingModeCommand*>(cmd);
             _sending_mode = typed_cmd->data();
         };
         break;
 
-    case CommandType::SET_INVERT_ENABLED:
+        case CommandType::SET_INVERT_ENABLED:
         {
             const auto typed_cmd = static_cast<const SetInvertEnabledCommand*>(cmd);
             _invert_value = typed_cmd->data();
         };
         break;
 
-    case CommandType::SET_SENDING_DELTA_TICKS:
+        case CommandType::SET_SENDING_DELTA_TICKS:
         {
             const auto typed_cmd = static_cast<const SetSendingDeltaTicksCommand*>(cmd);
             if (typed_cmd->data() > 0)
@@ -118,7 +118,7 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
         };
         break;
 
-    case CommandType::SET_MULTIPLEXED:
+        case CommandType::SET_MULTIPLEXED:
         {
             const auto typed_cmd = static_cast<const SetMultiplexedSensorCommand*>(cmd);
             _multiplexer_data = typed_cmd->data();
@@ -126,35 +126,33 @@ CommandErrorCode BaseSensorMapper::apply_command(const Command *cmd)
         };
         break;
 
-    case CommandType::SET_SEND_TIMESTAMP_ENABLED:
+        case CommandType::SET_SEND_TIMESTAMP_ENABLED:
         {
             const auto typed_cmd = static_cast<const SetSendTimestampEnabledCommand*>(cmd);
             _send_timestamp = typed_cmd->data();
         }
         break;
 
-    case CommandType::SET_FAST_MODE:
+        case CommandType::SET_FAST_MODE:
         {
             const auto typed_cmd = static_cast<const SetFastModeCommand*>(cmd);
             _fast_mode = typed_cmd->data();
         }
         break;
 
-    case CommandType::CLEAR_PREVIOUS_VALUE:
+        case CommandType::CLEAR_PREVIOUS_VALUE:
         {
             _previous_value.reset();
             SENSEI_LOG_INFO("Cleared previous value for sensor {}", _sensor_index);
         }
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
-
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     return status;
-
 }
 
 void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
@@ -181,28 +179,27 @@ void BaseSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 // DigitalSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-DigitalSensorMapper::DigitalSensorMapper(const int index) :
-    BaseSensorMapper(SensorType::DIGITAL_INPUT, index)
+DigitalSensorMapper::DigitalSensorMapper(const int index)
+    : BaseSensorMapper(SensorType::DIGITAL_INPUT, index)
 {}
 
 
-CommandErrorCode DigitalSensorMapper::apply_command(const Command *cmd)
+CommandErrorCode DigitalSensorMapper::apply_command(const Command* cmd)
 {
     // Handle digital-specific configurations
     CommandErrorCode status = CommandErrorCode::OK;
-    switch(cmd->type())
+    switch (cmd->type())
     {
-    case CommandType::SET_SENSOR_TYPE:
+        case CommandType::SET_SENSOR_TYPE:
         {
             // This is set internally and not from the user, so just assert for bugs
             assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::DIGITAL_INPUT);
         };
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
-
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     // If command was not handled, try to handle it in parent
@@ -221,9 +218,9 @@ void DigitalSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     BaseSensorMapper::put_config_commands_into(out_iterator);
 }
 
-void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
+void DigitalSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
-    if (! _enabled)
+    if (!_enabled)
     {
         return;
     }
@@ -240,7 +237,7 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     {
         return;
     }
-    float out_val = digital_val? 1.0f : 0.0f;
+    float out_val = digital_val ? 1.0f : 0.0f;
     if (_invert_value)
     {
         out_val = 1.0f - out_val;
@@ -253,12 +250,12 @@ void DigitalSensorMapper::process(Value *value, output_backend::OutputBackend *b
     // it gets optimized away by the compiler in release mode
     auto temp_msg = factory.make_output_value(_sensor_index,
                                               out_val,
-                                              _send_timestamp? value->timestamp() : 0);
+                                              _send_timestamp ? value->timestamp() : 0);
     auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
 }
 
-std::unique_ptr<Command> DigitalSensorMapper::process_set_value(Value*value)
+std::unique_ptr<Command> DigitalSensorMapper::process_set_value(Value* value)
 {
     bool out_val;
     if (!_enabled)
@@ -289,77 +286,76 @@ std::unique_ptr<Command> DigitalSensorMapper::process_set_value(Value*value)
 // AnalogSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-AnalogSensorMapper::AnalogSensorMapper(int index,
-                                       float adc_sampling_rate) :
-    BaseSensorMapper(SensorType::ANALOG_INPUT, index),
-    _filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT),
-    _slider_threshold(0),
-    _input_scale_range_low(0),
-    _input_scale_range_high((1<<DEFAULT_ADC_BIT_RESOLUTION)-1),
-    _adc_sampling_rate(adc_sampling_rate)
+AnalogSensorMapper::AnalogSensorMapper(int   index,
+                                       float adc_sampling_rate)
+    : BaseSensorMapper(SensorType::ANALOG_INPUT, index),
+      _filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT),
+      _slider_threshold(0),
+      _input_scale_range_low(0),
+      _input_scale_range_high((1 << DEFAULT_ADC_BIT_RESOLUTION) - 1),
+      _adc_sampling_rate(adc_sampling_rate)
 {
     _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
     _set_adc_filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT);
 }
 
-CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
+CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
 {
 
     // Handle analog-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
-    CommandErrorCode  status = CommandErrorCode::OK;
-    switch(cmd->type())
+    CommandErrorCode status = CommandErrorCode::OK;
+    switch (cmd->type())
     {
-    // External
-    case CommandType::SET_SENSOR_TYPE:
+        // External
+        case CommandType::SET_SENSOR_TYPE:
         {
             // This is set internally and not from the user, so just assert for bugs
             assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::ANALOG_INPUT);
         };
         break;
 
-    case CommandType::SET_SENSOR_HW_TYPE:
+        case CommandType::SET_SENSOR_HW_TYPE:
         {
             const auto typed_cmd = static_cast<const SetSensorHwTypeCommand*>(cmd);
             status = _set_sensor_hw_type(typed_cmd->data());
         };
         break;
 
-    case CommandType::SET_ADC_BIT_RESOLUTION:
+        case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
             status = _set_adc_bit_resolution(typed_cmd->data());
         };
         break;
 
-    case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
+        case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
         {
             const auto typed_cmd = static_cast<const SetADCFitlerTimeConstantCommand*>(cmd);
             status = _set_adc_filter_time_constant(typed_cmd->data());
         }
         break;
 
-    case CommandType::SET_SLIDER_THRESHOLD:
+        case CommandType::SET_SLIDER_THRESHOLD:
         {
             const auto typed_cmd = static_cast<const SetSliderThresholdCommand*>(cmd);
             status = _set_slider_threshold(typed_cmd->data());
         };
         break;
 
-    // Internal
+            // Internal
 
-    case CommandType::SET_INPUT_RANGE:
+        case CommandType::SET_INPUT_RANGE:
         {
             const auto typed_cmd = static_cast<const SetInputRangeCommand*>(cmd);
-            auto range = typed_cmd->data();
+            auto       range = typed_cmd->data();
             status = _set_input_scale_range(static_cast<int>(std::round(range.min)),
                                             static_cast<int>(std::round(range.max)));
         };
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
-
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     // If command was not handled, try to handle it in parent
@@ -371,7 +367,6 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command *cmd)
     {
         return status;
     }
-
 }
 
 void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
@@ -387,16 +382,15 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 
 void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
-    if (! _enabled)
+    if (!_enabled)
     {
         return;
     }
     assert(value->type() == ValueType::ANALOG);
 
-    auto analog_val = static_cast<AnalogValue*>(value);
-    int clipped_val = clip<int>(analog_val->value(), _input_scale_range_low, _input_scale_range_high);
-    float out_val =   static_cast<float>(clipped_val - _input_scale_range_low)
-                    / static_cast<float>(_input_scale_range_high - _input_scale_range_low);
+    auto  analog_val = static_cast<AnalogValue*>(value);
+    int   clipped_val = clip<int>(analog_val->value(), _input_scale_range_low, _input_scale_range_high);
+    float out_val = static_cast<float>(clipped_val - _input_scale_range_low) / static_cast<float>(_input_scale_range_high - _input_scale_range_low);
     if (_invert_value)
     {
         out_val = 1.0f - out_val;
@@ -409,14 +403,14 @@ void AnalogSensorMapper::process(Value* value, output_backend::OutputBackend* ba
         // it gets optimized away by the compiler in release mode
         auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
-                                                  _send_timestamp? value->timestamp() : 0);
+                                                  _send_timestamp ? value->timestamp() : 0);
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
         backend->send(transformed_value, value);
         _previous_value = out_val;
     }
 }
 
-std::unique_ptr<Command> AnalogSensorMapper::process_set_value(Value*value)
+std::unique_ptr<Command> AnalogSensorMapper::process_set_value(Value* value)
 {
     if (!_enabled)
     {
@@ -476,7 +470,7 @@ CommandErrorCode AnalogSensorMapper::_set_adc_filter_time_constant(float value)
 
 CommandErrorCode AnalogSensorMapper::_set_slider_threshold(int value)
 {
-    if ( (value < 0) || (value > (_max_allowed_input-1)) )
+    if ((value < 0) || (value > (_max_allowed_input - 1)))
     {
         return CommandErrorCode::INVALID_VALUE;
     }
@@ -488,14 +482,14 @@ CommandErrorCode AnalogSensorMapper::_set_slider_threshold(int value)
 CommandErrorCode AnalogSensorMapper::_set_input_scale_range(int low, int high)
 {
     CommandErrorCode status = CommandErrorCode::OK;
-    if ( (low < 0) || (high > (_max_allowed_input-1)))
+    if ((low < 0) || (high > (_max_allowed_input - 1)))
     {
         return CommandErrorCode::INVALID_RANGE;
     }
 
     if (high <= low)
     {
-        high = low + 1 ;
+        high = low + 1;
         status = CommandErrorCode::CLIP_WARNING;
     }
 
@@ -507,17 +501,17 @@ CommandErrorCode AnalogSensorMapper::_set_input_scale_range(int low, int high)
 ////////////////////////////////////////////////////////////////////////////////
 // RangeSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
-RangeSensorMapper::RangeSensorMapper(int index) : BaseSensorMapper(SensorType::ANALOG_INPUT, index),
-                                                  _input_scale_range_low(0),
-                                                  _input_scale_range_high(100)
+RangeSensorMapper::RangeSensorMapper(int index)
+    : BaseSensorMapper(SensorType::ANALOG_INPUT, index),
+      _input_scale_range_low(0),
+      _input_scale_range_high(100)
 {}
 
 
-
-CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
+CommandErrorCode RangeSensorMapper::apply_command(const Command* cmd)
 {
-    CommandErrorCode  status = CommandErrorCode::OK;
-    switch(cmd->type())
+    CommandErrorCode status = CommandErrorCode::OK;
+    switch (cmd->type())
     {
         // External
         case CommandType::SET_SENSOR_TYPE:
@@ -534,12 +528,12 @@ CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
         };
         break;
 
-        // Internal
+            // Internal
 
         case CommandType::SET_INPUT_RANGE:
         {
             const auto typed_cmd = static_cast<const SetInputRangeCommand*>(cmd);
-            auto range = typed_cmd->data();
+            auto       range = typed_cmd->data();
             status = _set_input_scale_range(static_cast<int>(std::round(range.min)),
                                             static_cast<int>(std::round(range.max)));
         };
@@ -552,12 +546,11 @@ CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
         }
         break;
 
-        break;
+            break;
 
         default:
             status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
             break;
-
     }
     // If command was not handled, try to handle it in parent
     if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
@@ -568,7 +561,6 @@ CommandErrorCode RangeSensorMapper::apply_command(const Command*cmd)
     {
         return status;
     }
-
 }
 
 void RangeSensorMapper::put_config_commands_into(CommandIterator out_iterator)
@@ -579,9 +571,9 @@ void RangeSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
 
-void RangeSensorMapper::process(Value*value, output_backend::OutputBackend*backend)
+void RangeSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
-    if (! _enabled)
+    if (!_enabled)
     {
         return;
     }
@@ -601,14 +593,14 @@ void RangeSensorMapper::process(Value*value, output_backend::OutputBackend*backe
         // it gets optimized away by the compiler in release mode
         auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
-                                                  _send_timestamp? value->timestamp() : 0);
+                                                  _send_timestamp ? value->timestamp() : 0);
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
         backend->send(transformed_value, value);
         _previous_int_value = out_val;
     }
 }
 
-std::unique_ptr<Command> RangeSensorMapper::process_set_value(Value*value)
+std::unique_ptr<Command> RangeSensorMapper::process_set_value(Value* value)
 {
     if (!_enabled)
     {
@@ -648,7 +640,7 @@ CommandErrorCode RangeSensorMapper::_set_input_scale_range(int low, int high)
     CommandErrorCode status = CommandErrorCode::OK;
     if (high <= low)
     {
-        high = low + 1 ;
+        high = low + 1;
         status = CommandErrorCode::CLIP_WARNING;
     }
 
@@ -661,18 +653,18 @@ CommandErrorCode RangeSensorMapper::_set_input_scale_range(int low, int high)
 // ContinuousSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-ContinuousSensorMapper::ContinuousSensorMapper(int index) :
-        BaseSensorMapper(SensorType::CONTINUOUS_INPUT, index),
-        _input_scale_range_low(-M_PI),
-        _input_scale_range_high(M_PI)
+ContinuousSensorMapper::ContinuousSensorMapper(int index)
+    : BaseSensorMapper(SensorType::CONTINUOUS_INPUT, index),
+      _input_scale_range_low(-M_PI),
+      _input_scale_range_high(M_PI)
 {}
 
-CommandErrorCode ContinuousSensorMapper::apply_command(const Command *cmd)
+CommandErrorCode ContinuousSensorMapper::apply_command(const Command* cmd)
 {
     // Handle digital-specific configurations
     CommandErrorCode status = CommandErrorCode::OK;
-    SENSEI_LOG_INFO("ContinuousSensorMapper: Got a set sensor type command {}!", (int)cmd->type());
-    switch(cmd->type())
+    SENSEI_LOG_INFO("ContinuousSensorMapper: Got a set sensor type command {}!", (int) cmd->type());
+    switch (cmd->type())
     {
         case CommandType::SET_SENSOR_TYPE:
         {
@@ -683,14 +675,13 @@ CommandErrorCode ContinuousSensorMapper::apply_command(const Command *cmd)
         case CommandType::SET_INPUT_RANGE:
         {
             const auto typed_cmd = static_cast<const SetInputRangeCommand*>(cmd);
-            auto range = typed_cmd->data();
+            auto       range = typed_cmd->data();
             status = _set_input_scale_range(range.min, range.max);
             break;
         }
         default:
             status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
             break;
-
     }
 
     // If command was not handled, try to handle it in parent
@@ -702,7 +693,6 @@ CommandErrorCode ContinuousSensorMapper::apply_command(const Command *cmd)
     {
         return status;
     }
-
 }
 
 void ContinuousSensorMapper::put_config_commands_into(CommandIterator out_iterator)
@@ -713,15 +703,15 @@ void ContinuousSensorMapper::put_config_commands_into(CommandIterator out_iterat
     *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
 
-void ContinuousSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
+void ContinuousSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
-    if (! _enabled)
+    if (!_enabled)
     {
         return;
     }
     assert(value->type() == ValueType::CONTINUOUS);
 
-    auto continuous_val = static_cast<ContinuousValue*>(value);
+    auto  continuous_val = static_cast<ContinuousValue*>(value);
     float clipped_val = clip<float>(continuous_val->value(), _input_scale_range_low, _input_scale_range_high);
     float out_val = (clipped_val - _input_scale_range_low) / (_input_scale_range_high - _input_scale_range_low);
 
@@ -736,14 +726,14 @@ void ContinuousSensorMapper::process(Value *value, output_backend::OutputBackend
         // it gets optimized away by the compiler in release mode
         auto temp_msg = factory.make_output_value(_sensor_index,
                                                   out_val,
-                                                  _send_timestamp? value->timestamp() : 0);
+                                                  _send_timestamp ? value->timestamp() : 0);
         auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
         backend->send(transformed_value, value);
         _previous_value = out_val;
     }
 }
 
-std::unique_ptr<Command> ContinuousSensorMapper::process_set_value(Value*value)
+std::unique_ptr<Command> ContinuousSensorMapper::process_set_value(Value* value)
 {
     if (!_enabled)
     {
@@ -766,7 +756,6 @@ std::unique_ptr<Command> ContinuousSensorMapper::process_set_value(Value*value)
     }
     out_val = out_val * (_input_scale_range_high - _input_scale_range_low) + _input_scale_range_low;
     return static_unique_ptr_cast<Command, BaseMessage>(_factory.make_set_continuous_output_command(value->index(), out_val));
-
 }
 
 CommandErrorCode ContinuousSensorMapper::_set_input_scale_range(float low, float high)
@@ -786,24 +775,24 @@ CommandErrorCode ContinuousSensorMapper::_set_input_scale_range(float low, float
 // RelativeSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-RelativeSensorMapper::RelativeSensorMapper(const int index) :
-    BaseSensorMapper(SensorType::RELATIVE_INPUT, index)
+RelativeSensorMapper::RelativeSensorMapper(const int index)
+    : BaseSensorMapper(SensorType::RELATIVE_INPUT, index)
 {}
 
-CommandErrorCode RelativeSensorMapper::apply_command(const Command *cmd)
+CommandErrorCode RelativeSensorMapper::apply_command(const Command* cmd)
 {
     CommandErrorCode status = CommandErrorCode::OK;
-    switch(cmd->type())
+    switch (cmd->type())
     {
-    case CommandType::SET_SENSOR_TYPE:
+        case CommandType::SET_SENSOR_TYPE:
         {
             assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::RELATIVE_INPUT);
         };
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
@@ -821,7 +810,7 @@ void RelativeSensorMapper::put_config_commands_into(CommandIterator out_iterator
     BaseSensorMapper::put_config_commands_into(out_iterator);
 }
 
-void RelativeSensorMapper::process(Value *value, output_backend::OutputBackend *backend)
+void RelativeSensorMapper::process(Value* value, output_backend::OutputBackend* backend)
 {
     if (!_enabled)
     {
@@ -829,7 +818,7 @@ void RelativeSensorMapper::process(Value *value, output_backend::OutputBackend *
     }
     assert(value->type() == ValueType::ANALOG);
 
-    int raw_val = static_cast<AnalogValue*>(value)->value();
+    int   raw_val = static_cast<AnalogValue*>(value)->value();
     float out_val = (raw_val >= 0) ? 1.0f : -1.0f;
     if (_invert_value)
     {
@@ -839,10 +828,10 @@ void RelativeSensorMapper::process(Value *value, output_backend::OutputBackend *
     // No previous value check - always forward every event
 
     MessageFactory factory;
-    auto temp_msg = factory.make_output_value(_sensor_index,
-                                              out_val,
-                                              _send_timestamp? value->timestamp() : 0);
-    auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+    auto           temp_msg = factory.make_output_value(_sensor_index,
+                                                        out_val,
+                                                        _send_timestamp ? value->timestamp() : 0);
+    auto           transformed_value = static_cast<OutputValue*>(temp_msg.get());
     backend->send(transformed_value, value);
 }
 
@@ -855,42 +844,42 @@ std::unique_ptr<Command> RelativeSensorMapper::process_set_value(Value* /*value*
 // DiscreteSensorMapper implementation
 ////////////////////////////////////////////////////////////////////////////////
 
-DiscreteSensorMapper::DiscreteSensorMapper(int index) :
-    BaseSensorMapper(SensorType::DISCRETE_INPUT, index)
+DiscreteSensorMapper::DiscreteSensorMapper(int index)
+    : BaseSensorMapper(SensorType::DISCRETE_INPUT, index)
 {
     // Default: no ranges configured
     _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
 }
 
-CommandErrorCode DiscreteSensorMapper::apply_command(const Command *cmd)
+CommandErrorCode DiscreteSensorMapper::apply_command(const Command* cmd)
 {
     CommandErrorCode status = CommandErrorCode::OK;
 
-    switch(cmd->type())
+    switch (cmd->type())
     {
-    case CommandType::SET_SENSOR_TYPE:
+        case CommandType::SET_SENSOR_TYPE:
         {
             assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::DISCRETE_INPUT);
         };
         break;
 
-    case CommandType::SET_ADC_BIT_RESOLUTION:
-    {
-        const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
-        status = _set_adc_bit_resolution(typed_cmd->data());
-    };
-    break;
+        case CommandType::SET_ADC_BIT_RESOLUTION:
+        {
+            const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
+            status = _set_adc_bit_resolution(typed_cmd->data());
+        };
+        break;
 
-    case CommandType::SET_DISCRETE_RANGES:
+        case CommandType::SET_DISCRETE_RANGES:
         {
             const auto typed_cmd = static_cast<const SetDiscreteRangesCommand*>(cmd);
             status = _set_discrete_ranges(typed_cmd->data());
         };
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     // If command was not handled, try parent
@@ -928,9 +917,8 @@ void DiscreteSensorMapper::process(Value* value, output_backend::OutputBackend* 
     const auto max_input_value = (1 << _adc_bit_resolution) - 1;
 
     // Normalize to 0.0-1.0 (same logic as AnalogSensorMapper)
-    int clipped_val = clip<int>(analog_val->value(), 0, max_input_value);
-    float normalized_val = static_cast<float>(clipped_val)
-                         / static_cast<float>(max_input_value);
+    int   clipped_val = clip<int>(analog_val->value(), 0, max_input_value);
+    float normalized_val = static_cast<float>(clipped_val) / static_cast<float>(max_input_value);
 
     // Apply inversion if enabled
     if (_invert_value)
@@ -947,10 +935,10 @@ void DiscreteSensorMapper::process(Value* value, output_backend::OutputBackend* 
         discrete_index != _previous_discrete_index)
     {
         MessageFactory factory;
-        auto temp_msg = factory.make_output_value(_sensor_index,
-                                                  static_cast<float>(*discrete_index),
-                                                  _send_timestamp ? value->timestamp() : 0);
-        auto transformed_value = static_cast<OutputValue*>(temp_msg.get());
+        auto           temp_msg = factory.make_output_value(_sensor_index,
+                                                            static_cast<float>(*discrete_index),
+                                                            _send_timestamp ? value->timestamp() : 0);
+        auto           transformed_value = static_cast<OutputValue*>(temp_msg.get());
         backend->send(transformed_value, value);
         _previous_discrete_index = discrete_index;
     }
@@ -975,13 +963,13 @@ CommandErrorCode DiscreteSensorMapper::_set_discrete_ranges(const std::vector<Ra
         if (ranges[i].min < 0.0f || ranges[i].max > 1.0f)
         {
             SENSEI_LOG_WARNING("Invalid discrete range [{}, {}]: min < 0.0 or max > 1.0",
-                              ranges[i].min, ranges[i].max);
+                               ranges[i].min, ranges[i].max);
             return CommandErrorCode::INVALID_RANGE;
         }
         else if (ranges[i].min >= ranges[i].max)
         {
             SENSEI_LOG_WARNING("Invalid discrete range [{}, {}]: min >= max",
-                              ranges[i].min, ranges[i].max);
+                               ranges[i].min, ranges[i].max);
             return CommandErrorCode::INVALID_RANGE;
         }
 

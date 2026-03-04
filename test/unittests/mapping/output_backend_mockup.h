@@ -33,13 +33,15 @@ public:
 
         switch (raw_input_value->type())
         {
-            case ValueType::ANALOG: {
+            case ValueType::ANALOG:
+            {
                 auto typed_val = static_cast<const AnalogValue*>(raw_input_value);
                 _last_raw_analogue_input = typed_val->value();
             }
             break;
 
-            case ValueType::DIGITAL: {
+            case ValueType::DIGITAL:
+            {
                 auto typed_val = static_cast<const DigitalValue*>(raw_input_value);
                 _last_raw_digital_input = typed_val->value();
             }

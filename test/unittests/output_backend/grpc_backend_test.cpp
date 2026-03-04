@@ -4,7 +4,7 @@
 #include "sensei-grpc-api/sensei_rpc.pb.h"
 #include "sensei-grpc-api/sensei_rpc.grpc.pb.h"
 
-#define private public
+#define private   public
 #define protected public
 #include "output_backend/grpc_backend.cpp"
 #include "user_frontend/grpc_user_frontend.h"
@@ -35,7 +35,7 @@ protected:
     void SetUp()
     {
         // Configure backend
-        MessageFactory factory;
+        MessageFactory                        factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
 
         _user_frontend.reset(new GrpcUserFrontend(&_handler, 64));
@@ -72,14 +72,14 @@ protected:
         _user_frontend.reset();
     }
 
-    int _max_n_sensors{64};
+    int         _max_n_sensors{64};
     GrpcBackend _backend{_max_n_sensors};
 
     std::unique_ptr<GrpcUserFrontend> _user_frontend;
-    MessageHandlerMock _handler;
-    int _server_port{50051};
+    MessageHandlerMock                _handler;
+    int                               _server_port{50051};
 
-    std::shared_ptr<grpc::Channel> _channel;
+    std::shared_ptr<grpc::Channel>                      _channel;
     std::unique_ptr<sensei_rpc::SenseiController::Stub> _stub;
 
     std::vector<sensei_rpc::Event> _received_events;
@@ -98,7 +98,7 @@ TEST_F(TestGrpcBackend, test_config)
 TEST_F(TestGrpcBackend, test_send_without_frontend)
 {
     // Create a backend without linked frontend and confirm that sending doesn't crash
-    GrpcBackend standalone_backend{64};
+    GrpcBackend    standalone_backend{64};
     MessageFactory factory;
 
     auto cmd = CMD_UPTR(factory.make_set_sensor_type_command(0, SensorType::DIGITAL_INPUT));
@@ -127,15 +127,16 @@ TEST_F(TestGrpcBackend, test_send_with_frontend)
     std::atomic<bool> subscribed{false};
     std::atomic<bool> received{false};
     sensei_rpc::Event received_event;
-    std::thread subscriber_thread([this, &subscribed, &received, &received_event]() {
-        grpc::ClientContext context;
-        sensei_rpc::SubscribeRequest request;
+    std::thread       subscriber_thread([this, &subscribed, &received, &received_event]() {
+        grpc::ClientContext                                    context;
+        sensei_rpc::SubscribeRequest                           request;
         std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
-            _stub->SubscribeToEvents(&context, request));
+                _stub->SubscribeToEvents(&context, request));
         subscribed.store(true);
 
         sensei_rpc::Event event;
-        if (reader->Read(&event)) {
+        if (reader->Read(&event))
+        {
             received_event = event;
             received.store(true);
         }
@@ -169,20 +170,21 @@ TEST_F(TestGrpcBackend, test_event_type_mapping)
     _backend.apply_command(enable_cmd.get());
 
     // Start subscription
-    std::atomic<bool> subscribed{false};
+    std::atomic<bool>              subscribed{false};
     std::vector<sensei_rpc::Event> received_events;
-    std::mutex events_mutex;
-    std::atomic<int> event_count{0};
+    std::mutex                     events_mutex;
+    std::atomic<int>               event_count{0};
 
     std::thread subscriber_thread([this, &subscribed, &received_events, &events_mutex, &event_count]() {
-        grpc::ClientContext context;
-        sensei_rpc::SubscribeRequest request;
+        grpc::ClientContext                                    context;
+        sensei_rpc::SubscribeRequest                           request;
         std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
-            _stub->SubscribeToEvents(&context, request));
+                _stub->SubscribeToEvents(&context, request));
         subscribed.store(true);
 
         sensei_rpc::Event event;
-        while (event_count < 3 && reader->Read(&event)) {
+        while (event_count < 3 && reader->Read(&event))
+        {
             {
                 std::lock_guard<std::mutex> lock(events_mutex);
                 received_events.push_back(event);
@@ -273,18 +275,19 @@ TEST_F(TestGrpcBackend, test_send_flags)
     // Send should not broadcast when disabled
     std::atomic<bool> subscribed{false};
     std::atomic<bool> received{false};
-    std::thread subscriber_thread([this, &subscribed, &received]() {
-        grpc::ClientContext context;
+    std::thread       subscriber_thread([this, &subscribed, &received]() {
+        grpc::ClientContext          context;
         sensei_rpc::SubscribeRequest request;
-        auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(200);
+        auto                         deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(200);
         context.set_deadline(deadline);
 
         std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
-            _stub->SubscribeToEvents(&context, request));
+                _stub->SubscribeToEvents(&context, request));
         subscribed.store(true);
 
         sensei_rpc::Event event;
-        if (reader->Read(&event)) {
+        if (reader->Read(&event))
+        {
             received.store(true);
         }
     });
@@ -311,7 +314,7 @@ TEST_F(TestGrpcBackend, test_send_flags)
 TEST_F(TestGrpcBackend, test_timestamp_conversion)
 {
     uint32_t timestamp_in = 123456;
-    auto event = _backend._create_proto_event(0, SensorType::ANALOG_INPUT, 1.0f, timestamp_in);
+    auto     event = _backend._create_proto_event(0, SensorType::ANALOG_INPUT, 1.0f, timestamp_in);
 
     ASSERT_TRUE(event.has_analog_ev());
     ASSERT_EQ(static_cast<int64_t>(timestamp_in), event.timestamp());

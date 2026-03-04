@@ -6,18 +6,18 @@
 class TestContainer
 {
 public:
-    int a;
+    int   a;
     float b;
 };
 
-const int ITERATIONS = 5;
+const int  ITERATIONS = 5;
 std::mutex mutex;
 
 void push_loop(SynchronizedQueue<TestContainer>* module_under_test, std::condition_variable* notifier)
 {
 
     std::unique_lock<std::mutex> lock(mutex);
-    for (int i = 0; i < ITERATIONS ; ++i)
+    for (int i = 0; i < ITERATIONS; ++i)
     {
         TestContainer m;
         m.a = i;
@@ -35,7 +35,7 @@ void push_loop(SynchronizedQueue<TestContainer>* module_under_test, std::conditi
 TEST(SynchronizedQueueTest, ordertest)
 {
     SynchronizedQueue<TestContainer> module_under_test;
-    std::condition_variable push_notifier;
+    std::condition_variable          push_notifier;
     // Initial state should be empty
     ASSERT_TRUE(module_under_test.empty());
 
@@ -60,4 +60,3 @@ TEST(SynchronizedQueueTest, ordertest)
     ASSERT_TRUE(module_under_test.empty());
     push_thread.join();
 }
-

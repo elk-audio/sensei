@@ -35,9 +35,9 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("grpc_backend");
 // GrpcBackend Implementation
 //==============================================================================
 
-GrpcBackend::GrpcBackend(const int max_n_sensors) :
-    OutputBackend(max_n_sensors),
-    _user_frontend(nullptr)
+GrpcBackend::GrpcBackend(const int max_n_sensors)
+    : OutputBackend(max_n_sensors),
+      _user_frontend(nullptr)
 {
     SENSEI_LOG_INFO("GrpcBackend created");
 }
@@ -89,8 +89,8 @@ void GrpcBackend::send(const OutputValue* transformed_value, const Value* /*raw_
     if (_send_output_active)
     {
         SensorType sensor_type = _sensor_types[sensor_index];
-        float value = transformed_value->value();
-        uint32_t timestamp = transformed_value->timestamp();
+        float      value = transformed_value->value();
+        uint32_t   timestamp = transformed_value->timestamp();
 
         sensei_rpc::Event event = _create_proto_event(sensor_index, sensor_type, value, timestamp);
 
@@ -109,10 +109,10 @@ void GrpcBackend::send(const OutputValue* transformed_value, const Value* /*raw_
     }
 }
 
-sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
-                                                  SensorType sensor_type,
-                                                  float value,
-                                                  uint32_t timestamp)
+sensei_rpc::Event GrpcBackend::_create_proto_event(int        sensor_index,
+                                                   SensorType sensor_type,
+                                                   float      value,
+                                                   uint32_t   timestamp)
 {
     sensei_rpc::Event event;
     event.set_controller_id(sensor_index);
@@ -125,7 +125,7 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
         {
             // Digital sensor -> ToggleEvent
             auto* toggle_ev = event.mutable_toggle_ev();
-            toggle_ev->set_value(value > 0.5f);  // Convert float to bool
+            toggle_ev->set_value(value > 0.5f); // Convert float to bool
             break;
         }
 
@@ -134,7 +134,7 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
         {
             // Range or Discrete sensor -> RangeEvent
             auto* range_ev = event.mutable_range_ev();
-            range_ev->set_value(static_cast<int32_t>(value));  // Convert float to int32
+            range_ev->set_value(static_cast<int32_t>(value)); // Convert float to int32
             break;
         }
 
@@ -151,7 +151,7 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
         {
             // Digital output -> LedEvent
             auto* led_ev = event.mutable_led_ev();
-            led_ev->set_value(value > 0.5f);  // Convert float to bool
+            led_ev->set_value(value > 0.5f); // Convert float to bool
             break;
         }
 
@@ -159,7 +159,7 @@ sensei_rpc::Event GrpcBackend::_create_proto_event(int sensor_index,
         {
             // Relative sensor -> RelativeEvent
             auto* relative_ev = event.mutable_relative_ev();
-            relative_ev->set_value(static_cast<int32_t>(value));  // -1 or +1
+            relative_ev->set_value(static_cast<int32_t>(value)); // -1 or +1
             break;
         }
 

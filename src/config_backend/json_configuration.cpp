@@ -30,9 +30,9 @@ SENSEI_GET_LOGGER_WITH_MODULE_NAME("config");
 
 Json::Value read_configuration(std::ifstream& file)
 {
-    Json::Value config;
+    Json::Value  config;
     Json::Reader reader;
-    bool parse_ok = reader.parse(file, config, false);
+    bool         parse_ok = reader.parse(file, config, false);
     if (!parse_ok)
     {
         SENSEI_LOG_ERROR("Error parsing JSON configuration file, {}", reader.getFormattedErrorMessages());
@@ -74,7 +74,7 @@ ConfigStatus JsonConfiguration::read(Config& config)
     /* Read the rest of the configuration */
     if (backends.isArray())
     {
-        for(const Json::Value& backend : backends)
+        for (const Json::Value& backend : backends)
         {
             status = handle_backend(backend, config.backend_config);
             if (status != ConfigStatus::OK)
@@ -85,7 +85,7 @@ ConfigStatus JsonConfiguration::read(Config& config)
     }
     if (sensors.isArray())
     {
-        for(const Json::Value& sensor : sensors)
+        for (const Json::Value& sensor : sensors)
         {
             status = handle_sensor(sensor);
             if (status != ConfigStatus::OK)
@@ -109,7 +109,7 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
         {
             config.type = HwFrontendType::RASPA_GPIO;
         }
-        else if(type == "elk_pi")
+        else if (type == "elk_pi")
         {
             config.type = HwFrontendType::ELK_PI_GPIO;
         }
@@ -131,7 +131,7 @@ ConfigStatus JsonConfiguration::handle_hw_config(const Json::Value& frontend, Hw
  */
 ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
 {
-    int sensor_id;
+    int                sensor_id;
     const Json::Value& id = sensor["id"];
     if (id.isInt())
     {
@@ -157,7 +157,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
     if (sensor_type.isString())
     {
         std::unique_ptr<BaseMessage> m = nullptr;
-        const std::string& sensor_type_str = sensor_type.asString();
+        const std::string&           sensor_type_str = sensor_type.asString();
         if (sensor_type_str == "analog_input")
         {
             m = _message_factory.make_set_sensor_type_command(sensor_id, SensorType::ANALOG_INPUT);
@@ -299,7 +299,7 @@ ConfigStatus JsonConfiguration::handle_sensor(const Json::Value& sensor)
         _handler->post_event(std::move(m));
     }
 
-    return ConfigStatus::OK ;
+    return ConfigStatus::OK;
 }
 
 /*
@@ -312,7 +312,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     if (sensor_type.isString())
     {
         std::unique_ptr<BaseMessage> m = nullptr;
-        const std::string& hw_type_str = sensor_type.asString();
+        const std::string&           hw_type_str = sensor_type.asString();
         if (hw_type_str == "analog_input_pin")
         {
             m = _message_factory.make_set_sensor_hw_type_command(sensor_id, SensorHwType::ANALOG_INPUT_PIN);
@@ -368,8 +368,8 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     const Json::Value& multiplexed = hardware["multiplexed"];
     if (multiplexed.isObject())
     {
-        int id;
-        int pin;
+        int                id;
+        int                pin;
         const Json::Value& multiplexer_id = multiplexed["multiplexer_id"];
         if (multiplexer_id.isIntegral())
         {
@@ -413,7 +413,7 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
     const Json::Value& polarity = hardware["polarity"];
     if (polarity.isString())
     {
-        const std::string& pol_str = polarity.asString();
+        const std::string&           pol_str = polarity.asString();
         std::unique_ptr<BaseMessage> m = nullptr;
         if (pol_str == "active_high")
         {
@@ -461,9 +461,9 @@ ConfigStatus JsonConfiguration::handle_sensor_hw(const Json::Value& hardware, in
 /*
  * Handle a backend configuration
  */
-ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend, BackendConfig &backend_config)
+ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend, BackendConfig& backend_config)
 {
-    int backend_id;
+    int                backend_id;
     const Json::Value& id = backend["id"];
     if (id.isInt())
     {
@@ -505,7 +505,7 @@ ConfigStatus JsonConfiguration::handle_backend(const Json::Value& backend, Backe
             return handle_grpc_backend(backend, backend_id);
         }
     }
-    return ConfigStatus::OK ;
+    return ConfigStatus::OK;
 }
 
 

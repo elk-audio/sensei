@@ -13,8 +13,8 @@ const int MAX_RESENDS = 2;
 class TestMessageTracker : public ::testing::Test
 {
 protected:
-    TestMessageTracker() :
-            _module_under_test(std::chrono::milliseconds(MAX_TIMEOUT), MAX_RESENDS)
+    TestMessageTracker()
+        : _module_under_test(std::chrono::milliseconds(MAX_TIMEOUT), MAX_RESENDS)
     {
     }
     void SetUp()
@@ -31,7 +31,7 @@ protected:
 /*
  * Test the initial conditions
  */
-TEST_F (TestMessageTracker, test_initial_conditions)
+TEST_F(TestMessageTracker, test_initial_conditions)
 {
     EXPECT_EQ(std::chrono::milliseconds(MAX_TIMEOUT), _module_under_test._timeout);
     EXPECT_EQ(MAX_RESENDS, _module_under_test._max_retries);
@@ -41,7 +41,7 @@ TEST_F (TestMessageTracker, test_initial_conditions)
 /*
  * Test tracking and acking a packet
  */
-TEST_F (TestMessageTracker, test_simple_tracking)
+TEST_F(TestMessageTracker, test_simple_tracking)
 {
     auto message = std::unique_ptr<Command>(static_cast<Command*>(_factory.make_set_sending_delta_ticks_command(1, 1, 1).release()));
     _module_under_test.store(std::move(message), 1234);
@@ -60,7 +60,7 @@ TEST_F (TestMessageTracker, test_simple_tracking)
 /*
  * Test timeouts on entries
  */
-TEST_F (TestMessageTracker, test_timeout)
+TEST_F(TestMessageTracker, test_timeout)
 {
     auto message = std::unique_ptr<Command>(static_cast<Command*>(_factory.make_set_sending_delta_ticks_command(1, 1, 1).release()));
     _module_under_test.store(std::move(message), 1234);

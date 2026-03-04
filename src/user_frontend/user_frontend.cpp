@@ -48,11 +48,11 @@ void UserFrontend::set_digital_output(int index, bool value)
 {
     if (_threading_mode == ThreadingMode::ASYNCHRONOUS)
     {
-        _handler->post_event(_factory.make_integer_set_value(index, value? 1:0));
+        _handler->post_event(_factory.make_integer_set_value(index, value ? 1 : 0));
     }
     else
     {
-        auto e = IntegerSetValue(index, value? 1:0);
+        auto e = IntegerSetValue(index, value ? 1 : 0);
         _handler->process_event(&e);
     }
 }

@@ -28,21 +28,20 @@ using namespace sensei::user_frontend;
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("osc_frontend");
 
-namespace
-{
+namespace {
 static const int DEFAULT_SERVER_PORT = 23024;
 
-static void osc_error(int num, const char *msg, const char *path)
+static void osc_error(int num, const char* msg, const char* path)
 {
     SENSEI_LOG_ERROR("liblo server error {} in path {}: {}", num, path, msg);
 }
 
-static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, lo_arg**argv, int /*argc*/,
-                                  lo_message /*msg*/, void*user_data)
+static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, lo_arg** argv, int /*argc*/,
+                                  lo_message /*msg*/, void* user_data)
 {
-    OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
-    int sensor_idx = argv[0]->i;
-    bool enabled = static_cast<bool>(argv[1]->i);
+    OSCUserFrontend* self = static_cast<OSCUserFrontend*>(user_data);
+    int              sensor_idx = argv[0]->i;
+    bool             enabled = static_cast<bool>(argv[1]->i);
     self->set_enabled(sensor_idx, enabled);
     SENSEI_LOG_DEBUG("Setting sensor {} to enabled status {}", sensor_idx, enabled);
 
@@ -51,11 +50,11 @@ static int osc_set_sensor_enabled(const char* /*path*/, const char* /*types*/, l
 
 ELK_PUSH_WARNING
 ELK_DISABLE_UNUSED_FUNCTION
-static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
+static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, lo_arg** argv, int /*argc*/, lo_message /*msg*/, void* user_data)
 {
-    OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
-    int id = argv[0]->i;
-    bool value = static_cast<bool>(argv[1]->i);
+    OSCUserFrontend* self = static_cast<OSCUserFrontend*>(user_data);
+    int              id = argv[0]->i;
+    bool             value = static_cast<bool>(argv[1]->i);
     self->set_digital_output(id, value);
     SENSEI_LOG_DEBUG("Sending value {} to digital output {}", value, id);
 
@@ -63,11 +62,11 @@ static int osc_set_digital_output(const char* /*path*/, const char* /*types*/, l
 }
 ELK_POP_WARNING
 
-static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
+static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/, lo_arg** argv, int /*argc*/, lo_message /*msg*/, void* user_data)
 {
-    OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
-    int id = argv[0]->i;
-    float value = argv[1]->f;
+    OSCUserFrontend* self = static_cast<OSCUserFrontend*>(user_data);
+    int              id = argv[0]->i;
+    float            value = argv[1]->f;
     self->set_continuous_output(id, value);
     SENSEI_LOG_DEBUG("Sending value {} to output {}", value, id);
 
@@ -76,11 +75,11 @@ static int osc_set_continuous_output(const char* /*path*/, const char* /*types*/
 
 ELK_PUSH_WARNING
 ELK_DISABLE_UNUSED_FUNCTION
-static int osc_set_range_output(const char* /*path*/, const char* /*types*/, lo_arg ** argv, int /*argc*/, lo_message /*msg*/, void *user_data)
+static int osc_set_range_output(const char* /*path*/, const char* /*types*/, lo_arg** argv, int /*argc*/, lo_message /*msg*/, void* user_data)
 {
-    OSCUserFrontend *self = static_cast<OSCUserFrontend*>(user_data);
-    int id = argv[0]->i;
-    int value = argv[1]->i;
+    OSCUserFrontend* self = static_cast<OSCUserFrontend*>(user_data);
+    int              id = argv[0]->i;
+    int              value = argv[1]->i;
     self->set_range_output(id, value);
     SENSEI_LOG_DEBUG("Sending value {} to range output {}", value, id);
 
@@ -91,11 +90,11 @@ ELK_POP_WARNING
 }; // anonymous namespace
 
 OSCUserFrontend::OSCUserFrontend(MessageHandler* handler,
-                                 const int max_n_sensors,
-                                 ThreadingMode threading_mode) :
-        UserFrontend(handler, max_n_sensors, threading_mode),
-            _osc_server(nullptr),
-            _server_port(DEFAULT_SERVER_PORT)
+                                 const int       max_n_sensors,
+                                 ThreadingMode   threading_mode)
+    : UserFrontend(handler, max_n_sensors, threading_mode),
+      _osc_server(nullptr),
+      _server_port(DEFAULT_SERVER_PORT)
 {
     _start_server();
 }
@@ -104,13 +103,13 @@ CommandErrorCode OSCUserFrontend::apply_command(const Command* cmd)
 {
     CommandErrorCode status = CommandErrorCode::OK;
 
-    switch(cmd->type())
+    switch (cmd->type())
     {
 
-    case CommandType::SET_OSC_INPUT_PORT:
+        case CommandType::SET_OSC_INPUT_PORT:
         {
             const auto typed_cmd = static_cast<const SetOSCInputPortCommand*>(cmd);
-            auto port = typed_cmd->data();
+            auto       port = typed_cmd->data();
             if ((port < 1000) || (port > 65535))
             {
                 status = CommandErrorCode::INVALID_PORT_NUMBER;
@@ -124,9 +123,9 @@ CommandErrorCode OSCUserFrontend::apply_command(const Command* cmd)
         };
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     // If command was not handled, try in the parent class
