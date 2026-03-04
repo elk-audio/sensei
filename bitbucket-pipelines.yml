@@ -44,6 +44,15 @@ pipelines:
           - ./unit_tests
           - cd ..
 
+          # Run raspa_mock integration test
+          - apt-get install -y python3-venv libclang-17-dev
+          - cd ../test/tools/raspa_mock
+          - python3 -m venv .venv
+          - source .venv/bin/activate
+          - pip install -r requirements.txt
+          - bash generate_bindings.sh
+          - python main.py
+
 definitions:
   caches:
     vcpkg: vcpkgcache
