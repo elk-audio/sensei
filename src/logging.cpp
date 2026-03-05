@@ -34,11 +34,11 @@ std::string                     Logger::_logger_name = "Sensei";
 spdlog::level::level_enum       Logger::_min_log_level = spdlog::level::warn;
 std::shared_ptr<spdlog::logger> Logger::logger_instance{nullptr};
 
-SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string&         file_name,
-                                          const std::string&         logger_name,
-                                          const std::string&         min_log_level,
-                                          const bool                 enable_flush_interval,
-                                          const std::chrono::seconds log_flush_interval)
+SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string&              file_name,
+                                          const std::string&              logger_name,
+                                          const std::string&              min_log_level,
+                                          const bool                      enable_flush_interval,
+                                          const std::chrono::milliseconds log_flush_interval)
 {
     SENSEI_LOG_ERROR_CODE ret = SENSEI_LOG_ERROR_CODE_OK;
 

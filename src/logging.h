@@ -139,7 +139,7 @@ public:
                                             const std::string& logger_name,
                                             const std::string& min_log_level,
                                             const bool enable_flush_interval,
-                                            const std::chrono::seconds log_flush_interval);
+                                            const std::chrono::milliseconds log_flush_interval);
 
 
     /**

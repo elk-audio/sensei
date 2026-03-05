@@ -48,10 +48,10 @@
 static volatile sig_atomic_t main_loop_running = 1;
 static volatile sig_atomic_t config_reload_pending = 0;
 
-std::string          log_level = std::string(SENSEI_DEFAULT_LOG_LEVEL);
-std::string          log_filename = std::string(SENSEI_DEFAULT_LOG_FILENAME);
-std::chrono::seconds log_flush_interval = std::chrono::seconds(0);
-bool                 enable_flush_interval = false;
+std::string log_level = std::string(SENSEI_DEFAULT_LOG_LEVEL);
+std::string log_filename = std::string(SENSEI_DEFAULT_LOG_FILENAME);
+auto        log_flush_interval = std::chrono::milliseconds(0);
+bool        enable_flush_interval = false;
 
 void print_headline()
 {
@@ -142,6 +142,23 @@ struct SenseiArg : public option::Arg
         }
         return option::ARG_ILLEGAL;
     }
+
+    static option::ArgStatus Float(const option::Option& option, bool msg)
+    {
+        char* endptr = nullptr;
+        if (option.arg != 0 && strtof(option.arg, &endptr)) {}
+
+        if (endptr != option.arg && *endptr == 0)
+        {
+            return option::ARG_OK;
+        }
+
+        if (msg)
+        {
+            print_error("Option '", option, "' requires a floating point argument\n");
+        }
+        return option::ARG_ILLEGAL;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +233,7 @@ const option::Descriptor usage[] =
                  0,
                  "",
                  "log-flush-interval",
-                 SenseiArg::Numeric,
+                 SenseiArg::Float,
                  "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."},
                 {SYNCHRONOUS_MODE,
                  0,
@@ -324,7 +341,7 @@ int main(int argc, char* argv[])
                 break;
 
             case LOG_FLUSH_INTERVAL:
-                log_flush_interval = std::chrono::seconds(std::strtol(opt.arg, nullptr, 0));
+                log_flush_interval = std::chrono::milliseconds(static_cast<long>(std::strtof(opt.arg, nullptr) * 1000.0));
                 enable_flush_interval = true;
                 break;
 
