@@ -1,128 +1,180 @@
-{
-    "backends" : [
-    {
-        "id" : 0,
-        "enabled": true,
-        "raw_input_enabled": false,
-        "type" : "osc",
-        "host" : "localhost",
-        "port" : 23023,
-        "base_path" : "/sensei/sensors",
-        "base_raw_input_path" : "/sensei/raw_input"
-	},
-	{
-		"id" : 1,
-		"enabled": true,
-		"raw_input_enabled": true,
-		"type" : "stdout"
-	}
-    ],
-
-    "hw_frontend" : {
-        "type" : "raspa_gpio"
-    },
-
-    "sensors" : [
-        {
-            "id" : 1,
-            "enabled": true,
-            "name" : "led",
-            "sensor_type" : "digital_output",
-            "hardware" :
-            {
-                "hardware_type" : "digital_output_pin",
-                "pins" : [3]
-            }
-        },
-        {
-            "id" : 2,
-            "enabled": true,
-            "name" : "led_ring_mux",
-            "sensor_type" :"no_output",
-            "hardware":
-            {
-                "hardware_type" : "multiplexer",
-                "pins" : [24,25]
-            }
-        },
-        {
-            "id" : 3,
-            "enabled": true,
-            "name" : "led_ring_1",
-            "sensor_type" : "analog_output",
-            "range" : [0, 6],
-            "hardware" :
-            {
-                "hardware_type" : "stepped_output",
-                "pins" : [8,9,10,11,12,13],
-                "multiplexed" :
-                {
-                    "multiplexer_id" : 2,
-                    "multiplexer_pin" : 24
-                }
-            }
-        },
-        {
-            "id" : 4,
-            "enabled": true,
-            "name" : "led_ring_2",
-            "sensor_type" : "analog_output",
-            "range" : [0, 6],
-            "hardware" :
-            {
-                "hardware_type" : "stepped_output",
-                "pins" : [8,9,10,11,12,13],
-                "multiplexed" :
-                {
-                    "multiplexer_id" : 2,
-                    "multiplexer_pin" : 25
-                }
-            }
-        },
-        {
-            "id" : 5,
-            "enabled": true,
-            "name" : "rot_enc",
-            "sensor_type" : "analog_input",
-            "mode" : "continuous",
-            "range" : [0, 15],
-            "hardware" :
-            {
-                "hardware_type" : "encoder",
-                "pins" : [23, 22],
-                "delta_ticks" : 1
-            }
-        },
-        {
-            "id" : 6,
-            "enabled": true,
-            "name" : "rot_sw",
-            "sensor_type" : "range_input",
-            "mode" : "on_value_changed",
-            "inverted" : true,
-            "range" : [1, 4],
-            "hardware" :
-            {
-                "hardware_type" : "n_way_switch",
-                "pins" : [12,13,14,15],
-                "delta_ticks" : 1
-            }
-        },
-        {
-            "id" : 7,
-            "enabled": true,
-            "name" : "button",
-            "sensor_type" : "digital_input",
-            "inverted" : true,
-            "mode" : "on_value_changed",
-            "timestamp" : true,
-            "hardware" :
-            {
-                "hardware_type" : "digital_input_pin",
-                "polarity" : "active_low",
-                "pins" : [21],
-                "delta_ticks" : 1
-            }
-        }
-    ]
+R"({"backends": [
+  {
+    "id": 0,
+    "enabled": true,
+    "raw_input_enabled": false,
+    "config": {
+      "type": "osc",
+      "host": "localhost",
+      "port": 23023,
+      "base_path": "/sensei/sensors",
+      "base_raw_input_path": "/sensei/raw_input"
     }
+  },
+  {
+    "id": 1,
+    "enabled": true,
+    "raw_input_enabled": true,
+    "config": {
+      "type": "stdout"
+    }
+  }
+],
+"hw_frontend": {
+  "type": "raspa_gpio"
+},
+"sensors": [
+  {
+    "id": 1,
+    "enabled": true,
+    "name": "led",
+    "config": {
+      "sensor_type": "digital_output",
+      "inverted": false
+    },
+    "hardware": {
+      "hardware_type": "digital_output_pin",
+      "polarity": "active_high",
+      "pins": [
+        3
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "enabled": true,
+    "name": "led_ring_mux",
+    "config": {
+      "sensor_type": "no_output"
+    },
+    "hardware": {
+      "hardware_type": "multiplexer",
+      "pins": [
+        24,
+        25
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "enabled": true,
+    "name": "led_ring_1",
+    "config": {
+      "sensor_type": "analog_output",
+      "range": [
+        0,
+        6
+      ]
+    },
+    "hardware": {
+      "hardware_type": "stepped_output",
+      "pins": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "multiplexed": {
+        "multiplexer_id": 2,
+        "multiplexer_pin": 24
+      }
+    }
+  },
+  {
+    "id": 4,
+    "enabled": true,
+    "name": "led_ring_2",
+    "config": {
+      "sensor_type": "analog_output",
+      "range": [
+        0,
+        6
+      ]
+    },
+    "hardware": {
+      "hardware_type": "stepped_output",
+      "pins": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "multiplexed": {
+        "multiplexer_id": 2,
+        "multiplexer_pin": 25
+      }
+    }
+  },
+  {
+    "id": 5,
+    "enabled": true,
+    "name": "rot_enc",
+    "config": {
+      "sensor_type": "analog_input",
+      "mode": "continuous",
+      "range": [
+        0,
+        15
+      ],
+      "inverted": false,
+      "timestamp": false
+    },
+    "hardware": {
+      "hardware_type": "encoder",
+      "polarity": "active_low",
+      "pins": [
+        23,
+        22
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "enabled": true,
+    "name": "rot_sw",
+    "config": {
+      "sensor_type": "range_input",
+      "mode": "on_value_changed",
+      "range": [
+        1,
+        4
+      ],
+      "inverted": true,
+      "timestamp": false
+    },
+    "hardware": {
+      "hardware_type": "n_way_switch",
+      "pins": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "delta_ticks": 1
+    }
+  },
+  {
+    "id": 7,
+    "enabled": true,
+    "name": "button",
+    "config": {
+      "sensor_type": "digital_input",
+      "mode": "on_value_changed",
+      "inverted": true,
+      "timestamp": true
+    },
+    "hardware": {
+      "hardware_type": "digital_input_pin",
+      "polarity": "active_low",
+      "pins": [
+        21
+      ],
+      "delta_ticks": 1
+    }
+  }
+]
+})"

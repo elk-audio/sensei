@@ -4,7 +4,14 @@ import threading
 import time
 
 import gpio_protocol
-from raspa_mock import OscReceiver, GrpcReceiver, SenseiProcess, SenseiClient, RaspaServer, logger
+from raspa_mock import (
+    OscReceiver,
+    GrpcReceiver,
+    SenseiProcess,
+    SenseiClient,
+    RaspaServer,
+    logger,
+)
 
 RASPA_SOCKET = "/tmp/raspa"
 SENSEI_SOCKET = "/tmp/sensei"
@@ -16,6 +23,7 @@ GRPC_HOST = "localhost"
 GRPC_PORT = 50051
 
 use_grpc = True
+
 
 def main():
     """Main entry point."""
@@ -38,7 +46,7 @@ def main():
     sensei_client.connected_event.wait()
 
     logger.info("connected, sleeping 10 seconds...")
-    #time.sleep(10)
+    # time.sleep(10)
 
     # Start OSC receiver first
     osc_receiver = OscReceiver(OSC_HOST, OSC_PORT)
@@ -91,12 +99,12 @@ def main():
             event.clear()
             send_value(controller_id, mcu_value)
             event.wait()
-            assert(math.isclose(event_value(), grpc_value, abs_tol=1e-6))
+            assert math.isclose(event_value(), grpc_value, abs_tol=1e-6)
 
         def check_no_value(controller_id, mcu_value):
             event.clear()
             send_value(controller_id, mcu_value)
-            assert(not event.wait(1.0))
+            assert not event.wait(1.0)
 
         def test_pots():
             # from sensei_config.json
@@ -106,13 +114,13 @@ def main():
             max_value = pow(2, adc_resolution) - 1
 
             # should receive the value from the backend
-            check_value(controller_id, 128, 128/max_value)
+            check_value(controller_id, 128, 128 / max_value)
 
             # this is the same value we had previously, no event and wait should timeout
             check_no_value(controller_id, 128)
 
             # the new value should generate an event
-            check_value(controller_id, 10, 10/max_value)
+            check_value(controller_id, 10, 10 / max_value)
 
         def test_buttons():
             # from sensei_config.json
@@ -153,7 +161,7 @@ def main():
 
         controllers = grpc_receiver.get_controller_map()
         logger.info(f"Controllers: {controllers}")
-        assert(len(controllers) == 14)
+        assert len(controllers) == 14
 
     except KeyboardInterrupt:
         logger.info("\nShutting down...")
@@ -169,6 +177,7 @@ def main():
         logger.info("Shutdown complete")
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -19,6 +19,7 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/test_utils.h
                unittests/user_frontend/osc_user_frontend_test.cpp)
 
+
 if (${SENSEI_WITH_GRPC})
     set(GRPC_TEST_FILES
                unittests/output_backend/grpc_backend_test.cpp
@@ -27,7 +28,7 @@ endif()
 
 add_executable(unit_tests ${TEST_FILES} ${GRPC_TEST_FILES})
 target_compile_definitions(unit_tests PRIVATE -DSENSEI_DISABLE_LOGGING)
-target_compile_features(unit_tests PRIVATE cxx_std_17)
+target_compile_features(unit_tests PRIVATE cxx_std_20)
 
 #########################
 #  Include directories  #

@@ -36,7 +36,7 @@ enum class ConfigStatus
     OK,
     IO_ERROR,
     PARSING_ERROR,
-    PARAMETER_ERROR,
+    SCHEMA_VALIDATION_ERROR,
 };
 
 struct HwFrontendConfig

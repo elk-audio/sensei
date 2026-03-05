@@ -22,7 +22,7 @@
 
 #include "message/message_factory.h"
 #include "base_configuration.h"
-#include <json/json.h>
+#include "rapidjson/document.h"
 
 namespace sensei {
 namespace config {
@@ -42,14 +42,15 @@ public:
      */
     ConfigStatus read(Config& config) override;
 
+    /*
+     * Parse json from string and put commands in queue 
+     */
+    ConfigStatus read_from_string(Config& config, const char* json_string);
+
 private:
-    ConfigStatus handle_hw_config(const Json::Value& frontend, HwFrontendConfig& config);
-    ConfigStatus handle_sensor(const Json::Value& sensor);
-    ConfigStatus handle_sensor_hw(const Json::Value& hardware, int sensor_id);
-    ConfigStatus handle_backend(const Json::Value& backend, BackendConfig& backend_config);
-    ConfigStatus handle_osc_backend(const Json::Value& backend, int id);
-    ConfigStatus handle_grpc_backend(const Json::Value& backend, int id);
-    ConfigStatus read_pins(const Json::Value& pins, int sensor_id);
+    void handle_sensor(const rapidjson::Value& sensor);
+    void handle_sensor_hw_config(const rapidjson::Value& hardware, int sensor_id);
+    void handle_backend_config(const rapidjson::Value& backend, BackendConfig& backend_config);
 
     MessageFactory _message_factory;
 };
