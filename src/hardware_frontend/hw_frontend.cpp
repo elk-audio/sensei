@@ -24,6 +24,7 @@
 #include "hw_frontend.h"
 #include "gpio_protocol/gpio_protocol.h"
 #include "logging.h"
+#include "message/command_defs.h"
 
 namespace sensei {
 namespace hw_frontend {
@@ -285,6 +286,28 @@ void HwFrontend::_process_sensei_command(const Command* message)
             _send_list.push_back(_packet_factory.make_set_analog_time_constant_command(cmd->index(), cmd->data()));
             break;
         }
+        case CommandType::SET_ANALOG_HYSTERESIS:
+        {
+            auto cmd = static_cast<const SetAnalogHysteresisCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_analog_hysteresis_command(cmd->index(), cmd->data()));
+            break;
+        }
+        case CommandType::SET_ANALOG_STABILIZATION_PERIOD:
+        {
+            auto cmd = static_cast<const SetAnalogStabilizationPeriodCommand*>(message);
+            _send_list.push_back(_packet_factory.make_set_analog_stabilization_period_command(cmd->index(), cmd->data()));
+            break;
+        }
+        case CommandType::SET_ANALOG_FILTER_TYPE:
+        {
+            auto cmd = static_cast<const SetAnalogFilterTypeCommand*>(message);
+            auto filter_type = to_gpio_analog_filter_type(cmd->data());
+            if (filter_type.has_value())
+            {
+                _send_list.push_back(_packet_factory.make_set_analog_filter_type_command(cmd->index(), filter_type.value()));
+            }
+            break;
+        }
         case CommandType::SET_MULTIPLEXED:
         {
             auto cmd = static_cast<const SetMultiplexedSensorCommand*>(message);
@@ -524,6 +547,26 @@ std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode)
             return std::nullopt;
     }
     return gpio_mode;
+}
+
+std::optional<uint8_t> to_gpio_analog_filter_type(AnalogFilterType type)
+{
+    uint8_t filter_type;
+    switch (type)
+    {
+        case AnalogFilterType::MOVING_AVERAGE:
+            filter_type = GPIO_ANALOG_FILTER_MOVING_AVERAGE;
+            break;
+
+        case AnalogFilterType::IIR:
+            filter_type = GPIO_ANALOG_FILTER_IIR;
+            break;
+
+        default:
+            SENSEI_LOG_WARNING("Unsupported analog filter type: {}", static_cast<int>(type));
+            return std::nullopt;
+    }
+    return std::make_optional(filter_type);
 }
 
 } // namespace hw_frontend

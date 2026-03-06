@@ -23,6 +23,7 @@
 #include <cmath>
 
 #include "mapping/sensor_mappers.h"
+#include "message/command_defs.h"
 #include "message/message_factory.h"
 #include "utils.h"
 #include "logging.h"
@@ -290,6 +291,8 @@ AnalogSensorMapper::AnalogSensorMapper(int   index,
                                        float adc_sampling_rate)
     : BaseSensorMapper(SensorType::ANALOG_INPUT, index),
       _filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT),
+      _hysteresis(0),
+      _stabilization_period(0.0f),
       _slider_threshold(0),
       _input_scale_range_low(0),
       _input_scale_range_high((1 << DEFAULT_ADC_BIT_RESOLUTION) - 1),
@@ -335,6 +338,27 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
         }
         break;
 
+        case CommandType::SET_ANALOG_HYSTERESIS:
+        {
+            const auto typed_cmd = static_cast<const SetAnalogHysteresisCommand*>(cmd);
+            status = _set_analog_hysteresis(typed_cmd->data());
+        }
+        break;
+
+        case CommandType::SET_ANALOG_STABILIZATION_PERIOD:
+        {
+            const auto typed_cmd = static_cast<const SetAnalogStabilizationPeriodCommand*>(cmd);
+            status = _set_analog_stabilization_period(typed_cmd->data());
+        }
+        break;
+
+        case CommandType::SET_ANALOG_FILTER_TYPE:
+        {
+            const auto typed_cmd = static_cast<const SetAnalogFilterTypeCommand*>(cmd);
+            status = _set_analog_filter_type(typed_cmd->data());
+        }
+        break;
+
         case CommandType::SET_SLIDER_THRESHOLD:
         {
             const auto typed_cmd = static_cast<const SetSliderThresholdCommand*>(cmd);
@@ -376,6 +400,9 @@ void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
     MessageFactory factory;
     *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
     *out_iterator = factory.make_set_analog_time_constant_command(_sensor_index, _filter_time_constant);
+    *out_iterator = factory.make_set_analog_hysteresis_command(_sensor_index, _hysteresis);
+    *out_iterator = factory.make_set_analog_stabilization_period_command(_sensor_index, _stabilization_period);
+    *out_iterator = factory.make_set_analog_filter_type_command(_sensor_index, _filter_type);
     *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
     *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
@@ -465,6 +492,28 @@ CommandErrorCode AnalogSensorMapper::_set_adc_filter_time_constant(float value)
     }
 
     _filter_time_constant = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AnalogSensorMapper::_set_analog_hysteresis(int value)
+{
+    _hysteresis = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AnalogSensorMapper::_set_analog_stabilization_period(float value)
+{
+    if (value < 0.0f)
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+    _stabilization_period = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AnalogSensorMapper::_set_analog_filter_type(AnalogFilterType value)
+{
+    _filter_type = value;
     return CommandErrorCode::OK;
 }
 

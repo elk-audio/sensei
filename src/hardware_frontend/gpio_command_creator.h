@@ -80,6 +80,9 @@ public:
     gpio::GpioPacket make_set_debounce_mode_command(uint8_t controller_id, uint8_t debounce_mode);
     gpio::GpioPacket make_set_analog_resolution_command(uint8_t controller_id, uint8_t adc_bits);
     gpio::GpioPacket make_set_analog_time_constant_command(uint8_t controller_id, float time_constant);
+    gpio::GpioPacket make_set_analog_hysteresis_command(uint8_t controller_id, int32_t hysteresis);
+    gpio::GpioPacket make_set_analog_stabilization_period_command(uint8_t controller_id, float period);
+    gpio::GpioPacket make_set_analog_filter_type_command(uint8_t controller_id, uint8_t filter_type);
     gpio::GpioPacket make_get_value_command(uint8_t controller_id);
     gpio::GpioPacket make_set_value_command(uint8_t controller_id, uint32_t value);
 

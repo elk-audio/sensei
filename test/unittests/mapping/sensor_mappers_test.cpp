@@ -6,6 +6,7 @@
 
 #include "mapping/sensor_mappers.cpp"
 
+#include "message/command_defs.h"
 #include "output_backend_mockup.h"
 #include "../test_utils.h"
 
@@ -191,6 +192,9 @@ protected:
                                                                                              _multiplexer_data.pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_time_constant_command(_sensor_idx, _filter_time_constant))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_hysteresis_command(_sensor_idx, _hysteresis))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_stabilization_period_command(_sensor_idx, _stabilization_period))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_filter_type_command(_sensor_idx, _filter_type))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_slider_threshold_command(_sensor_idx, _slider_threshold))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_input_range_command(_sensor_idx,
                                                                                       _input_scale_low,
@@ -221,6 +225,9 @@ protected:
     int              _delta_ticks{5};
     MultiplexerData  _multiplexer_data{3, 8};
     float            _filter_time_constant{0.20f};
+    int              _hysteresis{2};
+    float            _stabilization_period{0.30f};
+    AnalogFilterType _filter_type{AnalogFilterType::IIR};
     int              _adc_bit_resolution{12};
     int              _slider_threshold{9};
     int              _input_scale_low{22};
@@ -244,6 +251,18 @@ TEST_F(TestAnalogSensorMapper, test_config)
     auto cmd_slider_thr = extract_cmd_from<SetSliderThresholdCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_SLIDER_THRESHOLD, cmd_slider_thr->type());
     ASSERT_EQ(_slider_threshold, cmd_slider_thr->data());
+
+    auto cmd_filter_type = extract_cmd_from<SetAnalogFilterTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ANALOG_FILTER_TYPE, cmd_filter_type->type());
+    ASSERT_EQ(_filter_type, cmd_filter_type->data());
+
+    auto cmd_stabilization = extract_cmd_from<SetAnalogStabilizationPeriodCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ANALOG_STABILIZATION_PERIOD, cmd_stabilization->type());
+    ASSERT_EQ(_stabilization_period, cmd_stabilization->data());
+
+    auto cmd_hysteresis = extract_cmd_from<SetAnalogHysteresisCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ANALOG_HYSTERESIS, cmd_hysteresis->type());
+    ASSERT_EQ(_hysteresis, cmd_hysteresis->data());
 
     auto cmd_cutoff = extract_cmd_from<SetADCFitlerTimeConstantCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_ADC_FILTER_TIME_CONSTANT, cmd_cutoff->type());
