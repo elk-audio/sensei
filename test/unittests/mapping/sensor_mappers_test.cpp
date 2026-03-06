@@ -264,7 +264,7 @@ TEST_F(TestAnalogSensorMapper, test_config)
     ASSERT_EQ(CommandType::SET_ANALOG_HYSTERESIS, cmd_hysteresis->type());
     ASSERT_EQ(_hysteresis, cmd_hysteresis->data());
 
-    auto cmd_cutoff = extract_cmd_from<SetADCFitlerTimeConstantCommand>(stored_cmds);
+    auto cmd_cutoff = extract_cmd_from<SetADCFilterTimeConstantCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_ADC_FILTER_TIME_CONSTANT, cmd_cutoff->type());
     ASSERT_EQ(_filter_time_constant, cmd_cutoff->data());
 

@@ -249,7 +249,7 @@ SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
                        "Set ADC Bit Resolution",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
-SENSEI_DECLARE_COMMAND(SetADCFitlerTimeConstantCommand,
+SENSEI_DECLARE_COMMAND(SetADCFilterTimeConstantCommand,
                        CommandType::SET_ADC_FILTER_TIME_CONSTANT,
                        float,
                        "Set ADC Filter time constant",

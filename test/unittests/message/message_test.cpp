@@ -107,7 +107,7 @@ TEST(MessagesTest, test_external_command_creation)
 
             case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
             {
-                auto typed_cmd = static_cast<SetADCFitlerTimeConstantCommand*>(cmd_msg);
+                auto typed_cmd = static_cast<SetADCFilterTimeConstantCommand*>(cmd_msg);
                 ASSERT_EQ(0.020f, typed_cmd->data());
             };
             break;

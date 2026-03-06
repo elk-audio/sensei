@@ -282,7 +282,7 @@ void HwFrontend::_process_sensei_command(const Command* message)
         }
         case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
         {
-            auto cmd = static_cast<const SetADCFitlerTimeConstantCommand*>(message);
+            auto cmd = static_cast<const SetADCFilterTimeConstantCommand*>(message);
             _send_list.push_back(_packet_factory.make_set_analog_time_constant_command(cmd->index(), cmd->data()));
             break;
         }

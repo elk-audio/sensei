@@ -333,7 +333,7 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
 
         case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
         {
-            const auto typed_cmd = static_cast<const SetADCFitlerTimeConstantCommand*>(cmd);
+            const auto typed_cmd = static_cast<const SetADCFilterTimeConstantCommand*>(cmd);
             status = _set_adc_filter_time_constant(typed_cmd->data());
         }
         break;

@@ -172,8 +172,8 @@ public:
                                                                        const float    time_constant,
                                                                        const uint32_t timestamp = 0)
     {
-        auto msg = new SetADCFitlerTimeConstantCommand(sensor_id, time_constant, timestamp);
-        return std::unique_ptr<SetADCFitlerTimeConstantCommand>(msg);
+        auto msg = new SetADCFilterTimeConstantCommand(sensor_id, time_constant, timestamp);
+        return std::unique_ptr<SetADCFilterTimeConstantCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_set_analog_hysteresis_command(const int      sensor_id,
