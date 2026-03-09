@@ -563,7 +563,7 @@ std::optional<uint8_t> to_gpio_analog_filter_type(AnalogFilterType type)
             break;
 
         default:
-            SENSEI_LOG_WARNING("Unsupported analog filter type: {}", static_cast<int>(type));
+            assert(false);
             return std::nullopt;
     }
     return std::make_optional(filter_type);
