@@ -23,12 +23,17 @@
 #include <array>
 
 #include "config_backend/base_configuration.h"
+#include "elk-warning-suppressor/warning_suppressor.hpp"
 #include "message/command_defs.h"
+
+ELK_PUSH_WARNING
+ELK_DISABLE_NAN_INFINITY_DISABLED
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 #include "rapidjson/schema.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/pointer.h"
+ELK_POP_WARNING
 
 #include "json_configuration.h"
 #include "logging.h"
@@ -108,14 +113,14 @@ ConfigStatus JsonConfiguration::read(Config& config)
 /**
  * @throws std::invalid_argument if hardware frontend type is not recognized
  */
-HwFrontendType hw_frontend_from_string(std::string_view type_str)  
+HwFrontendType hw_frontend_from_string(std::string_view type_str)
 {
     static constexpr auto hw_frontend_map = std::to_array<std::pair<std::string_view, HwFrontendType>>(
             {{"raspa_xmos", HwFrontendType::RASPA_GPIO},
              {"raspa_gpio", HwFrontendType::RASPA_GPIO},
              {"elk_pi", HwFrontendType::ELK_PI_GPIO}});
 
-    for  (const auto& [name, value] : hw_frontend_map)
+    for (const auto& [name, value] : hw_frontend_map)
     {
         if (name == type_str)
             return value;
@@ -256,7 +261,7 @@ void handle_sensor_config(const rapidjson::Value& config, SensorType sensor_type
         {
             // DiscreteInput { mode, discrete_ranges, inverted, timestamp }
             const rapidjson::Value& discrete_ranges = config["discrete_ranges"];
-            std::vector<Range> ranges;
+            std::vector<Range>      ranges;
             for (const auto& range_array : discrete_ranges.GetArray())
             {
                 ranges.push_back({range_array[0].GetFloat(), range_array[1].GetFloat()});
@@ -361,7 +366,7 @@ void JsonConfiguration::handle_sensor(const rapidjson::Value& sensor)
 
     /* read and validate sensor name */
     std::string sensor_name = sensor["name"].GetString();
-    auto msg_name_command = _message_factory.make_set_sensor_name_command(sensor_id, sensor_name);
+    auto        msg_name_command = _message_factory.make_set_sensor_name_command(sensor_id, sensor_name);
     _handler->post_event(std::move(msg_name_command));
 
     /* Read sensor type configuration from nested config object */
@@ -455,8 +460,8 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
         case SensorHwType::DIGITAL_INPUT_PIN:
         {
             // DigitalInputPin { polarity, pins, delta_ticks }
-            auto     pins = parse_pins(hardware["pins"]);
-            int delta_ticks = hardware["delta_ticks"].GetInt();
+            auto pins = parse_pins(hardware["pins"]);
+            int  delta_ticks = hardware["delta_ticks"].GetInt();
             handler->post_event(factory.make_set_hw_pins_command(sensor_id, pins));
             handler->post_event(factory.make_set_sending_delta_ticks_command(sensor_id, delta_ticks));
             handler->post_event(factory.make_set_sensor_hw_polarity_command(sensor_id, parse_polarity_str(hardware["polarity"].GetString())));
@@ -466,10 +471,10 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
         case SensorHwType::ANALOG_INPUT_PIN:
         {
             // AnalogInputPin { pins, delta_ticks, adc_resolution, filter_time_constant }
-            auto     pins = parse_pins(hardware["pins"]);
-            int delta_ticks = hardware["delta_ticks"].GetInt();
-            int adc_resolution = hardware["adc_resolution"].GetInt();
-            float    filter_time_constant = hardware["filter_time_constant"].GetFloat();
+            auto  pins = parse_pins(hardware["pins"]);
+            int   delta_ticks = hardware["delta_ticks"].GetInt();
+            int   adc_resolution = hardware["adc_resolution"].GetInt();
+            float filter_time_constant = hardware["filter_time_constant"].GetFloat();
             handler->post_event(factory.make_set_hw_pins_command(sensor_id, pins));
             handler->post_event(factory.make_set_sending_delta_ticks_command(sensor_id, delta_ticks));
             handler->post_event(factory.make_set_adc_bit_resolution_command(sensor_id, adc_resolution));
@@ -489,8 +494,8 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
         case SensorHwType::RIBBON:
         {
             // Ribbon { pins, delta_ticks }
-            auto     pins = parse_pins(hardware["pins"]);
-            int delta_ticks = hardware["delta_ticks"].GetInt();
+            auto pins = parse_pins(hardware["pins"]);
+            int  delta_ticks = hardware["delta_ticks"].GetInt();
             handler->post_event(factory.make_set_hw_pins_command(sensor_id, pins));
             handler->post_event(factory.make_set_sending_delta_ticks_command(sensor_id, delta_ticks));
             break;
@@ -499,8 +504,8 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
         case SensorHwType::BUTTON:
         {
             // Button { pins, polarity, delta_ticks }
-            auto     pins = parse_pins(hardware["pins"]);
-            int delta_ticks = hardware["delta_ticks"].GetInt();
+            auto pins = parse_pins(hardware["pins"]);
+            int  delta_ticks = hardware["delta_ticks"].GetInt();
             handler->post_event(factory.make_set_hw_pins_command(sensor_id, pins));
             handler->post_event(factory.make_set_sending_delta_ticks_command(sensor_id, delta_ticks));
             handler->post_event(factory.make_set_sensor_hw_polarity_command(sensor_id, parse_polarity_str(hardware["polarity"].GetString())));
@@ -510,8 +515,8 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
         case SensorHwType::N_WAY_SWITCH:
         {
             // NWaySwitch { pins, delta_ticks }
-            auto     pins = parse_pins(hardware["pins"]);
-            int delta_ticks = hardware["delta_ticks"].GetInt();
+            auto pins = parse_pins(hardware["pins"]);
+            int  delta_ticks = hardware["delta_ticks"].GetInt();
             handler->post_event(factory.make_set_hw_pins_command(sensor_id, pins));
             handler->post_event(factory.make_set_sending_delta_ticks_command(sensor_id, delta_ticks));
             break;
@@ -520,7 +525,7 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
         case SensorHwType::STEPPED_OUTPUT:
         {
             // SteppedOutput { pins, multiplexed }
-            auto pins = parse_pins(hardware["pins"]);
+            auto                    pins = parse_pins(hardware["pins"]);
             const rapidjson::Value& mux_json = hardware["multiplexed"];
             handler->post_event(factory.make_set_hw_pins_command(sensor_id, pins));
             handler->post_event(factory.make_set_multiplexed_sensor_command(sensor_id, mux_json["multiplexer_id"].GetInt(), mux_json["multiplexer_pin"].GetInt()));

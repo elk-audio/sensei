@@ -20,9 +20,14 @@
 #ifndef SENSEI_JSONCONFIGURATION_H
 #define SENSEI_JSONCONFIGURATION_H
 
+#include "elk-warning-suppressor/warning_suppressor.hpp"
 #include "message/message_factory.h"
 #include "base_configuration.h"
+
+ELK_PUSH_WARNING
+ELK_DISABLE_NAN_INFINITY_DISABLED
 #include "rapidjson/document.h"
+ELK_POP_WARNING
 
 namespace sensei {
 namespace config {
