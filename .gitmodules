@@ -16,3 +16,6 @@
 [submodule "sensei-grpc-api"]
 	path = sensei-grpc-api
 	url = ../sensei-grpc-api.git
+[submodule "third-party/rapidjson"]
+	path = third-party/rapidjson
+	url = https://github.com/miloyip/rapidjson.git

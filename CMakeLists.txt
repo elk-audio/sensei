@@ -142,7 +142,8 @@ set(INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src"
                  "${PROJECT_SOURCE_DIR}/elk-warning-suppressor/include"
                  "${CMAKE_BINARY_DIR}"
                  "${PROJECT_SOURCE_DIR}/third-party/optionparser/"
-                 "${PROJECT_SOURCE_DIR}/third-party/spdlog/include")
+                 "${PROJECT_SOURCE_DIR}/third-party/spdlog/include"
+                 "${PROJECT_SOURCE_DIR}/third-party/rapidjson/include")
 
 # /usr/local doesn't get added by default in Mac OS X
 if (APPLE)
@@ -174,11 +175,10 @@ add_subdirectory(shiftregister_gpio)
 # these libraries are taken from vcpkg when compiling locally, but are provided
 # in the sysroot when cross-compiling
 if (CMAKE_CROSSCOMPILING)
-    set(EXTRA_LIBRARIES jsoncpp lo)
+    set(EXTRA_LIBRARIES lo)
 else()
-    find_package(jsoncpp CONFIG REQUIRED)
     find_package(liblo CONFIG REQUIRED)
-    set(EXTRA_LIBRARIES JsonCpp::JsonCpp liblo::liblo)
+    set(EXTRA_LIBRARIES liblo::liblo)
 endif()
 
 set(LINK_LIBRARIES gpio_protocol shiftreg_gpio pthread ${GRPC_LIBRARIES} ${EXTRA_LIBRARIES})

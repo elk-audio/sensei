@@ -63,12 +63,14 @@ bool EventHandler::init(int                max_n_sensors,
                 SENSEI_LOG_ERROR("Couldn't parse config file");
                 break;
 
-            case config::ConfigStatus::PARAMETER_ERROR:
-                SENSEI_LOG_ERROR("Wrong parameter in config file");
+            case config::ConfigStatus::SCHEMA_VALIDATION_ERROR:
+                SENSEI_LOG_ERROR("Config file failed schema validation");
+                break;
 
             default:
                 break;
         }
+        return false;
     }
 
     // hw_frontend initialization
@@ -136,10 +138,16 @@ bool EventHandler::init(int                max_n_sensors,
 
 void EventHandler::deinit()
 {
-    _hw_frontend->stop();
-    _hw_frontend.reset(nullptr);
-    _hw_backend->deinit();
-    _hw_backend.reset(nullptr);
+    if (_hw_frontend)
+    {
+        _hw_frontend->stop();
+        _hw_frontend.reset(nullptr);
+    }
+    if (_hw_backend)
+    {
+        _hw_backend->deinit();
+        _hw_backend.reset(nullptr);
+    }
     _processor.reset(nullptr);
     _output_backend.reset(nullptr);
     _config_backend.reset(nullptr);
