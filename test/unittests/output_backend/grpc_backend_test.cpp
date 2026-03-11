@@ -124,15 +124,13 @@ TEST_F(TestGrpcBackend, test_send_with_frontend)
     ASSERT_EQ(CommandErrorCode::OK, status);
 
     // Start subscription in separate thread
-    std::atomic<bool> subscribed{false};
     std::atomic<bool> received{false};
     sensei_rpc::Event received_event;
-    std::thread       subscriber_thread([this, &subscribed, &received, &received_event]() {
+    std::thread       subscriber_thread([this, &received, &received_event]() {
         grpc::ClientContext                                    context;
         sensei_rpc::SubscribeRequest                           request;
         std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
                 _stub->SubscribeToEvents(&context, request));
-        subscribed.store(true);
 
         sensei_rpc::Event event;
         if (reader->Read(&event))
@@ -141,11 +139,9 @@ TEST_F(TestGrpcBackend, test_send_with_frontend)
             received.store(true);
         }
     });
+    // Wait until the server has registered the subscriber before sending
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() > 0; }, DEFAULT_TIMEOUT));
 
-    // Wait for subscription before sending the event
-    ASSERT_TRUE(wait_for([&subscribed]() { return subscribed.load(); }, DEFAULT_TIMEOUT));
-
-    // Send value through backend
     auto value_msg = factory.make_output_value(0, 1.0f);
     auto value = static_cast<OutputValue*>(value_msg.get());
     _backend.send(value, nullptr);
@@ -170,17 +166,15 @@ TEST_F(TestGrpcBackend, test_event_type_mapping)
     _backend.apply_command(enable_cmd.get());
 
     // Start subscription
-    std::atomic<bool>              subscribed{false};
     std::vector<sensei_rpc::Event> received_events;
     std::mutex                     events_mutex;
     std::atomic<int>               event_count{0};
 
-    std::thread subscriber_thread([this, &subscribed, &received_events, &events_mutex, &event_count]() {
+    std::thread subscriber_thread([this, &received_events, &events_mutex, &event_count]() {
         grpc::ClientContext                                    context;
         sensei_rpc::SubscribeRequest                           request;
         std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
                 _stub->SubscribeToEvents(&context, request));
-        subscribed.store(true);
 
         sensei_rpc::Event event;
         while (event_count < 3 && reader->Read(&event))
@@ -193,7 +187,7 @@ TEST_F(TestGrpcBackend, test_event_type_mapping)
         }
     });
 
-    ASSERT_TRUE(wait_for([&subscribed]() { return subscribed.load(); }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() > 0; }, DEFAULT_TIMEOUT));
 
     // Test digital sensor -> ToggleEvent
     auto digital_msg = factory.make_output_value(0, 1.0f);
@@ -273,9 +267,8 @@ TEST_F(TestGrpcBackend, test_send_flags)
     ASSERT_FALSE(_backend._send_output_active);
 
     // Send should not broadcast when disabled
-    std::atomic<bool> subscribed{false};
     std::atomic<bool> received{false};
-    std::thread       subscriber_thread([this, &subscribed, &received]() {
+    std::thread       subscriber_thread([this, &received]() {
         grpc::ClientContext          context;
         sensei_rpc::SubscribeRequest request;
         auto                         deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(200);
@@ -283,7 +276,6 @@ TEST_F(TestGrpcBackend, test_send_flags)
 
         std::unique_ptr<grpc::ClientReader<sensei_rpc::Event>> reader(
                 _stub->SubscribeToEvents(&context, request));
-        subscribed.store(true);
 
         sensei_rpc::Event event;
         if (reader->Read(&event))
@@ -292,7 +284,7 @@ TEST_F(TestGrpcBackend, test_send_flags)
         }
     });
 
-    ASSERT_TRUE(wait_for([&subscribed]() { return subscribed.load(); }, DEFAULT_TIMEOUT));
+    ASSERT_TRUE(wait_for([this]() { return _user_frontend->num_subscribers() > 0; }, DEFAULT_TIMEOUT));
 
     auto value_msg = factory.make_output_value(0, 1.0f);
     auto value = static_cast<OutputValue*>(value_msg.get());
