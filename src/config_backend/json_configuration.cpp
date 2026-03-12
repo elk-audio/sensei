@@ -486,20 +486,36 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
         case SensorHwType::ANALOG_INPUT_PIN:
         {
             // AnalogInputPin { pins, delta_ticks, adc_resolution, filter_time_constant }
-            auto             pins = parse_pins(hardware["pins"]);
-            int              delta_ticks = hardware["delta_ticks"].GetInt();
-            int              adc_resolution = hardware["adc_resolution"].GetInt();
-            float            filter_time_constant = hardware["filter_time_constant"].GetFloat();
-            int              hysteresis = hardware["hysteresis"].GetInt();
-            float            stabilization_period = hardware["stabilization_period"].GetFloat();
-            AnalogFilterType filter_type = parse_filter_type_str(hardware["filter_type"].GetString());
+            auto  pins = parse_pins(hardware["pins"]);
+            int   delta_ticks = hardware["delta_ticks"].GetInt();
+            int   adc_resolution = hardware["adc_resolution"].GetInt();
+            float filter_time_constant = hardware["filter_time_constant"].GetFloat();
             handler->post_event(factory.make_set_hw_pins_command(sensor_id, pins));
             handler->post_event(factory.make_set_sending_delta_ticks_command(sensor_id, delta_ticks));
             handler->post_event(factory.make_set_adc_bit_resolution_command(sensor_id, adc_resolution));
             handler->post_event(factory.make_set_analog_time_constant_command(sensor_id, filter_time_constant));
-            handler->post_event(factory.make_set_analog_hysteresis_command(sensor_id, hysteresis));
-            handler->post_event(factory.make_set_analog_stabilization_period_command(sensor_id, stabilization_period));
-            handler->post_event(factory.make_set_analog_filter_type_command(sensor_id, filter_type));
+
+            constexpr auto HYSTERESIS = "hysteresis";
+            if (hardware.HasMember(HYSTERESIS))
+            {
+                int hysteresis = hardware[HYSTERESIS].GetInt();
+                handler->post_event(factory.make_set_analog_hysteresis_command(sensor_id, hysteresis));
+            }
+
+            constexpr auto STABILIZATION_PERIOD = "stabilization_period";
+            if (hardware.HasMember(STABILIZATION_PERIOD))
+            {
+                float stabilization_period = hardware[STABILIZATION_PERIOD].GetFloat();
+                handler->post_event(factory.make_set_analog_stabilization_period_command(sensor_id, stabilization_period));
+            }
+
+            constexpr auto FILTER_TYPE = "filter_type";
+            if (hardware.HasMember(FILTER_TYPE))
+            {
+                AnalogFilterType filter_type = parse_filter_type_str(hardware[FILTER_TYPE].GetString());
+                handler->post_event(factory.make_set_analog_filter_type_command(sensor_id, filter_type));
+            }
+
             break;
         }
 

@@ -230,10 +230,7 @@ R"(
             "pins",
             "delta_ticks",
             "adc_resolution",
-            "filter_time_constant",
-            "hysteresis",
-            "stabilization_period",
-            "filter_type"
+            "filter_time_constant"
           ]
         },
         {

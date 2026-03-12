@@ -268,6 +268,43 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_handler.event_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SEND_TIMESTAMP_ENABLED, SetSendTimestampEnabledCommand, index, (int) true);
 
+    /**
+     * A potentiometer on analog input pin 1, exercising the new analog filter params.
+     */
+    index = 8;
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_NAME, SetPinNameCommand, index, "potentiometer");
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_TYPE, SetSensorTypeCommand, index, SensorType::ANALOG_INPUT);
+
+    // HW specific configuration
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENSOR_HW_TYPE, SetSensorHwTypeCommand, index, SensorHwType::ANALOG_INPUT_PIN);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_HW_PINS, SetHwPinsCommand, index, (std::vector<int>{1}));
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_DELTA_TICKS, SetSendingDeltaTicksCommand, index, 1);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ADC_BIT_RESOLUTION, SetADCBitResolutionCommand, index, 8);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ADC_FILTER_TIME_CONSTANT, SetADCFilterTimeConstantCommand, index, 0.5f);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ANALOG_HYSTERESIS, SetAnalogHysteresisCommand, index, 2);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ANALOG_STABILIZATION_PERIOD, SetAnalogStabilizationPeriodCommand, index, 0.1f);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ANALOG_FILTER_TYPE, SetAnalogFilterTypeCommand, index, AnalogFilterType::IIR);
+
+    // Sensor configuration
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_ENABLED, SetEnabledCommand, index, (int) true);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SENDING_MODE, SetSendingModeCommand, index, SendingMode::ON_VALUE_CHANGED);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_INVERT_ENABLED, SetInvertEnabledCommand, index, (int) false);
+    m = std::move(_handler.event_queue.pop());
+    EXPECT_COMMAND(m, CommandType::SET_SEND_TIMESTAMP_ENABLED, SetSendTimestampEnabledCommand, index, (int) false);
+
     /*  Lastly we should have an EnableSendingPackets command to turn on all pins */
     m = std::move(_handler.event_queue.pop());
     EXPECT_COMMAND(m, CommandType::ENABLE_SENDING_PACKETS, EnableSendingPacketsCommand, 0, (int) true);
