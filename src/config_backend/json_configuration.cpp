@@ -279,7 +279,6 @@ void handle_sensor_config(const rapidjson::Value& config, SensorType sensor_type
             const rapidjson::Value& range = config["range"];
             handler->post_event(factory.make_set_sending_mode_command(sensor_id, mode_from_string(config["mode"].GetString())));
             handler->post_event(factory.make_set_invert_enabled_command(sensor_id, config["inverted"].GetBool()));
-            handler->post_event(factory.make_set_input_range_command(sensor_id, range[0].GetFloat(), range[1].GetFloat()));
             handler->post_event(factory.make_set_send_timestamp_enabled(sensor_id, config["timestamp"].GetBool()));
             break;
         }

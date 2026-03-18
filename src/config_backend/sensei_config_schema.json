@@ -552,15 +552,6 @@ R"(
             "mode": {
               "$ref": "#/definitions/InputSensorMode"
             },
-            "range": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
-              },
-              "maxItems": 2,
-              "minItems": 2
-            },
             "sensor_type": {
               "type": "string",
               "enum": ["analog_input"]
@@ -572,7 +563,6 @@ R"(
           "required": [
             "sensor_type",
             "mode",
-            "range",
             "inverted",
             "timestamp"
           ]

@@ -208,8 +208,6 @@ TEST_F(JsonConfigurationTest, test_read_configuration)
     m = std::move(_handler.event_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_INVERT_ENABLED, SetInvertEnabledCommand, index, (int) false);
     m = std::move(_handler.event_queue.pop());
-    EXPECT_COMMAND(m, CommandType::SET_INPUT_RANGE, SetInputRangeCommand, index, (Range{0.0, 15.0}));
-    m = std::move(_handler.event_queue.pop());
     EXPECT_COMMAND(m, CommandType::SET_SEND_TIMESTAMP_ENABLED, SetSendTimestampEnabledCommand, index, (int) false);
 
     /**
