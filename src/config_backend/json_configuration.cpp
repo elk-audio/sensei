@@ -275,8 +275,7 @@ void handle_sensor_config(const rapidjson::Value& config, SensorType sensor_type
 
         case SensorType::ANALOG_INPUT:
         {
-            // AnalogInput { mode, range, inverted, timestamp }
-            const rapidjson::Value& range = config["range"];
+            // AnalogInput { mode, inverted, timestamp }
             handler->post_event(factory.make_set_sending_mode_command(sensor_id, mode_from_string(config["mode"].GetString())));
             handler->post_event(factory.make_set_invert_enabled_command(sensor_id, config["inverted"].GetBool()));
             handler->post_event(factory.make_set_send_timestamp_enabled(sensor_id, config["timestamp"].GetBool()));
