@@ -196,6 +196,36 @@ gpio::GpioPacket GpioCommandCreator::make_set_analog_time_constant_command(uint8
     return packet;
 }
 
+gpio::GpioPacket GpioCommandCreator::make_set_analog_hysteresis_command(uint8_t controller_id, int32_t hysteresis)
+{
+    GpioPacket packet = _prepare_packet();
+    packet.command = GPIO_CMD_CONFIG_CONTROLLER;
+    packet.sub_command = GPIO_SUB_CMD_SET_ANALOG_HYSTERESIS;
+    packet.payload.hysteresis_data.controller_id = controller_id;
+    packet.payload.hysteresis_data.hysteresis = hysteresis;
+    return packet;
+}
+
+gpio::GpioPacket GpioCommandCreator::make_set_analog_stabilization_period_command(uint8_t controller_id, float period)
+{
+    GpioPacket packet = _prepare_packet();
+    packet.command = GPIO_CMD_CONFIG_CONTROLLER;
+    packet.sub_command = GPIO_SUB_CMD_SET_ANALOG_STABILIZATION_PERIOD;
+    packet.payload.stabilization_period_data.controller_id = controller_id;
+    packet.payload.stabilization_period_data.stabilization_period = period;
+    return packet;
+}
+
+gpio::GpioPacket GpioCommandCreator::make_set_analog_filter_type_command(uint8_t controller_id, uint8_t filter_type)
+{
+    GpioPacket packet = _prepare_packet();
+    packet.command = GPIO_CMD_CONFIG_CONTROLLER;
+    packet.sub_command = GPIO_SUB_CMD_SET_ANALOG_FILTER_TYPE;
+    packet.payload.filter_type_data.controller_id = controller_id;
+    packet.payload.filter_type_data.filter_type = filter_type;
+    return packet;
+}
+
 gpio::GpioPacket GpioCommandCreator::make_get_value_command(uint8_t controller_id)
 {
     GpioPacket packet = _prepare_packet();

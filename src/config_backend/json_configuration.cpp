@@ -427,6 +427,23 @@ HwPolarity parse_polarity_str(std::string_view polarity_str)
     throw std::invalid_argument("Unrecognized polarity: " + std::string(polarity_str));
 }
 
+/**
+ * @throws std::invalid_argument if filter_type is not recognized
+ */
+AnalogFilterType parse_filter_type_str(std::string_view filter_type_str)
+{
+    static constexpr auto filter_type_map = std::to_array<std::pair<std::string_view, AnalogFilterType>>(
+            {{"iir", AnalogFilterType::IIR},
+             {"ma", AnalogFilterType::MOVING_AVERAGE}});
+
+    for (auto const& [name, value] : filter_type_map)
+    {
+        if (name == filter_type_str)
+            return value;
+    }
+    throw std::invalid_argument("Unrecognized filter type: " + std::string(filter_type_str));
+}
+
 std::vector<int> parse_pins(const rapidjson::Value& pins_json)
 {
     std::vector<int> pins;
@@ -477,6 +494,28 @@ void handle_hardware_config_commands(const rapidjson::Value& hardware, SensorHwT
             handler->post_event(factory.make_set_sending_delta_ticks_command(sensor_id, delta_ticks));
             handler->post_event(factory.make_set_adc_bit_resolution_command(sensor_id, adc_resolution));
             handler->post_event(factory.make_set_analog_time_constant_command(sensor_id, filter_time_constant));
+
+            constexpr auto HYSTERESIS = "hysteresis";
+            if (hardware.HasMember(HYSTERESIS))
+            {
+                int hysteresis = hardware[HYSTERESIS].GetInt();
+                handler->post_event(factory.make_set_analog_hysteresis_command(sensor_id, hysteresis));
+            }
+
+            constexpr auto STABILIZATION_PERIOD = "stabilization_period";
+            if (hardware.HasMember(STABILIZATION_PERIOD))
+            {
+                float stabilization_period = hardware[STABILIZATION_PERIOD].GetFloat();
+                handler->post_event(factory.make_set_analog_stabilization_period_command(sensor_id, stabilization_period));
+            }
+
+            constexpr auto FILTER_TYPE = "filter_type";
+            if (hardware.HasMember(FILTER_TYPE))
+            {
+                AnalogFilterType filter_type = parse_filter_type_str(hardware[FILTER_TYPE].GetString());
+                handler->post_event(factory.make_set_analog_filter_type_command(sensor_id, filter_type));
+            }
+
             break;
         }
 

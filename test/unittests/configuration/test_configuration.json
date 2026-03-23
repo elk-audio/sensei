@@ -175,6 +175,28 @@ R"({"backends": [
       ],
       "delta_ticks": 1
     }
+  },
+  {
+    "id": 8,
+    "enabled": true,
+    "name": "potentiometer",
+    "config": {
+      "sensor_type": "analog_input",
+      "mode": "on_value_changed",
+      "range": [1, 255],
+      "inverted": false,
+      "timestamp": false
+    },
+    "hardware": {
+        "hardware_type": "analog_input_pin",
+        "pins": [1],
+        "delta_ticks": 1,
+        "adc_resolution": 8,
+        "filter_time_constant": 0.5,
+        "hysteresis": 2,
+        "stabilization_period": 0.1,
+        "filter_type": "iir"
+    }
   }
 ]
 })"

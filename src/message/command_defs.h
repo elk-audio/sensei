@@ -48,6 +48,9 @@ enum class CommandType
     SET_SENDING_DELTA_TICKS,
     SET_ADC_BIT_RESOLUTION,
     SET_ADC_FILTER_TIME_CONSTANT,
+    SET_ANALOG_HYSTERESIS,
+    SET_ANALOG_STABILIZATION_PERIOD,
+    SET_ANALOG_FILTER_TYPE,
     SET_SLIDER_THRESHOLD,
     SET_DISCRETE_RANGES,
     SET_MULTIPLEXED,
@@ -158,6 +161,15 @@ enum class HwPolarity
 };
 
 /**
+ * @brief The type of filtering to use for an analog input
+ */
+enum class AnalogFilterType
+{
+    IIR,
+    MOVING_AVERAGE
+};
+
+/**
  * @brief Encapsulates a controller range definition
  */
 struct Range
@@ -237,10 +249,28 @@ SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
                        "Set ADC Bit Resolution",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
-SENSEI_DECLARE_COMMAND(SetADCFitlerTimeConstantCommand,
+SENSEI_DECLARE_COMMAND(SetADCFilterTimeConstantCommand,
                        CommandType::SET_ADC_FILTER_TIME_CONSTANT,
                        float,
                        "Set ADC Filter time constant",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetAnalogHysteresisCommand,
+                       CommandType::SET_ANALOG_HYSTERESIS,
+                       int,
+                       "Set Analog Hysteresis",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetAnalogStabilizationPeriodCommand,
+                       CommandType::SET_ANALOG_STABILIZATION_PERIOD,
+                       float,
+                       "Set Analog Stabilization Period",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetAnalogFilterTypeCommand,
+                       CommandType::SET_ANALOG_FILTER_TYPE,
+                       AnalogFilterType,
+                       "Set Analog Filter Type",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,

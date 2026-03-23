@@ -31,6 +31,7 @@
 
 #include "base_hw_frontend.h"
 #include "hardware_backend/base_hw_backend.h"
+#include "message/command_defs.h"
 #include "message_tracker.h"
 #include "message/base_command.h"
 #include "message/message_factory.h"
@@ -122,6 +123,7 @@ private:
 
 std::optional<uint8_t> to_gpio_hw_type(SensorHwType type);
 std::optional<uint8_t> to_gpio_sending_mode(SendingMode mode);
+std::optional<uint8_t> to_gpio_analog_filter_type(AnalogFilterType type);
 
 } // namespace hw_frontend
 } // namespace sensei

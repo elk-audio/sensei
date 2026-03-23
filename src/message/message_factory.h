@@ -172,8 +172,32 @@ public:
                                                                        const float    time_constant,
                                                                        const uint32_t timestamp = 0)
     {
-        auto msg = new SetADCFitlerTimeConstantCommand(sensor_id, time_constant, timestamp);
-        return std::unique_ptr<SetADCFitlerTimeConstantCommand>(msg);
+        auto msg = new SetADCFilterTimeConstantCommand(sensor_id, time_constant, timestamp);
+        return std::unique_ptr<SetADCFilterTimeConstantCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_analog_hysteresis_command(const int      sensor_id,
+                                                                    const int      hysteresis,
+                                                                    const uint32_t timestamp = 0)
+    {
+        auto msg = new SetAnalogHysteresisCommand(sensor_id, hysteresis, timestamp);
+        return std::unique_ptr<SetAnalogHysteresisCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_analog_stabilization_period_command(const int      sensor_id,
+                                                                              const float    period,
+                                                                              const uint32_t timestamp = 0)
+    {
+        auto msg = new SetAnalogStabilizationPeriodCommand(sensor_id, period, timestamp);
+        return std::unique_ptr<SetAnalogStabilizationPeriodCommand>(msg);
+    }
+
+    std::unique_ptr<BaseMessage> make_set_analog_filter_type_command(const int              sensor_id,
+                                                                     const AnalogFilterType filter_type,
+                                                                     const uint32_t         timestamp = 0)
+    {
+        auto msg = new SetAnalogFilterTypeCommand(sensor_id, filter_type, timestamp);
+        return std::unique_ptr<SetAnalogFilterTypeCommand>(msg);
     }
 
     std::unique_ptr<BaseMessage> make_set_slider_threshold_command(const int      sensor_id,

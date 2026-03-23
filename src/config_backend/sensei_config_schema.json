@@ -198,9 +198,18 @@ R"(
               "format": "double",
               "minimum": 0.0
             },
+            "filter_type": {
+              "type": "string",
+              "enum": ["ma", "iir"]
+            },
             "hardware_type": {
               "type": "string",
               "enum": ["analog_input_pin"]
+            },
+            "hysteresis": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 0
             },
             "pins": {
               "type": "array",
@@ -209,6 +218,11 @@ R"(
                 "format": "int64"
               },
               "minItems": 1
+            },
+            "stabilization_period": {
+              "type": "number",
+              "format": "double",
+              "minimum": 0.0
             }
           },
           "required": [
