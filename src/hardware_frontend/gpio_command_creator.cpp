@@ -292,6 +292,8 @@ std::string gpio_status_to_string(uint8_t status)
             return "GPIO_INVALID_COMMAND_FOR_CONTROLLER";
         case GpioReturnStatus::GPIO_INVALID_RUNTIME_CONFIG:
             return "GPIO_INVALID_RUNTIME_CONFIG";
+        case GpioReturnStatus::GPIO_OUT_OF_MEMORY:
+            return "GPIO_OUT_OF_MEMORY";
         default:
             return "";
     }
