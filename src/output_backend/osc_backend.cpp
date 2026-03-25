@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Output backend with OSC
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #include <sstream>
 #include <algorithm>
@@ -47,7 +47,7 @@ void trim_osc_path_components(std::string& s)
     char_idx = s.find_last_not_of("/");
     if (char_idx != std::string::npos)
     {
-        s.erase(char_idx+1);
+        s.erase(char_idx + 1);
     }
 }
 
@@ -70,16 +70,16 @@ std::string concatenate_osc_paths(std::string a, std::string b)
 
 }; // anonymous namespace
 
-OSCBackend::OSCBackend(const int max_n_input_pins) :
-    OutputBackend(max_n_input_pins),
-    _base_path("sensors"),
-    _base_raw_path("raw_input"),
-    _host("localhost"),
-    _port(23023)
+OSCBackend::OSCBackend(const int max_n_sensors)
+    : OutputBackend(max_n_sensors),
+      _base_path("sensors"),
+      _base_raw_path("raw_input"),
+      _host("localhost"),
+      _port(23023)
 
 {
-    _full_out_paths.resize(static_cast<size_t>(max_n_input_pins));
-    _full_raw_paths.resize(static_cast<size_t>(max_n_input_pins));
+    _full_out_paths.resize(static_cast<size_t>(max_n_sensors));
+    _full_raw_paths.resize(static_cast<size_t>(max_n_sensors));
     _compute_full_paths();
     _compute_address();
 }
@@ -89,7 +89,7 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
     // TODO: see if it's worth checking errors in lo_send calls
     int sensor_index = transformed_value->index();
 
-    SENSEI_LOG_INFO("OSC backend, got value to send");
+    SENSEI_LOG_DEBUG("OSC backend, got value to send");
     if (_send_output_active)
     {
         if (transformed_value->timestamp() == 0)
@@ -97,6 +97,8 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
         else
             lo_send(_address, _full_out_paths[sensor_index].c_str(), "ft",
                     transformed_value->value(), to_osc_timestamp(transformed_value->timestamp()));
+
+        SENSEI_LOG_DEBUG("Sending: sensor={} value={}", _sensor_names[sensor_index], transformed_value->value());
     }
 
     if (_send_raw_input_active)
@@ -105,63 +107,62 @@ void OSCBackend::send(const OutputValue* transformed_value, const Value* raw_inp
 
         switch (raw_input_value->type())
         {
-        case ValueType::ANALOG:
+            case ValueType::ANALOG:
             {
-                auto typed_val = static_cast<const AnalogValue *>(raw_input_value);
+                auto typed_val = static_cast<const AnalogValue*>(raw_input_value);
                 input_val = static_cast<int>(typed_val->value());
             }
             break;
 
-        case ValueType::DIGITAL:
+            case ValueType::DIGITAL:
             {
-                auto typed_val = static_cast<const DigitalValue *>(raw_input_value);
+                auto typed_val = static_cast<const DigitalValue*>(raw_input_value);
                 input_val = static_cast<int>(typed_val->value());
             }
             break;
 
-        case ValueType::CONTINUOUS:
+            case ValueType::CONTINUOUS:
             {
-                auto typed_val = static_cast<const ContinuousValue *>(raw_input_value);
+                auto typed_val = static_cast<const ContinuousValue*>(raw_input_value);
                 input_val = static_cast<int>(typed_val->value());
             }
             break;
 
-        default:
-            break;
+            default:
+                break;
         }
         if (transformed_value->timestamp() == 0)
             lo_send(_address, _full_raw_paths[sensor_index].c_str(), "i", input_val);
         else
             lo_send(_address, _full_raw_paths[sensor_index].c_str(), "i", input_val, to_osc_timestamp(transformed_value->timestamp()));
     }
-
 }
 
-CommandErrorCode OSCBackend::apply_command(const Command *cmd)
+CommandErrorCode OSCBackend::apply_command(const Command* cmd)
 {
     CommandErrorCode status = CommandErrorCode::OK;
-    auto pin_idx = cmd->index();
+    auto             sensor_idx = cmd->index();
 
-    switch(cmd->type())
+    switch (cmd->type())
     {
 
-    case CommandType::SET_SENSOR_NAME:
+        case CommandType::SET_SENSOR_NAME:
         {
-            const auto typed_cmd = static_cast<const SetPinNameCommand *>(cmd);
-            _sensor_names[pin_idx] = typed_cmd->data();
+            const auto typed_cmd = static_cast<const SetPinNameCommand*>(cmd);
+            _sensor_names[sensor_idx] = typed_cmd->data();
             _compute_full_paths();
         };
         break;
 
-    case CommandType::SET_SENSOR_TYPE:
+        case CommandType::SET_SENSOR_TYPE:
         {
             const auto typed_cmd = static_cast<const SetSensorTypeCommand*>(cmd);
-            _pin_types[pin_idx] = typed_cmd->data();
+            _sensor_types[sensor_idx] = typed_cmd->data();
             _compute_full_paths();
         };
         break;
 
-    case CommandType::SET_OSC_OUTPUT_BASE_PATH:
+        case CommandType::SET_OSC_OUTPUT_BASE_PATH:
         {
             const auto typed_cmd = static_cast<const SetOSCOutputBasePathCommand*>(cmd);
             _base_path = typed_cmd->data();
@@ -169,7 +170,7 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
         };
         break;
 
-    case CommandType::SET_OSC_OUTPUT_RAW_PATH:
+        case CommandType::SET_OSC_OUTPUT_RAW_PATH:
         {
             const auto typed_cmd = static_cast<const SetOSCOutputRawPathCommand*>(cmd);
             _base_raw_path = typed_cmd->data();
@@ -177,7 +178,7 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
         };
         break;
 
-    case CommandType::SET_OSC_OUTPUT_HOST:
+        case CommandType::SET_OSC_OUTPUT_HOST:
         {
             const auto typed_cmd = static_cast<const SetOSCOutputHostCommand*>(cmd);
             _host = typed_cmd->data();
@@ -185,7 +186,7 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
         };
         break;
 
-    case CommandType::SET_OSC_OUTPUT_PORT:
+        case CommandType::SET_OSC_OUTPUT_PORT:
         {
             const auto typed_cmd = static_cast<const SetOSCOutputPortCommand*>(cmd);
             _port = typed_cmd->data();
@@ -200,10 +201,9 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
         };
         break;
 
-    default:
-        status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
-        break;
-
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
     }
 
     // If command was not handled, try in the parent class
@@ -215,45 +215,42 @@ CommandErrorCode OSCBackend::apply_command(const Command *cmd)
     {
         return status;
     }
-
 }
 
 void OSCBackend::_compute_full_paths()
 {
-    for (size_t i=0; i<_full_out_paths.size(); i++)
+    for (size_t i = 0; i < _full_out_paths.size(); i++)
     {
         std::string cur_path = _base_path;
         std::string cur_raw_path = _base_raw_path;
         std::string cur_sensor_type;
-        switch (_pin_types[i])
+        switch (_sensor_types[i])
         {
-        case SensorType::ANALOG_INPUT:
-            cur_sensor_type = std::string("analog");
-            break;
+            case SensorType::ANALOG_INPUT:
+                cur_sensor_type = std::string("analog");
+                break;
 
-        case SensorType::DIGITAL_INPUT:
-            cur_sensor_type = std::string("digital");
-            break;
+            case SensorType::DIGITAL_INPUT:
+                cur_sensor_type = std::string("digital");
+                break;
 
-        case SensorType::RANGE_INPUT:
-            cur_sensor_type = std::string("range");
-            break;
+            case SensorType::RANGE_INPUT:
+                cur_sensor_type = std::string("range");
+                break;
 
-        case SensorType::CONTINUOUS_INPUT:
-            cur_sensor_type = std::string("continuous");
-            break;
+            case SensorType::CONTINUOUS_INPUT:
+                cur_sensor_type = std::string("continuous");
+                break;
 
-        default:
-            break;
+            default:
+                break;
         }
 
         _full_out_paths[i] = concatenate_osc_paths(cur_path,
-                                                   concatenate_osc_paths(cur_sensor_type, _sensor_names[i]) );
+                                                   concatenate_osc_paths(cur_sensor_type, _sensor_names[i]));
         _full_raw_paths[i] = concatenate_osc_paths(cur_raw_path,
-                                                   concatenate_osc_paths(cur_sensor_type, _sensor_names[i]) );
+                                                   concatenate_osc_paths(cur_sensor_type, _sensor_names[i]));
     }
-
-
 }
 
 CommandErrorCode OSCBackend::_compute_address()

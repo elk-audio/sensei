@@ -15,12 +15,20 @@ SET(TEST_FILES unittests/sample_test.cpp
                unittests/mapping/sensor_mappers_test.cpp
                unittests/mapping/mapping_processor_test.cpp
                unittests/mapping/output_backend_mockup.h
-               unittests/test_utils.h
                unittests/output_backend/osc_backend_test.cpp
+               unittests/test_utils.h
                unittests/user_frontend/osc_user_frontend_test.cpp)
 
-add_executable(unit_tests ${TEST_FILES})
-target_compile_definitions(unit_tests PRIVATE -DDISABLE_LOGGING)
+
+if (${SENSEI_WITH_GRPC})
+    set(GRPC_TEST_FILES
+               unittests/output_backend/grpc_backend_test.cpp
+               unittests/user_frontend/grpc_user_frontend_test.cpp)
+endif()
+
+add_executable(unit_tests ${TEST_FILES} ${GRPC_TEST_FILES})
+target_compile_definitions(unit_tests PRIVATE -DSENSEI_DISABLE_LOGGING)
+target_compile_features(unit_tests PRIVATE cxx_std_20)
 
 #########################
 #  Include directories  #

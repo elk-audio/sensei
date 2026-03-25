@@ -10,7 +10,8 @@ using namespace hw_frontend;
 class TestGpioCommandCreator : public ::testing::Test
 {
 protected:
-    TestGpioCommandCreator() :_module_under_test()
+    TestGpioCommandCreator()
+        : _module_under_test()
     {
     }
     void SetUp()
@@ -26,10 +27,10 @@ protected:
 TEST_F(TestGpioCommandCreator, test_initialize_common_data)
 {
     GpioPacket packet = _module_under_test._prepare_packet();
-    uint32_t seq_no = from_gpio_protocol_byteord(packet.sequence_no);
+    uint32_t   seq_no = from_gpio_protocol_byteord(packet.sequence_no);
     EXPECT_EQ(0, packet.command);
     EXPECT_EQ(0, packet.sub_command);
-    for (unsigned int i = 0; i < sizeof(GpioPacket::payload.raw_data) ; ++i)
+    for (unsigned int i = 0; i < sizeof(GpioPacket::payload.raw_data); ++i)
     {
         EXPECT_EQ(0, packet.payload.raw_data[i]);
     }
@@ -98,7 +99,7 @@ TEST_F(TestGpioCommandCreator, test_command_creation)
     EXPECT_EQ(11, packet.payload.controller_notif_data.controller_id);
     EXPECT_EQ(GPIO_ON_VALUE_CHANGE, packet.payload.controller_notif_data.notif_mode);
 
-    Pinlist list = {2, {5,6}};
+    Pinlist list = {2, {5, 6}};
     packet = _module_under_test.make_add_pins_to_controller_command(12, list);
     EXPECT_EQ(GPIO_CMD_CONFIG_CONTROLLER, packet.command);
     EXPECT_EQ(GPIO_SUB_CMD_ADD_PINS_TO_CONTROLLER, packet.sub_command);
@@ -143,4 +144,3 @@ TEST_F(TestGpioCommandCreator, test_command_creation)
     EXPECT_EQ(18, packet.payload.gpio_value_data.controller_id);
     EXPECT_EQ(2048u, from_gpio_protocol_byteord(packet.payload.gpio_value_data.controller_val));
 }
-

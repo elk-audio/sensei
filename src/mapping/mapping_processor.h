@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Main class for remapping sensors data into output format
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_MAPPING_PROCESSOR_H
 #define SENSEI_MAPPING_PROCESSOR_H
@@ -35,7 +35,7 @@ public:
 
     MappingProcessor(int max_no_sensors = 64);
 
-    CommandErrorCode apply_command(const Command *cmd);
+    CommandErrorCode apply_command(const Command* cmd);
 
     void put_config_commands_into(CommandIterator out_iterator);
 
@@ -44,7 +44,7 @@ public:
     std::unique_ptr<Command> process_set(Value* value);
 
 private:
-    int _max_no_sensors;
+    int                                            _max_no_sensors;
     std::vector<std::unique_ptr<BaseSensorMapper>> _mappers;
 };
 

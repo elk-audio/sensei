@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -17,12 +17,13 @@
  * @brief Interface between the hw frontend and the underlying gpio hardware
  *        which implements gpio logic according to the gpio protocol
  *        specifications
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_BASE_HW_BACKEND_H
 #define SENSEI_BASE_HW_BACKEND_H
 
 #include "gpio_protocol/gpio_protocol.h"
+#include "handler_interface.h"
 
 namespace sensei {
 namespace hw_backend {
@@ -38,8 +39,10 @@ public:
      * @brief Constructor for the base hw backend.
      * @param recv_packet_timeout The blocking timeout for receiving packets
      */
-    BaseHwBackend(std::chrono::milliseconds recv_packet_timeout) :
-            _recv_packet_timeout(recv_packet_timeout)
+    BaseHwBackend(std::chrono::milliseconds recv_packet_timeout,
+                  ThreadingMode             threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : _recv_packet_timeout(recv_packet_timeout),
+          _threading_mode(threading_mode)
     {}
 
     virtual ~BaseHwBackend() = default;
@@ -80,6 +83,7 @@ public:
 
 protected:
     std::chrono::milliseconds _recv_packet_timeout;
+    ThreadingMode             _threading_mode;
 };
 
 /**
@@ -88,13 +92,14 @@ protected:
 class NoOpHwBackend : public BaseHwBackend
 {
 public:
-    NoOpHwBackend(std::chrono::milliseconds recv_packet_timeout) :
-                                BaseHwBackend(recv_packet_timeout)
+    NoOpHwBackend(std::chrono::milliseconds recv_packet_timeout,
+                  ThreadingMode             threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : BaseHwBackend(recv_packet_timeout, threading_mode)
     {}
 
     bool init()
     {
-        return  false;
+        return false;
     }
 
     void deinit() {}

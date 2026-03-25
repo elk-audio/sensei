@@ -32,7 +32,8 @@
 *.dSYM/
 
 # Hidden files
-.*
+.cache/
+.claude/
 !*/.gitkeep
 !.gitignore
 
@@ -40,6 +41,7 @@
 scratch/
 */scratch
 **/build/
+**/build-*/
 linux/third-party/install/
 
 # Taken from liblo .gitignore
@@ -117,3 +119,4 @@ linux/build/
 bin/
 doc/~$DATA_PROTOCOL_SENSUS.xlsx
 
+/vcpkg_installed

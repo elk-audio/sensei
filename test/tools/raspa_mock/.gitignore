@@ -1,0 +1,4 @@
+venv
+__pycache__
+gpio_protocol.py
+sensei_rpc_pb2*

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Base class for runtime user frontend
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * This module give run-time control from the user over some fast-changing configuration
  * parameters (e.g. sensors enabled/disabled) and access to digital output pins.
@@ -24,8 +24,8 @@
 #define SENSEI_USER_FRONTEND_H
 
 #include <message/message_factory.h>
-#include "synchronized_queue.h"
 #include "message/message_factory.h"
+#include "handler_interface.h"
 
 namespace sensei {
 namespace user_frontend {
@@ -33,12 +33,12 @@ namespace user_frontend {
 class UserFrontend
 {
 public:
-    UserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue,
-                 const int max_n_input_pins,
-                 const int max_n_digital_out_pins) :
-            _queue(queue),
-            _max_n_input_pins(max_n_input_pins),
-            _max_n_out_pins(max_n_digital_out_pins)
+    UserFrontend(MessageHandler* handler,
+                 const int       max_n_sensors,
+                 ThreadingMode   threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : _handler(handler),
+          _max_n_sensors(max_n_sensors),
+          _threading_mode(threading_mode)
     {}
 
     virtual ~UserFrontend()
@@ -52,7 +52,7 @@ public:
      * @return CommandErrorCode::OK if command was succesful,
      *         other codes in case of error.
      */
-    virtual CommandErrorCode apply_command(const Command *cmd);
+    virtual CommandErrorCode apply_command(const Command* cmd);
 
     /**
      * @brief Put an enabled message in the shared queue.
@@ -98,10 +98,16 @@ public:
      */
     void set_range_output(int index, int value);
 
-private:
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
-    int _max_n_input_pins;
-    int _max_n_out_pins;
+    /**
+     * @brief Trigger the MCU to re-send the values of all controllers.
+     */
+    void refresh_controller_values();
+
+protected:
+    MessageHandler* _handler;
+
+    [[maybe_unused]] int _max_n_sensors;
+    ThreadingMode        _threading_mode;
 
     MessageFactory _factory;
 };

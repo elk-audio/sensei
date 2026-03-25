@@ -1,0 +1,758 @@
+R"(
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SenseiConfig",
+  "type": "object",
+  "properties": {
+    "backends": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Backend"
+      },
+      "minItems": 1
+    },
+    "hw_frontend": {
+      "$ref": "#/definitions/HwFrontend"
+    },
+    "sensors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Sensor"
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "backends",
+    "hw_frontend",
+    "sensors"
+  ],
+  "definitions": {
+    "Backend": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/BackendConfig"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "raw_input_enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "enabled",
+        "raw_input_enabled",
+        "config"
+      ]
+    },
+    "BackendConfig": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "base_path": {
+              "type": "string"
+            },
+            "base_raw_input_path": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer",
+              "format": "int64",
+              "maximum": 65535,
+              "minimum": 1
+            },
+            "type": {
+              "type": "string",
+              "enum": ["osc"]
+            }
+          },
+          "required": [
+            "type",
+            "host",
+            "port",
+            "base_path",
+            "base_raw_input_path"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "port": {
+              "type": "integer",
+              "format": "int64",
+              "maximum": 65535,
+              "minimum": 1
+            },
+            "type": {
+              "type": "string",
+              "enum": ["grpc"]
+            }
+          },
+          "required": [
+            "type",
+            "host",
+            "port"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["stdout"]
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "Hardware": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "hardware_type": {
+              "type": "string",
+              "enum": ["digital_output_pin"]
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 1
+            },
+            "polarity": {
+              "$ref": "#/definitions/Polarity"
+            }
+          },
+          "required": [
+            "hardware_type",
+            "polarity",
+            "pins"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delta_ticks": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "hardware_type": {
+              "type": "string",
+              "enum": ["digital_input_pin"]
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 1
+            },
+            "polarity": {
+              "$ref": "#/definitions/Polarity"
+            }
+          },
+          "required": [
+            "hardware_type",
+            "polarity",
+            "pins",
+            "delta_ticks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "adc_resolution": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "delta_ticks": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "filter_time_constant": {
+              "type": "number",
+              "format": "double",
+              "minimum": 0.0
+            },
+            "filter_type": {
+              "type": "string",
+              "enum": ["ma", "iir"]
+            },
+            "hardware_type": {
+              "type": "string",
+              "enum": ["analog_input_pin"]
+            },
+            "hysteresis": {
+              "type": "number",
+              "format": "int64",
+              "minimum": 0
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 1
+            },
+            "stabilization_period": {
+              "type": "number",
+              "format": "double",
+              "minimum": 0.0
+            }
+          },
+          "required": [
+            "hardware_type",
+            "pins",
+            "delta_ticks",
+            "adc_resolution",
+            "filter_time_constant"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "hardware_type": {
+              "type": "string",
+              "enum": ["encoder"]
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "polarity": {
+              "$ref": "#/definitions/Polarity"
+            }
+          },
+          "required": [
+            "hardware_type",
+            "polarity",
+            "pins"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delta_ticks": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "hardware_type": {
+              "type": "string",
+              "enum": ["ribbon"]
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "hardware_type",
+            "pins",
+            "delta_ticks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delta_ticks": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "hardware_type": {
+              "type": "string",
+              "enum": ["button"]
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 1
+            },
+            "polarity": {
+              "$ref": "#/definitions/Polarity"
+            }
+          },
+          "required": [
+            "hardware_type",
+            "pins",
+            "polarity",
+            "delta_ticks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delta_ticks": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "hardware_type": {
+              "type": "string",
+              "enum": ["n_way_switch"]
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 2
+            }
+          },
+          "required": [
+            "hardware_type",
+            "pins",
+            "delta_ticks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "hardware_type": {
+              "type": "string",
+              "enum": ["stepped_output"]
+            },
+            "multiplexed": {
+              "$ref": "#/definitions/MultiplexerInfo"
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "hardware_type",
+            "pins",
+            "multiplexed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "hardware_type": {
+              "type": "string",
+              "enum": ["multiplexer"]
+            },
+            "pins": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "hardware_type",
+            "pins"
+          ]
+        }
+      ]
+    },
+    "HwFrontend": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/HwFrontendType"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "HwFrontendType": {
+      "type": "string",
+      "enum": [
+        "none",
+        "raspa_xmos",
+        "raspa_gpio",
+        "elk_pi"
+      ]
+    },
+    "InputSensorMode": {
+      "description": "Sending mode for sensors",
+      "type": "string",
+      "enum": [
+        "off",
+        "continuous",
+        "on_value_changed",
+        "on_request",
+        "on_press",
+        "on_release"
+      ]
+    },
+    "MultiplexerInfo": {
+      "type": "object",
+      "properties": {
+        "multiplexer_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "multiplexer_pin": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "required": [
+        "multiplexer_id",
+        "multiplexer_pin"
+      ]
+    },
+    "Polarity": {
+      "type": "string",
+      "enum": [
+        "active_low",
+        "active_high"
+      ]
+    },
+    "Sensor": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/SensorConfig"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "hardware": {
+          "$ref": "#/definitions/Hardware"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "enabled",
+        "name",
+        "config",
+        "hardware"
+      ]
+    },
+    "SensorConfig": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "inverted": {
+              "type": "boolean"
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["digital_output"]
+            }
+          },
+          "required": [
+            "sensor_type",
+            "inverted"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "inverted": {
+              "type": "boolean"
+            },
+            "mode": {
+              "$ref": "#/definitions/InputSensorMode"
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["digital_input"]
+            },
+            "timestamp": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "sensor_type",
+            "mode",
+            "inverted",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "discrete_ranges": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "minItems": 1
+            },
+            "inverted": {
+              "type": "boolean"
+            },
+            "mode": {
+              "$ref": "#/definitions/InputSensorMode"
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["discrete_input"]
+            },
+            "timestamp": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "sensor_type",
+            "mode",
+            "discrete_ranges",
+            "inverted",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "inverted": {
+              "type": "boolean"
+            },
+            "mode": {
+              "$ref": "#/definitions/InputSensorMode"
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["analog_input"]
+            },
+            "timestamp": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "sensor_type",
+            "mode",
+            "inverted",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "range": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["analog_output"]
+            }
+          },
+          "required": [
+            "sensor_type",
+            "range"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "inverted": {
+              "type": "boolean"
+            },
+            "mode": {
+              "$ref": "#/definitions/InputSensorMode"
+            },
+            "range": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["continuous_input"]
+            },
+            "timestamp": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "sensor_type",
+            "mode",
+            "range",
+            "inverted",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "range": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["continuous_output"]
+            }
+          },
+          "required": [
+            "sensor_type",
+            "range"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "inverted": {
+              "type": "boolean"
+            },
+            "mode": {
+              "$ref": "#/definitions/InputSensorMode"
+            },
+            "range": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["range_input"]
+            },
+            "timestamp": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "sensor_type",
+            "mode",
+            "range",
+            "inverted",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "range": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["range_output"]
+            }
+          },
+          "required": [
+            "sensor_type",
+            "range"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sensor_type": {
+              "type": "string",
+              "enum": ["no_output"]
+            }
+          },
+          "required": [
+            "sensor_type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "inverted": {
+              "type": "boolean"
+            },
+            "mode": {
+              "$ref": "#/definitions/InputSensorMode"
+            },
+            "sensor_type": {
+              "type": "string",
+              "enum": ["relative_input"]
+            },
+            "timestamp": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "sensor_type",
+            "mode",
+            "inverted",
+            "timestamp"
+          ]
+        }
+      ]
+    }
+  }
+}
+)"

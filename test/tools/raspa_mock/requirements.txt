@@ -1,0 +1,5 @@
+grpcio>=1.76.0
+grpcio-tools>=1.76.0
+python-osc
+ctypeslib2
+clang==17.0.6

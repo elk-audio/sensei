@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,7 +16,7 @@
 /**
  * @brief Unix socket based hw backend which allows exchanging of packets with
  *        a gpio protocol client over the sockets.
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #include <chrono>
 #include <iostream>
@@ -31,7 +31,7 @@
 namespace sensei {
 namespace hw_backend {
 
-constexpr char SENSEI_SOCKET[] = "/tmp/sensei";
+constexpr char   SENSEI_SOCKET[] = "/tmp/sensei";
 constexpr size_t GPIO_PACKET_SIZE = sizeof(gpio::GpioPacket);
 
 SENSEI_GET_LOGGER_WITH_MODULE_NAME("gpio_hw_socket");
@@ -91,10 +91,11 @@ void GpioHwSocket::deinit()
 bool GpioHwSocket::send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet)
 {
     auto bytes = send(_out_socket, &tx_gpio_packet, GPIO_PACKET_SIZE, 0);
-    if(bytes < static_cast<ssize_t>(GPIO_PACKET_SIZE))
+    if (bytes < static_cast<ssize_t>(GPIO_PACKET_SIZE))
     {
         SENSEI_LOG_WARNING("Sending packet on socket failed {}, Attempting"
-                           " to reconnect to socket..,", bytes);
+                           " to reconnect to socket..,",
+                           bytes);
 
         _connect_to_gpio_hw_socket();
         return false;
@@ -107,7 +108,7 @@ bool GpioHwSocket::receive_gpio_packet(gpio::GpioPacket& rx_gpio_packet)
 {
     memset(&rx_gpio_packet, 0, GPIO_PACKET_SIZE);
     auto bytes = recv(_in_socket, &rx_gpio_packet, GPIO_PACKET_SIZE, 0);
-    if(bytes < static_cast<ssize_t>(GPIO_PACKET_SIZE))
+    if (bytes < static_cast<ssize_t>(GPIO_PACKET_SIZE))
     {
         return false;
     }
@@ -141,5 +142,5 @@ inline void GpioHwSocket::_connect_to_gpio_hw_socket()
     return;
 }
 
-} // namespace gpio_hw_socket
+} // namespace hw_backend
 } // namespace sensei

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,7 +16,7 @@
 /**
  * @brief Unix socket based hw backend which allows exchanging of packets with
  *        a gpio protocol client over the sockets.
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_GPIO_HW_SOCKET_H
 #define SENSEI_GPIO_HW_SOCKET_H
@@ -44,12 +44,13 @@ public:
      *
      * @param gpio_hw_socket_name The socket name to which it should connect to
      */
-    GpioHwSocket(std::string gpio_hw_socket_name,
-                 std::chrono::milliseconds recv_packet_timeout) :
-                                                BaseHwBackend(recv_packet_timeout),
-                                                _in_socket(-1),
-                                                _out_socket(-1),
-                                                _gpio_hw_socket_name(gpio_hw_socket_name)
+    GpioHwSocket(std::string               gpio_hw_socket_name,
+                 std::chrono::milliseconds recv_packet_timeout,
+                 ThreadingMode             threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : BaseHwBackend(recv_packet_timeout, threading_mode),
+          _in_socket(-1),
+          _out_socket(-1),
+          _gpio_hw_socket_name(gpio_hw_socket_name)
     {}
 
     ~GpioHwSocket()

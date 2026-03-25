@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Value messages definition
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * Declaration of Command Message types using macro facilities in message/command_base.h
  *
@@ -48,7 +48,11 @@ enum class CommandType
     SET_SENDING_DELTA_TICKS,
     SET_ADC_BIT_RESOLUTION,
     SET_ADC_FILTER_TIME_CONSTANT,
+    SET_ANALOG_HYSTERESIS,
+    SET_ANALOG_STABILIZATION_PERIOD,
+    SET_ANALOG_FILTER_TYPE,
     SET_SLIDER_THRESHOLD,
+    SET_DISCRETE_RANGES,
     SET_MULTIPLEXED,
     SET_HW_POLARITY,
     SET_FAST_MODE,
@@ -56,6 +60,7 @@ enum class CommandType
     SET_CONTINUOUS_OUTPUT_VALUE,
     SET_ANALOG_OUTPUT_VALUE,
     ENABLE_SENDING_PACKETS,
+    GET_VALUE,
     // Internal Commands
     SET_INVERT_ENABLED,
     SET_INPUT_RANGE,
@@ -70,6 +75,10 @@ enum class CommandType
     SET_OSC_OUTPUT_HOST,
     SET_OSC_OUTPUT_PORT,
     SET_OSC_INPUT_PORT,
+    // gRPC User Frontend Commands
+    SET_GRPC_LISTEN_ADDRESS,
+    SET_GRPC_LISTEN_PORT,
+    CLEAR_PREVIOUS_VALUE,
     N_COMMAND_TAGS
 };
 
@@ -82,10 +91,12 @@ enum class SensorType
     DIGITAL_OUTPUT,
     ANALOG_INPUT,
     ANALOG_OUTPUT,
+    DISCRETE_INPUT,
     CONTINUOUS_INPUT,
     CONTINUOUS_OUTPUT,
     RANGE_INPUT,
     RANGE_OUTPUT,
+    RELATIVE_INPUT,
     UNDEFINED,
     NO_OUTPUT,
     N_PIN_TYPES
@@ -112,6 +123,7 @@ enum class BackendType
     NONE,
     OSC,
     STD_STREAM,
+    GRPC,
     N_BACKEND_TYPES
 };
 
@@ -149,6 +161,15 @@ enum class HwPolarity
 };
 
 /**
+ * @brief The type of filtering to use for an analog input
+ */
+enum class AnalogFilterType
+{
+    IIR,
+    MOVING_AVERAGE
+};
+
+/**
  * @brief Encapsulates a controller range definition
  */
 struct Range
@@ -162,8 +183,8 @@ struct Range
  */
 struct MultiplexerData
 {
-    int  id;
-    int  pin;
+    int id;
+    int pin;
 };
 
 enum class CommandErrorCode
@@ -228,10 +249,28 @@ SENSEI_DECLARE_COMMAND(SetADCBitResolutionCommand,
                        "Set ADC Bit Resolution",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
-SENSEI_DECLARE_COMMAND(SetADCFitlerTimeConstantCommand,
+SENSEI_DECLARE_COMMAND(SetADCFilterTimeConstantCommand,
                        CommandType::SET_ADC_FILTER_TIME_CONSTANT,
                        float,
                        "Set ADC Filter time constant",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetAnalogHysteresisCommand,
+                       CommandType::SET_ANALOG_HYSTERESIS,
+                       int,
+                       "Set Analog Hysteresis",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetAnalogStabilizationPeriodCommand,
+                       CommandType::SET_ANALOG_STABILIZATION_PERIOD,
+                       float,
+                       "Set Analog Stabilization Period",
+                       CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetAnalogFilterTypeCommand,
+                       CommandType::SET_ANALOG_FILTER_TYPE,
+                       AnalogFilterType,
+                       "Set Analog Filter Type",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
@@ -239,6 +278,12 @@ SENSEI_DECLARE_COMMAND(SetSliderThresholdCommand,
                        int,
                        "Set Slider Threshold",
                        CommandDestination::HARDWARE_FRONTEND | CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(SetDiscreteRangesCommand,
+                       CommandType::SET_DISCRETE_RANGES,
+                       std::vector<Range>,
+                       "Set Discrete Ranges",
+                       CommandDestination::MAPPING_PROCESSOR);
 
 SENSEI_DECLARE_COMMAND(SetMultiplexedSensorCommand,
                        CommandType::SET_MULTIPLEXED,
@@ -282,6 +327,12 @@ SENSEI_DECLARE_COMMAND(EnableSendingPacketsCommand,
                        "Enable Sending Packets",
                        CommandDestination::HARDWARE_FRONTEND);
 
+SENSEI_DECLARE_COMMAND(GetValueCommand,
+                       CommandType::GET_VALUE,
+                       int,
+                       "Get Value",
+                       CommandDestination::HARDWARE_FRONTEND);
+
 // Internal commands
 
 SENSEI_DECLARE_COMMAND(SetInvertEnabledCommand,
@@ -300,6 +351,12 @@ SENSEI_DECLARE_COMMAND(SetSendTimestampEnabledCommand,
                        CommandType::SET_SEND_TIMESTAMP_ENABLED,
                        bool,
                        "Set Output Timestamp Enabled",
+                       CommandDestination::MAPPING_PROCESSOR);
+
+SENSEI_DECLARE_COMMAND(ClearPreviousValueCommand,
+                       CommandType::CLEAR_PREVIOUS_VALUE,
+                       bool,
+                       "Clear Previous Value",
                        CommandDestination::MAPPING_PROCESSOR);
 
 // Output Backend commands
@@ -356,6 +413,18 @@ SENSEI_DECLARE_COMMAND(SetOSCInputPortCommand,
                        CommandType::SET_OSC_INPUT_PORT,
                        int,
                        "Set OSC input port",
+                       CommandDestination::USER_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetGrpcListenAddressCommand,
+                       CommandType::SET_GRPC_LISTEN_ADDRESS,
+                       std::string,
+                       "Set gRPC listen address",
+                       CommandDestination::USER_FRONTEND);
+
+SENSEI_DECLARE_COMMAND(SetGrpcListenPortCommand,
+                       CommandType::SET_GRPC_LISTEN_PORT,
+                       int,
+                       "Set gRPC listen port",
                        CommandDestination::USER_FRONTEND);
 
 ////////////////////////////////////////////////////////////////////////////////

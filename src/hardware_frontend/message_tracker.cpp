@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Class for keeping track of sent messages and their respective acks.
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * A helper class to keep track of sent messages and acknowledgements to identify
  * message timeouts.
@@ -25,17 +25,16 @@
 namespace sensei {
 namespace hw_frontend {
 
-MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries) :
-        _timeout(timeout),
-        _max_retries(max_retries),
-        _retries(0),
-        _identifier(0)
+MessageTracker::MessageTracker(std::chrono::milliseconds timeout, int max_retries)
+    : _timeout(timeout),
+      _max_retries(max_retries),
+      _retries(0),
+      _identifier(0)
 {
 }
 
 MessageTracker::~MessageTracker()
 {
-
 }
 
 void MessageTracker::store(std::unique_ptr<Command>&& message, uint64_t uuid)
@@ -70,7 +69,7 @@ bool MessageTracker::ack(uint64_t identifier)
 timeout MessageTracker::timed_out()
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    if (_identifier == 0 &&  _message_in_transit == nullptr)
+    if (_identifier == 0 && _message_in_transit == nullptr)
     {
         return timeout::NO_MESSAGE;
     }

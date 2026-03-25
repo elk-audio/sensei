@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#define private public
+#define private   public
 #define protected public
 #include "output_backend/osc_backend.cpp"
 #include "message/message_factory.h"
@@ -18,17 +18,17 @@ void osc_error_handler(int /*num*/, const char* /*msg*/, const char* /*path*/)
 {
 }
 
-int alice_values_handler(const char *path, const char *types, lo_arg **argv,
-                         int argc, void *data, void *user_data);
+int alice_values_handler(const char* path, const char* types, lo_arg** argv,
+                         int argc, lo_message msg, void* user_data);
 
-int bob_values_handler(const char *path, const char *types, lo_arg ** argv,
-                       int argc, void *data, void *user_data);
+int bob_values_handler(const char* path, const char* types, lo_arg** argv,
+                       int argc, lo_message msg, void* user_data);
 
-int alice_raw_handler(const char *path, const char *types, lo_arg **argv,
-                      int argc, void *data, void *user_data);
+int alice_raw_handler(const char* path, const char* types, lo_arg** argv,
+                      int argc, lo_message msg, void* user_data);
 
-int bob_raw_handler(const char *path, const char *types, lo_arg **argv,
-                    int argc, void *data, void *user_data);
+int bob_raw_handler(const char* path, const char* types, lo_arg** argv,
+                    int argc, lo_message msg, void* user_data);
 
 class TestOscBackend : public ::testing::Test
 {
@@ -44,7 +44,7 @@ protected:
     void SetUp()
     {
         // Configure backend
-        MessageFactory factory;
+        MessageFactory                        factory;
         std::vector<std::unique_ptr<Command>> config_cmds;
 
         // global config messages
@@ -82,25 +82,24 @@ protected:
         lo_server_free(_osc_server);
     }
 
-    int _max_n_sensors{64};
+    int        _max_n_sensors{64};
     OSCBackend _backend{_max_n_sensors};
 
     std::string _base_path{"test_sensors"};
     std::string _base_raw_path{"test_input_raw"};
     std::string _host{"127.0.0.1"};
-    int _port{22022};
+    int         _port{22022};
 
     float _last_alice_received{0.0f};
     float _last_bob_received{0.0f};
-    int _last_raw_alice_received{0};
-    int _last_raw_bob_received{0};
+    int   _last_raw_alice_received{0};
+    int   _last_raw_bob_received{0};
 
     lo_server _osc_server{nullptr};
-
 };
 
-int alice_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                         int /*argc*/, void* /*data*/, void *user_data)
+int alice_values_handler(const char* /*path*/, const char* /*types*/, lo_arg** argv,
+                         int /*argc*/, lo_message /*msg*/, void*               user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_alice_received = argv[0]->f;
@@ -108,8 +107,8 @@ int alice_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **a
     return 1;
 }
 
-int alice_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                      int /*argc*/, void* /*data*/, void *user_data)
+int alice_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg** argv,
+                      int /*argc*/, lo_message /*msg*/, void*               user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_raw_alice_received = argv[0]->i;
@@ -117,8 +116,8 @@ int alice_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv
     return 1;
 }
 
-int bob_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                       int /*argc*/, void* /*data*/, void *user_data)
+int bob_values_handler(const char* /*path*/, const char* /*types*/, lo_arg** argv,
+                       int /*argc*/, lo_message /*msg*/, void*               user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_bob_received = argv[0]->f;
@@ -126,8 +125,8 @@ int bob_values_handler(const char* /*path*/, const char* /*types*/, lo_arg **arg
     return 1;
 }
 
-int bob_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg **argv,
-                    int /*argc*/, void* /*data*/, void *user_data)
+int bob_raw_handler(const char* /*path*/, const char* /*types*/, lo_arg** argv,
+                    int /*argc*/, lo_message /*msg*/, void*               user_data)
 {
     auto backend = static_cast<TestOscBackend*>(user_data);
     backend->_last_raw_bob_received = argv[0]->i;
@@ -141,9 +140,9 @@ TEST_F(TestOscBackend, test_config)
     ASSERT_EQ(_base_raw_path, _backend._base_raw_path);
     ASSERT_EQ(_host, _backend._host);
     ASSERT_EQ(_port, _backend._port);
-    ASSERT_EQ(SensorType::DIGITAL_INPUT, _backend._pin_types[0]);
+    ASSERT_EQ(SensorType::DIGITAL_INPUT, _backend._sensor_types[0]);
     ASSERT_EQ("alice", _backend._sensor_names[0]);
-    ASSERT_EQ(SensorType::ANALOG_INPUT, _backend._pin_types[1]);
+    ASSERT_EQ(SensorType::ANALOG_INPUT, _backend._sensor_types[1]);
     ASSERT_EQ("bob", _backend._sensor_names[1]);
 }
 

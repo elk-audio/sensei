@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Base class for commands
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * Base command class and macros for quick subclasses definition.
  * This is intended for internal module use, if you need to define special command sub-classes do it so in
@@ -50,22 +50,21 @@ enum class CommandDestination : int
     USER_FRONTEND = 1 << 4,
 };
 
-using CommandDestinationType = std::underlying_type_t <CommandDestination>;
+using CommandDestinationType = std::underlying_type_t<CommandDestination>;
 
-inline CommandDestination operator | (CommandDestination lhs, CommandDestination rhs)
+inline CommandDestination operator|(CommandDestination lhs, CommandDestination rhs)
 {
     return static_cast<CommandDestination>(
-            static_cast<CommandDestinationType>(lhs) | static_cast<CommandDestinationType>(rhs)
-    );
+            static_cast<CommandDestinationType>(lhs) | static_cast<CommandDestinationType>(rhs));
 }
 
-inline CommandDestination& operator |= (CommandDestination& lhs, CommandDestination rhs)
+inline CommandDestination& operator|=(CommandDestination& lhs, CommandDestination rhs)
 {
     lhs = static_cast<CommandDestination>(static_cast<CommandDestinationType>(lhs) | static_cast<CommandDestinationType>(rhs));
     return lhs;
 }
 
-inline bool operator & (CommandDestination lhs, CommandDestination rhs)
+inline bool operator&(CommandDestination lhs, CommandDestination rhs)
 {
     return static_cast<bool>(static_cast<CommandDestinationType>(lhs) & static_cast<CommandDestinationType>(rhs));
 }
@@ -116,17 +115,17 @@ public:
     }
 
 protected:
-    Command(const int sensor_index,
-            const CommandType type,
+    Command(const int                sensor_index,
+            const CommandType        type,
             const CommandDestination destination,
-            const uint32_t timestamp=0) :
-                BaseMessage(sensor_index, timestamp, MessageType::COMMAND),
-                _type(type),
-                _destination(destination)
+            const uint32_t           timestamp = 0)
+        : BaseMessage(sensor_index, timestamp, MessageType::COMMAND),
+          _type(type),
+          _destination(destination)
     {
     }
 
-    CommandType _type;
+    CommandType        _type;
     CommandDestination _destination;
 };
 
@@ -134,29 +133,29 @@ protected:
 // Concrete class definition macros
 //////////////////////////////////////////////////////////////////////////////////
 
-#define SENSEI_DECLARE_COMMAND(ClassName, command_type, InternalType, representation_prefix, destination ) \
-class ClassName : public Command \
-{ \
-public: \
-    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() const override \
-    {\
-        return std::string(representation_prefix);\
-    }\
-    InternalType data() const\
-    {\
-        return _data;\
-    }\
-private:\
-    ClassName(const int sensor_index,\
-              const InternalType data,\
-              const uint32_t timestamp=0) :\
-        Command(sensor_index, command_type, destination, timestamp),\
-        _data(data)\
-    {\
-    }\
-    InternalType _data;\
-}
+#define SENSEI_DECLARE_COMMAND(ClassName, command_type, InternalType, representation_prefix, destination) \
+    class ClassName : public Command \
+    { \
+    public: \
+        SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+        std::string representation() const override \
+        { \
+            return std::string(representation_prefix); \
+        } \
+        InternalType data() const \
+        { \
+            return _data; \
+        } \
+        /* private:\ */ \
+        ClassName(const int          sensor_index, \
+                  const InternalType data, \
+                  const uint32_t     timestamp = 0) \
+            : Command(sensor_index, command_type, destination, timestamp), \
+              _data(data) \
+        { \
+        } \
+        InternalType _data; \
+    }
 
 }; // namespace sensei
 

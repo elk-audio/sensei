@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Utilities functions shared between modules
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_UTILS_H
 #define SENSEI_UTILS_H
@@ -25,13 +25,13 @@
 
 template<typename Derived, typename Base>
 std::unique_ptr<Derived>
-static_unique_ptr_cast( std::unique_ptr<Base>&& p )
+static_unique_ptr_cast(std::unique_ptr<Base>&& p)
 {
-    auto d = static_cast<Derived *>(p.release());
+    auto d = static_cast<Derived*>(p.release());
     return std::unique_ptr<Derived>(d);
 }
 
-template <typename T>
+template<typename T>
 T clip(const T& x, const T& lower, const T& upper)
 {
     return std::max(lower, std::min(x, upper));

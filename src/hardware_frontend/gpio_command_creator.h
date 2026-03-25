@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Class which helps in creation of gpio protocol master packets
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_GPIO_COMMAND_CREATOR_H
 #define SENSEI_GPIO_COMMAND_CREATOR_H
@@ -56,7 +56,7 @@ std::string gpio_packet_to_string(const gpio::GpioPacket& packet);
 
 struct Pinlist
 {
-    uint8_t pincount;
+    uint8_t                 pincount;
     std::array<uint8_t, 20> pins;
 };
 
@@ -80,13 +80,16 @@ public:
     gpio::GpioPacket make_set_debounce_mode_command(uint8_t controller_id, uint8_t debounce_mode);
     gpio::GpioPacket make_set_analog_resolution_command(uint8_t controller_id, uint8_t adc_bits);
     gpio::GpioPacket make_set_analog_time_constant_command(uint8_t controller_id, float time_constant);
+    gpio::GpioPacket make_set_analog_hysteresis_command(uint8_t controller_id, int32_t hysteresis);
+    gpio::GpioPacket make_set_analog_stabilization_period_command(uint8_t controller_id, float period);
+    gpio::GpioPacket make_set_analog_filter_type_command(uint8_t controller_id, uint8_t filter_type);
     gpio::GpioPacket make_get_value_command(uint8_t controller_id);
     gpio::GpioPacket make_set_value_command(uint8_t controller_id, uint32_t value);
 
 private:
     gpio::GpioPacket _prepare_packet();
 
-    uint32_t _sequence_number() {return _sequence_count++;}
+    uint32_t _sequence_number() { return _sequence_count++; }
 
     uint32_t _sequence_count{1};
 };

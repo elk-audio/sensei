@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Main entry point to SENSEI
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #include <vector>
 #include <fstream>
@@ -33,38 +33,35 @@
 // Global constants
 ////////////////////////////////////////////////////////////////////////////////
 
-#define SENSEI_DEFAULT_N_INPUT_PINS         64
-#define SENSEI_DEFAULT_N_INPUT_PINS_STR     "64"
-#define SENSEI_DEFAULT_N_OUTPUT_PINS        32
-#define SENSEI_DEFAULT_N_OUTPUT_PINS_STR    "32"
+#define SENSEI_DEFAULT_N_SENSORS           64
+#define SENSEI_DEFAULT_N_SENSORS_STR       "64"
 #define SENSEI_DEFAULT_WAIT_PERIOD_MS      10
-#define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR  "10"
-#define SENSEI_DEFAULT_CONFIG_FILENAME      "../../../scratch/sensei_config.json"
-#define SENSEI_DEFAULT_LOG_FILENAME         "/tmp/sensei.log"
-#define SENSEI_DEFAULT_LOG_LEVEL            "info"
+#define SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR "10"
+#define SENSEI_DEFAULT_CONFIG_FILENAME     "../../../scratch/sensei_config.json"
+#define SENSEI_DEFAULT_LOG_FILENAME        "/tmp/sensei.log"
+#define SENSEI_DEFAULT_LOG_LEVEL           "info"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables
 ////////////////////////////////////////////////////////////////////////////////
 
-sensei::EventHandler event_handler;
 static volatile sig_atomic_t main_loop_running = 1;
 static volatile sig_atomic_t config_reload_pending = 0;
 
 std::string log_level = std::string(SENSEI_DEFAULT_LOG_LEVEL);
 std::string log_filename = std::string(SENSEI_DEFAULT_LOG_FILENAME);
-std::chrono::seconds log_flush_interval = std::chrono::seconds(0);
-bool enable_flush_interval = false;
+auto        log_flush_interval = std::chrono::milliseconds(0);
+bool        enable_flush_interval = false;
 
 void print_headline()
 {
-    std::cout << "SENSEI - Copyright 2017-2019 Elk, Stockholm" << std::endl;
+    std::cout << "SENSEI - 2017-2026 Elk Audio AB, Stockholm" << std::endl;
     std::cout << "SENSEI is licensed under the Affero GPL 3.0. Source code is available at github.com/elk-audio" << std::endl;
 }
 
 void print_version_and_build_info()
 {
-    std::cout << "\nVersion "   << SENSEI__VERSION_MAJ << "."
+    std::cout << "\nVersion " << SENSEI__VERSION_MAJ << "."
               << SENSEI__VERSION_MIN << "."
               << SENSEI__VERSION_REV << std::endl;
 
@@ -78,7 +75,7 @@ void print_version_and_build_info()
 
 static void kill_signal_handler(int sig_number)
 {
-    if ( (sig_number == SIGINT) || (sig_number == SIGTERM) )
+    if ((sig_number == SIGINT) || (sig_number == SIGTERM))
     {
         main_loop_running = 0;
     }
@@ -137,11 +134,28 @@ struct SenseiArg : public option::Arg
 
         if (endptr != option.arg && *endptr == 0)
         {
-          return option::ARG_OK;
+            return option::ARG_OK;
         }
         if (msg)
         {
             print_error("Option '", option, "' requires a numeric argument\n");
+        }
+        return option::ARG_ILLEGAL;
+    }
+
+    static option::ArgStatus Float(const option::Option& option, bool msg)
+    {
+        char* endptr = nullptr;
+        if (option.arg != 0 && strtof(option.arg, &endptr)) {}
+
+        if (endptr != option.arg && *endptr == 0)
+        {
+            return option::ARG_OK;
+        }
+
+        if (msg)
+        {
+            print_error("Option '", option, "' requires a floating point argument\n");
         }
         return option::ARG_ILLEGAL;
     }
@@ -152,103 +166,83 @@ struct SenseiArg : public option::Arg
 ////////////////////////////////////////////////////////////////////////////////
 
 enum OptionIndex
-{ 
+{
     UNKNOWN,
     HELP,
     VERSION,
-    N_INPUT_PINS,
-    N_OUTPUT_PINS,
+    N_SENSORS,
     SLEEP_PERIOD,
     CONFIG_FILENAME,
     LOG_FILENAME,
     LOG_LEVEL,
-    LOG_FLUSH_INTERVAL
+    LOG_FLUSH_INTERVAL,
+    SYNCHRONOUS_MODE
 };
 
 const option::Descriptor usage[] =
-{
-    {
-        UNKNOWN,
-        0,
-        "",
-        "",
-        SenseiArg::Unknown,
-        "\nUSAGE: sensei [options]\n\nOptions:"
-    },
-    {
-        HELP,
-        0,
-        "h?",
-        "help",
-        SenseiArg::None,
-        "\t\t-h --help \tPrint usage and exit."
-    },
-    {
-        VERSION,
-        0,
-        "v?",
-        "version",
-        SenseiArg::None,
-        "\t\t-v --version \tPrint version and build info and exit."
-    },
-    {
-        N_INPUT_PINS,
-        0,
-        "i",
-        "input-pins",
-        SenseiArg::Numeric,
-        "\t\t-i <value>, --input-pins=<value> \tSpecify number of configurable pins [default=" SENSEI_DEFAULT_N_INPUT_PINS_STR "]."
-    },
-    {
-        N_OUTPUT_PINS,
-        0,
-        "o",
-        "output-pins",
-        SenseiArg::Numeric,
-        "\t\t-o <value>, --output-pins=<value> \tSpecify number of digital output pins [default=" SENSEI_DEFAULT_N_OUTPUT_PINS_STR "]."
-    },
-    {
-        SLEEP_PERIOD,
-        0,
-        "s",
-        "sleep",
-        SenseiArg::Numeric,
-        "\t\t-s <value>, --sleep=<value> \tSpecify event loop sleep period in ms [default=" SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR "]."
-    },
-    {
-        CONFIG_FILENAME,
-        0,
-        "f",
-        "file",
-        SenseiArg::NonEmpty,
-        "\t\t-f <file>, --file=<file> \tSpecify JSON configuration file [default=" SENSEI_DEFAULT_CONFIG_FILENAME "]."
-    },
-    {
-        LOG_FILENAME,
-        0,
-        "L",
-        "log-file",
-        SenseiArg::NonEmpty,
-        "\t\t-L <filename>, --log-file=<filename> \tSpecify logging file destination [default=" SENSEI_DEFAULT_LOG_FILENAME "]."
-    },
-    {
-        LOG_LEVEL,
-        0,
-        "l",
-        "log-level",
-        SenseiArg::NonEmpty,
-        "\t\t-l <level>, --log-level=<level> \tSpecify minimum logging level, from ('debug', 'info', 'warning', 'error')"
-    },
-    {
-        LOG_FLUSH_INTERVAL,
-        0,
-        "",
-        "log-flush-interval",
-        SenseiArg::Numeric,
-        "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."
-    },
+        {
+                {UNKNOWN,
+                 0,
+                 "",
+                 "",
+                 SenseiArg::Unknown,
+                 "\nUSAGE: sensei [options]\n\nOptions:"},
+                {HELP,
+                 0,
+                 "h?",
+                 "help",
+                 SenseiArg::None,
+                 "\t\t-h --help \tPrint usage and exit."},
+                {VERSION,
+                 0,
+                 "v?",
+                 "version",
+                 SenseiArg::None,
+                 "\t\t-v --version \tPrint version and build info and exit."},
+                {N_SENSORS,
+                 0,
+                 "i",
+                 "sensors",
+                 SenseiArg::Numeric,
+                 "\t\t-i <value>, --sensors=<value> \tSpecify number of configurable sensors [default=" SENSEI_DEFAULT_N_SENSORS_STR "]."},
+                {SLEEP_PERIOD,
+                 0,
+                 "s",
+                 "sleep",
+                 SenseiArg::Numeric,
+                 "\t\t-s <value>, --sleep=<value> \tSpecify event loop sleep period in ms [default=" SENSEI_DEFAULT_SLEEP_PERIOD_MS_STR "]."},
+                {CONFIG_FILENAME,
+                 0,
+                 "f",
+                 "file",
+                 SenseiArg::NonEmpty,
+                 "\t\t-f <file>, --file=<file> \tSpecify JSON configuration file [default=" SENSEI_DEFAULT_CONFIG_FILENAME "]."},
+                {LOG_FILENAME,
+                 0,
+                 "L",
+                 "log-file",
+                 SenseiArg::NonEmpty,
+                 "\t\t-L <filename>, --log-file=<filename> \tSpecify logging file destination [default=" SENSEI_DEFAULT_LOG_FILENAME "]."},
+                {LOG_LEVEL,
+                 0,
+                 "l",
+                 "log-level",
+                 SenseiArg::NonEmpty,
+                 "\t\t-l <level>, --log-level=<level> \tSpecify minimum logging level, from ('debug', 'info', 'warning', 'error')"},
+                {LOG_FLUSH_INTERVAL,
+                 0,
+                 "",
+                 "log-flush-interval",
+                 SenseiArg::Float,
+                 "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."},
+                {SYNCHRONOUS_MODE,
+                 0,
+                 "x",
+                 "synchronous",
+                 SenseiArg::None,
+                 "\t\t-x --synchronous \tSynchronous Mode - Events are handled directly without queueing."},
 
-    { 0, 0, 0, 0, 0, 0}
+                {0, 0, 0, 0, 0, 0}
 };
 
 int main(int argc, char* argv[])
@@ -265,10 +259,10 @@ int main(int argc, char* argv[])
         argv++;
     }
 
-    option::Stats cl_stats(usage, argc, argv);
+    option::Stats               cl_stats(usage, argc, argv);
     std::vector<option::Option> cl_options(cl_stats.options_max);
     std::vector<option::Option> cl_buffer(cl_stats.buffer_max);
-    option::Parser cl_parser(usage, argc, argv, &cl_options[0], &cl_buffer[0]);
+    option::Parser              cl_parser(usage, argc, argv, &cl_options[0], &cl_buffer[0]);
 
     if (cl_parser.error())
     {
@@ -292,23 +286,23 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    int n_input_pins = SENSEI_DEFAULT_N_INPUT_PINS;
-    int n_output_pins = SENSEI_DEFAULT_N_OUTPUT_PINS;
+    int                       n_sensors = SENSEI_DEFAULT_N_SENSORS;
     std::chrono::milliseconds wait_period_ms{SENSEI_DEFAULT_WAIT_PERIOD_MS};
-    std::string config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
-    for (int i=0; i<cl_parser.optionsCount(); i++)
+    std::string               config_filename = std::string(SENSEI_DEFAULT_CONFIG_FILENAME);
+    sensei::ThreadingMode     threading_mode = sensei::ThreadingMode::ASYNCHRONOUS;
+    for (int i = 0; i < cl_parser.optionsCount(); i++)
     {
         option::Option& opt = cl_buffer[i];
-        switch(opt.index())
+        switch (opt.index())
         {
-        case HELP:
-        case UNKNOWN:
-        case VERSION:
-            // should be handled before arriving here
-            assert(false);
-            break;
+            case HELP:
+            case UNKNOWN:
+            case VERSION:
+                // should be handled before arriving here
+                assert(false);
+                break;
 
-        case N_INPUT_PINS:
+            case N_SENSORS:
             {
                 int parsed_int = atoi(opt.arg);
                 // horrible, but that's how atoi works and std::stoi needs exceptions
@@ -317,24 +311,11 @@ int main(int argc, char* argv[])
                     SenseiArg::print_error("Option '", opt, "' invalid number\n");
                     return 1;
                 }
-                n_input_pins = parsed_int;
+                n_sensors = parsed_int;
             }
             break;
 
-        case N_OUTPUT_PINS:
-            {
-                int parsed_int = atoi(opt.arg);
-                // horrible, but that's how atoi works and std::stoi needs exceptions
-                if (parsed_int == 0)
-                {
-                    SenseiArg::print_error("Option '", opt, "' invalid number\n");
-                    return 1;
-                }
-                n_output_pins = parsed_int;
-            }
-            break;
-
-        case SLEEP_PERIOD:
+            case SLEEP_PERIOD:
             {
                 int parsed_int = atoi(opt.arg);
                 // horrible, but that's how atoi works and std::stoi needs exceptions
@@ -347,32 +328,36 @@ int main(int argc, char* argv[])
             }
             break;
 
-        case CONFIG_FILENAME:
-            config_filename.assign(opt.arg);
-            break;
+            case CONFIG_FILENAME:
+                config_filename.assign(opt.arg);
+                break;
 
-        case LOG_FILENAME:
-            log_filename.assign(opt.arg);
-            break;
+            case LOG_FILENAME:
+                log_filename.assign(opt.arg);
+                break;
 
-        case LOG_LEVEL:
-            log_level.assign(opt.arg);
-            break;
+            case LOG_LEVEL:
+                log_level.assign(opt.arg);
+                break;
 
-        case LOG_FLUSH_INTERVAL:
-            log_flush_interval = std::chrono::seconds(std::strtol(opt.arg, nullptr, 0));
-            enable_flush_interval = true;
-            break;
+            case LOG_FLUSH_INTERVAL:
+                log_flush_interval = std::chrono::milliseconds(static_cast<long>(std::strtof(opt.arg, nullptr) * 1000.0));
+                enable_flush_interval = true;
+                break;
 
-        default:
-            SenseiArg::print_error("Unhandled option '", opt, "' \n");
-            break;
+            case SYNCHRONOUS_MODE:
+                threading_mode = sensei::ThreadingMode::SYNCHRONOUS;
+                break;
+
+            default:
+                SenseiArg::print_error("Unhandled option '", opt, "' \n");
+                break;
         }
     }
 
     // Post-config checks
     std::ifstream config_file(config_filename.c_str());
-    if (! config_file.good())
+    if (!config_file.good())
     {
         std::cerr << "Failed to open config file " << config_filename << std::endl;
         config_file.close();
@@ -396,14 +381,14 @@ int main(int argc, char* argv[])
     signal(SIGTERM, kill_signal_handler);
     signal(SIGUSR1, user_signal_handler);
 
-    if(!event_handler.init(n_input_pins, n_output_pins, config_filename))
+    sensei::EventHandler event_handler;
+    if (!event_handler.init(n_sensors, config_filename, threading_mode))
     {
         std::cerr << "Failed to initialize, check logs for details. Exiting..."
                   << std::endl;
         event_handler.deinit();
         return 1;
     }
-
 
     SENSEI_GET_LOGGER_WITH_MODULE_NAME("main");
 

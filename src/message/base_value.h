@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Value messages definition
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * Base Value class and macros for quick subclasses definition.
  * This is intended for internal module use, if you need to define special command sub-classes do it so in
@@ -55,11 +55,11 @@ public:
     }
 
 protected:
-    Value(const int sensor_index,
+    Value(const int       sensor_index,
           const ValueType type,
-          const uint32_t timestamp=0) :
-        BaseMessage(sensor_index, timestamp, MessageType::VALUE),
-        _type(type)
+          const uint32_t  timestamp = 0)
+        : BaseMessage(sensor_index, timestamp, MessageType::VALUE),
+          _type(type)
     {
     }
 
@@ -67,28 +67,27 @@ protected:
 };
 
 #define SENSEI_DECLARE_VALUE(ClassName, value_type, InternalType, representation_prefix) \
-class ClassName : public Value \
-{ \
-public: \
-    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() const override \
-    {\
-        return std::string(representation_prefix);\
-    }\
-    InternalType value() const\
-    {\
-        return _value;\
-    }\
-private:\
-    ClassName(const int sensor_index,\
-              const InternalType value,\
-              const uint32_t timestamp=0) :\
-        Value(sensor_index, value_type, timestamp),\
-        _value(value)\
-    {\
-    }\
-    InternalType _value;\
-}
+    class ClassName : public Value \
+    { \
+    public: \
+        SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+        std::string representation() const override \
+        { \
+            return std::string(representation_prefix); \
+        } \
+        InternalType value() const \
+        { \
+            return _value; \
+        } \
+        ClassName(const int          sensor_index, \
+                  const InternalType value, \
+                  const uint32_t     timestamp = 0) \
+            : Value(sensor_index, value_type, timestamp), \
+              _value(value) \
+        { \
+        } \
+        InternalType _value; \
+    }
 
 }; // namespace sensei
 

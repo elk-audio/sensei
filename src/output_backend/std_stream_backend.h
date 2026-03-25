@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Output backend using standard output/error streams
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_STD_STREAM_BACKEND_H
 #define SENSEI_STD_STREAM_BACKEND_H
@@ -28,12 +28,12 @@ namespace output_backend {
 class StandardStreamBackend : public OutputBackend
 {
 public:
-    StandardStreamBackend(const int max_n_input_pins=64);
+    StandardStreamBackend(const int max_n_sensors = 64);
 
     ~StandardStreamBackend()
     {}
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void send(const OutputValue* transformed_value, const Value* raw_input_value) override;
 };

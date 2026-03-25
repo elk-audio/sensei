@@ -1,9 +1,21 @@
 [submodule "third-party/spdlog"]
 	path = third-party/spdlog
-	url = git://github.com/gabime/spdlog.git
+	url = https://github.com/gabime/spdlog.git
 [submodule "test/gtest"]
 	path = test/gtest
 	url = https://github.com/google/googletest.git
 [submodule "elk-gpio-protocol"]
 	path = elk-gpio-protocol
-	url = https://github.com/elk-audio/elk-gpio-protocol.git
+	url = ../gpio-protocol.git
+[submodule "third-party/vcpkg"]
+	path = third-party/vcpkg
+	url = https://github.com/Microsoft/vcpkg.git
+[submodule "elk-warning-suppressor"]
+	path = elk-warning-suppressor
+	url = ../elk-warning-suppressor.git
+[submodule "sensei-grpc-api"]
+	path = sensei-grpc-api
+	url = ../sensei-grpc-api.git
+[submodule "third-party/rapidjson"]
+	path = third-party/rapidjson
+	url = https://github.com/miloyip/rapidjson.git

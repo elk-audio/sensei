@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief A templated uni-directional queue with build in condition_variable
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_SYNCHRONIZED_QUEUE_H
 #define SENSEI_SYNCHRONIZED_QUEUE_H
@@ -23,8 +23,10 @@
 #include <condition_variable>
 #include <chrono>
 #include "locked_queue.h"
+#include "cassert"
 
-template <class T> class SynchronizedQueue
+template<class T>
+class SynchronizedQueue
 {
 public:
     void push(T const& message)
@@ -36,6 +38,7 @@ public:
 
     void push(T&& message)
     {
+        assert(message);
         std::lock_guard<std::mutex> lock(_queue_mutex);
         _queue.push_front(std::move(message));
         _notifier.notify_one();
@@ -44,7 +47,7 @@ public:
     T pop()
     {
         std::lock_guard<std::mutex> lock(_queue_mutex);
-        T message = std::move(_queue.back());
+        T                           message = std::move(_queue.back());
         _queue.pop_back();
         return std::move(message);
     }
@@ -62,6 +65,7 @@ public:
     {
         return _queue.empty();
     }
+
 private:
     std::deque<T>           _queue;
     std::mutex              _queue_mutex;

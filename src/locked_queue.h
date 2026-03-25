@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief A simple locked queue implementation
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_LOCKEDQUEUE_H
 #define SENSEI_LOCKEDQUEUE_H
@@ -24,10 +24,10 @@
 #include <memory>
 #include <mutex>
 
-template <class T> class LockedQueue
+template<class T>
+class LockedQueue
 {
 public:
-
     void push(T const& message)
     {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -43,7 +43,7 @@ public:
     T pop()
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        T message = std::move(_queue.back());
+        T                           message = std::move(_queue.back());
         _queue.pop_back();
         return std::move(message);
     }
@@ -52,6 +52,7 @@ public:
     {
         return _queue.empty();
     }
+
 private:
     std::deque<T> _queue;
     std::mutex    _mutex;

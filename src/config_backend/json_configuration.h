@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,14 +15,19 @@
 
 /**
  * @brief Configuration Class for importing configuration from a JSON file
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_JSONCONFIGURATION_H
 #define SENSEI_JSONCONFIGURATION_H
 
+#include "elk-warning-suppressor/warning_suppressor.hpp"
 #include "message/message_factory.h"
 #include "base_configuration.h"
-#include <json/json.h>
+
+ELK_PUSH_WARNING
+ELK_DISABLE_NAN_INFINITY_DISABLED
+#include "rapidjson/document.h"
+ELK_POP_WARNING
 
 namespace sensei {
 namespace config {
@@ -30,8 +35,9 @@ namespace config {
 class JsonConfiguration : public BaseConfiguration
 {
 public:
-    JsonConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& file) :
-            BaseConfiguration(queue, file)
+    JsonConfiguration(MessageHandler* handler, const std::string& file,
+                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : BaseConfiguration(handler, file, threading_mode)
     {}
 
     ~JsonConfiguration() = default;
@@ -39,15 +45,17 @@ public:
     /*
      * Open file, parse json and put commands in queue
      */
-    ConfigStatus read(HwFrontendConfig& hw_config) override;
+    ConfigStatus read(Config& config) override;
+
+    /*
+     * Parse json from string and put commands in queue 
+     */
+    ConfigStatus read_from_string(Config& config, const char* json_string);
 
 private:
-    ConfigStatus handle_hw_config(const Json::Value& frontend, HwFrontendConfig& config);
-    ConfigStatus handle_sensor(const Json::Value& sensor);
-    ConfigStatus handle_sensor_hw(const Json::Value& hardware, int sensor_id);
-    ConfigStatus handle_backend(const Json::Value& backend);
-    ConfigStatus handle_osc_backend(const Json::Value& backend, int id);
-    ConfigStatus read_pins(const Json::Value& pins, int sensor_id);
+    void handle_sensor(const rapidjson::Value& sensor);
+    void handle_sensor_hw_config(const rapidjson::Value& hardware, int sensor_id);
+    void handle_backend_config(const rapidjson::Value& backend, BackendConfig& backend_config);
 
     MessageFactory _message_factory;
 };

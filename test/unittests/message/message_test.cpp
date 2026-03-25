@@ -68,84 +68,82 @@ TEST(MessagesTest, test_external_command_creation)
         ASSERT_TRUE(cmd_msg->destination() & CommandDestination::HARDWARE_FRONTEND);
 
         CommandType cmd_type = cmd_msg->type();
-        switch(cmd_type)
+        switch (cmd_type)
         {
-        case CommandType::SET_ENABLED:
+            case CommandType::SET_ENABLED:
             {
-                auto typed_cmd = static_cast<SetEnabledCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetEnabledCommand*>(cmd_msg);
                 ASSERT_FALSE(typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_SENSOR_TYPE:
+            case CommandType::SET_SENSOR_TYPE:
             {
-                auto typed_cmd = static_cast<SetSensorTypeCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetSensorTypeCommand*>(cmd_msg);
                 ASSERT_EQ(SensorType::ANALOG_INPUT, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_SENDING_MODE:
+            case CommandType::SET_SENDING_MODE:
             {
-                auto typed_cmd = static_cast<SetSendingModeCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetSendingModeCommand*>(cmd_msg);
                 ASSERT_EQ(SendingMode::ON_VALUE_CHANGED, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_SENDING_DELTA_TICKS:
+            case CommandType::SET_SENDING_DELTA_TICKS:
             {
-                auto typed_cmd = static_cast<SetSendingDeltaTicksCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetSendingDeltaTicksCommand*>(cmd_msg);
                 ASSERT_EQ(10, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_ADC_BIT_RESOLUTION:
+            case CommandType::SET_ADC_BIT_RESOLUTION:
             {
-                auto typed_cmd = static_cast<SetADCBitResolutionCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetADCBitResolutionCommand*>(cmd_msg);
                 ASSERT_EQ(12, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
+            case CommandType::SET_ADC_FILTER_TIME_CONSTANT:
             {
-                auto typed_cmd = static_cast<SetADCFitlerTimeConstantCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetADCFilterTimeConstantCommand*>(cmd_msg);
                 ASSERT_EQ(0.020f, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_SLIDER_THRESHOLD:
+            case CommandType::SET_SLIDER_THRESHOLD:
             {
-                auto typed_cmd = static_cast<SetSliderThresholdCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetSliderThresholdCommand*>(cmd_msg);
                 ASSERT_EQ(9, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_FAST_MODE:
+            case CommandType::SET_FAST_MODE:
             {
                 auto typed_cmd = static_cast<SetFastModeCommand*>(cmd_msg);
                 ASSERT_EQ(true, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_DIGITAL_OUTPUT_VALUE:
+            case CommandType::SET_DIGITAL_OUTPUT_VALUE:
             {
-                auto typed_cmd = static_cast<   SetDigitalOutputValueCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetDigitalOutputValueCommand*>(cmd_msg);
                 ASSERT_EQ(true, typed_cmd->data());
             };
             break;
 
-        case CommandType::ENABLE_SENDING_PACKETS:
+            case CommandType::ENABLE_SENDING_PACKETS:
             {
-                auto typed_cmd = static_cast<EnableSendingPacketsCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<EnableSendingPacketsCommand*>(cmd_msg);
                 ASSERT_EQ(true, typed_cmd->data());
             };
             break;
 
-        default:
-            FAIL();
+            default:
+                FAIL();
         }
-
     }
-
 }
 
 TEST(MessagesTest, test_internal_command_creation)
@@ -167,37 +165,35 @@ TEST(MessagesTest, test_internal_command_creation)
         ASSERT_TRUE(cmd_msg->destination() & CommandDestination::MAPPING_PROCESSOR);
 
         CommandType cmd_type = cmd_msg->type();
-        switch(cmd_type)
+        switch (cmd_type)
         {
 
-        case CommandType::SET_INVERT_ENABLED:
+            case CommandType::SET_INVERT_ENABLED:
             {
-                auto typed_cmd = static_cast<SetInvertEnabledCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetInvertEnabledCommand*>(cmd_msg);
                 ASSERT_TRUE(typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_INPUT_RANGE:
+            case CommandType::SET_INPUT_RANGE:
             {
-                auto typed_cmd = static_cast<SetInputRangeCommand*>(cmd_msg);
+                auto  typed_cmd = static_cast<SetInputRangeCommand*>(cmd_msg);
                 Range expected = {20, 200};
                 ASSERT_EQ(expected, typed_cmd->data());
             };
             break;
 
-         case CommandType::SET_SEND_TIMESTAMP_ENABLED:
+            case CommandType::SET_SEND_TIMESTAMP_ENABLED:
             {
                 auto typed_cmd = static_cast<SetSendTimestampEnabledCommand*>(cmd_msg);
                 ASSERT_TRUE(typed_cmd->data());
             };
             break;
 
-        default:
-            FAIL();
+            default:
+                FAIL();
         }
-
     }
-
 }
 
 TEST(MessagesTest, test_output_backend_command_creation)
@@ -224,70 +220,69 @@ TEST(MessagesTest, test_output_backend_command_creation)
         ASSERT_TRUE(cmd_msg->destination() & CommandDestination::OUTPUT_BACKEND);
 
         CommandType cmd_type = cmd_msg->type();
-        switch(cmd_type)
+        switch (cmd_type)
         {
 
-        case CommandType::SET_BACKEND_TYPE:
+            case CommandType::SET_BACKEND_TYPE:
             {
-                auto typed_cmd = static_cast<SetBackendTypeCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetBackendTypeCommand*>(cmd_msg);
                 ASSERT_EQ(BackendType::OSC, typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_SENSOR_NAME:
+            case CommandType::SET_SENSOR_NAME:
             {
-                auto typed_cmd = static_cast<SetPinNameCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetPinNameCommand*>(cmd_msg);
                 ASSERT_EQ(std::string("pippo"), typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_SEND_OUTPUT_ENABLED:
+            case CommandType::SET_SEND_OUTPUT_ENABLED:
             {
-                auto typed_cmd = static_cast<SetSendOutputEnabledCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetSendOutputEnabledCommand*>(cmd_msg);
                 ASSERT_FALSE(typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_SEND_RAW_INPUT_ENABLED:
+            case CommandType::SET_SEND_RAW_INPUT_ENABLED:
             {
-                auto typed_cmd = static_cast<SetSendRawInputEnabledCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetSendRawInputEnabledCommand*>(cmd_msg);
                 ASSERT_TRUE(typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_OSC_OUTPUT_BASE_PATH:
+            case CommandType::SET_OSC_OUTPUT_BASE_PATH:
             {
-                auto typed_cmd = static_cast<SetOSCOutputBasePathCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetOSCOutputBasePathCommand*>(cmd_msg);
                 ASSERT_EQ("/sensors", typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_OSC_OUTPUT_RAW_PATH:
+            case CommandType::SET_OSC_OUTPUT_RAW_PATH:
             {
-                auto typed_cmd = static_cast<SetOSCOutputRawPathCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetOSCOutputRawPathCommand*>(cmd_msg);
                 ASSERT_EQ("/raw_input", typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_OSC_OUTPUT_HOST:
+            case CommandType::SET_OSC_OUTPUT_HOST:
             {
-                auto typed_cmd = static_cast<SetOSCOutputHostCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetOSCOutputHostCommand*>(cmd_msg);
                 ASSERT_EQ("192.168.1.100", typed_cmd->data());
             };
             break;
 
-        case CommandType::SET_OSC_OUTPUT_PORT:
+            case CommandType::SET_OSC_OUTPUT_PORT:
             {
-                auto typed_cmd = static_cast<SetOSCOutputPortCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetOSCOutputPortCommand*>(cmd_msg);
                 ASSERT_EQ(9999, typed_cmd->data());
             };
             break;
 
-        default:
-            FAIL();
+            default:
+                FAIL();
         }
     }
-
 }
 
 TEST(MessagesTest, test_user_frontend_message_creation)
@@ -297,6 +292,8 @@ TEST(MessagesTest, test_user_frontend_message_creation)
     std::vector<std::unique_ptr<BaseMessage>> msg_queue;
 
     msg_queue.push_back(factory.make_set_osc_input_port_command(0, 9999));
+    msg_queue.push_back(factory.make_set_grpc_listen_address_command(0, "0.0.0.0"));
+    msg_queue.push_back(factory.make_set_grpc_listen_port_command(0, 50051));
 
     for (auto const& msg : msg_queue)
     {
@@ -306,20 +303,33 @@ TEST(MessagesTest, test_user_frontend_message_creation)
         ASSERT_TRUE(cmd_msg->destination() & CommandDestination::USER_FRONTEND);
 
         CommandType cmd_type = cmd_msg->type();
-        switch(cmd_type)
+        switch (cmd_type)
         {
-        case CommandType::SET_OSC_INPUT_PORT:
+            case CommandType::SET_OSC_INPUT_PORT:
             {
-                auto typed_cmd = static_cast<SetOSCInputPortCommand *>(cmd_msg);
+                auto typed_cmd = static_cast<SetOSCInputPortCommand*>(cmd_msg);
                 ASSERT_EQ(9999, typed_cmd->data());
             };
             break;
 
-        default:
-            FAIL();
+            case CommandType::SET_GRPC_LISTEN_ADDRESS:
+            {
+                auto typed_cmd = static_cast<SetGrpcListenAddressCommand*>(cmd_msg);
+                ASSERT_EQ("0.0.0.0", typed_cmd->data());
+            };
+            break;
+
+            case CommandType::SET_GRPC_LISTEN_PORT:
+            {
+                auto typed_cmd = static_cast<SetGrpcListenPortCommand*>(cmd_msg);
+                ASSERT_EQ(50051, typed_cmd->data());
+            };
+            break;
+
+            default:
+                FAIL();
         }
     }
-
 }
 
 
@@ -329,9 +339,9 @@ TEST(MessagesTest, test_error_creation)
 
     auto tmp_msg = factory.make_bad_crc_error(0);
     auto bad_crc_msg = static_cast<BadCrcError*>(tmp_msg.get());
-    ASSERT_EQ(ErrorType::BAD_CRC, bad_crc_msg->type() );
+    ASSERT_EQ(ErrorType::BAD_CRC, bad_crc_msg->type());
 
     tmp_msg = factory.make_too_many_timeouts_error(0);
     auto timeouts_msg = static_cast<TooManyTimeoutsError*>(tmp_msg.get());
-    ASSERT_EQ(ErrorType::TOO_MANY_TIMEOUTS, timeouts_msg->type() );
+    ASSERT_EQ(ErrorType::TOO_MANY_TIMEOUTS, timeouts_msg->type());
 }

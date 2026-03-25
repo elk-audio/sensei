@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief OSC runtime user frontend
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * Starts a thread listening for OSC commands at the given port
  * (configurable with proper command sent with apply_command.
@@ -37,15 +37,15 @@ namespace user_frontend {
 class OSCUserFrontend : public UserFrontend
 {
 public:
-    OSCUserFrontend(SynchronizedQueue<std::unique_ptr<BaseMessage>> *queue, const int max_n_input_pins,
-                        const int max_n_digital_out_pins);
+    OSCUserFrontend(MessageHandler* handler, const int max_n_sensors,
+                    ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS);
 
     ~OSCUserFrontend()
     {
         _stop_server();
     }
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
 private:
     void _start_server();
@@ -53,7 +53,7 @@ private:
     void _stop_server();
 
     lo_server_thread _osc_server;
-    int _server_port;
+    int              _server_port;
 };
 
 } // namespace user_frontend

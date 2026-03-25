@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Class for keeping track of sent messages and their respective acks.
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * A helper class to keep track of sent messages and acknowledgements to identify
  * message timeouts.
@@ -76,17 +76,16 @@ public:
 private:
     void update_time();
 
-    std::chrono::steady_clock::duration    _timeout;
-    std::chrono::steady_clock::time_point  _current_time;
-    std::chrono::steady_clock::time_point  _send_time;
+    std::chrono::steady_clock::duration   _timeout;
+    std::chrono::steady_clock::time_point _current_time;
+    std::chrono::steady_clock::time_point _send_time;
 
-    int                                    _max_retries;
-    int                                    _retries;
-    std::unique_ptr<Command>               _message_in_transit;
+    int                      _max_retries;
+    int                      _retries;
+    std::unique_ptr<Command> _message_in_transit;
 
-    uint64_t    _identifier;
-    std::mutex  _mutex;
-
+    uint64_t   _identifier;
+    std::mutex _mutex;
 };
 
 } // namespace hw_frontend

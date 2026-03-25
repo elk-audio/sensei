@@ -4,14 +4,14 @@
 class TestContainer
 {
 public:
-    int a;
+    int   a;
     float b;
 };
 
 TEST(LockedQueueTest, test_ordering_with_unique_pointers)
 {
     LockedQueue<std::unique_ptr<int>> module_under_test;
-    std::unique_ptr<int> a(new int);
+    std::unique_ptr<int>              a(new int);
     *a = 1;
     std::unique_ptr<int> b(new int);
     *b = 2;
@@ -34,7 +34,7 @@ TEST(LockedQueueTest, test_ordering_with_unique_pointers)
 TEST(LockedQueueTest, test_ordering_with_object)
 {
     LockedQueue<TestContainer> module_under_test;
-    TestContainer a;
+    TestContainer              a;
     a.a = 2;
     TestContainer b;
     b.a = 4;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Class which is responsible for creation and handling of all events
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 #ifndef SENSEI_EVENT_HANDLER_H
 #define SENSEI_EVENT_HANDLER_H
@@ -32,44 +32,58 @@
 #include "output_backend/output_backend.h"
 #include "config_backend/base_configuration.h"
 #include "user_frontend/user_frontend.h"
+#include "handler_interface.h"
 
 namespace sensei {
 
-class EventHandler
+class EventHandler : public MessageHandler
 {
 public:
     EventHandler() = default;
 
-    ~EventHandler() = default;
+    virtual ~EventHandler() = default;
 
-    bool init(int max_n_input_pins, int max_n_digital_out_pins, const std::string& config_file);
+    bool init(int max_n_sensors, const std::string& config_file, ThreadingMode threading_mode);
 
     void handle_events(std::chrono::milliseconds wait_period);
 
     void deinit();
 
+    void process_event(const BaseMessage* event) override;
+
+    void post_event(std::unique_ptr<BaseMessage> event) override;
+
+    SynchronizedQueue<std::unique_ptr<Command>>* outgoing_queue() override;
+
     void reload_config()
     {
-        config::HwFrontendConfig hwc;
-        _config_backend->read(hwc);
+        config::Config config;
+        _config_backend->read(config);
     }
 
 private:
-    void _handle_value(std::unique_ptr<Value> value);
-    void _handle_command(std::unique_ptr<Command> cmd);
-    void _handle_error(std::unique_ptr<Error> error);
+    void _handle_event(BaseMessage* event);
+    void _handle_value(Value* value);
+
+    void _handle_hw_frontend_message(std::unique_ptr<BaseMessage> cmd);
+
+    void _handle_command(Command* cmd);
+    void _handle_error(Error* error);
+
+    std::mutex    _sync_mutex;
+    ThreadingMode _mode;
 
     // Inter-modules communication queues
-    SynchronizedQueue<std::unique_ptr<Command>> _to_frontend_queue;
+    SynchronizedQueue<std::unique_ptr<Command>>     _to_frontend_queue;
     SynchronizedQueue<std::unique_ptr<BaseMessage>> _event_queue;
 
     // Sub-components instances
-    std::unique_ptr<hw_frontend::BaseHwFrontend> _hw_frontend;
-    std::unique_ptr<hw_backend::BaseHwBackend> _hw_backend;
-    std::unique_ptr<mapping::MappingProcessor> _processor;
+    std::unique_ptr<hw_frontend::BaseHwFrontend>   _hw_frontend;
+    std::unique_ptr<hw_backend::BaseHwBackend>     _hw_backend;
+    std::unique_ptr<mapping::MappingProcessor>     _processor;
     std::unique_ptr<output_backend::OutputBackend> _output_backend;
-    std::unique_ptr<config::BaseConfiguration> _config_backend;
-    std::unique_ptr<user_frontend::UserFrontend> _user_frontend;
+    std::unique_ptr<config::BaseConfiguration>     _config_backend;
+    std::unique_ptr<user_frontend::UserFrontend>   _user_frontend;
 };
 
 } // namespace sensei

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -30,13 +30,15 @@
  * spdlog supports ostream style too, but that doesn't work with
  * SENSEI_DISABLE_LOGGING unfortunately
  *
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  */
 
 #ifndef LOGGING_H
 #define LOGGING_H
 
 #include <string>
+
+#include "elk-warning-suppressor/warning_suppressor.hpp"
 
 /* Prevent name collisions with Xenomai that for some inexplicable reason
  * defines 'debug' as a macro */
@@ -58,13 +60,16 @@ enum SENSEI_LOG_ERROR_CODE
 
 /* log macros */
 #ifndef SENSEI_DISABLE_LOGGING
+ELK_PUSH_WARNING
+ELK_DISABLE_NAN_INFINITY_DISABLED
 #include "spdlog/spdlog.h"
+ELK_POP_WARNING
 
 /* Add file and line numbers to debug prints, disabled by default */
 //#define SENSEI_ENABLE_DEBUG_FILE_AND_LINE_NUM
 
 /* Use this macro  at the top of a source file to declare a local logger */
-#define SENSEI_GET_LOGGER_WITH_MODULE_NAME(prefix) constexpr char local_log_prefix[] = "[" prefix "] " ;
+#define SENSEI_GET_LOGGER_WITH_MODULE_NAME(prefix) constexpr char local_log_prefix[] = "[" prefix "] ";
 
 #define SENSEI_GET_LOGGER constexpr char local_log_prefix[] = "";
 
@@ -76,15 +81,16 @@ enum SENSEI_LOG_ERROR_CODE
  * -DDISABLE_MACROS unfortunately
  */
 #ifdef SENSEI_ENABLE_DEBUG_FILE_AND_LINE_NUM
-#define SENSEI_LOG_DEBUG(msg, ...) spdlog_instance->debug("{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__ , __LINE__)
+#define SENSEI_LOG_DEBUG(msg, ...) spdlog_instance->debug("{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__, __LINE__)
 #else
-#define SENSEI_LOG_DEBUG(msg, ...)         elk::Logger::logger_instance->debug("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_DEBUG(msg, ...) elk::Logger::logger_instance->debug("{}" msg, local_log_prefix, ##__VA_ARGS__)
 #endif
-#define SENSEI_LOG_INFO(msg, ...)          elk::Logger::logger_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_WARNING(msg, ...)       elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_ERROR(msg, ...)         elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__)
-#define SENSEI_LOG_CRITICAL(msg, ...)      elk::Logger::logger_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_INFO(msg, ...)     elk::Logger::logger_instance->info("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_WARNING(msg, ...)  elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_ERROR(msg, ...)    elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__)
+#define SENSEI_LOG_CRITICAL(msg, ...) elk::Logger::logger_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__)
 
+// clang-format off
 #ifdef SENSEI_ENABLE_DEBUG_FILE_AND_LINE_NUM
 #define SENSEI_LOG_DEBUG_IF(condition, msg, ...) if (condition) { elk::Logger::logger_instance->debug_if(condition, "{}" msg " - [@{} #{}]", ##__VA_ARGS__, __FILE__ , __LINE__); }
 #else
@@ -94,6 +100,7 @@ enum SENSEI_LOG_ERROR_CODE
 #define SENSEI_LOG_WARNING_IF(condition, msg, ...)  if (condition) { elk::Logger::logger_instance->warn("{}" msg, local_log_prefix, ##__VA_ARGS__); }
 #define SENSEI_LOG_ERROR_IF(condition, msg, ...)    if (condition) { elk::Logger::logger_instance->error("{}" msg, local_log_prefix, ##__VA_ARGS__); }
 #define SENSEI_LOG_CRITICAL_IF(condition, msg, ...) if (condition) { elk::Logger::logger_instance->critical("{}" msg, local_log_prefix, ##__VA_ARGS__); }
+// clang-format off
 
 /*
  * Call this _before_ instantiating any object that use SENSEI_GET_LOGGER
@@ -132,7 +139,7 @@ public:
                                             const std::string& logger_name,
                                             const std::string& min_log_level,
                                             const bool enable_flush_interval,
-                                            const std::chrono::seconds log_flush_interval);
+                                            const std::chrono::milliseconds log_flush_interval);
 
 
     /**

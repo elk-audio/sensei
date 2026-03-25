@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Base class for errors
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * Base error class and macros for quick subclasses definition.
  * This is intended for internal module use, if you need to define special command sub-classes do it so in
@@ -50,11 +50,11 @@ public:
     }
 
 protected:
-    Error(const int sensor_index,
+    Error(const int       sensor_index,
           const ErrorType type,
-          const uint32_t timestamp = 0) :
-            BaseMessage(sensor_index, timestamp, MessageType::ERROR),
-            _type(type)
+          const uint32_t  timestamp = 0)
+        : BaseMessage(sensor_index, timestamp, MessageType::ERROR),
+          _type(type)
     {
     }
 
@@ -66,45 +66,47 @@ protected:
 //////////////////////////////////////////////////////////////////////////////////
 
 #define SENSEI_DECLARE_VOID_ERROR(ClassName, error_type, representation_prefix) \
-class ClassName : public Error \
-{ \
-public: \
-    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() const override \
-    {\
-        return std::string(representation_prefix);\
-    }\
-private:\
-    ClassName(const int sensor_index,\
-              const uint32_t timestamp=0) :\
-        Error(sensor_index, error_type, timestamp)\
-    {\
-    }\
-}
+    class ClassName : public Error \
+    { \
+    public: \
+        SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+        std::string representation() const override \
+        { \
+            return std::string(representation_prefix); \
+        } \
+\
+    private: \
+        ClassName(const int      sensor_index, \
+                  const uint32_t timestamp = 0) \
+            : Error(sensor_index, error_type, timestamp) \
+        { \
+        } \
+    }
 
 #define SENSEI_DECLARE_ERROR(ClassName, error_type, InternalType, representation_prefix) \
-class ClassName : public Error \
-{ \
-public: \
-    SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
-    std::string representation() const override \
-    {\
-        return std::string(representation_prefix);\
-    }\
-    InternalType data() const\
-    {\
-        return _data;\
-    }\
-private:\
-    ClassName(const int sensor_index,\
-              const InternalType data,\
-              const uint32_t timestamp=0) :\
-        Error(sensor_index, error_type, timestamp),\
-        _data(data)\
-    {\
-    }\
-    InternalType _data;\
-}
+    class ClassName : public Error \
+    { \
+    public: \
+        SENSEI_MESSAGE_CONCRETE_CLASS_PREAMBLE(ClassName) \
+        std::string representation() const override \
+        { \
+            return std::string(representation_prefix); \
+        } \
+        InternalType data() const \
+        { \
+            return _data; \
+        } \
+\
+    private: \
+        ClassName(const int          sensor_index, \
+                  const InternalType data, \
+                  const uint32_t     timestamp = 0) \
+            : Error(sensor_index, error_type, timestamp), \
+              _data(data) \
+        { \
+        } \
+        InternalType _data; \
+    }
 
 }; // namespace sensei
 

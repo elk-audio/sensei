@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,13 +15,15 @@
 
 /**
  * @brief Classes for remapping raw sensor data into output range.
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * The classes here store all the configuration regarding a single sensor as well.
  * They are only used as components in MappingProcessor
  */
 #ifndef SENSEI_SENSOR_MAPPERS_H
 #define SENSEI_SENSOR_MAPPERS_H
+
+#include <optional>
 
 #include "message/base_value.h"
 #include "message/value_defs.h"
@@ -58,7 +60,7 @@ public:
      * or CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE
      * if command is not appropriate for configuring this sensor.
      */
-    virtual CommandErrorCode apply_command(const Command *cmd);
+    virtual CommandErrorCode apply_command(const Command* cmd);
 
     /**
      * @brief Fill the given container with a sequence of commands that match internal configuration.
@@ -76,7 +78,7 @@ public:
      * @param [in] value Input value coming from the gpio hw frontend
      * @param [out] out_iterator Iterator to a collection to which output values will be added
      */
-    virtual void process(Value *value, output_backend::OutputBackend *backend) = 0;
+    virtual void process(Value* value, output_backend::OutputBackend* backend) = 0;
 
     /**
      * @brief Process a given value coming from a user frontend and generate a set command
@@ -84,24 +86,24 @@ public:
      * @param [in] value Input value from a user fronted
      * @return A set value command to be sent to a hw frontend
      */
-    virtual std::unique_ptr<Command> process_set_value(Value *value) = 0;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) = 0;
 
 protected:
-    MessageFactory      _factory;
-    SensorType          _sensor_type;
-    SensorHwType        _hw_type;
-    int                 _sensor_index;
-    std::vector<int>    _hw_pins;
-    bool                _enabled;
-    bool                _multiplexed;
-    MultiplexerData     _multiplexer_data;
-    SendingMode         _sending_mode;
-    int                 _delta_ticks_sending;
+    MessageFactory   _factory;
+    SensorType       _sensor_type;
+    SensorHwType     _hw_type;
+    int              _sensor_index;
+    std::vector<int> _hw_pins;
+    bool             _enabled;
+    bool             _multiplexed;
+    MultiplexerData  _multiplexer_data;
+    SendingMode      _sending_mode;
+    int              _delta_ticks_sending;
 
-    float               _previous_value;
-    bool                _invert_value;
-    bool                _send_timestamp;
-    bool                _fast_mode;
+    std::optional<float> _previous_value;
+    bool                 _invert_value;
+    bool                 _send_timestamp;
+    bool                 _fast_mode;
 };
 
 /**
@@ -116,16 +118,15 @@ public:
 
     ~DigitalSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
-
 };
 
 /**
@@ -141,34 +142,40 @@ public:
 
     ~AnalogSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
     CommandErrorCode _set_adc_bit_resolution(int resolution);
     CommandErrorCode _set_input_scale_range(int low, int high);
     CommandErrorCode _set_adc_filter_time_constant(float value);
+    CommandErrorCode _set_analog_hysteresis(int value);
+    CommandErrorCode _set_analog_stabilization_period(float value);
+    CommandErrorCode _set_analog_filter_type(AnalogFilterType value);
     CommandErrorCode _set_slider_threshold(int value);
 
     // External board config
-    int _delta_ticks_sending;
-    int _adc_bit_resolution;
-    float _filter_time_constant;
-    int _slider_threshold;
+    [[maybe_unused]] int _delta_ticks_sending;
+    [[maybe_unused]] int _adc_bit_resolution;
+    float                _filter_time_constant;
+    int                  _hysteresis;
+    float                _stabilization_period;
+    AnalogFilterType     _filter_type;
+    int                  _slider_threshold;
 
     // Mapping parameters
     int _input_scale_range_low;
     int _input_scale_range_high;
 
     // Internal helper attributes
-    int _max_allowed_input;
-    float _adc_sampling_rate;
+    int                    _max_allowed_input;
+    [[maybe_unused]] float _adc_sampling_rate;
 };
 
 /**
@@ -184,13 +191,13 @@ public:
 
     ~RangeSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
@@ -201,7 +208,7 @@ private:
     int _input_scale_range_high;
 
     // Internal helper attributes
-    int _previous_int_value;
+    std::optional<int> _previous_int_value;
 };
 
 /**
@@ -216,13 +223,13 @@ public:
 
     ~ContinuousSensorMapper() = default;
 
-    CommandErrorCode apply_command(const Command *cmd) override;
+    CommandErrorCode apply_command(const Command* cmd) override;
 
     void put_config_commands_into(CommandIterator out_iterator) override;
 
-    void process(Value *value, output_backend::OutputBackend *backend) override;
+    void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value *value) override;
+    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
     CommandErrorCode _set_input_scale_range(float low, float high);
@@ -230,6 +237,62 @@ private:
     // Mapping parameters
     float _input_scale_range_low;
     float _input_scale_range_high;
+};
+
+/**
+ * @brief Mapper for sensors that produce a relative value of -1 or +1
+ *        (e.g. encoder increments). Every event is forwarded without
+ *        any previous-value check.
+ */
+class RelativeSensorMapper : public BaseSensorMapper
+{
+public:
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(RelativeSensorMapper)
+
+    explicit RelativeSensorMapper(int index = 0);
+
+    ~RelativeSensorMapper() = default;
+
+    CommandErrorCode apply_command(const Command* cmd) override;
+
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value* value, output_backend::OutputBackend* backend) override;
+
+    std::unique_ptr<Command> process_set_value(Value* value) override;
+};
+
+/**
+ * @brief Mapper for sensors that map continuous analog input to discrete ranges
+ */
+class DiscreteSensorMapper : public BaseSensorMapper
+{
+public:
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DiscreteSensorMapper)
+
+    explicit DiscreteSensorMapper(int index = 0);
+
+    ~DiscreteSensorMapper() = default;
+
+    CommandErrorCode apply_command(const Command* cmd) override;
+
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value* value, output_backend::OutputBackend* backend) override;
+
+    std::unique_ptr<Command> process_set_value(Value* value) override;
+
+private:
+    CommandErrorCode   _set_adc_bit_resolution(int resolution);
+    CommandErrorCode   _set_discrete_ranges(const std::vector<Range>& ranges);
+    std::optional<int> _find_range_index(float normalized_value) const;
+
+    // Configuration
+    std::vector<Range> _discrete_ranges;
+    int                _adc_bit_resolution;
+
+    // State tracking
+    std::optional<int> _previous_discrete_index;
 };
 
 }; // namespace mapping

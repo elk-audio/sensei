@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk
+ * Copyright 2017-2026 Elk Audio AB
  *
  * SENSEI is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +15,7 @@
 
 /**
  * @brief Base class for configuration backends
- * @copyright 2017-2019 Modern Ancient Instruments Networked AB, dba Elk, Stockholm
+ * @copyright 2017-2026 Elk Audio AB, Stockholm
  *
  * This class should not be instanciated directly, it should only be used to derive
  * concrete configuration classes
@@ -24,16 +24,19 @@
 #define SENSEI_BASECONFIGURATION_H
 
 #include "message/base_message.h"
+#include "message/command_defs.h"
+#include "handler_interface.h"
 #include "synchronized_queue.h"
 
 namespace sensei {
 namespace config {
 
-enum class ConfigStatus {
+enum class ConfigStatus
+{
     OK,
     IO_ERROR,
     PARSING_ERROR,
-    PARAMETER_ERROR,
+    SCHEMA_VALIDATION_ERROR,
 };
 
 struct HwFrontendConfig
@@ -42,14 +45,27 @@ struct HwFrontendConfig
     std::string    port;
 };
 
+struct BackendConfig
+{
+    BackendType type;
+};
+
+struct Config
+{
+    HwFrontendConfig hw_config;
+    BackendConfig    backend_config;
+};
+
 class BaseConfiguration
 {
 
 public:
-    BaseConfiguration(SynchronizedQueue<std::unique_ptr<BaseMessage>>* queue, const std::string& source) :
-            _queue(queue),
-            _source(source),
-            _enabled(false)
+    BaseConfiguration(MessageHandler* handler, const std::string& source,
+                      ThreadingMode threading_mode = ThreadingMode::ASYNCHRONOUS)
+        : _handler(handler),
+          _source(source),
+          _enabled(false),
+          _threading_mode(threading_mode)
     {
     }
 
@@ -80,10 +96,11 @@ public:
     /**
      * @brief Read configuration and construct messages from it
      */
-    virtual ConfigStatus read(HwFrontendConfig& /*hw_config*/)
+    virtual ConfigStatus read(Config& /*config*/)
     {
         return ConfigStatus::OK;
     }
+
     /**
      * @brief Receive configuration data for exporting to file/socket/etc
      */
@@ -92,13 +109,13 @@ public:
 
 
 protected:
-    SynchronizedQueue<std::unique_ptr<BaseMessage>>* _queue;
-    std::string _source;
-    bool _enabled;
-
+    MessageHandler* _handler;
+    std::string     _source;
+    bool            _enabled;
+    ThreadingMode   _threading_mode;
 };
 
-}  // namespace config
-}  // namespace sensei
+} // namespace config
+} // namespace sensei
 
 #endif //SENSEI_BASECONFIGURATION_H
