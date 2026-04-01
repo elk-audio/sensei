@@ -24,6 +24,7 @@
 #ifndef SHIFTREG_GPIO_H_
 #define SHIFTREG_GPIO_H_
 
+#include "hardware_backend/base_hw_backend.h"
 #include "logging.h"
 
 // Consider the following if WITH_GPIO_LOGIC is defined
@@ -34,7 +35,6 @@
 
 #include "fifo/circularfifo_memory_relaxed_aquire_release.h"
 
-#include "hardware_backend/base_hw_backend.h"
 #include "gpio_protocol/gpio_protocol.h"
 #include "gpio_protocol_client/gpio_client.h"
 #include "gpio_protocol_client/gpio_logger_interface.h"
@@ -277,8 +277,6 @@ private:
 
 namespace sensei {
 
-SENSEI_GET_LOGGER_WITH_MODULE_NAME("Shiftreg Gpio");
-
 namespace hw_backend {
 namespace shiftregister_gpio {
 
@@ -291,6 +289,7 @@ public:
 
     bool init() override
     {
+        SENSEI_GET_LOGGER_WITH_MODULE_NAME("Shiftreg Gpio");
         SENSEI_LOG_ERROR("Cannot Init Shiftregister Hw Backend. Its not enabled!");
         return false;
     }
