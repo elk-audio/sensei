@@ -1028,6 +1028,10 @@ protected:
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_hw_pins_command(_sensor_idx, _hw_pin))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_sensor_hw_type_command(_sensor_idx, _hw_type))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_adc_bit_resolution_command(_sensor_idx, _adc_bit_resolution))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_time_constant_command(_sensor_idx, _filter_time_constant))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_hysteresis_command(_sensor_idx, _hysteresis))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_stabilization_period_command(_sensor_idx, _stabilization_period))));
+        config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_analog_filter_type_command(_sensor_idx, _filter_type))));
         config_cmds.push_back(std::move(CMD_UPTR(factory.make_set_discrete_ranges_command(_sensor_idx, _discrete_ranges))));
 
         for (auto const& cmd : config_cmds)
@@ -1048,6 +1052,10 @@ protected:
     bool               _fast_mode{true};
     int                _delta_ticks{5};
     int                _adc_bit_resolution{12};
+    float              _filter_time_constant{0.20f};
+    int                _hysteresis{2};
+    float              _stabilization_period{0.30f};
+    AnalogFilterType   _filter_type{AnalogFilterType::IIR};
     std::vector<Range> _discrete_ranges{{0.0f, 0.33f}, {0.33f, 0.66f}, {0.66f, 1.0f}};
 
     OutputBackendMockup  _backend;
@@ -1063,6 +1071,22 @@ TEST_F(TestDiscreteSensorMapper, test_config)
     auto cmd_ranges = extract_cmd_from<SetDiscreteRangesCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_DISCRETE_RANGES, cmd_ranges->type());
     ASSERT_EQ(_discrete_ranges, cmd_ranges->data());
+
+    auto cmd_filter_type = extract_cmd_from<SetAnalogFilterTypeCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ANALOG_FILTER_TYPE, cmd_filter_type->type());
+    ASSERT_EQ(_filter_type, cmd_filter_type->data());
+
+    auto cmd_stabilization = extract_cmd_from<SetAnalogStabilizationPeriodCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ANALOG_STABILIZATION_PERIOD, cmd_stabilization->type());
+    ASSERT_EQ(_stabilization_period, cmd_stabilization->data());
+
+    auto cmd_hysteresis = extract_cmd_from<SetAnalogHysteresisCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ANALOG_HYSTERESIS, cmd_hysteresis->type());
+    ASSERT_EQ(_hysteresis, cmd_hysteresis->data());
+
+    auto cmd_cutoff = extract_cmd_from<SetADCFilterTimeConstantCommand>(stored_cmds);
+    ASSERT_EQ(CommandType::SET_ADC_FILTER_TIME_CONSTANT, cmd_cutoff->type());
+    ASSERT_EQ(_filter_time_constant, cmd_cutoff->data());
 
     auto cmd_adc_res = extract_cmd_from<SetADCBitResolutionCommand>(stored_cmds);
     ASSERT_EQ(CommandType::SET_ADC_BIT_RESOLUTION, cmd_adc_res->type());
@@ -1127,7 +1151,7 @@ TEST_F(TestDiscreteSensorMapper, test_config_fail)
     ret = _mapper.apply_command(CMD_PTR(factory.make_set_discrete_ranges_command(_sensor_idx, {{0.5f, 1.5f}})));
     ASSERT_EQ(CommandErrorCode::INVALID_RANGE, ret);
 
-    ret = _mapper.apply_command(CMD_PTR(factory.make_set_analog_time_constant_command(_sensor_idx, 0.02f)));
+    ret = _mapper.apply_command(CMD_PTR(factory.make_set_slider_threshold_command(_sensor_idx, 1)));
     ASSERT_EQ(CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE, ret);
 }
 
