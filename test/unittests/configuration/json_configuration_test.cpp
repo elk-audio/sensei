@@ -603,6 +603,4 @@ TEST_F(JsonConfigurationTest, test_schema_validation)
         }]
     })";
     EXPECT_EQ(ConfigStatus::SCHEMA_VALIDATION_ERROR, _module_under_test.read_from_string(config, invalid_mode));
-
-
 }

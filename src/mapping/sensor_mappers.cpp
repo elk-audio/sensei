@@ -284,46 +284,24 @@ std::unique_ptr<Command> DigitalSensorMapper::process_set_value(Value* value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// AnalogSensorMapper
+// AdcSensorMapper
 ////////////////////////////////////////////////////////////////////////////////
 
-AnalogSensorMapper::AnalogSensorMapper(int   index,
-                                       float adc_sampling_rate)
-    : BaseSensorMapper(SensorType::ANALOG_INPUT, index),
+AdcSensorMapper::AdcSensorMapper(SensorType type, int index)
+    : BaseSensorMapper(type, index),
+      _adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION),
       _filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT),
       _hysteresis(0),
       _stabilization_period(0.0f),
-      _slider_threshold(0),
-      _input_scale_range_low(0),
-      _input_scale_range_high((1 << DEFAULT_ADC_BIT_RESOLUTION) - 1),
-      _adc_sampling_rate(adc_sampling_rate)
-{
-    _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
-    _set_adc_filter_time_constant(DEFAULT_FILTER_TIME_CONSTANT);
-}
+      _filter_type(AnalogFilterType::IIR)
+{}
 
-CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
+CommandErrorCode AdcSensorMapper::apply_command(const Command* cmd)
 {
-
-    // Handle analog-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
     CommandErrorCode status = CommandErrorCode::OK;
+
     switch (cmd->type())
     {
-        // External
-        case CommandType::SET_SENSOR_TYPE:
-        {
-            // This is set internally and not from the user, so just assert for bugs
-            assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::ANALOG_INPUT);
-        };
-        break;
-
-        case CommandType::SET_SENSOR_HW_TYPE:
-        {
-            const auto typed_cmd = static_cast<const SetSensorHwTypeCommand*>(cmd);
-            status = _set_sensor_hw_type(typed_cmd->data());
-        };
-        break;
-
         case CommandType::SET_ADC_BIT_RESOLUTION:
         {
             const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
@@ -359,6 +337,119 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
         }
         break;
 
+        default:
+            status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
+            break;
+    }
+
+    if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
+    {
+        return BaseSensorMapper::apply_command(cmd);
+    }
+    else
+    {
+        return status;
+    }
+}
+
+void AdcSensorMapper::put_config_commands_into(CommandIterator out_iterator)
+{
+    BaseSensorMapper::put_config_commands_into(out_iterator);
+
+    MessageFactory factory;
+    *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
+    *out_iterator = factory.make_set_analog_time_constant_command(_sensor_index, _filter_time_constant);
+    *out_iterator = factory.make_set_analog_hysteresis_command(_sensor_index, _hysteresis);
+    *out_iterator = factory.make_set_analog_stabilization_period_command(_sensor_index, _stabilization_period);
+    *out_iterator = factory.make_set_analog_filter_type_command(_sensor_index, _filter_type);
+}
+
+CommandErrorCode AdcSensorMapper::_set_adc_bit_resolution(int resolution)
+{
+    if ((resolution < 1) || (resolution > MAX_ADC_BIT_RESOLUTION))
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+
+    _adc_bit_resolution = resolution;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AdcSensorMapper::_set_adc_filter_time_constant(float value)
+{
+    if (value <= 0.0f)
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+
+    _filter_time_constant = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AdcSensorMapper::_set_analog_hysteresis(int value)
+{
+    _hysteresis = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AdcSensorMapper::_set_analog_stabilization_period(float value)
+{
+    if (value < 0.0f)
+    {
+        return CommandErrorCode::INVALID_VALUE;
+    }
+    _stabilization_period = value;
+    return CommandErrorCode::OK;
+}
+
+CommandErrorCode AdcSensorMapper::_set_analog_filter_type(AnalogFilterType value)
+{
+    _filter_type = value;
+    return CommandErrorCode::OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// AnalogSensorMapper
+////////////////////////////////////////////////////////////////////////////////
+
+AnalogSensorMapper::AnalogSensorMapper(int index)
+    : AdcSensorMapper(SensorType::ANALOG_INPUT, index),
+      _slider_threshold(0),
+      _input_scale_range_low(0),
+      _input_scale_range_high((1 << DEFAULT_ADC_BIT_RESOLUTION) - 1)
+{
+    _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
+}
+
+CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
+{
+
+    // Handle analog-specific configurations, and fail if CommandType is not appropriate for this kind of sensor
+    CommandErrorCode status = CommandErrorCode::OK;
+    switch (cmd->type())
+    {
+        // External
+        case CommandType::SET_SENSOR_TYPE:
+        {
+            // This is set internally and not from the user, so just assert for bugs
+            assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::ANALOG_INPUT);
+        };
+        break;
+
+        case CommandType::SET_SENSOR_HW_TYPE:
+        {
+            const auto typed_cmd = static_cast<const SetSensorHwTypeCommand*>(cmd);
+            status = _set_sensor_hw_type(typed_cmd->data());
+        };
+        break;
+
+        case CommandType::SET_ADC_BIT_RESOLUTION:
+        {
+            const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
+            status = _set_adc_bit_resolution(typed_cmd->data());
+        };
+        break;
+
         case CommandType::SET_SLIDER_THRESHOLD:
         {
             const auto typed_cmd = static_cast<const SetSliderThresholdCommand*>(cmd);
@@ -385,7 +476,7 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
     // If command was not handled, try to handle it in parent
     if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
     {
-        return BaseSensorMapper::apply_command(cmd);
+        return AdcSensorMapper::apply_command(cmd);
     }
     else
     {
@@ -395,14 +486,9 @@ CommandErrorCode AnalogSensorMapper::apply_command(const Command* cmd)
 
 void AnalogSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
-    BaseSensorMapper::put_config_commands_into(out_iterator);
+    AdcSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
-    *out_iterator = factory.make_set_analog_time_constant_command(_sensor_index, _filter_time_constant);
-    *out_iterator = factory.make_set_analog_hysteresis_command(_sensor_index, _hysteresis);
-    *out_iterator = factory.make_set_analog_stabilization_period_command(_sensor_index, _stabilization_period);
-    *out_iterator = factory.make_set_analog_filter_type_command(_sensor_index, _filter_type);
     *out_iterator = factory.make_set_slider_threshold_command(_sensor_index, _slider_threshold);
     *out_iterator = factory.make_set_input_range_command(_sensor_index, _input_scale_range_low, _input_scale_range_high);
 }
@@ -483,39 +569,6 @@ CommandErrorCode AnalogSensorMapper::_set_adc_bit_resolution(int resolution)
     return CommandErrorCode::OK;
 }
 
-
-CommandErrorCode AnalogSensorMapper::_set_adc_filter_time_constant(float value)
-{
-    if (value <= 0.0f)
-    {
-        return CommandErrorCode::INVALID_VALUE;
-    }
-
-    _filter_time_constant = value;
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode AnalogSensorMapper::_set_analog_hysteresis(int value)
-{
-    _hysteresis = value;
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode AnalogSensorMapper::_set_analog_stabilization_period(float value)
-{
-    if (value < 0.0f)
-    {
-        return CommandErrorCode::INVALID_VALUE;
-    }
-    _stabilization_period = value;
-    return CommandErrorCode::OK;
-}
-
-CommandErrorCode AnalogSensorMapper::_set_analog_filter_type(AnalogFilterType value)
-{
-    _filter_type = value;
-    return CommandErrorCode::OK;
-}
 
 CommandErrorCode AnalogSensorMapper::_set_slider_threshold(int value)
 {
@@ -894,10 +947,9 @@ std::unique_ptr<Command> RelativeSensorMapper::process_set_value(Value* /*value*
 ////////////////////////////////////////////////////////////////////////////////
 
 DiscreteSensorMapper::DiscreteSensorMapper(int index)
-    : BaseSensorMapper(SensorType::DISCRETE_INPUT, index)
+    : AdcSensorMapper(SensorType::DISCRETE_INPUT, index)
 {
     // Default: no ranges configured
-    _set_adc_bit_resolution(DEFAULT_ADC_BIT_RESOLUTION);
 }
 
 CommandErrorCode DiscreteSensorMapper::apply_command(const Command* cmd)
@@ -909,13 +961,6 @@ CommandErrorCode DiscreteSensorMapper::apply_command(const Command* cmd)
         case CommandType::SET_SENSOR_TYPE:
         {
             assert(static_cast<const SetSensorTypeCommand*>(cmd)->data() == SensorType::DISCRETE_INPUT);
-        };
-        break;
-
-        case CommandType::SET_ADC_BIT_RESOLUTION:
-        {
-            const auto typed_cmd = static_cast<const SetADCBitResolutionCommand*>(cmd);
-            status = _set_adc_bit_resolution(typed_cmd->data());
         };
         break;
 
@@ -934,7 +979,7 @@ CommandErrorCode DiscreteSensorMapper::apply_command(const Command* cmd)
     // If command was not handled, try parent
     if (status == CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE)
     {
-        return BaseSensorMapper::apply_command(cmd);
+        return AdcSensorMapper::apply_command(cmd);
     }
     else
     {
@@ -944,10 +989,9 @@ CommandErrorCode DiscreteSensorMapper::apply_command(const Command* cmd)
 
 void DiscreteSensorMapper::put_config_commands_into(CommandIterator out_iterator)
 {
-    BaseSensorMapper::put_config_commands_into(out_iterator);
+    AdcSensorMapper::put_config_commands_into(out_iterator);
 
     MessageFactory factory;
-    *out_iterator = factory.make_set_adc_bit_resolution_command(_sensor_index, _adc_bit_resolution);
     *out_iterator = factory.make_set_discrete_ranges_command(_sensor_index, _discrete_ranges);
 }
 
@@ -1046,16 +1090,4 @@ std::optional<int> DiscreteSensorMapper::_find_range_index(float normalized_valu
 
     // Value outside all ranges
     return std::nullopt;
-}
-
-CommandErrorCode DiscreteSensorMapper::_set_adc_bit_resolution(int resolution)
-{
-    if ((resolution < 1) || (resolution > MAX_ADC_BIT_RESOLUTION))
-    {
-        return CommandErrorCode::INVALID_VALUE;
-    }
-
-    _adc_bit_resolution = resolution;
-
-    return CommandErrorCode::OK;
 }

@@ -107,6 +107,44 @@ protected:
 };
 
 /**
+ * @brief Intermediate base class for ADC-based sensor mappers.
+ *
+ * Holds configuration common to sensors that read from an ADC:
+ * bit resolution, filter time constant, hysteresis, stabilization period, and filter type.
+ * This is a pure virtual class and cannot be instantiated directly.
+ */
+class AdcSensorMapper : public BaseSensorMapper
+{
+public:
+    SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AdcSensorMapper)
+
+    virtual ~AdcSensorMapper() = default;
+
+    CommandErrorCode apply_command(const Command* cmd) override;
+
+    void put_config_commands_into(CommandIterator out_iterator) override;
+
+    void process(Value* value, output_backend::OutputBackend* backend) override = 0;
+
+    std::unique_ptr<Command> process_set_value(Value* value) override = 0;
+
+protected:
+    explicit AdcSensorMapper(SensorType pin_type, int index);
+
+    virtual CommandErrorCode _set_adc_bit_resolution(int resolution);
+    CommandErrorCode         _set_adc_filter_time_constant(float value);
+    CommandErrorCode         _set_analog_hysteresis(int value);
+    CommandErrorCode         _set_analog_stabilization_period(float value);
+    CommandErrorCode         _set_analog_filter_type(AnalogFilterType value);
+
+    int              _adc_bit_resolution;
+    float            _filter_time_constant;
+    int              _hysteresis;
+    float            _stabilization_period;
+    AnalogFilterType _filter_type;
+};
+
+/**
  * @brief Mapper for sensors that produce a digital (on/off) output
  */
 class DigitalSensorMapper : public BaseSensorMapper
@@ -133,12 +171,12 @@ private:
  * @brief Mappers for sensors that produce analog value sampled with a given
  *        adc resolution, values are sent to mapper as an integer value
  */
-class AnalogSensorMapper : public BaseSensorMapper
+class AnalogSensorMapper : public AdcSensorMapper
 {
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(AnalogSensorMapper)
 
-    explicit AnalogSensorMapper(int index = 0, float adc_sampling_rate = 1000.0f);
+    explicit AnalogSensorMapper(int index = 0);
 
     ~AnalogSensorMapper() = default;
 
@@ -148,34 +186,23 @@ public:
 
     void process(Value* value, output_backend::OutputBackend* backend) override;
 
-    virtual std::unique_ptr<Command> process_set_value(Value* value) override;
+    std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
     CommandErrorCode _set_sensor_hw_type(SensorHwType hw_type);
-    CommandErrorCode _set_adc_bit_resolution(int resolution);
+    CommandErrorCode _set_adc_bit_resolution(int resolution) override;
     CommandErrorCode _set_input_scale_range(int low, int high);
-    CommandErrorCode _set_adc_filter_time_constant(float value);
-    CommandErrorCode _set_analog_hysteresis(int value);
-    CommandErrorCode _set_analog_stabilization_period(float value);
-    CommandErrorCode _set_analog_filter_type(AnalogFilterType value);
     CommandErrorCode _set_slider_threshold(int value);
 
     // External board config
-    [[maybe_unused]] int _delta_ticks_sending;
-    [[maybe_unused]] int _adc_bit_resolution;
-    float                _filter_time_constant;
-    int                  _hysteresis;
-    float                _stabilization_period;
-    AnalogFilterType     _filter_type;
-    int                  _slider_threshold;
+    int _slider_threshold;
 
     // Mapping parameters
     int _input_scale_range_low;
     int _input_scale_range_high;
 
     // Internal helper attributes
-    int                    _max_allowed_input;
-    [[maybe_unused]] float _adc_sampling_rate;
+    int _max_allowed_input;
 };
 
 /**
@@ -265,7 +292,7 @@ public:
 /**
  * @brief Mapper for sensors that map continuous analog input to discrete ranges
  */
-class DiscreteSensorMapper : public BaseSensorMapper
+class DiscreteSensorMapper : public AdcSensorMapper
 {
 public:
     SENSEI_MESSAGE_DECLARE_NON_COPYABLE(DiscreteSensorMapper)
@@ -283,13 +310,11 @@ public:
     std::unique_ptr<Command> process_set_value(Value* value) override;
 
 private:
-    CommandErrorCode   _set_adc_bit_resolution(int resolution);
     CommandErrorCode   _set_discrete_ranges(const std::vector<Range>& ranges);
     std::optional<int> _find_range_index(float normalized_value) const;
 
     // Configuration
     std::vector<Range> _discrete_ranges;
-    int                _adc_bit_resolution;
 
     // State tracking
     std::optional<int> _previous_discrete_index;
