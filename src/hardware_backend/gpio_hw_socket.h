@@ -100,6 +100,11 @@ private:
     int _out_socket;
 
     std::string _gpio_hw_socket_name;
+
+    /**
+     * Used to avoid logging unnecessary errors while waiting for an initial connection.
+     */
+    bool _ever_connected{false};
 };
 
 } // namespace hw_backend

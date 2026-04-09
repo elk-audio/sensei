@@ -93,9 +93,12 @@ bool GpioHwSocket::send_gpio_packet(const gpio::GpioPacket& tx_gpio_packet)
     auto bytes = send(_out_socket, &tx_gpio_packet, GPIO_PACKET_SIZE, 0);
     if (bytes < static_cast<ssize_t>(GPIO_PACKET_SIZE))
     {
-        SENSEI_LOG_WARNING("Sending packet on socket failed {}, Attempting"
-                           " to reconnect to socket..,",
-                           bytes);
+        if (_ever_connected)
+        {
+            SENSEI_LOG_WARNING("Sending packet on socket failed {}, Attempting"
+                               " to reconnect to socket..,",
+                               bytes);
+        }
 
         _connect_to_gpio_hw_socket();
         return false;
@@ -124,7 +127,10 @@ inline void GpioHwSocket::_connect_to_gpio_hw_socket()
     auto res = connect(_out_socket, reinterpret_cast<sockaddr*>(&address), sizeof(sockaddr_un));
     if (res != 0)
     {
-        SENSEI_LOG_ERROR("Failed to connect to Gpio Hw socket: {}", strerror(errno));
+        if (_ever_connected)
+        {
+            SENSEI_LOG_ERROR("Failed to connect to Gpio Hw socket: {}", strerror(errno));
+        }
         return;
     }
 
@@ -139,6 +145,7 @@ inline void GpioHwSocket::_connect_to_gpio_hw_socket()
     }
 
     SENSEI_LOG_INFO("Connected to Gpio Hw Socket!");
+    _ever_connected = true;
     return;
 }
 

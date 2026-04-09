@@ -164,7 +164,6 @@ void HwFrontend::write_loop()
             // attempt to send packets.
             if (!_hw_backend->send_gpio_packet(packet))
             {
-                SENSEI_LOG_WARNING("Failed sending packet to hw backend");
                 std::this_thread::sleep_for(std::chrono::milliseconds(HW_BACKEND_CON_TIMEOUT));
                 continue;
             }
