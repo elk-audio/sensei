@@ -971,6 +971,14 @@ CommandErrorCode DiscreteSensorMapper::apply_command(const Command* cmd)
         };
         break;
 
+        case CommandType::CLEAR_PREVIOUS_VALUE:
+        {
+            _previous_value.reset();
+            _previous_discrete_index.reset();
+            SENSEI_LOG_INFO("Cleared previous value for discrete sensor {}", _sensor_index);
+        }
+        break;
+
         default:
             status = CommandErrorCode::UNHANDLED_COMMAND_FOR_SENSOR_TYPE;
             break;
