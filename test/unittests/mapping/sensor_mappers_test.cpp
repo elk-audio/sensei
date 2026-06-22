@@ -1237,6 +1237,34 @@ TEST_F(TestDiscreteSensorMapper, test_same_discrete_index_not_sent_twice)
     ASSERT_EQ(first_message_time, _backend._last_timestamp);
 }
 
+TEST_F(TestDiscreteSensorMapper, test_unchanged_discrete_index_sent_after_clear_previous)
+{
+    MessageFactory factory;
+
+    // First process: value in middle range — goes through because _previous_discrete_index is empty
+    const uint32_t first_time = 100;
+    auto           input_msg = factory.make_analog_value(_sensor_idx, 2048, first_time);
+    auto           input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(first_time, _backend._last_timestamp);
+
+    // Same value again — suppressed because discrete index hasn't changed
+    const uint32_t second_time = 200;
+    input_msg = factory.make_analog_value(_sensor_idx, 2048, second_time);
+    input_val  = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(first_time, _backend._last_timestamp);
+
+    _mapper.apply_command(CMD_PTR(factory.make_clear_previous_value_command(_sensor_idx)));
+
+    // Same value after clear — must send even though discrete index is unchanged
+    const uint32_t third_time = 300;
+    input_msg = factory.make_analog_value(_sensor_idx, 2048, third_time);
+    input_val  = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_EQ(third_time, _backend._last_timestamp);
+}
+
 TEST_F(TestDiscreteSensorMapper, test_output_timestamp_preserved)
 {
     MessageFactory factory;
