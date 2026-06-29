@@ -364,7 +364,9 @@ void GrpcUserFrontend::refresh_controller_values()
     {
         const auto& name = _controller_map[i].name;
         auto        type = _controller_map[i].type;
-        if (!name.empty() && type != SensorType::UNDEFINED)
+
+        // RELATIVE_INPUT controllers have no state, do not ask for their initial value.
+        if (!name.empty() && type != SensorType::UNDEFINED && type != SensorType::RELATIVE_INPUT)
         {
             int controller_id = static_cast<int>(i);
             _handler->post_event(_factory.make_clear_previous_value_command(controller_id));
