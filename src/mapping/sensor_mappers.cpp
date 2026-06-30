@@ -921,7 +921,12 @@ void RelativeSensorMapper::process(Value* value, output_backend::OutputBackend* 
     assert(value->type() == ValueType::ANALOG);
 
     int   raw_val = static_cast<AnalogValue*>(value)->value();
-    float out_val = (raw_val >= 0) ? 1.0f : -1.0f;
+    if (raw_val == 0)
+    {
+        // 0 has no meaning for a RelativeSensor, do not send.
+        return;
+    }
+    float out_val = (raw_val > 0) ? 1.0f : -1.0f;
     if (_invert_value)
     {
         out_val = -out_val;

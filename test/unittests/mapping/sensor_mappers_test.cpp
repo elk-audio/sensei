@@ -1008,6 +1008,20 @@ TEST_F(TestRelativeSensorMapper, test_disabled_process_dont_send_values)
     ASSERT_FLOAT_EQ(fake_reference_value, _backend._last_output_value);
 }
 
+TEST_F(TestRelativeSensorMapper, test_zero_value_skips_send)
+{
+    // A raw value of 0 means no encoder movement - nothing should be sent.
+    MessageFactory factory;
+
+    float fake_reference_value = -123456.789f;
+    _backend._last_output_value = fake_reference_value;
+
+    auto input_msg = factory.make_analog_value(_sensor_idx, 0);
+    auto input_val = static_cast<Value*>(input_msg.get());
+    _mapper.process(input_val, &_backend);
+    ASSERT_FLOAT_EQ(fake_reference_value, _backend._last_output_value);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // TestDiscreteSensorMapper
 ////////////////////////////////////////////////////////////////////////////////

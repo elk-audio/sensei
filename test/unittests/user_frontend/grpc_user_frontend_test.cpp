@@ -357,6 +357,42 @@ TEST_F(TestGrpcUserFrontend, test_refresh_all_states_rpc)
     ASSERT_TRUE(_handler.event_queue.empty());
 }
 
+TEST_F(TestGrpcUserFrontend, test_refresh_all_states_skips_relative_input)
+{
+    _user_frontend->update_controller(0, "POT1", SensorType::ANALOG_INPUT);
+    _user_frontend->update_controller(1, "ENC1", SensorType::RELATIVE_INPUT);
+    _user_frontend->update_controller(2, "POT2", SensorType::ANALOG_INPUT);
+
+    grpc::ClientContext          context;
+    sensei_rpc::GenericVoidValue request;
+    sensei_rpc::GenericVoidValue response;
+
+    grpc::Status status = _stub->RefreshAllStates(&context, request, &response);
+    ASSERT_TRUE(status.ok());
+
+    _handler.event_queue.wait_for_data(std::chrono::milliseconds(50));
+
+    // Expect commands only for controller 0 and 2, not the RELATIVE_INPUT at index 1
+    for (int id : {0, 2})
+    {
+        ASSERT_FALSE(_handler.event_queue.empty());
+        {
+            std::unique_ptr<BaseMessage> event = _handler.event_queue.pop();
+            auto val = static_unique_ptr_cast<ClearPreviousValueCommand, BaseMessage>(std::move(event));
+            ASSERT_EQ(CommandType::CLEAR_PREVIOUS_VALUE, val->type());
+            ASSERT_EQ(val->index(), id);
+        }
+        {
+            std::unique_ptr<BaseMessage> event = _handler.event_queue.pop();
+            auto val = static_unique_ptr_cast<GetValueCommand, BaseMessage>(std::move(event));
+            ASSERT_EQ(CommandType::GET_VALUE, val->type());
+            ASSERT_EQ(val->index(), id);
+        }
+    }
+
+    ASSERT_TRUE(_handler.event_queue.empty());
+}
+
 TEST_F(TestGrpcUserFrontend, test_concurrent_operations)
 {
     // Start multiple subscriptions

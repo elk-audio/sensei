@@ -107,7 +107,6 @@ def test_sensor_values(sensei):
         controller_id = 14
 
         check_value(controller_id, 1, 1)
-        check_value(controller_id, 0, 1)
         check_value(controller_id, 5, 1)
         check_value(controller_id, -1, -1)
         check_value(controller_id, -200, -1)
