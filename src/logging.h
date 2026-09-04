@@ -108,8 +108,8 @@ ELK_POP_WARNING
  *
  * See help of Logger::set_logger_params for more details
  */
-#define SENSEI_INITIALIZE_LOGGER(FILE_NAME, LOGGER_NAME, MIN_LOG_LEVEL, ENABLE_FLUSH_INTERVAL, LOG_FLUSH_INTERVAL) \
-    elk::Logger::init_logger(FILE_NAME, LOGGER_NAME, MIN_LOG_LEVEL, ENABLE_FLUSH_INTERVAL, LOG_FLUSH_INTERVAL)
+#define SENSEI_INITIALIZE_LOGGER(FILE_NAME, LOGGER_NAME, MIN_LOG_LEVEL, ENABLE_FLUSH_INTERVAL, LOG_FLUSH_INTERVAL, MAX_LOG_FILE_SIZE) \
+    elk::Logger::init_logger(FILE_NAME, LOGGER_NAME, MIN_LOG_LEVEL, ENABLE_FLUSH_INTERVAL, LOG_FLUSH_INTERVAL, MAX_LOG_FILE_SIZE)
 
 
 #define SENSEI_LOG_GET_ERROR_MESSAGE(retcode) \
@@ -129,17 +129,19 @@ public:
      * @param min_log_level Minimum logging level, one of ('debug', 'info', 'warning', 'error', 'critical')
      * @param enable_flush_interval Sets if periodic flushing is enabled
      * @param log_flush_interval The interval of the periodic log flushing
+     * @param max_log_file_size Maximum size of a log file, in bytes, before it is rotated
      *
      * @returns Error code, use SENSEI_LOG_ERROR_MESSAGES to retrieve the message
      *
-     * @todo add other logging options, like e.g. logger type, max file size, etc.
+     * @todo add other logging options, like e.g. logger type, etc.
      * @todo Check arguments and e.g. return errors
      */
     static SENSEI_LOG_ERROR_CODE init_logger(const std::string& file_name,
-                                            const std::string& logger_name,
-                                            const std::string& min_log_level,
-                                            const bool enable_flush_interval,
-                                            const std::chrono::milliseconds log_flush_interval);
+                                             const std::string& logger_name,
+                                             const std::string& min_log_level,
+                                             const bool enable_flush_interval,
+                                             const std::chrono::milliseconds log_flush_interval,
+                                             const int max_log_file_size);
 
 
     /**
@@ -156,6 +158,7 @@ private:
     static std::string _logger_file_name;
     static std::string _logger_name;
     static spdlog::level::level_enum _min_log_level;
+    static int _max_log_file_size;
 };
 
 } // end namespace elk

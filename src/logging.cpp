@@ -32,13 +32,15 @@ namespace elk {
 std::string                     Logger::_logger_file_name = "/tmp/sensei.log";
 std::string                     Logger::_logger_name = "Sensei";
 spdlog::level::level_enum       Logger::_min_log_level = spdlog::level::warn;
+int                             Logger::_max_log_file_size = 10'485'760;
 std::shared_ptr<spdlog::logger> Logger::logger_instance{nullptr};
 
 SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string&              file_name,
                                           const std::string&              logger_name,
                                           const std::string&              min_log_level,
                                           const bool                      enable_flush_interval,
-                                          const std::chrono::milliseconds log_flush_interval)
+                                          const std::chrono::milliseconds log_flush_interval,
+                                          const int                       max_log_file_size)
 {
     SENSEI_LOG_ERROR_CODE ret = SENSEI_LOG_ERROR_CODE_OK;
 
@@ -55,6 +57,7 @@ SENSEI_LOG_ERROR_CODE Logger::init_logger(const std::string&              file_n
 
     Logger::_logger_file_name.assign(file_name);
     Logger::_logger_name.assign(logger_name);
+    Logger::_max_log_file_size = max_log_file_size;
 
     logger_instance = setup_logging();
 
@@ -99,13 +102,12 @@ std::string Logger::get_error_message(SENSEI_LOG_ERROR_CODE status)
 
 std::shared_ptr<spdlog::logger> Logger::setup_logging()
 {
-    const int  MAX_LOG_FILE_SIZE = 10'000'000;       // In bytes
     const auto MIN_FLUSH_LEVEL = spdlog::level::err; // Min level for automatic flush
 
     spdlog::set_level(_min_log_level);
     auto async_file_logger = spdlog::rotating_logger_mt<spdlog::async_factory>(_logger_name,
                                                                                _logger_file_name,
-                                                                               MAX_LOG_FILE_SIZE,
+                                                                               _max_log_file_size,
                                                                                1);
 
     async_file_logger->flush_on(MIN_FLUSH_LEVEL);
