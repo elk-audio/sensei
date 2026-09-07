@@ -40,6 +40,8 @@
 #define SENSEI_DEFAULT_CONFIG_FILENAME     "../../../scratch/sensei_config.json"
 #define SENSEI_DEFAULT_LOG_FILENAME        "/tmp/sensei.log"
 #define SENSEI_DEFAULT_LOG_LEVEL           "info"
+#define SENSEI_DEFAULT_LOG_FILE_SIZE_KB     10240
+#define SENSEI_DEFAULT_LOG_FILE_SIZE_KB_STR "10240"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables
@@ -52,6 +54,7 @@ std::string log_level = std::string(SENSEI_DEFAULT_LOG_LEVEL);
 std::string log_filename = std::string(SENSEI_DEFAULT_LOG_FILENAME);
 auto        log_flush_interval = std::chrono::milliseconds(0);
 bool        enable_flush_interval = false;
+int         log_file_size_kb = SENSEI_DEFAULT_LOG_FILE_SIZE_KB;
 
 void print_headline()
 {
@@ -176,6 +179,7 @@ enum OptionIndex
     LOG_FILENAME,
     LOG_LEVEL,
     LOG_FLUSH_INTERVAL,
+    LOG_FILE_SIZE,
     SYNCHRONOUS_MODE
 };
 
@@ -235,6 +239,12 @@ const option::Descriptor usage[] =
                  "log-flush-interval",
                  SenseiArg::Float,
                  "\t\t--log-flush-interval=<seconds> \tEnable flushing the log periodically and specify the interval."},
+                {LOG_FILE_SIZE,
+                 0,
+                 "",
+                 "log-file-size",
+                 SenseiArg::Numeric,
+                 "\t\t--log-file-size=<kB> \tMaximum size of a log file in kB [default=" SENSEI_DEFAULT_LOG_FILE_SIZE_KB_STR "]."},
                 {SYNCHRONOUS_MODE,
                  0,
                  "x",
@@ -318,7 +328,6 @@ int main(int argc, char* argv[])
             case SLEEP_PERIOD:
             {
                 int parsed_int = atoi(opt.arg);
-                // horrible, but that's how atoi works and std::stoi needs exceptions
                 if (parsed_int == 0)
                 {
                     SenseiArg::print_error("Option '", opt, "' invalid number\n");
@@ -345,6 +354,18 @@ int main(int argc, char* argv[])
                 enable_flush_interval = true;
                 break;
 
+            case LOG_FILE_SIZE:
+            {
+                int parsed_int = atoi(opt.arg);
+                if (parsed_int == 0)
+                {
+                    SenseiArg::print_error("Option '", opt, "' invalid number\n");
+                    return 1;
+                }
+                log_file_size_kb = parsed_int;
+            }
+            break;
+
             case SYNCHRONOUS_MODE:
                 threading_mode = sensei::ThreadingMode::SYNCHRONOUS;
                 break;
@@ -367,7 +388,12 @@ int main(int argc, char* argv[])
     ////////////////////////////////////////////////////////////////////////////////
     // Logger configuration
     ////////////////////////////////////////////////////////////////////////////////
-    auto ret_code = SENSEI_INITIALIZE_LOGGER(log_filename, "Logger", log_level, enable_flush_interval, log_flush_interval);
+    auto ret_code = SENSEI_INITIALIZE_LOGGER(log_filename,
+                                             "Logger",
+                                             log_level,
+                                             enable_flush_interval,
+                                             log_flush_interval,
+                                             log_file_size_kb * 1024);
     if (ret_code != SENSEI_LOG_ERROR_CODE_OK)
     {
         std::cerr << SENSEI_LOG_GET_ERROR_MESSAGE(ret_code) << ", using default." << std::endl;
