@@ -16,7 +16,7 @@ Fixes:
 ## 0.5.0
 New Features:
   * New relative_input and discrete_input sensor types
-  * Synchronous messaging from hardware to user frontend (OSC or gRPC)
+  * Direct messaging from hardware to user frontend instead of passing through a thread boundary
   * Input and output pins merged into a common sensor concept
   * Config file validated using a JSON schema
   * New analog filter parameters
